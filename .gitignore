@@ -1,0 +1,30 @@
+# Build artifacts
+/publish.bat
+dist/
+build/
+*.egg-info/
+__pycache__/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# PyPI credentials (security)
+.pypirc

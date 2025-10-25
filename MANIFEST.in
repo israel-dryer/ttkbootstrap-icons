@@ -5,6 +5,11 @@ recursive-include src/ttkbootstrap_icons/_pyinstaller *.py
 
 # Exclude examples and development files
 exclude example.py
+exclude build_and_publish.sh
+exclude build_and_publish.ps1
+exclude prepare_release.sh
+exclude prepare_release.ps1
+exclude RELEASE.md
 recursive-exclude examples *
 global-exclude *.pyc
 global-exclude __pycache__
