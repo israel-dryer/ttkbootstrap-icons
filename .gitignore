@@ -5,6 +5,9 @@ build/
 *.egg-info/
 __pycache__/
 
+# Auto-generated version file
+src/ttkbootstrap_icons/_version.py
+
 # IDE
 .vscode/
 .idea/
