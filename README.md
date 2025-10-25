@@ -336,7 +336,7 @@ atexit.register(Icon.cleanup)
 ## Requirements
 
 - Python >= 3.10
-- Pillow >= 10
+- Pillow >= 9.0.0
 
 ## License
 
