@@ -2,6 +2,8 @@
 
 A Python package for using Bootstrap Icons and Lucide Icons in your tkinter/ttkbootstrap applications.
 
+![Icon Previewer](https://raw.githubusercontent.com/israel-dryer/ttkbootstrap-icons/main/examples/previewer.png)
+
 ## Features
 
 - **Two Icon Sets**: Access to both Bootstrap Icons and Lucide Icons
