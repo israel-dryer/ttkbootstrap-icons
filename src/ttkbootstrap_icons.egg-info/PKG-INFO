@@ -1,0 +1,280 @@
+Metadata-Version: 2.4
+Name: ttkbootstrap-icons
+Version: 1.0.0
+Summary: Use bootstrap icons in your tkinter application
+Author-email: Israel Dryer <israel.dryer@gmail.com>
+Project-URL: Homepage, https://github.com/israel-dryer/ttkbootstrap-icons
+Keywords: tkinter,ttk,bootstrap,gui,desktop,python3,ui,widgets,theming,cross-platform,modern,responsive,python-gui,icon
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Environment :: Win32 (MS Windows)
+Classifier: Environment :: X11 Applications :: GTK
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
+Classifier: Topic :: Software Development :: User Interfaces
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: pillow>=10
+Dynamic: license-file
+
+# ttkbootstrap-icons
+
+A Python package for using Bootstrap Icons and Lucide Icons in your tkinter/ttkbootstrap applications.
+
+## Features
+
+- **Two Icon Sets**: Access to both Bootstrap Icons and Lucide Icons
+- **Easy to Use**: Simple API for creating icons
+- **Customizable**: Adjust icon size and color on the fly
+- **Lightweight**: Uses icon fonts for efficient rendering
+- **Cross-Platform**: Works on Windows, macOS, and Linux
+
+## Installation
+
+```bash
+pip install ttkbootstrap-icons
+```
+
+## Quick Start
+
+### Bootstrap Icons
+
+```python
+import tkinter as tk
+from ttkbootstrap_icons import BootstrapIcon
+
+root = tk.Tk()
+
+# Create a Bootstrap icon
+icon = BootstrapIcon("house", size=32, color="blue")
+
+# Use it in a label
+label = tk.Label(root, image=icon.image)
+label.pack()
+
+root.mainloop()
+```
+
+### Lucide Icons
+
+```python
+import tkinter as tk
+from ttkbootstrap_icons import LucideIcon
+
+root = tk.Tk()
+
+# Create a Lucide icon
+icon = LucideIcon("home", size=32, color="red")
+
+# Use it in a button
+button = tk.Button(root, image=icon.image, text="Home", compound="left")
+button.pack()
+
+root.mainloop()
+```
+
+## API Reference
+
+### BootstrapIcon
+
+```python
+BootstrapIcon(name: str, size: int = 24, color: str = "black")
+```
+
+**Parameters:**
+- `name`: The name of the Bootstrap icon (e.g., "house", "search", "heart")
+- `size`: Size of the icon in pixels (default: 24)
+- `color`: Color of the icon (default: "black"). Accepts any valid Tkinter color string
+
+**Attributes:**
+- `image`: Returns the PhotoImage object that can be used in Tkinter widgets
+
+### LucideIcon
+
+```python
+LucideIcon(name: str, size: int = 24, color: str = "black")
+```
+
+**Parameters:**
+- `name`: The name of the Lucide icon (e.g., "home", "settings", "user")
+- `size`: Size of the icon in pixels (default: 24)
+- `color`: Color of the icon (default: "black"). Accepts any valid Tkinter color string
+
+**Attributes:**
+- `image`: Returns the PhotoImage object that can be used in Tkinter widgets
+
+## Available Icons
+
+- **Bootstrap Icons**: See the [Bootstrap Icons website](https://icons.getbootstrap.com/) for a full list of available icons
+- **Lucide Icons**: See the [Lucide Icons website](https://lucide.dev/) for a full list of available icons
+
+## Advanced Usage
+
+### Using Icons in Different Widgets
+
+```python
+from ttkbootstrap_icons import BootstrapIcon, LucideIcon
+import tkinter as tk
+
+root = tk.Tk()
+
+# In a Button
+icon1 = BootstrapIcon("gear", size=24, color="#333333")
+btn = tk.Button(root, image=icon1.image, text="Settings", compound="left")
+btn.pack()
+
+# In a Label
+icon2 = LucideIcon("alert-circle", size=48, color="orange")
+lbl = tk.Label(root, image=icon2.image)
+lbl.pack()
+
+# Keep references to avoid garbage collection
+root.icon1 = icon1
+root.icon2 = icon2
+
+root.mainloop()
+```
+
+### Transparent Icons
+
+You can create a transparent placeholder icon using the special name "none":
+
+```python
+transparent_icon = BootstrapIcon("none", size=24)
+```
+
+## Icon Previewer
+
+The package includes an interactive icon previewer application to browse all available icons.
+
+### Using the CLI Command
+
+After installing the package:
+
+```bash
+ttkbootstrap-icons
+```
+
+### Alternative Methods
+
+Run directly with Python:
+
+```bash
+python -m ttkbootstrap_icons.icon_previewer
+```
+
+For development (from the repository root):
+
+```bash
+pip install -e .
+ttkbootstrap-icons
+```
+
+**Features:**
+- Browse 2078+ Bootstrap icons or 1601+ Lucide icons
+- Real-time search filtering
+- Adjustable icon size (16-128px)
+- Color customization with presets
+- Virtual scrolling for smooth performance
+- Fixed 800x600 window
+
+**Controls:**
+- **Icon Set**: Switch between Bootstrap and Lucide icon sets
+- **Search**: Filter icons by name (case-insensitive)
+- **Size**: Adjust preview size from 16 to 128 pixels
+- **Color**: Enter any valid Tkinter color (hex codes, names, etc.)
+- **Color Presets**: Quick color selection buttons
+- **Click to Copy**: Click any icon to copy its name to clipboard
+
+Perfect for discovering the right icon for your project!
+
+## Using with PyInstaller
+
+This package includes built-in PyInstaller support. The icon assets (fonts and metadata) will be automatically included when you freeze your application.
+
+### Basic Usage
+
+```bash
+pip install pyinstaller
+pyinstaller --onefile your_app.py
+```
+
+### With Hook Directory (Automatic)
+
+The package includes a PyInstaller hook that automatically bundles the required assets. In most cases, PyInstaller will detect and use this hook automatically.
+
+### Manual Hook Configuration (If Needed)
+
+If the automatic detection doesn't work, you can manually specify the hook directory:
+
+```python
+# your_app.spec file or command line
+pyinstaller --additional-hooks-dir=path/to/site-packages/ttkbootstrap_icons/_pyinstaller your_app.py
+```
+
+Or in your `.spec` file:
+
+```python
+a = Analysis(
+    ['your_app.py'],
+    ...
+    hookspath=['path/to/site-packages/ttkbootstrap_icons/_pyinstaller'],
+    ...
+)
+```
+
+### Programmatic Hook Discovery
+
+```python
+from ttkbootstrap_icons._pyinstaller import get_hook_dirs
+
+# Use in your build script
+hook_dirs = get_hook_dirs()
+```
+
+### Testing Your Frozen Application
+
+After building with PyInstaller, test that icons load correctly:
+
+```bash
+./dist/your_app  # Linux/Mac
+dist\your_app.exe  # Windows
+```
+
+### Cleanup Temporary Files
+
+Icons create temporary font files. To clean them up when your app exits:
+
+```python
+import atexit
+from ttkbootstrap_icons.icon import Icon
+
+# Register cleanup on exit
+atexit.register(Icon.cleanup)
+```
+
+## Requirements
+
+- Python >= 3.10
+- Pillow >= 10
+
+## License
+
+MIT License - see LICENSE file for details
+
+## Author
+
+Israel Dryer (israel.dryer@gmail.com)
+
+## Links
+
+- [GitHub Repository](https://github.com/israel-dryer/ttkbootstrap-icons)
+- [Bootstrap Icons](https://icons.getbootstrap.com/)
+- [Lucide Icons](https://lucide.dev/)
+- [ttkbootstrap](https://ttkbootstrap.readthedocs.io/)

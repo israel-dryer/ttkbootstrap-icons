@@ -1,0 +1,2 @@
+[console_scripts]
+ttkbootstrap-icons = ttkbootstrap_icons.icon_previewer:main

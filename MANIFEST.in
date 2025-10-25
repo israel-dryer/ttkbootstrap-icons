@@ -1,0 +1,10 @@
+include README.md
+include LICENSE
+recursive-include src/ttkbootstrap_icons/assets *.ttf *.json
+recursive-include src/ttkbootstrap_icons/_pyinstaller *.py
+
+# Exclude examples and development files
+exclude example.py
+recursive-exclude examples *
+global-exclude *.pyc
+global-exclude __pycache__

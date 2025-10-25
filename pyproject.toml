@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=68", "setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ttkbootstrap-icons"
+dynamic = ["version"]
+description = "Use bootstrap icons in your tkinter application"
+readme = { file = "README.md", content-type = "text/markdown" }
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Israel Dryer", email = "israel.dryer@gmail.com" }
+]
+keywords = ["tkinter", "ttk", "bootstrap", "gui", "desktop", "python3",
+    "ui", "widgets", "theming", "cross-platform", "modern",
+    "responsive", "python-gui", "icon"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Win32 (MS Windows)",
+    "Environment :: X11 Applications :: GTK",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: User Interfaces",
+    "Operating System :: OS Independent"
+]
+dependencies = ["pillow>=10"]
+
+[project.scripts]
+ttkbootstrap-icons = "ttkbootstrap_icons.icon_previewer:main"
+
+[project.urls]
+Homepage = "https://github.com/israel-dryer/ttkbootstrap-icons"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+include-package-data = true
+license-files = ["LICENSE", "LICENSE.*"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+ttkbootstrap_icons = [
+    "assets/**/*",
+    "_pyinstaller/*.py"
+]
+
+[tool.setuptools_scm]
+version_file = "src/ttkbootstrap_icons/_version.py"
+fallback_version = "1.0.0"
