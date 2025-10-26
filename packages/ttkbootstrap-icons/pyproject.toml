@@ -30,10 +30,11 @@ classifiers = [
     "Topic :: Software Development :: User Interfaces",
     "Operating System :: OS Independent"
 ]
-dependencies = ["pillow>=9.0.0"]
+dependencies = ["pillow>=9.1.0"]
 
 [project.scripts]
 ttkbootstrap-icons = "ttkbootstrap_icons.icon_previewer:main"
+ttkicons-build-all = "ttkbootstrap_icons.tools.build_all:main"
 
 [project.urls]
 Homepage = "https://github.com/israel-dryer/ttkbootstrap-icons"

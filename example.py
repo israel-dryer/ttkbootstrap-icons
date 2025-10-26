@@ -8,7 +8,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from ttkbootstrap_icons import BootstrapIcon, LucideIcon
-from ttkbootstrap_icons.icon import Icon
+from ttkbootstrap_icons import Icon
 
 
 def main():

@@ -6,7 +6,7 @@ build/
 __pycache__/
 
 # Auto-generated version file
-src/ttkbootstrap_icons/_version.py
+packages/ttkbootstrap-icons/src/ttkbootstrap_icons/_version.py
 
 # IDE
 .vscode/

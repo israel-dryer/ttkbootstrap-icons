@@ -14,6 +14,11 @@ from tkinter import ttk
 
 from ttkbootstrap_icons import BootstrapIcon, LucideIcon
 from ttkbootstrap_icons.icon import Icon
+from ttkbootstrap_icons.providers import (
+    BuiltinBootstrapProvider,
+    BuiltinLucideProvider,
+)
+from ttkbootstrap_icons.registry import ProviderRegistry, load_external_providers
 
 
 class VirtualIconGrid:
@@ -275,23 +280,58 @@ class IconPreviewerApp:
         self._build_ui()
 
     def _load_icon_data(self):
-        """Load icon names from JSON files."""
-        assets = files("ttkbootstrap_icons.assets")
+        """Discover providers and load icon names dynamically."""
 
-        # Load Bootstrap icons
-        bootstrap_json = json.loads(
-            assets.joinpath("bootstrap.json").read_text(encoding="utf-8")
-        )
-        bootstrap_names = sorted(bootstrap_json.keys())
+        def extract_names(glyphmap):
+            if isinstance(glyphmap, dict):
+                # Dict of codepoints or dict of dicts
+                sample = next(iter(glyphmap.values())) if glyphmap else None
+                if isinstance(sample, dict):
+                    return sorted(glyphmap.keys())
+                return sorted(glyphmap.keys())
+            if isinstance(glyphmap, list):
+                # List of dicts with "name"
+                names = [g.get("name") for g in glyphmap if isinstance(g, dict) and g.get("name")]
+                return sorted({n for n in names if n})
+            return []
 
-        # Load Lucide icons
-        lucide_json = json.loads(assets.joinpath("lucide.json").read_text(encoding="utf-8"))
-        lucide_names = sorted(lucide_json.keys())
+        def make_icon_class(provider):
+            class _ProviderIcon(Icon):
+                def __init__(self, name: str, size: int = 24, color: str = "black"):
+                    Icon.initialize_with_provider(provider)
+                    super().__init__(name, size, color)
 
-        return {
-            "bootstrap": {"class": BootstrapIcon, "names": bootstrap_names},
-            "lucide": {"class": LucideIcon, "names": lucide_names},
+            return _ProviderIcon
+
+        # Seed with built-in providers
+        providers = {
+            "bootstrap": BuiltinBootstrapProvider(),
+            "lucide": BuiltinLucideProvider(),
         }
+
+        # Load external providers via entry points
+        registry = ProviderRegistry()
+        load_external_providers(registry)
+        for name in registry.names():
+            prov = registry.get_provider(name)
+            if prov and name not in providers:
+                providers[name] = prov
+
+        # Build data map
+        data = {}
+        for name, provider in providers.items():
+            try:
+                _, glyphmap_text = provider.load_assets()
+                glyphmap = json.loads(glyphmap_text)
+                names = extract_names(glyphmap)
+                if not names:
+                    continue
+                data[name] = {"class": make_icon_class(provider), "names": names}
+            except Exception:
+                # Ignore providers that fail to load
+                pass
+
+        return data
 
     def _build_ui(self):
         """Build the user interface."""
@@ -305,11 +345,12 @@ class IconPreviewerApp:
 
         ttk.Label(row1, text="Icon Set:", width=10).pack(side="left", padx=(0, 5))
 
-        self.icon_set_var = tk.StringVar(value="bootstrap")
+        first_key = next(iter(self.icon_data.keys()), "bootstrap")
+        self.icon_set_var = tk.StringVar(value=first_key)
         icon_set_combo = ttk.Combobox(
             row1,
             textvariable=self.icon_set_var,
-            values=["bootstrap", "lucide"],
+            values=list(self.icon_data.keys()),
             state="readonly",
             width=15,
         )
@@ -387,6 +428,7 @@ class IconPreviewerApp:
         grid_frame.pack(fill="both", expand=True, padx=10, pady=(0, 10))
 
         # Create virtual grid
+        # Pick initial set
         initial_data = self.icon_data[self.current_icon_set]
         self.grid = VirtualIconGrid(
             grid_frame,

@@ -7,6 +7,7 @@ from typing import Any, Optional
 
 from PIL import Image, ImageDraw, ImageFont
 from PIL.ImageTk import PhotoImage
+from .providers import BaseFontProvider
 
 _transparent_image_cache = {}
 
@@ -162,6 +163,24 @@ class Icon(ABC):
             tmp_font.write(font_data)
             font_path = tmp_font.name
 
+        icon_map = json.loads(json_text)
+        cls._configure(font_path=font_path, icon_map=icon_map)
+
+    @classmethod
+    def initialize_with_provider(cls, provider: BaseFontProvider):
+        """Initialize icon rendering using an external provider.
+
+        The provider supplies font bytes and a glyph map JSON. We write the
+        font to a temporary file and configure the renderer.
+        """
+        # Avoid re-loading if already initialized for this provider
+        if cls._initialized and cls._icon_set == provider.name:
+            return
+        cls._icon_set = provider.name
+        font_data, json_text = provider.load_assets()
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".ttf") as tmp_font:
+            tmp_font.write(font_data)
+            font_path = tmp_font.name
         icon_map = json.loads(json_text)
         cls._configure(font_path=font_path, icon_map=icon_map)
 

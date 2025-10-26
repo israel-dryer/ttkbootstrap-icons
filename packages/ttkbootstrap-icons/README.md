@@ -1,12 +1,13 @@
 # ttkbootstrap-icons
 
-A Python package for using Bootstrap Icons and Lucide Icons in your tkinter/ttkbootstrap applications.
+A Python package for using Bootstrap and Lucide icons in your tkinter/ttkbootstrap applications — now with plug-in providers (Font Awesome, Material, Ion, Remix, Fluent, Simple, Weather) available as optional subpackages.
 
 ![Icon Previewer](https://raw.githubusercontent.com/israel-dryer/ttkbootstrap-icons/main/examples/previewer.png)
 
 ## Features
 
-- **Two Icon Sets**: Access to both Bootstrap Icons and Lucide Icons
+- **Built-in Sets**: Bootstrap Icons and Lucide Icons
+- **Extensible Providers**: Install optional packages like Font Awesome, Material, Ion, Remix, Fluent, Simple, Weather
 - **Easy to Use**: Simple API for creating icons
 - **Customizable**: Adjust icon size and color on the fly
 - **Lightweight**: Uses icon fonts for efficient rendering
@@ -16,6 +17,18 @@ A Python package for using Bootstrap Icons and Lucide Icons in your tkinter/ttkb
 
 ```bash
 pip install ttkbootstrap-icons
+```
+
+Optional providers (install any you want):
+
+```bash
+pip install ttkbootstrap-icons-fa       # Font Awesome (Free)
+pip install ttkbootstrap-icons-mat      # Material Icons
+pip install ttkbootstrap-icons-ion      # Ion Icons
+pip install ttkbootstrap-icons-remix    # Remix Icons
+pip install ttkbootstrap-icons-fluent   # Fluent System Icons
+pip install ttkbootstrap-icons-simple   # Simple Icons
+pip install ttkbootstrap-icons-weather  # Weather Icons
 ```
 
 ## Quick Start
@@ -55,6 +68,34 @@ button.pack()
 
 root.mainloop()
 ```
+
+### Provider Icons (Font Awesome, Material, …)
+
+Install the provider package, then import and use its convenience icon class:
+
+```python
+import tkinter as tk
+from ttkbootstrap_icons_fa import FAIcon           # Font Awesome (Free)
+from ttkbootstrap_icons_mat import MatIcon         # Material Icons
+
+root = tk.Tk()
+
+fa = FAIcon("house", size=24, color="#0d6efd")
+mat = MatIcon("home", size=24, color="#dc3545")
+
+tk.Button(root, image=fa.image, text="FA House", compound="left").pack()
+tk.Button(root, image=mat.image, text="Mat Home", compound="left").pack()
+
+root.mainloop()
+```
+
+Other provider classes you can import similarly after installing their packages:
+
+- `from ttkbootstrap_icons_ion import IonIcon`
+- `from ttkbootstrap_icons_remix import RemixIcon`
+- `from ttkbootstrap_icons_fluent import FluentIcon`
+- `from ttkbootstrap_icons_simple import SimpleIcon`
+- `from ttkbootstrap_icons_weather import WeatherIcon`
 
 ## API Reference
 
@@ -225,7 +266,7 @@ python example.py
 
 ## Icon Previewer
 
-The package includes an interactive icon previewer application to browse all available icons.
+The package includes an interactive icon previewer application to browse all available icons. It automatically discovers any installed provider packages and adds them to the icon set list.
 
 ### Using the CLI Command
 
@@ -251,7 +292,7 @@ ttkbootstrap-icons
 ```
 
 **Features:**
-- Browse 2078+ Bootstrap icons or 1601+ Lucide icons
+- Browse built-in (Bootstrap, Lucide) and any installed provider sets
 - Real-time search filtering
 - Adjustable icon size (16-128px)
 - Color customization with presets
@@ -339,6 +380,36 @@ atexit.register(Icon.cleanup)
 
 - Python >= 3.10
 - Pillow >= 9.0.0
+
+## Maintainers
+
+The following tools are intended for library maintainers to (re)build provider assets (fonts + glyphmap). End users do not need these commands to use icons.
+
+- Build all installed providers using recommended presets:
+
+  - `ttkicons-build-all`
+  - Options:
+    - `--only fa ion remix` to limit which providers run
+    - `--dry-run` to list providers without building
+
+- Per‑provider quick builders (no parameters):
+
+  - `ttkicons-fa-quick` (Font Awesome 6 Free Solid)
+  - `ttkicons-mat-quick` (Material Design Icons webfont)
+  - `ttkicons-ion-quick` (Ionicons v2)
+  - `ttkicons-remix-quick` (Remix Icon)
+  - `ttkicons-fluent-quick` (Fluent System Icons Regular)
+  - `ttkicons-weather-quick` (Weather Icons)
+
+- Per‑provider full builders (custom sources):
+
+  - `ttkicons-fa-build --preset fa6-solid --version 6.5.2`
+  - `ttkicons-fa-build --font-url https://…/fa-solid-900.ttf --map-url https://…/metadata.json`
+
+Notes:
+- Builders write into each provider package directory under `fonts/` and `glyphmap.json`.
+- If no metadata JSON is supplied, glyph maps are derived from the TTF’s cmap and require `fonttools` (`pip install fonttools`).
+- Respect upstream licenses when downloading and distributing fonts and metadata.
 
 ## License
 
