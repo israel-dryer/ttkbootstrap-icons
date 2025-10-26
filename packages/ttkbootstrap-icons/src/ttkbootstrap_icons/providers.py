@@ -4,7 +4,7 @@ from abc import ABC
 from dataclasses import dataclass
 from importlib.resources import files
 from pathlib import Path
-from typing import Tuple
+from typing import Optional, Tuple
 
 
 @dataclass
@@ -23,7 +23,15 @@ class BaseFontProvider(ABC):
     font_filename: str
     glyphmap_filename: str
 
-    def load_assets(self) -> Tuple[bytes, str]:
+    def list_styles(self) -> list[str]:
+        """Return available style identifiers for this provider (if any)."""
+        return []
+
+    def get_default_style(self) -> str | None:
+        """Return the default style identifier, if any."""
+        return None
+
+    def load_assets(self, style: Optional[str] = None) -> Tuple[bytes, str]:
         """Return (font_bytes, glyphmap_json_text)."""
         pkg = files(self.package)
 
@@ -49,6 +57,31 @@ class BaseFontProvider(ABC):
         return font_bytes, glyphmap_json
 
 
+@dataclass
+class MultiStyleFontProvider(BaseFontProvider):
+    """Provider that supports multiple styles.
+
+    Set `styles` to a mapping of style -> relative TTF path (under the package).
+    If `style` is None, uses a `default_style`.
+    """
+
+    styles: dict
+    default_style: str = "regular"
+
+    def load_assets(self, style: Optional[str] = None) -> Tuple[bytes, str]:
+        chosen = (style or self.default_style).lower()
+        if chosen not in self.styles:
+            raise FileNotFoundError(f"Style '{chosen}' not found for provider '{self.name}'.")
+        self.font_filename = self.styles[chosen]
+        return super().load_assets(style=style)
+
+    def list_styles(self) -> list[str]:
+        return sorted(self.styles.keys())
+
+    def get_default_style(self) -> str | None:
+        return self.default_style
+
+
 class BuiltinBootstrapProvider(BaseFontProvider):
     def __init__(self) -> None:
         super().__init__(
@@ -67,4 +100,3 @@ class BuiltinLucideProvider(BaseFontProvider):
             font_filename="lucide.ttf",
             glyphmap_filename="lucide.json",
         )
-

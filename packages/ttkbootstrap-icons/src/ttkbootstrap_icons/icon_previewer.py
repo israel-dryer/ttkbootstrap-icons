@@ -24,13 +24,14 @@ from ttkbootstrap_icons.registry import ProviderRegistry, load_external_provider
 class VirtualIconGrid:
     """Virtual scrolling grid for displaying icons efficiently."""
 
-    def __init__(self, parent, icon_class, icon_names, icon_size=32, icon_color="black"):
+    def __init__(self, parent, icon_class, icon_names, icon_size=32, icon_color="black", icon_style=None):
         self.parent = parent
         self.icon_class = icon_class
         self.all_icon_names = icon_names
         self.filtered_icons = icon_names.copy()
         self.icon_size = icon_size
         self.icon_color = icon_color
+        self.icon_style = icon_style
 
         # Grid configuration
         self.gap = 18  # Gap between icons
@@ -146,7 +147,15 @@ class VirtualIconGrid:
 
             # Create icon
             try:
-                icon_obj = self.icon_class(icon_name, size=self.icon_size, color=self.icon_color)
+                # Pass style if supported by the icon class
+                try:
+                    icon_obj = self.icon_class(
+                        icon_name, size=self.icon_size, color=self.icon_color, style=self.icon_style
+                    )
+                except TypeError:
+                    icon_obj = self.icon_class(
+                        icon_name, size=self.icon_size, color=self.icon_color
+                    )
 
                 # Create canvas items
                 img_item = self.canvas.create_image(x, y, image=icon_obj.image)
@@ -235,6 +244,17 @@ class VirtualIconGrid:
         # Re-render
         self._render_visible_items()
 
+    def update_style(self, style):
+        """Update icon style variant (if provider supports it)."""
+        self.icon_style = style
+        Icon._cache.clear()
+        for idx in list(self.visible_items.keys()):
+            canvas_items, icon_obj = self.visible_items[idx]
+            for item in canvas_items:
+                self.canvas.delete(item)
+            del self.visible_items[idx]
+        self._render_visible_items()
+
     def change_icon_set(self, icon_class, icon_names):
         """Change the icon set being displayed."""
         self.icon_class = icon_class
@@ -297,8 +317,8 @@ class IconPreviewerApp:
 
         def make_icon_class(provider):
             class _ProviderIcon(Icon):
-                def __init__(self, name: str, size: int = 24, color: str = "black"):
-                    Icon.initialize_with_provider(provider)
+                def __init__(self, name: str, size: int = 24, color: str = "black", style=None):
+                    Icon.initialize_with_provider(provider, style=style)
                     super().__init__(name, size, color)
 
             return _ProviderIcon
@@ -326,7 +346,26 @@ class IconPreviewerApp:
                 names = extract_names(glyphmap)
                 if not names:
                     continue
-                data[name] = {"class": make_icon_class(provider), "names": names}
+                styles = []
+                default_style = None
+                # Probe for styles if the provider supports them
+                if hasattr(provider, "list_styles"):
+                    try:
+                        styles = provider.list_styles()  # type: ignore[attr-defined]
+                    except Exception:
+                        styles = []
+                if hasattr(provider, "get_default_style"):
+                    try:
+                        default_style = provider.get_default_style()  # type: ignore[attr-defined]
+                    except Exception:
+                        default_style = None
+
+                data[name] = {
+                    "class": make_icon_class(provider),
+                    "names": names,
+                    "styles": styles,
+                    "default_style": default_style,
+                }
             except Exception:
                 # Ignore providers that fail to load
                 pass
@@ -357,6 +396,13 @@ class IconPreviewerApp:
 
         icon_set_combo.pack(side="left", padx=(0, 20))
         icon_set_combo.bind("<<ComboboxSelected>>", self._on_icon_set_change)
+
+        # Style selection (conditionally enabled)
+        ttk.Label(row1, text="Style:").pack(side="left", padx=(0, 5))
+        self.style_var = tk.StringVar()
+        self.style_combo = ttk.Combobox(row1, textvariable=self.style_var, state="disabled", width=15)
+        self.style_combo.pack(side="left", padx=(0, 20))
+        self.style_combo.bind("<<ComboboxSelected>>", self._on_style_change)
 
         # Status label
         self.status_var = tk.StringVar(value="")
@@ -430,12 +476,24 @@ class IconPreviewerApp:
         # Create virtual grid
         # Pick initial set
         initial_data = self.icon_data[self.current_icon_set]
+        # Configure style control for initial set
+        styles = initial_data.get("styles", [])
+        default_style = initial_data.get("default_style")
+        if styles:
+            self.style_combo.configure(state="readonly", values=styles)
+            self.style_var.set(default_style or styles[0])
+            self.current_style = self.style_var.get()
+        else:
+            self.style_combo.configure(state="disabled", values=[])
+            self.style_var.set("")
+            self.current_style = None
         self.grid = VirtualIconGrid(
             grid_frame,
             initial_data["class"],
             initial_data["names"],
             self.current_size,
             self.current_color,
+            self.current_style,
         )
 
         # Update status
@@ -447,7 +505,21 @@ class IconPreviewerApp:
         if new_set != self.current_icon_set:
             self.current_icon_set = new_set
             data = self.icon_data[new_set]
+            # Update styles UI
+            styles = data.get("styles", [])
+            default_style = data.get("default_style")
+            if styles:
+                self.style_combo.configure(state="readonly", values=styles)
+                self.style_var.set(default_style or styles[0])
+                self.current_style = self.style_var.get()
+            else:
+                self.style_combo.configure(state="disabled", values=[])
+                self.style_var.set("")
+                self.current_style = None
+
             self.grid.change_icon_set(data["class"], data["names"])
+            # Apply style to grid
+            self.grid.update_style(self.current_style)
             self.search_var.set("")  # Clear search
             self._update_status()
 
@@ -482,6 +554,12 @@ class IconPreviewerApp:
 
         except (ValueError, tk.TclError):
             pass  # Ignore invalid values during typing
+
+    def _on_style_change(self, event=None):
+        style = self.style_var.get() or None
+        self.current_style = style
+        self.grid.update_style(style)
+        self._update_status()
 
     def _update_status(self):
         """Update status label."""
