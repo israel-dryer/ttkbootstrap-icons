@@ -412,7 +412,7 @@ class IconPreviewerApp:
 
         # Row 1: Icon Set, Size, Color, and Color Presets
         row1 = ttk.Frame(control_frame)
-        row1.pack(fill="x", pady=(0, 5))
+        row1.pack(fill="x", pady=(10, 5))
 
         ttk.Label(row1, text="Icon Set:", width=10).pack(side="left", padx=(0, 5))
 
@@ -426,7 +426,7 @@ class IconPreviewerApp:
             width=15,
         )
 
-        icon_set_combo.pack(side="left", padx=(0, 20))
+        icon_set_combo.pack(side="left", padx=(0, 20), fill='x', expand=True)
         icon_set_combo.bind("<<ComboboxSelected>>", self._on_icon_set_change)
 
         # Style selection (conditionally enabled)
