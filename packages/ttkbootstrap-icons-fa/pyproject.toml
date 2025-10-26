@@ -1,0 +1,36 @@
+[project]
+name = "ttkbootstrap-icons-fa"
+version = "0.1.0"
+description = "Font Awesome Free (font-based) provider for ttkbootstrap-icons"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Israel Dryer" }]
+dependencies = ["Pillow>=9.1", "ttkbootstrap-icons>=1.0.0"]
+
+# Font Awesome Free licensing:
+# - Fonts: SIL OFL 1.1
+# - Code (CSS/JS): MIT
+# - Icon designs: CC BY 4.0
+license = { file = "LICENSES/SIL-OFL-1.1.txt" }
+
+[project.urls]
+Homepage = "https://github.com/israel-dryer/ttkbootstrap-icons"
+
+# Auto-discovery hook for your base registry
+[project.entry-points."ttkbootstrap_icons.providers"]
+fa = "ttkbootstrap_icons_fa.provider:FontAwesomeFontProvider"
+
+[project.scripts]
+ttkicons-fa-build = "ttkbootstrap_icons_fa.tools.generate_assets:main"
+ttkicons-fa-quick = "ttkbootstrap_icons_fa.tools.generate_assets:default_main"
+
+[tool.setuptools.package-data]
+"ttkbootstrap_icons_fa" = ["fonts/*.ttf", "glyphmap.json"]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+include-package-data = true
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
