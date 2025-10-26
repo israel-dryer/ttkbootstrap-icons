@@ -31,6 +31,14 @@ def load_json(source: str) -> dict | list:
         return json.load(resp)
 
 
+def load_text(source: str) -> str:
+    p = Path(source)
+    if p.exists():
+        return p.read_text(encoding="utf-8")
+    with urllib.request.urlopen(source) as resp:  # nosec - executed by developer
+        return resp.read().decode("utf-8")
+
+
 def normalize_codepoint(value) -> int:
     if isinstance(value, int):
         return value
@@ -114,6 +122,86 @@ def glyphmap_from_ttf(ttf_path: Path) -> Dict[str, int]:
     return mapping
 
 
+def glyphmap_from_css(css_text: str, class_prefixes: Iterable[str] = ("ion-ios-", "ion-md-", "ion-",)) -> Dict[str, int]:
+    """Extract a glyph map from a CSS file with .class:before { content: "\fxxx" } rules.
+
+    This is useful for icon fonts like Ionicons v2 which distribute names via CSS.
+    """
+    mapping: Dict[str, int] = {}
+    # Build pattern for allowed prefixes
+    prefix_pat = "|".join(re.escape(p) for p in class_prefixes)
+    # Matches e.g.:
+    # .ion-alert:before { content: "\f101"; }
+    # .ion-alert::before{content:'\f101'}
+    # Allow single or double quotes, one backslash before hex
+    # Pattern 1: with quotes around the content value
+    pattern1 = re.compile(
+        rf"\.((?:{prefix_pat})[a-z0-9\-]+)::?before\s*\{{[^}}]*content\s*:\s*([\'\"])\\([0-9a-fA-F]+)\2",
+        re.IGNORECASE | re.DOTALL,
+    )
+    # Pattern 2: sometimes minifiers may drop quotes (rare). Support without quotes.
+    pattern2 = re.compile(
+        rf"\.((?:{prefix_pat})[a-z0-9\-]+)::?before\s*\{{[^}}]*content\s*:\s*\\([0-9a-fA-F]+)",
+        re.IGNORECASE | re.DOTALL,
+    )
+
+    matches = list(pattern1.finditer(css_text))
+    if not matches:
+        matches = list(pattern2.finditer(css_text))
+
+    for m in matches:
+        klass = m.group(1)
+        hexcp = m.group(2) if m.lastindex and m.lastindex >= 2 else m.group(m.lastindex)
+        # strip prefix to make shorter names (e.g., 'ion-alert' -> 'alert')
+        name = klass
+        for pref in class_prefixes:
+            if name.startswith(pref):
+                name = name[len(pref) :]
+                break
+        try:
+            code = int(hexcp, 16)
+            # Add both stripped and original class name for flexibility
+            mapping[name] = code
+            mapping[klass] = code
+        except Exception:
+            continue
+    if mapping:
+        return mapping
+
+    # Fallback parser: iterate CSS blocks and handle comma-separated selectors
+    block_re = re.compile(r"([^\{]+)\{([^\}]*)\}", re.DOTALL)
+    cp_re_quoted = re.compile(r"content\s*:\s*([\'\"])\\([0-9a-fA-F]+)\1", re.IGNORECASE)
+    cp_re_unquoted = re.compile(r"content\s*:\s*\\([0-9a-fA-F]+)", re.IGNORECASE)
+    sel_re = re.compile(rf"\.((?:{prefix_pat})[a-z0-9\-]+)::?before\s*$", re.IGNORECASE)
+
+    for m in block_re.finditer(css_text):
+        selectors = m.group(1)
+        body = m.group(2)
+        mcp = cp_re_quoted.search(body) or cp_re_unquoted.search(body)
+        if not mcp:
+            continue
+        hexcp = mcp.group(2)
+        for sel in selectors.split(','):
+            sel = sel.strip()
+            ms = sel_re.search(sel)
+            if not ms:
+                continue
+            klass = ms.group(1)
+            name = klass
+            for pref in class_prefixes:
+                if name.startswith(pref):
+                    name = name[len(pref) :]
+                    break
+            try:
+                code = int(hexcp, 16)
+                mapping[name] = code
+                mapping[klass] = code
+            except Exception:
+                continue
+
+    return mapping
+
+
 def write_glyphmap(path: Path, mapping: Dict[str, int]) -> None:
     # Write as a flat dict of name -> hex codepoint string
     data = {name: f"{code:04x}" for name, code in sorted(mapping.items())}
@@ -122,4 +210,3 @@ def write_glyphmap(path: Path, mapping: Dict[str, int]) -> None:
 
 def ensure_dir(p: Path) -> None:
     p.mkdir(parents=True, exist_ok=True)
-
