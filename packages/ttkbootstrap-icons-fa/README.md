@@ -18,9 +18,16 @@ from ttkbootstrap_icons_fa import FAIcon
 
 root = tk.Tk()
 
-icon = FAIcon("house", size=24, color="#0d6efd")
-btn = tk.Button(root, image=icon.image, text="FA House", compound="left")
-btn.pack()
+# Solid (default)
+solid = FAIcon("house", size=24, color="#0d6efd", style="solid")
+# Regular
+regular = FAIcon("house", size=24, color="#0d6efd", style="regular")
+# Brands
+brand = FAIcon("github", size=24, color="#0d6efd", style="brands")
+
+tk.Button(root, image=solid.image, text="Solid", compound="left").pack()
+tk.Button(root, image=regular.image, text="Regular", compound="left").pack()
+tk.Button(root, image=brand.image, text="Brand", compound="left").pack()
 
 root.mainloop()
 ```
@@ -43,3 +50,8 @@ ttkicons-fa-build --font-url ... --map-url https://example.com/metadata.json
 ```
 
 If you omit metadata, the tool attempts to derive the glyphmap from the TTF (requires `fonttools`).
+
+Styles
+- This provider supports `style` values: `solid` (default), `regular`, `brands`.
+- Ensure the following fonts are present in `fonts/` for full coverage:
+  - `fa-solid-900.ttf`, `fa-regular-400.ttf`, `fa-brands-400.ttf`

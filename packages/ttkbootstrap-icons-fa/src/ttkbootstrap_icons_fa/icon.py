@@ -3,6 +3,7 @@ from .provider import FontAwesomeFontProvider
 
 
 class FAIcon(Icon):
-    def __init__(self, name: str, size: int = 24, color: str = "black"):
-        FAIcon.initialize_with_provider(FontAwesomeFontProvider())
+    def __init__(self, name: str, size: int = 24, color: str = "black", style: str = "solid"):
+        # style: 'solid' | 'regular' | 'brands'
+        FAIcon.initialize_with_provider(FontAwesomeFontProvider(), style=style)
         super().__init__(name, size, color)
