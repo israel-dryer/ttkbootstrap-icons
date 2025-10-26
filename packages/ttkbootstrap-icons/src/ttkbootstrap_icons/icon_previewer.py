@@ -39,7 +39,7 @@ class VirtualIconGrid:
         self.gap = 18  # Gap between icons
         self.item_width = 120  # Width of each icon cell
         self.item_height = 100  # Height of each icon cell
-        self.canvas_width = 700  # Fixed canvas width
+        self.canvas_width = 830  # Fixed canvas width
         self.canvas_height = 480  # Fixed canvas height
 
         # Calculate columns
@@ -436,11 +436,6 @@ class IconPreviewerApp:
         self.style_combo.pack(side="left", padx=(0, 20))
         self.style_combo.bind("<<ComboboxSelected>>", self._on_style_change)
 
-        # Status label
-        self.status_var = tk.StringVar(value="")
-        status_label = ttk.Label(row1, textvariable=self.status_var, foreground="gray", font=("Arial", 8), anchor='w')
-        status_label.pack(side="left", fill='x', expand=True)
-
         ttk.Label(row1, text="Size:").pack(side="left", padx=(0, 5))
 
         self.size_var = tk.IntVar(value=32)
@@ -491,6 +486,17 @@ class IconPreviewerApp:
         search_entry = ttk.Entry(row2, textvariable=self.search_var, width=40)
         search_entry.pack(side="left", fill="x", expand=True)
         self.search_var.trace_add("write", self._on_search_change)
+
+        # Status label (icon count) to the right of search
+        self.status_var = tk.StringVar(value="")
+        status_label = ttk.Label(
+            row2,
+            textvariable=self.status_var,
+            foreground="gray",
+            font=("Arial", 8),
+            anchor="e",
+        )
+        status_label.pack(side="right", padx=(10, 0))
 
         # Row 3: Info and Status
         row3 = ttk.Frame(control_frame)
