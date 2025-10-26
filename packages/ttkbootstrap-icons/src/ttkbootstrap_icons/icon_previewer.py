@@ -6,13 +6,15 @@ virtual scrolling for performance.
 """
 
 import atexit
+import importlib
 import json
 import math
+import os
+import sys
 import tkinter as tk
-from importlib.resources import files
 from tkinter import ttk
 
-from ttkbootstrap_icons import BootstrapIcon, LucideIcon
+from ttkbootstrap_icons import BootstrapIcon
 from ttkbootstrap_icons.icon import Icon
 from ttkbootstrap_icons.providers import (
     BuiltinBootstrapProvider,
@@ -336,6 +338,36 @@ class IconPreviewerApp:
             prov = registry.get_provider(name)
             if prov and name not in providers:
                 providers[name] = prov
+
+        # Dev fallback: attempt to import known providers directly if not installed
+        # If running from a monorepo, add each provider's src dir to sys.path
+        try:
+            repo_packages_dir = os.path.join(os.getcwd(), "packages")
+            if os.path.isdir(repo_packages_dir):
+                for entry in os.listdir(repo_packages_dir):
+                    src_path = os.path.join(repo_packages_dir, entry, "src")
+                    if os.path.isdir(src_path) and src_path not in sys.path:
+                        sys.path.insert(0, src_path)
+        except Exception:
+            pass
+        dev_candidates = [
+            ("fa", "ttkbootstrap_icons_fa.provider", "FontAwesomeFontProvider"),
+            ("ion", "ttkbootstrap_icons_ion.provider", "IonFontProvider"),
+            ("remix", "ttkbootstrap_icons_remix.provider", "RemixFontProvider"),
+            ("fluent", "ttkbootstrap_icons_fluent.provider", "FluentFontProvider"),
+            ("simple", "ttkbootstrap_icons_simple.provider", "SimpleFontProvider"),
+            ("mat", "ttkbootstrap_icons_mat.provider", "MaterialFontProvider"),
+            ("weather", "ttkbootstrap_icons_weather.provider", "WeatherFontProvider"),
+        ]
+        for name, mod_path, cls_name in dev_candidates:
+            if name in providers:
+                continue
+            try:
+                mod = importlib.import_module(mod_path)
+                ProviderCls = getattr(mod, cls_name)
+                providers[name] = ProviderCls()
+            except Exception:
+                continue
 
         # Build data map
         data = {}
