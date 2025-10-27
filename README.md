@@ -265,7 +265,7 @@ ttkbootstrap-icons
 - **Color Presets**: Quick color selection buttons
 - **Click to Copy**: Click any icon to copy its name to clipboard
 
-![Icon Previewer](https://raw.githubusercontent.com/israel-dryer/ttkbootstrap-icons/main/examples/previewer.png)
+![Icon Previewer](https://raw.githubusercontent.com/israel-dryer/ttkbootstrap-icons/main/examples/previewer-2.png)
 
 Perfect for discovering the right icon for your project!
 
