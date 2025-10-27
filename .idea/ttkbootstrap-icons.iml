@@ -6,6 +6,7 @@
       <sourceFolder url="file://$MODULE_DIR$/packages/ttkbootstrap-icons-fluent/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/ttkbootstrap-icons-gmi/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/ttkbootstrap-icons-ion/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/ttkbootstrap-icons-lucide/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/ttkbootstrap-icons-mat/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/ttkbootstrap-icons-remix/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/ttkbootstrap-icons-simple/src" isTestSource="false" />
