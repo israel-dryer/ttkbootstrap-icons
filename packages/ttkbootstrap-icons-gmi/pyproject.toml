@@ -1,0 +1,32 @@
+[project]
+name = "ttkbootstrap-icons-gmi"
+version = "0.1.0"
+description = "Google Material Icons (baseline/outlined/round/sharp/twotone) provider for ttkbootstrap-icons"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Israel Dryer" }]
+dependencies = ["Pillow>=9.1", "ttkbootstrap-icons>=1.0.0"]
+
+license = "Apache-2.0"
+
+[project.urls]
+Homepage = "https://github.com/israel-dryer/ttkbootstrap-icons"
+
+[project.entry-points."ttkbootstrap_icons.providers"]
+gmi = "ttkbootstrap_icons_gmi.provider:GoogleMaterialProvider"
+
+[project.scripts]
+ttkicons-gmi-build = "ttkbootstrap_icons_gmi.tools.generate_assets:main"
+ttkicons-gmi-quick = "ttkbootstrap_icons_gmi.tools.generate_assets:default_main"
+
+[tool.setuptools.package-data]
+"ttkbootstrap_icons_gmi" = ["fonts/*.*", "glyphmap.json"]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+include-package-data = true
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
