@@ -58,7 +58,11 @@ Note: Your usage of upstream assets is governed by their respective licenses. Th
   - License: Apache 2.0
   - Subpackage: packages/ttkbootstrap-icons-gmi (see `src/ttkbootstrap_icons_gmi/LICENSES/`)
 
+- Devicon — package: `ttkbootstrap-icons-devicon`
+  - Source: https://github.com/devicons/devicon
+  - License: MIT
+  - Subpackage: packages/ttkbootstrap-icons-devicon (see `src/ttkbootstrap_icons_devicon/LICENSES/`)
+
 ---
 
 If you believe an upstream license or attribution is missing or incorrect, please open an issue with details and references.
-
