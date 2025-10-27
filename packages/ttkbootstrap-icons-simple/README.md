@@ -1,4 +1,4 @@
-# ttkbootstrap-icons-simple
+# Simple Icons (ttkbootstrap-icons-simple)
 
 Simple Icons provider for ttkbootstrap-icons.
 
@@ -9,6 +9,18 @@ pip install ttkbootstrap-icons-simple
 ```
 
 Requires `ttkbootstrap-icons` (installed automatically) and `Pillow`.
+
+## Info
+
+- Name: Simple Icons Font (community)
+- Icon Version (preset default): latest
+- Source: https://github.com/simple-icons/simple-icons-font
+
+## License and Attribution
+
+- Underlying icon set: Simple Icons — CC0 1.0 Universal (public domain) — https://simpleicons.org/
+- This font project: see the simple-icons-font repository for license details (often MIT for code)
+- Attribution: Simple Icons — https://simpleicons.org/
 
 ## Usage
 

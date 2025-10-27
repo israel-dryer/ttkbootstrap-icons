@@ -1,4 +1,4 @@
-# ttkbootstrap-icons-weather
+# Weather Icons (ttkbootstrap-icons-weather)
 
 Weather Icons provider for ttkbootstrap-icons.
 
@@ -9,6 +9,19 @@ pip install ttkbootstrap-icons-weather
 ```
 
 Requires `ttkbootstrap-icons` (installed automatically) and `Pillow`.
+
+## Info
+
+- Name: Weather Icons
+- Icon Version (preset default): 2.0.10
+- Source: https://erikflowers.github.io/weather-icons/ (CDN: https://cdnjs.com/libraries/weather-icons)
+
+## License and Attribution
+
+- Fonts: SIL Open Font License 1.1 (OFL-1.1)
+- Code: MIT License
+- Documentation: Creative Commons Attribution 3.0 (CC BY 3.0)
+- Attribution: Weather Icons by Erik Flowers — https://erikflowers.github.io/weather-icons/
 
 ## Usage
 

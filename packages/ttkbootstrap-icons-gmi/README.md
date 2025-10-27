@@ -1,4 +1,4 @@
-# ttkbootstrap-icons-gmi
+# Material Icons (ttkbootstrap-icons-gmi)
 
 Google Material Icons provider (baseline/outlined/round/sharp/twotone) for ttkbootstrap-icons.
 
@@ -9,6 +9,17 @@ pip install ttkbootstrap-icons-gmi
 ```
 
 Requires `ttkbootstrap-icons` and `Pillow`.
+
+## Info
+
+- Name: Material Icons
+- Icon Version (preset default): latest
+- Source: https://github.com/google/material-design-icons
+
+## License and Attribution
+
+- Icons and code: Apache License 2.0 (per material-design-icons repository)
+- Attribution: Google Material Icons — https://fonts.google.com/icons
 
 ## Usage
 
@@ -41,4 +52,3 @@ ttkicons-gmi-quick
 # Full builder
 ttkicons-gmi-build --preset gmi --version latest
 ```
-

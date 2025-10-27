@@ -1,4 +1,4 @@
-# ttkbootstrap-icons-mat
+# Material Design Icons (ttkbootstrap-icons-mat)
 
 Material Icons provider for ttkbootstrap-icons.
 
@@ -9,6 +9,17 @@ pip install ttkbootstrap-icons-mat
 ```
 
 Requires `ttkbootstrap-icons` (installed automatically) and `Pillow`.
+
+## Info
+
+- Name: Material Design Icons (MDI)
+- Icon Version (preset default): 7.4.47
+- Source: https://github.com/Templarian/MaterialDesign-Webfont (npm: @mdi/font)
+
+## License and Attribution
+
+- Icons and code: Apache License 2.0
+- Attribution: Material Design Icons — https://materialdesignicons.com/ and @mdi/font
 
 ## Usage
 

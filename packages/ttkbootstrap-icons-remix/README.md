@@ -1,4 +1,4 @@
-# ttkbootstrap-icons-remix
+# Remix Icon (ttkbootstrap-icons-remix)
 
 Remix Icons provider for ttkbootstrap-icons.
 
@@ -9,6 +9,17 @@ pip install ttkbootstrap-icons-remix
 ```
 
 Requires `ttkbootstrap-icons` (installed automatically) and `Pillow`.
+
+## Info
+
+- Name: Remix Icon
+- Icon Version (preset default): 3.5.0
+- Source: https://remixicon.com/ (npm: remixicon)
+
+## License and Attribution
+
+- Icons and code: Apache License 2.0
+- Attribution: Remix Icon — https://remixicon.com/
 
 ## Usage
 

@@ -1,4 +1,4 @@
-# ttkbootstrap-icons-fa
+# Font Awesome (ttkbootstrap-icons-fa)
 
 Font Awesome Free provider for ttkbootstrap-icons.
 
@@ -9,6 +9,19 @@ pip install ttkbootstrap-icons-fa
 ```
 
 Requires `ttkbootstrap-icons` (installed automatically) and `Pillow`.
+
+## Info
+
+- Name: Font Awesome Free
+- Icon Version (preset default): 6.5.2
+- Source: https://fontawesome.com/ (CDN: https://cdnjs.com/libraries/font-awesome)
+
+## License and Attribution
+
+- Fonts: SIL Open Font License 1.1 (OFL-1.1)
+- Code (CSS/JS): MIT License
+- Icon designs: Creative Commons Attribution 4.0 (CC BY 4.0)
+- Attribution: Font Awesome — https://fontawesome.com/
 
 ## Usage
 

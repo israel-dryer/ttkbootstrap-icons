@@ -1,4 +1,4 @@
-# ttkbootstrap-icons-ion
+# Ionicons (ttkbootstrap-icons-ion)
 
 Ion Icons provider for ttkbootstrap-icons.
 
@@ -9,6 +9,17 @@ pip install ttkbootstrap-icons-ion
 ```
 
 Requires `ttkbootstrap-icons` (installed automatically) and `Pillow`.
+
+## Info
+
+- Name: Ionicons v2 (font-based)
+- Icon Version (preset default): 2.0.1
+- Source: https://ionic.io/ionicons (CDN: https://cdnjs.com/libraries/ionicons)
+
+## License and Attribution
+
+- Icons and code: MIT License
+- Attribution: Ionicons — https://ionic.io/ionicons
 
 ## Usage
 

@@ -6,12 +6,92 @@ A Python package for using Bootstrap and Lucide icons in your tkinter/ttkbootstr
 
 ## Features
 
-- **Built-in Sets**: Bootstrap Icons and Lucide Icons
-- **Extensible Providers**: Install optional packages like Font Awesome, Material, Ion, Remix, Fluent, Simple, Weather
-- **Easy to Use**: Simple API for creating icons
-- **Customizable**: Adjust icon size and color on the fly
-- **Lightweight**: Uses icon fonts for efficient rendering
-- **Cross-Platform**: Works on Windows, macOS, and Linux
+- Built-in sets: Bootstrap Icons and Lucide Icons
+- Pluggable providers: Font Awesome, Material (MDI), Ionicons, Remix, Fluent, Simple, Weather
+- Style variants: Style-aware rendering for sets that provide them (e.g., Font Awesome solid/regular/brands; Fluent regular/filled/light; Google Material baseline/outlined/round/sharp/twotone)
+- Readable names: CSS-based name mapping for font sets (Ionicons, MDI, Remix, Weather, Simple) for human-friendly icon names in the previewer
+- Previewer: Auto-discovers installed providers, offers a Style combobox when available, fast virtual scroll, search, size and color controls, click-to-copy
+- Font-based rendering using Pillow; cross-platform (Windows/macOS/Linux)
+- PyInstaller support with included hook for bundling assets
+
+**Providers Summary**
+- [Bootstrap Icons](https://icons.getbootstrap.com/)
+  - Package: `ttkbootstrap-icons` (built-in)
+  - Styles: n/a
+  - Version: bundled
+  - Source: icons.getbootstrap.com
+  - License: MIT (code), OFL 1.1 (font)
+
+- [Fluent System Icons](https://github.com/israel-dryer/ttkbootstrap-icons/tree/main/packages/ttkbootstrap-icons-fluent)
+  - Package: `ttkbootstrap-icons-fluent`
+  - Install: `pip install ttkbootstrap-icons-fluent`
+  - Styles: regular, filled, light
+  - Preset version: 1.1.261 (example)
+  - Source: github.com/microsoft/fluentui-system-icons
+  - License: MIT
+
+- [Font Awesome Free](https://github.com/israel-dryer/ttkbootstrap-icons/tree/main/packages/ttkbootstrap-icons-fa)
+  - Package: `ttkbootstrap-icons-fa`
+  - Install: `pip install ttkbootstrap-icons-fa`
+  - Styles: solid, regular, brands
+  - Preset version: 6.5.2
+  - Source: fontawesome.com (CDNJS)
+  - License: OFL 1.1 (fonts), MIT (code), CC BY 4.0 (designs)
+
+- [Ionicons v2 (font)](https://github.com/israel-dryer/ttkbootstrap-icons/tree/main/packages/ttkbootstrap-icons-ion)
+  - Package: `ttkbootstrap-icons-ion`
+  - Install: `pip install ttkbootstrap-icons-ion`
+  - Styles: n/a (ios-/md- variants appear as friendly names in previewer)
+  - Preset version: 2.0.1
+  - Source: ionic.io/ionicons (CDNJS)
+  - License: MIT
+
+- [Lucide Icons](https://lucide.dev/)
+  - Package: `ttkbootstrap-icons` (built-in)
+  - Styles: n/a
+  - Version: bundled
+  - Source: lucide.dev
+  - License: ISC/MIT (project)
+
+- [Material Design Icons (MDI)](https://github.com/israel-dryer/ttkbootstrap-icons/tree/main/packages/ttkbootstrap-icons-mat)
+  - Package: `ttkbootstrap-icons-mat`
+  - Install: `pip install ttkbootstrap-icons-mat`
+  - Styles: n/a (outline/variants in names, e.g., home-outline)
+  - Preset version: 7.4.47
+  - Source: github.com/Templarian/MaterialDesign-Webfont
+  - License: Apache 2.0
+
+- [Material Icons (Google)](https://github.com/israel-dryer/ttkbootstrap-icons/tree/main/packages/ttkbootstrap-icons-gmi)
+  - Package: `ttkbootstrap-icons-gmi`
+  - Install: `pip install ttkbootstrap-icons-gmi`
+  - Styles: baseline, outlined, round, sharp, twotone
+  - Preset version: latest
+  - Source: github.com/google/material-design-icons
+  - License: Apache 2.0
+
+- [Remix Icon](https://github.com/israel-dryer/ttkbootstrap-icons/tree/main/packages/ttkbootstrap-icons-remix)
+  - Package: `ttkbootstrap-icons-remix`
+  - Install: `pip install ttkbootstrap-icons-remix`
+  - Styles: n/a
+  - Preset version: 3.5.0
+  - Source: remixicon.com
+  - License: Apache 2.0
+
+- [Simple Icons (community font)](https://github.com/israel-dryer/ttkbootstrap-icons/tree/main/packages/ttkbootstrap-icons-simple)
+  - Package: `ttkbootstrap-icons-simple`
+  - Install: `pip install ttkbootstrap-icons-simple`
+  - Styles: n/a
+  - Preset version: latest
+  - Source: github.com/simple-icons/simple-icons-font
+  - License: CC0 1.0 (underlying set), font project often MIT (see repo)
+
+- [Weather Icons](https://github.com/israel-dryer/ttkbootstrap-icons/tree/main/packages/ttkbootstrap-icons-weather)
+  - Package: `ttkbootstrap-icons-weather`
+  - Install: `pip install ttkbootstrap-icons-weather`
+  - Styles: n/a
+  - Preset version: 2.0.10
+  - Source: erikflowers.github.io/weather-icons (CDNJS)
+  - License: OFL 1.1 (font), MIT (code), CC BY 3.0 (docs)
 
 ## Installation
 

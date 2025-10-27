@@ -1,4 +1,4 @@
-# ttkbootstrap-icons-fluent
+# Fluent System Icons (ttkbootstrap-icons-fluent)
 
 Fluent System Icons provider for ttkbootstrap-icons.
 
@@ -9,6 +9,17 @@ pip install ttkbootstrap-icons-fluent
 ```
 
 Requires `ttkbootstrap-icons` (installed automatically) and `Pillow`.
+
+## Info
+
+- Name: Fluent System Icons
+- Icon Version (preset default): 1.1.261 (example)
+- Source: https://github.com/microsoft/fluentui-system-icons
+
+## License and Attribution
+
+- Icons and code: MIT License (per repository license)
+- Attribution: Microsoft Fluent UI System Icons — https://github.com/microsoft/fluentui-system-icons
 
 ## Usage
 
