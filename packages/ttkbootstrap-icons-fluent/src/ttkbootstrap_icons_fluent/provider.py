@@ -45,3 +45,10 @@ class FluentFontProvider(MultiStyleFontProvider):
             # Defer to base which will error meaningfully
             return super().load_assets(style=None)
         return super().load_assets(style=chosen)
+
+    def display_name(self) -> str:  # pragma: no cover
+        return "Fluent System Icons"
+
+    def style_display_name(self, style: str) -> str:  # pragma: no cover
+        mapping = {"regular": "Regular", "filled": "Filled", "light": "Light"}
+        return mapping.get(style, super().style_display_name(style))

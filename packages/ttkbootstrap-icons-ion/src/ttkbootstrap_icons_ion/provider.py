@@ -10,3 +10,5 @@ class IonFontProvider(BaseFontProvider):
     font_filename: str = ""
     glyphmap_filename: str = "glyphmap.json"
 
+    def display_name(self) -> str:  # pragma: no cover
+        return "Ionicons"

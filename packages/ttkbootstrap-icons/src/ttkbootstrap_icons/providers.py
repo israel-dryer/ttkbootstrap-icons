@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import ABC
 from dataclasses import dataclass
 from importlib.resources import files
+import os
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -23,6 +24,11 @@ class BaseFontProvider(ABC):
     font_filename: str
     glyphmap_filename: str
 
+    def display_name(self) -> str:
+        return getattr(self, "display", self.name)
+
+    def style_display_name(self, style: str) -> str:
+        return style.title()
     def list_styles(self) -> list[str]:
         """Return available style identifiers for this provider (if any)."""
         return []
@@ -35,22 +41,32 @@ class BaseFontProvider(ABC):
         """Return (font_bytes, glyphmap_json_text)."""
         pkg = files(self.package)
 
-        # Resolve font file: explicit filename or first .ttf in fonts/
+        # Resolve font file: explicit filename or first .ttf/.otf in fonts/
         if self.font_filename:
             font_path = pkg.joinpath(self.font_filename)
         else:
-            # Fallback: pick first .ttf under a fonts/ directory
-            candidates = list(pkg.rglob("*.ttf"))
+            # Fallback: pick first .ttf or .otf under package
+            candidates = list(pkg.rglob("*.ttf")) + list(pkg.rglob("*.otf"))
             if not candidates:
                 raise FileNotFoundError(
                     f"No font found for provider '{self.name}' in package '{self.package}'."
                 )
             font_path = candidates[0]
 
-        if not str(font_path).endswith(".ttf"):
-            raise FileNotFoundError(f"Invalid font path for provider '{self.name}': {font_path}")
+        # Ensure the file exists
+        try:
+            _ = font_path.read_bytes()
+        except Exception as e:
+            raise FileNotFoundError(f"Font not accessible for provider '{self.name}': {font_path}") from e
 
         glyphmap_path = pkg.joinpath(self.glyphmap_filename)
+
+        # Debug output for troubleshooting which font is being loaded
+        if os.environ.get("TTKICONS_DEBUG"):
+            try:
+                print(f"[ttkicons DEBUG] provider={self.name} style={style or ''} font={font_path}")
+            except Exception:
+                pass
 
         font_bytes = font_path.read_bytes()
         glyphmap_json = glyphmap_path.read_text(encoding="utf-8")
@@ -91,6 +107,9 @@ class BuiltinBootstrapProvider(BaseFontProvider):
             glyphmap_filename="bootstrap.json",
         )
 
+    def display_name(self) -> str:  # pragma: no cover
+        return "Bootstrap Icons"
+
 
 class BuiltinLucideProvider(BaseFontProvider):
     def __init__(self) -> None:
@@ -100,3 +119,6 @@ class BuiltinLucideProvider(BaseFontProvider):
             font_filename="lucide.ttf",
             glyphmap_filename="lucide.json",
         )
+
+    def display_name(self) -> str:  # pragma: no cover
+        return "Lucide Icons"

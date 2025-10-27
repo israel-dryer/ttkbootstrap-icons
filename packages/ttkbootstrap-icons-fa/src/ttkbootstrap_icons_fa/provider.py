@@ -19,3 +19,10 @@ class FontAwesomeFontProvider(MultiStyleFontProvider):
                 "regular": "fonts/fa-regular-400.ttf",
                 "brands": "fonts/fa-brands-400.ttf",
             }
+
+    def display_name(self) -> str:  # pragma: no cover
+        return "Font Awesome"
+
+    def style_display_name(self, style: str) -> str:  # pragma: no cover
+        mapping = {"solid": "Solid", "regular": "Regular", "brands": "Brands"}
+        return mapping.get(style, super().style_display_name(style))

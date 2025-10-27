@@ -290,12 +290,15 @@ class IconPreviewerApp:
         # Register cleanup
         atexit.register(Icon.cleanup)
 
+        # Enable debug to show which font file gets loaded during provider init
+        os.environ["TTKICONS_DEBUG"] = "1"
+
         # Load icon data
         self.icon_data = self._load_icon_data()
 
         # Current settings
         self.current_icon_set = "bootstrap"
-        self.current_size = 32
+        self.current_size = 64
         self.current_color = "black"
 
         # Build UI
@@ -305,21 +308,50 @@ class IconPreviewerApp:
         """Discover providers and load icon names dynamically."""
 
         def extract_names(glyphmap):
+            def dedup(names_iterable):
+                # Remove prefixed aliases if a stripped version exists
+                names = [str(x) for x in names_iterable]
+                prefixes = [
+                    "ion-ios-",
+                    "ion-md-",
+                    "ion-android-",
+                    "ion-",
+                    "wi-",
+                    "mdi-",
+                    "si-",
+                    "simple-icons-",
+                ]
+                name_set = set(names)
+                result = []
+                for n in sorted(name_set):
+                    low = n.lower()
+                    skip = False
+                    for p in prefixes:
+                        if low.startswith(p):
+                            stripped = low[len(p) :]
+                            # If the stripped version exists (exactly), prefer it
+                            if stripped in name_set:
+                                skip = True
+                                break
+                    if not skip:
+                        result.append(n)
+                return sorted(result)
+
             if isinstance(glyphmap, dict):
                 # Dict of codepoints or dict of dicts
                 sample = next(iter(glyphmap.values())) if glyphmap else None
                 if isinstance(sample, dict):
-                    return sorted(glyphmap.keys())
-                return sorted(glyphmap.keys())
+                    return dedup(glyphmap.keys())
+                return dedup(glyphmap.keys())
             if isinstance(glyphmap, list):
                 # List of dicts with "name"
                 names = [g.get("name") for g in glyphmap if isinstance(g, dict) and g.get("name")]
-                return sorted({n for n in names if n})
+                return dedup({n for n in names if n})
             return []
 
         def make_icon_class(provider):
             class _ProviderIcon(Icon):
-                def __init__(self, name: str, size: int = 24, color: str = "black", style=None):
+                def __init__(self, name: str, size: int = 64, color: str = "black", style=None):
                     Icon.initialize_with_provider(provider, style=style)
                     super().__init__(name, size, color)
 
@@ -358,6 +390,7 @@ class IconPreviewerApp:
             ("simple", "ttkbootstrap_icons_simple.provider", "SimpleFontProvider"),
             ("mat", "ttkbootstrap_icons_mat.provider", "MaterialFontProvider"),
             ("weather", "ttkbootstrap_icons_weather.provider", "WeatherFontProvider"),
+            ("gmi", "ttkbootstrap_icons_gmi.provider", "GoogleMaterialProvider"),
         ]
         for name, mod_path, cls_name in dev_candidates:
             if name in providers:
@@ -379,6 +412,7 @@ class IconPreviewerApp:
                 if not names:
                     continue
                 styles = []
+                style_labels = []
                 default_style = None
                 # Probe for styles if the provider supports them
                 if hasattr(provider, "list_styles"):
@@ -391,11 +425,19 @@ class IconPreviewerApp:
                         default_style = provider.get_default_style()  # type: ignore[attr-defined]
                     except Exception:
                         default_style = None
+                # Build style display labels
+                if styles:
+                    try:
+                        style_labels = [provider.style_display_name(s) for s in styles]
+                    except Exception:
+                        style_labels = [s.title() for s in styles]
 
                 data[name] = {
                     "class": make_icon_class(provider),
                     "names": names,
                     "styles": styles,
+                    "style_labels": style_labels,
+                    "display": provider.display_name(),
                     "default_style": default_style,
                 }
             except Exception:
@@ -417,11 +459,14 @@ class IconPreviewerApp:
         ttk.Label(row1, text="Icon Set:", width=10).pack(side="left", padx=(0, 5))
 
         first_key = next(iter(self.icon_data.keys()), "bootstrap")
-        self.icon_set_var = tk.StringVar(value=first_key)
+        # Map display names to internal keys
+        self.icon_set_map = {v.get("display", k): k for k, v in self.icon_data.items()}
+        first_display = self.icon_set_map.keys().__iter__().__next__()
+        self.icon_set_var = tk.StringVar(value=first_display)
         icon_set_combo = ttk.Combobox(
             row1,
             textvariable=self.icon_set_var,
-            values=list(self.icon_data.keys()),
+            values=list(self.icon_set_map.keys()),
             state="readonly",
             width=15,
         )
@@ -438,7 +483,7 @@ class IconPreviewerApp:
 
         ttk.Label(row1, text="Size:").pack(side="left", padx=(0, 5))
 
-        self.size_var = tk.IntVar(value=32)
+        self.size_var = tk.IntVar(value=64)
         size_spinbox = ttk.Spinbox(
             row1, from_=16, to=128, textvariable=self.size_var, width=8, command=self._on_settings_change
         )
@@ -516,11 +561,21 @@ class IconPreviewerApp:
         initial_data = self.icon_data[self.current_icon_set]
         # Configure style control for initial set
         styles = initial_data.get("styles", [])
+        style_labels = initial_data.get("style_labels", [])
+        # Build style label -> style id map for current set
+        self.style_label_map = dict(zip(style_labels, styles)) if styles else {}
         default_style = initial_data.get("default_style")
         if styles:
-            self.style_combo.configure(state="readonly", values=styles)
-            self.style_var.set(default_style or styles[0])
-            self.current_style = self.style_var.get()
+            values = style_labels or styles
+            self.style_combo.configure(state="readonly", values=values)
+            default_label = None
+            if default_style and style_labels:
+                try:
+                    default_label = style_labels[styles.index(default_style)]
+                except Exception:
+                    default_label = None
+            self.style_var.set(default_label or (values[0] if values else ""))
+            self.current_style = self.style_label_map.get(self.style_var.get(), self.style_var.get())
         else:
             self.style_combo.configure(state="disabled", values=[])
             self.style_var.set("")
@@ -539,17 +594,27 @@ class IconPreviewerApp:
 
     def _on_icon_set_change(self, event=None):
         """Handle icon set change."""
-        new_set = self.icon_set_var.get()
+        new_set_display = self.icon_set_var.get()
+        new_set = self.icon_set_map.get(new_set_display, self.current_icon_set)
         if new_set != self.current_icon_set:
             self.current_icon_set = new_set
             data = self.icon_data[new_set]
             # Update styles UI
             styles = data.get("styles", [])
+            style_labels = data.get("style_labels", [])
+            self.style_label_map = dict(zip(style_labels, styles)) if styles else {}
             default_style = data.get("default_style")
             if styles:
-                self.style_combo.configure(state="readonly", values=styles)
-                self.style_var.set(default_style or styles[0])
-                self.current_style = self.style_var.get()
+                values = style_labels or styles
+                self.style_combo.configure(state="readonly", values=values)
+                default_label = None
+                if default_style and style_labels:
+                    try:
+                        default_label = style_labels[styles.index(default_style)]
+                    except Exception:
+                        default_label = None
+                self.style_var.set(default_label or (values[0] if values else ""))
+                self.current_style = self.style_label_map.get(self.style_var.get(), self.style_var.get())
             else:
                 self.style_combo.configure(state="disabled", values=[])
                 self.style_var.set("")
@@ -594,7 +659,8 @@ class IconPreviewerApp:
             pass  # Ignore invalid values during typing
 
     def _on_style_change(self, event=None):
-        style = self.style_var.get() or None
+        label = self.style_var.get()
+        style = self.style_label_map.get(label, label) or None
         self.current_style = style
         self.grid.update_style(style)
         self._update_status()
