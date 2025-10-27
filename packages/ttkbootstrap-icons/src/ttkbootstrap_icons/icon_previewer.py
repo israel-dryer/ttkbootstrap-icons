@@ -18,7 +18,6 @@ from ttkbootstrap_icons import BootstrapIcon
 from ttkbootstrap_icons.icon import Icon
 from ttkbootstrap_icons.providers import (
     BuiltinBootstrapProvider,
-    BuiltinLucideProvider,
 )
 from ttkbootstrap_icons.registry import ProviderRegistry, load_external_providers
 
@@ -360,7 +359,7 @@ class IconPreviewerApp:
         # Seed with built-in providers
         providers = {
             "bootstrap": BuiltinBootstrapProvider(),
-            "lucide": BuiltinLucideProvider(),
+            
         }
 
         # Load external providers via entry points
@@ -692,3 +691,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+

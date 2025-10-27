@@ -1,0 +1,32 @@
+[project]
+name = "ttkbootstrap-icons-lucide"
+version = "0.1.0"
+description = "Lucide Icons provider for ttkbootstrap-icons"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Israel Dryer" }]
+dependencies = ["Pillow>=9.1", "ttkbootstrap-icons>=1.0.0"]
+
+license = "ISC"
+
+[project.urls]
+Homepage = "https://github.com/israel-dryer/ttkbootstrap-icons"
+
+[project.entry-points."ttkbootstrap_icons.providers"]
+lucide = "ttkbootstrap_icons_lucide.provider:LucideFontProvider"
+
+[project.scripts]
+ttkicons-lucide-build = "ttkbootstrap_icons_lucide.tools.generate_assets:main"
+ttkicons-lucide-quick = "ttkbootstrap_icons_lucide.tools.generate_assets:default_main"
+
+[tool.setuptools.package-data]
+"ttkbootstrap_icons_lucide" = ["fonts/*.*", "glyphmap.json"]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+include-package-data = true
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
