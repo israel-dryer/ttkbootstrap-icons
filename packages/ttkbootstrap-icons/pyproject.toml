@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ttkbootstrap-icons"
 dynamic = ["version"]
-description = "Use bootstrap icons in your tkinter application"
+description = "Font-based icons for Tkinter/ttkbootstrap with a built-in Bootstrap set and installable providers: Font Awesome, Material, Ionicons, Remix, Fluent, Simple, Weather, Lucide."
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.10"
 license = { file = "LICENSE" }

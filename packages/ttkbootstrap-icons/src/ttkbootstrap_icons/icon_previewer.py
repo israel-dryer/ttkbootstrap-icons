@@ -289,9 +289,6 @@ class IconPreviewerApp:
         # Register cleanup
         atexit.register(Icon.cleanup)
 
-        # Enable debug to show which font file gets loaded during provider init
-        os.environ["TTKICONS_DEBUG"] = "1"
-
         # Load icon data
         self.icon_data = self._load_icon_data()
 
