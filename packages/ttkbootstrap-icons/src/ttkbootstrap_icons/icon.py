@@ -129,7 +129,10 @@ class Icon(ABC):
         if not glyph:
             raise ValueError(f"Icon '{self.name}' not found in icon map.")
 
-        font = ImageFont.truetype(self._font_path, self.size)
+        # Add an internal padding to reduce edge clipping for fonts with tight bearings
+        pad = max(1, int(self.size * 0.10))
+        eff_size = max(1, self.size - 2 * pad)
+        font = ImageFont.truetype(self._font_path, eff_size)
 
         bbox = font.getbbox(glyph)
         glyph_w, glyph_h = bbox[2] - bbox[0], bbox[3] - bbox[1]
@@ -140,8 +143,12 @@ class Icon(ABC):
         img = Image.new("RGBA", (canvas_size, canvas_size), (255, 255, 255, 0))
         draw = ImageDraw.Draw(img)
 
-        dx = (canvas_size - glyph_w) // 2 - bbox[0]
-        dy = (canvas_size - full_height) // 2 + (ascent - bbox[3])
+        # Constrain layout to an inner box with padding on all sides
+        inner_w = canvas_size - 2 * pad
+        inner_h = canvas_size - 2 * pad
+
+        dx = pad + (inner_w - glyph_w) // 2 - bbox[0]
+        dy = pad + (inner_h - full_height) // 2 + (ascent - bbox[3])
 
         draw.text((dx, dy), glyph, font=font, fill=self.color)
 

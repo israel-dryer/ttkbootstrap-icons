@@ -458,15 +458,20 @@ class IconPreviewerApp:
 
         ttk.Label(row1, text="Icon Set:", width=10).pack(side="left", padx=(0, 5))
 
-        first_key = next(iter(self.icon_data.keys()), "bootstrap")
-        # Map display names to internal keys
+        # Build mapping of display name -> internal key, and sort by display name
         self.icon_set_map = {v.get("display", k): k for k, v in self.icon_data.items()}
-        first_display = self.icon_set_map.keys().__iter__().__next__()
-        self.icon_set_var = tk.StringVar(value=first_display)
+        sorted_displays = sorted(self.icon_set_map.keys(), key=str.casefold)
+        # Ensure the combobox reflects the current icon set's display name
+        current_display = None
+        try:
+            current_display = next(d for d, key in self.icon_set_map.items() if key == self.current_icon_set)
+        except StopIteration:
+            current_display = sorted_displays[0] if sorted_displays else ""
+        self.icon_set_var = tk.StringVar(value=current_display)
         icon_set_combo = ttk.Combobox(
             row1,
             textvariable=self.icon_set_var,
-            values=list(self.icon_set_map.keys()),
+            values=sorted_displays,
             state="readonly",
             width=15,
         )
