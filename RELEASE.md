@@ -41,48 +41,55 @@ git push origin main
 git push origin v1.0.0
 ```
 
-#### 2. Build the Package
+#### 2. Build and Publish a Package
 
-**Option A: Using the build script (Windows)**
+Use the new PowerShell helper to build and publish a specific package (base or provider):
+
 ```powershell
-# Test upload to TestPyPI
-.\build_and_publish.ps1 -Mode test
+# Syntax
+./publish.ps1 <package> [-Dev]
 
-# Production upload to PyPI
-.\build_and_publish.ps1 -Mode prod
+# Examples
+# Publish to PyPI
+./publish.ps1 ttkbootstrap-icons             # base package (Bootstrap built-in)
+./publish.ps1 ttkbootstrap-icons-fa          # Font Awesome provider
+./publish.ps1 fluent                         # resolves to packages/ttkbootstrap-icons-fluent
+
+# Publish to TestPyPI
+./publish.ps1 ttkbootstrap-icons-remix -Dev
 ```
 
-**Option B: Using the build script (Linux/Mac)**
-```bash
-# Test upload to TestPyPI
-./build_and_publish.sh test
+Prereqs:
+- Set an API token in your environment before running:
+  - `$env:TWINE_PASSWORD = 'pypi-xxxxxxxxxxxxxxxxxxxxx'`
+- `TWINE_USERNAME` defaults to `__token__`.
+- Requires `python -m pip install build twine`.
 
-# Production upload to PyPI
-./build_and_publish.sh prod
-```
-
-**Option C: Manual build and upload**
+**Manual build and upload (alternative)**
 ```bash
 # Clean previous builds
-rm -rf dist/ build/ src/*.egg-info
+rm -rf dist/ build/ *.egg-info
 
 # Build
 python -m build
 
 # Upload to TestPyPI (optional)
-python -m twine upload --repository testpypi dist/*
+twine upload --repository testpypi dist/*
 
 # Upload to PyPI
-python -m twine upload dist/*
+twine upload dist/*
 ```
 
 #### 3. Verify the Release
 
-1. Check PyPI: https://pypi.org/project/ttkbootstrap-icons/
+1. Check PyPI/TestPyPI for the package you published (base or provider):
+   - Base: https://pypi.org/project/ttkbootstrap-icons/
+   - Example provider: https://pypi.org/project/ttkbootstrap-icons-fa/
 2. Test installation:
    ```bash
    pip install --upgrade ttkbootstrap-icons
-   ttkbootstrap-icons  # Test CLI
+   pip install --upgrade ttkbootstrap-icons-fa   # example
+   ttkbootstrap-icons  # Test previewer CLI (auto-discovers installed providers)
    ```
 
 ### Version Numbering
@@ -112,7 +119,7 @@ This project uses `setuptools-scm` for automatic versioning based on git tags.
 - **Solution:** Make sure you've created a git tag and pushed it
 
 **Issue:** Files missing from package
-- **Solution:** Check `MANIFEST.in` and `pyproject.toml` package-data settings
+- **Solution:** Verify `[tool.setuptools.package-data]` in the package's `pyproject.toml` includes fonts, glyphmap.json, and LICENSES/*.
 
 ### Rolling Back a Release
 
@@ -151,3 +158,9 @@ password = pypi-AgENdGVzdC5weXBpLm9yZwI...your-test-token-here
 ```
 
 **Security:** Keep this file private! Add to `.gitignore`.
+
+---
+
+Notes:
+- Each provider package ships upstream license files under `LICENSES/` and documents attribution in its README.
+- The base package includes PyInstaller hooks for all providers; freezing apps will bundle provider assets when providers are installed.
