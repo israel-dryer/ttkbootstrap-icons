@@ -122,107 +122,9 @@ You can create a transparent placeholder icon using the special name "none":
 transparent_icon = BootstrapIcon("none", size=24)
 ```
 
-## Examples
-
-The repository includes example applications demonstrating various use cases. These are available in
-the [examples directory](https://github.com/israel-dryer/ttkbootstrap-icons/tree/main/examples) on GitHub.
-
-### Basic Example
-
-A simple application showing both Bootstrap and Lucide icons in buttons:
-
-```python
-import atexit
-import tkinter as tk
-from tkinter import ttk
-
-from ttkbootstrap_icons import BootstrapIcon, LucideIcon
-from ttkbootstrap_icons import Icon
-
-
-def main():
-    # Register cleanup to remove temporary font files on exit
-    atexit.register(Icon.cleanup)
-
-    root = tk.Tk()
-    root.title("ttkbootstrap-icons Example")
-
-    # Title
-    title = tk.Label(root, text="Icon Examples", font=("Arial", 16, "bold"))
-    title.pack(pady=10)
-
-    # Bootstrap Icons
-    frame1 = ttk.LabelFrame(root, text="Bootstrap Icons", padding=10)
-    frame1.pack(fill="x", padx=20, pady=10)
-
-    icons = [
-        ("house", "Home"),
-        ("gear", "Settings"),
-        ("heart", "Favorite"),
-        ("search", "Search"),
-    ]
-
-    for icon_name, label_text in icons:
-        icon = BootstrapIcon(icon_name, size=24, color="#0d6efd")
-        btn = tk.Button(
-            frame1, image=icon.image, text=label_text, compound="left", width=120
-        )
-        btn.pack(side="left", padx=5)
-        # Keep reference to prevent garbage collection
-        btn.icon = icon
-
-    # Lucide Icons
-    frame2 = ttk.LabelFrame(root, text="Lucide Icons", padding=10)
-    frame2.pack(fill="x", padx=20, pady=10)
-
-    lucide_icons = [
-        ("house", "Home"),
-        ("settings", "Settings"),
-        ("user", "User"),
-        ("bell", "Notifications"),
-    ]
-
-    for icon_name, label_text in lucide_icons:
-        icon = LucideIcon(icon_name, size=24, color="#dc3545")
-        btn = tk.Button(
-            frame2, image=icon.image, text=label_text, compound="left", width=120
-        )
-        btn.pack(side="left", padx=5)
-        # Keep reference to prevent garbage collection
-        btn.icon = icon
-
-    # Info
-    info = tk.Label(
-        root,
-        text="Icons are rendered from fonts and can be any size/color!",
-        font=("Arial", 9),
-        fg="gray",
-    )
-    info.pack(pady=20)
-
-    root.mainloop()
-
-
-if __name__ == "__main__":
-    main()
-```
-
-![Example Application](https://raw.githubusercontent.com/israel-dryer/ttkbootstrap-icons/main/examples/example.png)
-
-### Running Examples Locally
-
-Clone the repository and run the examples:
-
-```bash
-git clone https://github.com/israel-dryer/ttkbootstrap-icons.git
-cd ttkbootstrap-icons
-pip install -e .
-python example.py
-```
-
 ## Icon Previewer
 
-The package includes an interactive icon previewer application to browse all available icons.
+Browse installed icon sets with search, styles, size and color controls. The previewer auto‑discovers any provider packages you have installed.
 
 ### Using the CLI Command
 
@@ -232,38 +134,25 @@ After installing the package:
 ttkbootstrap-icons
 ```
 
-### Alternative Methods
-
-Run directly with Python:
-
-```bash
-python -m ttkbootstrap_icons.icon_previewer
-```
-
-For development (from the repository root):
-
-```bash
-pip install -e .
-ttkbootstrap-icons
-```
-
 **Features:**
 
-- Browse 2078+ Bootstrap icons or 1601+ Lucide icons
-- Real-time search filtering
-- Adjustable icon size (16-128px)
+- Shows all installed providers (Bootstrap built‑in; others optional)
+- Style selector for sets that provide variants (e.g., FA, Fluent, Material Icons)
+- Real‑time search filtering
+- Adjustable icon size (16–128 px)
 - Color customization with presets
 - Virtual scrolling for smooth performance
-- Fixed 800x600 window
+- Fixed window for consistent layout
 
 **Controls:**
 
-- **Icon Set**: Switch between Bootstrap and Lucide icon sets
-- **Search**: Filter icons by name (case-insensitive)
-- **Size**: Adjust preview size from 16 to 128 pixels
-- **Color**: Enter any valid Tkinter color (hex codes, names, etc.)
-- **Color Presets**: Quick color selection buttons
-- **Click to Copy**: Click any icon to copy its name to clipboard
+- Icon Set: Choose among installed icon sets
+- Style: Select a style variant when available
+- Search: Filter icons by name (case‑insensitive)
+- Size: Set preview size
+- Color: Enter any Tkinter color (hex, names)
+- Presets: Quick color buttons
+- Click to Copy: Click any icon to copy its name
 
 ![Icon Previewer](https://raw.githubusercontent.com/israel-dryer/ttkbootstrap-icons/main/examples/previewer-2.png)
 
