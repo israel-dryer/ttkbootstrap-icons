@@ -11,7 +11,7 @@ dependencies = ["Pillow>=9.1", "ttkbootstrap-icons>=1.0.0"]
 # - Fonts: SIL OFL 1.1
 # - Code (CSS/JS): MIT
 # - Icon designs: CC BY 4.0
-license = { file = "LICENSES/SIL-OFL-1.1.txt" }
+license = "MIT"
 
 [project.urls]
 Homepage = "https://github.com/israel-dryer/ttkbootstrap-icons"
@@ -25,7 +25,7 @@ ttkicons-fa-build = "ttkbootstrap_icons_fa.tools.generate_assets:main"
 ttkicons-fa-quick = "ttkbootstrap_icons_fa.tools.generate_assets:default_main"
 
 [tool.setuptools.package-data]
-"ttkbootstrap_icons_fa" = ["fonts/*.ttf", "glyphmap.json"]
+"ttkbootstrap_icons_fa" = ["fonts/*.ttf", "glyphmap.json", "LICENSES/*"]
 
 [tool.setuptools]
 package-dir = { "" = "src" }
@@ -34,3 +34,5 @@ include-package-data = true
 [build-system]
 requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
+
+

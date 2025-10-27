@@ -7,7 +7,7 @@ requires-python = ">=3.10"
 authors = [{ name = "Israel Dryer" }]
 dependencies = ["Pillow>=9.1", "ttkbootstrap-icons>=1.0.0"]
 
-license = "ISC"
+license = "MIT"
 
 [project.urls]
 Homepage = "https://github.com/israel-dryer/ttkbootstrap-icons"
@@ -29,4 +29,5 @@ include-package-data = true
 [build-system]
 requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
+
 

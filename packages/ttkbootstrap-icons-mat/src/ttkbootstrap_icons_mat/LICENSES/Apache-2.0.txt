@@ -1,0 +1,13 @@
+Apache License, Version 2.0
+
+This package redistributes Material Design Icons (MDI) webfont under the Apache License 2.0.
+
+Full text: https://www.apache.org/licenses/LICENSE-2.0
+
+TERMS (summary)
+- Use, reproduce, and distribute in source or binary, with or without modification.
+- Include a copy of the license and a NOTICE if provided by upstream.
+- Provide attribution notices in documentation and/or other materials.
+
+For the complete terms, refer to the official text at the link above.
+

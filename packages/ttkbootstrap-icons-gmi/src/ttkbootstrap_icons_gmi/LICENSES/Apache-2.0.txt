@@ -1,0 +1,6 @@
+Apache License, Version 2.0
+
+This package redistributes Google Material Icons (Material Design Icons) under the Apache License 2.0.
+
+Full text: https://www.apache.org/licenses/LICENSE-2.0
+

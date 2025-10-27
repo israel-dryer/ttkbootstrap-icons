@@ -7,7 +7,7 @@ requires-python = ">=3.10"
 authors = [{ name = "Israel Dryer" }]
 dependencies = ["Pillow>=9.1", "ttkbootstrap-icons>=1.0.0"]
 
-license = "Apache-2.0"
+license = "MIT"
 
 [project.urls]
 Homepage = "https://github.com/israel-dryer/ttkbootstrap-icons"
@@ -20,7 +20,7 @@ ttkicons-gmi-build = "ttkbootstrap_icons_gmi.tools.generate_assets:main"
 ttkicons-gmi-quick = "ttkbootstrap_icons_gmi.tools.generate_assets:default_main"
 
 [tool.setuptools.package-data]
-"ttkbootstrap_icons_gmi" = ["fonts/*.*", "glyphmap.json"]
+"ttkbootstrap_icons_gmi" = ["fonts/*.*", "glyphmap.json", "LICENSES/*"]
 
 [tool.setuptools]
 package-dir = { "" = "src" }
@@ -29,4 +29,6 @@ include-package-data = true
 [build-system]
 requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
+
+
 

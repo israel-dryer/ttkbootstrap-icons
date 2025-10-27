@@ -242,6 +242,7 @@ Israel Dryer (israel.dryer@gmail.com)
 ## Links
 
 - [GitHub Repository](https://github.com/israel-dryer/ttkbootstrap-icons)
+- [Third-Party Notices](./THIRD-PARTY-NOTICES.md)
 - [Bootstrap Icons](https://icons.getbootstrap.com/)
 - [Font Awesome](https://fontawesome.com/)
 - [Material Design Icons (MDI)](https://materialdesignicons.com/)

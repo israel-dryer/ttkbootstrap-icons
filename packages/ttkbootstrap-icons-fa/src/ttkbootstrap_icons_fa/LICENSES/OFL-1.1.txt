@@ -1,0 +1,17 @@
+SIL Open Font License 1.1 (OFL-1.1)
+
+This package redistributes Font Awesome Free font files under the SIL Open Font License 1.1.
+
+Full text: https://scripts.sil.org/OFL
+
+PREAMBLE
+The goals of the Open Font License (OFL) are to stimulate worldwide development of collaborative font projects, to support the font creation efforts of academic and linguistic communities, and to provide a free and open framework in which fonts may be shared and improved in partnership with others.
+
+PERMISSION & CONDITIONS (summary)
+- You may use, study, copy, merge, embed, modify and redistribute the fonts.
+- You must not sell the fonts by themselves.
+- Any derivative fonts must be renamed to avoid confusion with the original.
+- The license and copyright notice must be included with the font.
+
+For the complete terms, please refer to the official text at the link above.
+
