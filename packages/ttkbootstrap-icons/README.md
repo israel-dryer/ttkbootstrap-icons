@@ -30,6 +30,7 @@ pip install ttkbootstrap-icons-remix    # Remix Icon
 pip install ttkbootstrap-icons-simple   # Simple Icons (community font)
 pip install ttkbootstrap-icons-weather  # Weather Icons
 pip install ttkbootstrap-icons-devicon  # Devicon
+pip install ttkbootstrap-icons-eva      # Eva Icons
 ```
 
 ## Quick Start
@@ -258,5 +259,5 @@ Israel Dryer (israel.dryer@gmail.com)
 - [Lucide Icons](https://lucide.dev/)
 - [Material Icons (Google)](https://fonts.google.com/icons)
 - [Devicon](https://devicon.dev)
+- [Eva Icons](https://akveo.github.io/eva-icons/)
 - [ttkbootstrap](https://ttkbootstrap.readthedocs.io/)
-
