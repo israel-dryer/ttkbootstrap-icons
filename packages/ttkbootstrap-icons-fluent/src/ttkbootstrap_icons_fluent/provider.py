@@ -44,7 +44,20 @@ class FluentFontProvider(MultiStyleFontProvider):
         if not chosen:
             # Defer to base which will error meaningfully
             return super().load_assets(style=None)
-        return super().load_assets(style=chosen)
+        # Prefer a style-specific glyphmap if present, e.g., glyphmap-regular.json
+        original_map = self.glyphmap_filename
+        candidate = f"glyphmap-{chosen}.json"
+        try:
+            pkg = files(self.package)
+            if pkg.joinpath(candidate).is_file():
+                self.glyphmap_filename = candidate
+        except Exception:
+            pass
+        try:
+            return super().load_assets(style=chosen)
+        finally:
+            # Restore to avoid leaking state across calls
+            self.glyphmap_filename = original_map
 
     def display_name(self) -> str:  # pragma: no cover
         return "Fluent System Icons"
