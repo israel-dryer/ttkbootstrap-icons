@@ -312,6 +312,7 @@ class IconPreviewerApp:
                     "ion-md-",
                     "ion-android-",
                     "ion-",
+                    "ra-",
                     "wi-",
                     "mdi-",
                     "si-",
@@ -432,6 +433,7 @@ class IconPreviewerApp:
             ("weather", "ttkbootstrap_icons_weather.provider", "WeatherFontProvider"),
             ("gmi", "ttkbootstrap_icons_gmi.provider", "GoogleMaterialProvider"),
             ("devicon", "ttkbootstrap_icons_devicon.provider", "DeviconFontProvider"),
+            ("rpga", "ttkbootstrap_icons_rpga.provider", "RPGAFontProvider"),
             ("eva", "ttkbootstrap_icons_eva.provider", "EvaFontProvider"),
         ]
         for name, mod_path, cls_name in dev_candidates:
