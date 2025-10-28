@@ -46,3 +46,10 @@ ttkicons-simple-build --font-url https://example.com/path/to/simple-icons.ttf
 ```
 
 Omitting metadata uses TTF-only extraction (needs `fonttools`).
+
+## Changelog
+
+| Version | Date       | Notes                                 |
+|--------:|------------|---------------------------------------|
+| 0.2.0   | 2025-10-28 | Docs consistency; previewer UX tweaks |
+| 0.1.0   | 2024-10-27 | Initial provider and basic usage docs |
