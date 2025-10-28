@@ -1,12 +1,12 @@
 # ttkbootstrap-icons
 
 Font-based icons for Tkinter/ttkbootstrap with a built-in Bootstrap set and installable providers: Font Awesome,
-Material, Ionicons, Remix, Fluent, Simple, Weather, Lucide.
+Material, Ionicons, Remix, Fluent, Simple, Weather, Lucide, Devicon.
 
 ## Features
 
 - Built-in set: Bootstrap Icons
-- Pluggable providers: Font Awesome, Material, Ionicons, Remix, Fluent, Simple, Weather, Lucide
+- Pluggable providers: Font Awesome, Material, Ionicons, Remix, Fluent, Simple, Weather, Lucide, Devicon
 - Style variants where available (e.g., Font Awesome solid/regular/brands, etc...)
 - Previewer app: search, style selector, size/color controls, click-to-copy; auto-discovers installed providers
 - Cross‑platform; includes PyInstaller hook for bundling assets
@@ -29,6 +29,7 @@ pip install ttkbootstrap-icons-mat      # Material Design Icons (MDI)
 pip install ttkbootstrap-icons-remix    # Remix Icon
 pip install ttkbootstrap-icons-simple   # Simple Icons (community font)
 pip install ttkbootstrap-icons-weather  # Weather Icons
+pip install ttkbootstrap-icons-devicon  # Devicon
 ```
 
 ## Quick Start
@@ -55,16 +56,19 @@ root.mainloop()
 
 ```python
 import tkinter as tk
-from ttkbootstrap_icons_fa import FAIcon  # Font Awesome
-from ttkbootstrap_icons_lucide import LucideIcon  # Lucide
+from ttkbootstrap_icons_fa import FAIcon            # Font Awesome
+from ttkbootstrap_icons_lucide import LucideIcon    # Lucide
+from ttkbootstrap_icons_devicon import DevIcon      # Devicon
 
 root = tk.Tk()
 
 fa = FAIcon("house", size=24, color="#0d6efd", style="solid")
 luc = LucideIcon("home", size=24, color="#dc3545")
+dev = DevIcon("python-plain", size=24, color="#3776AB")
 
 tk.Button(root, image=fa.image, text="FA House", compound="left").pack()
 tk.Button(root, image=luc.image, text="Lucide Home", compound="left").pack()
+tk.Button(root, image=dev.image, text="Devicon Python", compound="left").pack()
 
 root.mainloop()
 ```
@@ -253,4 +257,5 @@ Israel Dryer (israel.dryer@gmail.com)
 - [Weather Icons](https://erikflowers.github.io/weather-icons/)
 - [Lucide Icons](https://lucide.dev/)
 - [Material Icons (Google)](https://fonts.google.com/icons)
+- [Devicon](https://devicon.dev)
 - [ttkbootstrap](https://ttkbootstrap.readthedocs.io/)

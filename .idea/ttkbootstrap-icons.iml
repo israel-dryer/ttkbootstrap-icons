@@ -12,6 +12,7 @@
       <sourceFolder url="file://$MODULE_DIR$/packages/ttkbootstrap-icons-simple/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/ttkbootstrap-icons-weather/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/ttkbootstrap-icons/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/ttkbootstrap-icons-devicon/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.13 (ttkbootstrap-icons)" jdkType="Python SDK" />

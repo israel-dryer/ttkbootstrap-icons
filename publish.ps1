@@ -1,10 +1,4 @@
-Param(
-    [Parameter(Mandatory = $true, Position = 0)]
-    [string]$Package,
-
-    [Parameter(Mandatory = $false)]
-    [switch]$Dev
-)
+Param( [Parameter(Mandatory = $true, Position = 0)] [string]$Package, [Parameter(Mandatory = $false)] [switch]$Dev, [Parameter(Mandatory = $false)] [string]$Version )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -43,9 +37,29 @@ try {
     }
 
     Write-Host "> Building $pkgDir ..." -ForegroundColor Cyan
-    Push-Location $pkgDir
+        # If building base package and no explicit -Version, try to infer from latest git tag
+    if (-not $Version) {
+        $baseNames = @('ttkbootstrap-icons', 'packages/ttkbootstrap-icons')
+        foreach ($bn in $baseNames) {
+            if ($pkgDir -like "*\$bn") {
+                try {
+                    Ensure-Tool git
+                    $tag = (git describe --tags --abbrev=0).Trim()
+                    if ($tag) {
+                        $tag = $tag -replace '^v',''
+                        if ($tag -match '^[0-9]+\.[0-9]+\.[0-9]+') {
+                            $Version = $tag
+                            Write-Host "> Using version from git tag: $Version" -ForegroundColor Yellow
+                        }
+                    }
+                } catch {}
+                break
+            }
+        }
+    }
+Push-Location $pkgDir
     if (Test-Path dist) { Remove-Item -Recurse -Force dist }
-    python -m build
+    if ($Version) { $env:SETUPTOOLS_SCM_PRETEND_VERSION = $Version }; python -m build; if ($Version) { Remove-Item Env:SETUPTOOLS_SCM_PRETEND_VERSION -ErrorAction SilentlyContinue }
     Pop-Location
 
     $repo = if ($Dev) { 'testpypi' } else { 'pypi' }
@@ -62,4 +76,6 @@ try {
     Write-Error $_
     exit 1
 }
+
+
 
