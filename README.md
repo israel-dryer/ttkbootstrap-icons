@@ -6,7 +6,7 @@ Material, Ionicons, Remix, Fluent, Simple, Weather, Lucide, Devicon.
 ## Features
 
 - Built-in set: Bootstrap Icons
-- Pluggable providers: Font Awesome, Material, Ionicons, Remix, Fluent, Simple, Weather, Lucide, Devicon
+- Pluggable providers: Font Awesome, Material, Ionicons, Remix, Fluent, Simple, Weather, Lucide, Devicon, Eva
 - Style variants where available (e.g., Font Awesome solid/regular/brands, etc...)
 - Previewer app: search, style selector, size/color controls, click-to-copy; auto-discovers installed providers
 - Cross‑platform; includes PyInstaller hook for bundling assets
@@ -30,6 +30,7 @@ pip install ttkbootstrap-icons-remix    # Remix Icon
 pip install ttkbootstrap-icons-simple   # Simple Icons (community font)
 pip install ttkbootstrap-icons-weather  # Weather Icons
 pip install ttkbootstrap-icons-devicon  # Devicon
+pip install ttkbootstrap-icons-eva      # Eva Icons
 ```
 
 ## Quick Start
@@ -258,4 +259,5 @@ Israel Dryer (israel.dryer@gmail.com)
 - [Lucide Icons](https://lucide.dev/)
 - [Material Icons (Google)](https://fonts.google.com/icons)
 - [Devicon](https://devicon.dev)
+- [Eva Icons](https://akveo.github.io/eva-icons/)
 - [ttkbootstrap](https://ttkbootstrap.readthedocs.io/)
