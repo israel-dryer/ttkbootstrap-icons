@@ -62,3 +62,10 @@ ttkicons-fluent-build --font-url https://github.com/microsoft/fluentui-system-ic
 Notes
 - The quick build writes per-style glyph maps when possible (e.g., `glyphmap-regular.json`, `glyphmap-filled.json`, and `glyphmap-light.json` when available). The provider will use the style-specific map for better name coverage.
 - Omitting metadata uses TTF-only extraction (needs `fonttools`).
+
+## Changelog
+
+| Version | Date       | Notes                                                                                                   |
+|--------:|------------|---------------------------------------------------------------------------------------------------------|
+| 0.2.0   | 2025-10-28 | Per-style glyphmaps written and used; previewer shows base names, appends suffix; typed `style` union   |
+| 0.1.0   | 2024-10-27 | Initial provider; per-style glyphmaps support; previewer shows base names with a separate style param   |

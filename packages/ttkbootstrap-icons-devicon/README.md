@@ -64,3 +64,10 @@ If CSS/metadata are unavailable, the tool falls back to deriving a glyph map fro
 - Styles are naming-level variants on a single font: `plain`, `plain-wordmark`, `original`, `original-wordmark`.
 - You can supply either full names (e.g., `python-plain`) or a base name with a `style` parameter.
 - A convenience alias `name` → `name-plain` is added when applicable.
+
+## Changelog
+
+| Version | Date       | Notes                                                                                                      |
+|--------:|------------|------------------------------------------------------------------------------------------------------------|
+| 0.2.0   | 2025-10-28 | Previewer shows base names with Style dropdown; generator uses devicon-base.css + devicon.json; typed style |
+| 0.1.0   | 2024-10-27 | Initial provider; style variants exposed via `style`; CSS/metadata map                                      |
