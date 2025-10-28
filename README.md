@@ -1,7 +1,7 @@
 # ttkbootstrap-icons
 
 Font-based icons for Tkinter/ttkbootstrap with a built-in Bootstrap set and installable providers: Font Awesome,
-Material, Ionicons, Remix, Fluent, Simple, Weather, Lucide, Devicon.
+Material, Ionicons, Remix, Fluent, Simple, Weather, Lucide, Devicon & more.
 
 ## Features
 
