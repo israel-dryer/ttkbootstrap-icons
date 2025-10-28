@@ -17,4 +17,4 @@ class EvaFontProvider(BaseFontProvider):
         return ["outline", "fill"]
 
     def get_default_style(self) -> str | None:  # pragma: no cover
-        return "outline"
+        return "fill"
