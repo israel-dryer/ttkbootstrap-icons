@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ttkbootstrap-icons"
 dynamic = ["version"]
-description = "Font-based icons for Tkinter/ttkbootstrap with a built-in Bootstrap set and installable providers: Font Awesome, Material, Ionicons, Remix, Fluent, Simple, Weather, Lucide."
+description = "Font-based icons for Tkinter/ttkbootstrap with a built-in Bootstrap set and installable providers: Font Awesome, Material, Ionicons, Remix, Fluent, Simple, Weather, Lucide, Eva & more."
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
@@ -55,4 +55,4 @@ ttkbootstrap_icons = [
 
 [tool.setuptools_scm]
 version_file = "src/ttkbootstrap_icons/_version.py"
-fallback_version = "2.0.0"
+fallback_version = "2.1.0"
