@@ -355,17 +355,24 @@ class IconPreviewerApp:
             # Heuristic: providers with a single font but style-encoded names
             # should append style suffix to base names (e.g., Devicon)
             has_multi_fonts = hasattr(provider, "styles")
+            # Some multi-font providers also encode style in glyph names (e.g., Fluent)
+            multi_font_suffix_providers = {"fluent"}
 
             class _ProviderIcon(Icon):
                 def __init__(self, name: str, size: int = 64, color: str = "black", style=None):
                     # Initialize renderer with provider/style
                     Icon.initialize_with_provider(provider, style=style)
                     resolved = name
-                    if name != "none" and style and supported_styles and not has_multi_fonts:
-                        # If name does not already end with a known style suffix, append it
+                    if name != "none" and style and supported_styles:
                         lowered = name.lower()
-                        if not any(lowered.endswith("-" + s) for s in supported_styles):
-                            resolved = f"{name}-{style}"
+                        # Append style suffix for single-font providers (e.g., Devicon)
+                        if not has_multi_fonts:
+                            if not any(lowered.endswith("-" + s) for s in supported_styles):
+                                resolved = f"{name}-{style}"
+                        # Append for certain multi-font providers whose glyph names include the suffix (e.g., Fluent)
+                        elif getattr(provider, "name", "").lower() in multi_font_suffix_providers:
+                            if not any(lowered.endswith("-" + s) for s in supported_styles):
+                                resolved = f"{name}-{style}"
                     super().__init__(resolved, size, color)
 
             return _ProviderIcon
@@ -458,10 +465,17 @@ class IconPreviewerApp:
                                 _, gm_text = provider.load_assets(style=s)
                                 gm = json.loads(gm_text)
                                 names_by_style[s] = extract_names(gm)
-                                display_names_by_style[s] = names_by_style[s]
                             except Exception:
                                 names_by_style[s] = []
-                                display_names_by_style[s] = []
+                            # For display, prefer base names without the style suffix if present
+                            base_names = []
+                            suffix = "-" + s
+                            for n in names_by_style[s]:
+                                if n.lower().endswith(suffix):
+                                    base_names.append(n[: -len(suffix)])
+                                else:
+                                    base_names.append(n)
+                            display_names_by_style[s] = sorted(set(base_names))
                     else:
                         # Single font; filter strictly by suffix to avoid invalid names (e.g., Devicon)
                         for s in styles:
