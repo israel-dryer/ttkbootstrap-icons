@@ -29,7 +29,6 @@ from ttkbootstrap_icons_rpga import RPGAIcon
 
 root = tk.Tk()
 
-# Both base and prefixed names work: "sword" or "ra-sword"
 icon = RPGAIcon("sword", size=24, color="#6f42c1")
 tk.Button(root, image=icon.image, text="Sword", compound="left").pack()
 
