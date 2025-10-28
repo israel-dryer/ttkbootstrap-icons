@@ -365,12 +365,32 @@ class IconPreviewerApp:
                     resolved = name
                     if name != "none" and style and supported_styles:
                         lowered = name.lower()
-                        # Append style suffix for single-font providers (e.g., Devicon)
+                        prov_name = getattr(provider, "name", "").lower()
+                        mp = Icon._icon_map
+                        # Single-font providers: manage suffix resolution smartly
                         if not has_multi_fonts:
-                            if not any(lowered.endswith("-" + s) for s in supported_styles):
-                                resolved = f"{name}-{style}"
-                        # Append for certain multi-font providers whose glyph names include the suffix (e.g., Fluent)
-                        elif getattr(provider, "name", "").lower() in multi_font_suffix_providers:
+                            if prov_name == "eva":
+                                # Eva fill often uses base name; outline uses -outline
+                                if style == "fill":
+                                    if lowered.endswith("-fill"):
+                                        resolved = name
+                                    elif name in mp:
+                                        resolved = name
+                                    elif f"{name}-fill" in mp:
+                                        resolved = f"{name}-fill"
+                                else:  # outline
+                                    if lowered.endswith("-outline"):
+                                        resolved = name
+                                    elif f"{name}-outline" in mp:
+                                        resolved = f"{name}-outline"
+                                    elif name in mp:
+                                        resolved = name
+                            else:
+                                # Default: append suffix if missing
+                                if not any(lowered.endswith("-" + s) for s in supported_styles):
+                                    resolved = f"{name}-{style}"
+                        # Some multi-font providers encode style suffix in glyph names (e.g., Fluent)
+                        elif prov_name in multi_font_suffix_providers:
                             if not any(lowered.endswith("-" + s) for s in supported_styles):
                                 resolved = f"{name}-{style}"
                     super().__init__(resolved, size, color)
@@ -412,6 +432,7 @@ class IconPreviewerApp:
             ("weather", "ttkbootstrap_icons_weather.provider", "WeatherFontProvider"),
             ("gmi", "ttkbootstrap_icons_gmi.provider", "GoogleMaterialProvider"),
             ("devicon", "ttkbootstrap_icons_devicon.provider", "DeviconFontProvider"),
+            ("eva", "ttkbootstrap_icons_eva.provider", "EvaFontProvider"),
         ]
         for name, mod_path, cls_name in dev_candidates:
             if name in providers:
@@ -477,15 +498,27 @@ class IconPreviewerApp:
                                     base_names.append(n)
                             display_names_by_style[s] = sorted(set(base_names))
                     else:
-                        # Single font; filter strictly by suffix to avoid invalid names (e.g., Devicon)
+                        # Single font; build per-style lists. Some sets (e.g., Eva) use base name for a style.
+                        prov_name = getattr(provider, "name", "").lower()
+                        lowered_all = [n.lower() for n in all_names]
+                        set_all = set(lowered_all)
                         for s in styles:
-                            names = [n for n in all_names if n.lower().endswith("-" + s)]
+                            if prov_name == "eva" and s == "fill":
+                                # Fill: include names that either end with -fill or have no -outline suffix
+                                names = [
+                                    n for n in all_names if n.lower().endswith("-fill") or not n.lower().endswith("-outline")
+                                ]
+                            else:
+                                names = [n for n in all_names if n.lower().endswith("-" + s)]
                             names_by_style[s] = sorted(set(names))
-                            # For display, show base names only to avoid redundancy with style selector
+                            # For display, show base names only
                             base_names = []
                             suffix = "-" + s
                             for n in names_by_style[s]:
-                                if n.lower().endswith(suffix):
+                                ln = n.lower()
+                                if prov_name == "eva" and s == "fill" and not ln.endswith("-fill"):
+                                    base_names.append(n)
+                                elif ln.endswith(suffix):
                                     base_names.append(n[: -len(suffix)])
                             display_names_by_style[s] = sorted(set(base_names))
 
@@ -647,9 +680,9 @@ class IconPreviewerApp:
         display_names = initial_data["names"]
         if self.current_style:
             if initial_data.get("display_names_by_style"):
-                display_names = initial_data["display_names_by_style"].get(self.current_style, display_names)
+                display_names = initial_data["display_names_by_style"].get(self.current_style, [])
             elif initial_data.get("names_by_style"):
-                display_names = initial_data["names_by_style"].get(self.current_style, display_names)
+                display_names = initial_data["names_by_style"].get(self.current_style, [])
         self.grid = VirtualIconGrid(
             grid_frame,
             initial_data["class"],
@@ -693,9 +726,9 @@ class IconPreviewerApp:
             display_names = data["names"]
             if self.current_style:
                 if data.get("display_names_by_style"):
-                    display_names = data["display_names_by_style"].get(self.current_style, display_names)
+                    display_names = data["display_names_by_style"].get(self.current_style, [])
                 elif data.get("names_by_style"):
-                    display_names = data["names_by_style"].get(self.current_style, display_names)
+                    display_names = data["names_by_style"].get(self.current_style, [])
             self.grid.change_icon_set(data["class"], display_names)
             # Apply style to grid
             self.grid.update_style(self.current_style)
@@ -743,9 +776,9 @@ class IconPreviewerApp:
         names = data.get("names", [])
         if style:
             if data.get("display_names_by_style"):
-                names = data["display_names_by_style"].get(style, names)
+                names = data["display_names_by_style"].get(style, [])
             elif data.get("names_by_style"):
-                names = data["names_by_style"].get(style, names)
+                names = data["names_by_style"].get(style, [])
         self.grid.change_icon_set(data.get("class"), names)
         self.grid.update_style(style)
         self._update_status()
