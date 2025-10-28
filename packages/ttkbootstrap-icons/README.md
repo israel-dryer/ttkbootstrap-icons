@@ -29,6 +29,7 @@ pip install ttkbootstrap-icons-mat      # Material Design Icons (MDI)
 pip install ttkbootstrap-icons-remix    # Remix Icon
 pip install ttkbootstrap-icons-simple   # Simple Icons (community font)
 pip install ttkbootstrap-icons-weather  # Weather Icons
+pip install ttkbootstrap-icons-devicon  # Devicon
 ```
 
 ## Quick Start
