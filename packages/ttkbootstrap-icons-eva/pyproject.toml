@@ -1,11 +1,11 @@
 [project]
 name = "ttkbootstrap-icons-eva"
-version = "0.1.0"
+version = "0.2.0"
 description = "Eva Icons (font-based) provider for ttkbootstrap-icons"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [{ name = "Israel Dryer" }]
-dependencies = ["Pillow>=9.1", "ttkbootstrap-icons>=2.0.0"]
+dependencies = ["Pillow>=9.1", "ttkbootstrap-icons>=2.2.0"]
 
 license = "MIT"
 
