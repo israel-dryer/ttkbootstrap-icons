@@ -1,9 +1,14 @@
+from typing import Literal, Optional
+
 from ttkbootstrap_icons.icon import Icon
 from .provider import FluentFontProvider
 
 
+FluentStyle = Literal["regular", "filled", "light"]
+
+
 class FluentIcon(Icon):
-    def __init__(self, name: str, size: int = 24, color: str = "black", style: str | None = None):
+    def __init__(self, name: str, size: int = 24, color: str = "black", style: Optional[FluentStyle] = None):
         base_style = (style or "").lower() if style is not None else None
         # Infer style from name if not provided
         inferred_style = None
