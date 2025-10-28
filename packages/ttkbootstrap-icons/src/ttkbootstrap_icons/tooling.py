@@ -134,7 +134,7 @@ def glyphmap_from_css(css_text: str, class_prefixes: Iterable[str] = ("ion-ios-"
     # .ion-alert:before { content: "\f101"; }
     # .ion-alert::before{content:'\f101'}
     # Allow single or double quotes, one backslash before hex
-    # Pattern 1: with quotes around the content value
+    # Pattern 1: with quotes around a hexadecimal content value (e.g., "\f101")
     pattern1 = re.compile(
         rf"\.((?:{prefix_pat})[a-z0-9\-]+)::?before\s*\{{[^}}]*content\s*:\s*([\'\"])\\([0-9a-fA-F]+)\2",
         re.IGNORECASE | re.DOTALL,
@@ -144,10 +144,18 @@ def glyphmap_from_css(css_text: str, class_prefixes: Iterable[str] = ("ion-ios-"
         rf"\.((?:{prefix_pat})[a-z0-9\-]+)::?before\s*\{{[^}}]*content\s*:\s*\\([0-9a-fA-F]+)",
         re.IGNORECASE | re.DOTALL,
     )
+    # Pattern 3: quoted literal glyph (e.g., content: ""), common in some icon CSS
+    pattern3 = re.compile(
+        rf"\.((?:{prefix_pat})[a-z0-9\-]+)::?before\s*\{{[^}}]*content\s*:\s*([\'\"])(.)\2",
+        re.IGNORECASE | re.DOTALL,
+    )
 
     matches = list(pattern1.finditer(css_text))
+    literal_matches = []
     if not matches:
         matches = list(pattern2.finditer(css_text))
+        # Also collect literal glyph matches in a second pass
+        literal_matches = list(pattern3.finditer(css_text))
 
     for m in matches:
         klass = m.group(1)
@@ -165,22 +173,47 @@ def glyphmap_from_css(css_text: str, class_prefixes: Iterable[str] = ("ion-ios-"
             mapping[klass] = code
         except Exception:
             continue
+
+    # Handle quoted literal glyphs (e.g., content: "")
+    for m in literal_matches:
+        klass = m.group(1)
+        glyph = m.group(3)
+        if not glyph:
+            continue
+        name = klass
+        for pref in class_prefixes:
+            if name.startswith(pref):
+                name = name[len(pref) :]
+                break
+        try:
+            code = ord(glyph)
+            mapping[name] = code
+            mapping[klass] = code
+        except Exception:
+            continue
     if mapping:
         return mapping
 
     # Fallback parser: iterate CSS blocks and handle comma-separated selectors
     block_re = re.compile(r"([^\{]+)\{([^\}]*)\}", re.DOTALL)
     cp_re_quoted = re.compile(r"content\s*:\s*([\'\"])\\([0-9a-fA-F]+)\1", re.IGNORECASE)
+    cp_re_literal = re.compile(r"content\s*:\s*([\'\"])(.)\1", re.IGNORECASE | re.DOTALL)
     cp_re_unquoted = re.compile(r"content\s*:\s*\\([0-9a-fA-F]+)", re.IGNORECASE)
     sel_re = re.compile(rf"\.((?:{prefix_pat})[a-z0-9\-]+)::?before\s*$", re.IGNORECASE)
 
     for m in block_re.finditer(css_text):
         selectors = m.group(1)
         body = m.group(2)
-        mcp = cp_re_quoted.search(body) or cp_re_unquoted.search(body)
+        mcp = cp_re_quoted.search(body) or cp_re_unquoted.search(body) or cp_re_literal.search(body)
         if not mcp:
             continue
-        hexcp = mcp.group(2)
+        # Determine codepoint value based on which capture matched
+        hexcp = None
+        literal_char = None
+        if mcp.re is cp_re_literal:
+            literal_char = mcp.group(2)
+        else:
+            hexcp = mcp.group(2)
         for sel in selectors.split(','):
             sel = sel.strip()
             ms = sel_re.search(sel)
@@ -193,7 +226,10 @@ def glyphmap_from_css(css_text: str, class_prefixes: Iterable[str] = ("ion-ios-"
                     name = name[len(pref) :]
                     break
             try:
-                code = int(hexcp, 16)
+                if literal_char is not None and len(literal_char) >= 1:
+                    code = ord(literal_char[0])
+                else:
+                    code = int(hexcp, 16)
                 mapping[name] = code
                 mapping[klass] = code
             except Exception:
