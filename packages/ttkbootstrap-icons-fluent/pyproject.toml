@@ -21,7 +21,7 @@ ttkicons-fluent-build = "ttkbootstrap_icons_fluent.tools.generate_assets:main"
 ttkicons-fluent-quick = "ttkbootstrap_icons_fluent.tools.generate_assets:default_main"
 
 [tool.setuptools.package-data]
-"ttkbootstrap_icons_fluent" = ["fonts/*.ttf", "glyphmap.json", "LICENSES/*"]
+"ttkbootstrap_icons_fluent" = ["fonts/*.ttf", "glyphmap*.json", "LICENSES/*"]
 
 [tool.setuptools]
 package-dir = { "" = "src" }

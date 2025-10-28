@@ -29,8 +29,8 @@ from ttkbootstrap_icons_fluent import FluentIcon
 
 root = tk.Tk()
 
-regular = FluentIcon("home-16-regular", 24, "#6f42c1", style="regular")
-filled = FluentIcon("home-16-filled", 24, "#6f42c1", style="filled")
+regular = FluentIcon("home-16", size=24, color="#6f42c1", style="regular")
+filled = FluentIcon("home-16", size=24, color="#6f42c1", style="filled")
 
 tk.Button(root, image=regular.image, text="Regular", compound="left").pack()
 tk.Button(root, image=filled.image, text="Filled", compound="left").pack()
@@ -39,6 +39,12 @@ root.mainloop()
 ```
 
 This package registers a provider entry point, so the base icon previewer will automatically discover it.
+
+### Styles
+
+- Supported styles: `regular`, `filled`, `light` (if the Light font is present)
+- You may also pass fully-qualified names (e.g., `home-16-filled`). If the style suffix is missing, it is appended automatically based on the provided `style` parameter.
+- The previewer shows base names with a Style dropdown; copying an icon copies the base name. Use it with the chosen style in code for clarity.
 
 ## Generate assets (developer)
 
@@ -53,4 +59,6 @@ ttkicons-fluent-build --preset fluent-regular --version 1.1.261
 ttkicons-fluent-build --font-url https://github.com/microsoft/fluentui-system-icons/releases/download/v1.1.261/FluentSystemIcons-Font.zip
 ```
 
-Omitting metadata uses TTF-only extraction (needs `fonttools`).
+Notes
+- The quick build writes per-style glyph maps when possible (e.g., `glyphmap-regular.json`, `glyphmap-filled.json`, and `glyphmap-light.json` when available). The provider will use the style-specific map for better name coverage.
+- Omitting metadata uses TTF-only extraction (needs `fonttools`).

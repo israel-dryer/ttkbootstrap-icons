@@ -36,6 +36,7 @@ def main(argv=None):
     parser.add_argument("--map-url", help="URL to download official metadata JSON (optional)")
     parser.add_argument("--map-file", help="Path to local metadata JSON (optional)")
     parser.add_argument("--out-dir", help="Output package directory", default=str(Path(__file__).resolve().parents[1]))
+    parser.add_argument("--out-map", help="Output glyphmap filename (default: glyphmap.json)")
     parser.add_argument("--preset", choices=sorted(PRESETS.keys()), help="Use a known release font URL preset")
     parser.add_argument("--version", help="Override preset version (e.g., 1.1.261)")
     args = parser.parse_args(argv)
@@ -162,8 +163,9 @@ def main(argv=None):
     else:
         mapping = glyphmap_from_ttf(font_path)
 
-    write_glyphmap(pkg_root / "glyphmap.json", mapping)
-    print(f"Wrote: {pkg_root / 'glyphmap.json'}")
+    out_map = args.out_map or "glyphmap.json"
+    write_glyphmap(pkg_root / out_map, mapping)
+    print(f"Wrote: {pkg_root / out_map}")
     print(f"Font at: {font_path}")
 
 
@@ -181,12 +183,12 @@ def default_main():
     """
     # Regular
     try:
-        main(["--preset", "fluent-regular"])
+        main(["--preset", "fluent-regular", "--out-map", "glyphmap-regular.json"])
     except SystemExit:
         pass
     # Filled
     try:
-        main(["--preset", "fluent-filled"])
+        main(["--preset", "fluent-filled", "--out-map", "glyphmap-filled.json"])
     except SystemExit:
         pass
     # Light (best-effort; may not exist)
@@ -194,6 +196,8 @@ def default_main():
         main([
             "--font-url",
             "https://raw.githubusercontent.com/microsoft/fluentui-system-icons/main/fonts/FluentSystemIcons-Light.ttf",
+            "--out-map",
+            "glyphmap-light.json",
         ])
     except SystemExit:
         print("Light style not available; skipped")
