@@ -68,3 +68,10 @@ Styles
 - This provider supports `style` values: `solid` (default), `regular`, `brands`.
 - Ensure the following fonts are present in `fonts/` for full coverage:
   - `fa-solid-900.ttf`, `fa-regular-400.ttf`, `fa-brands-400.ttf`
+
+## Changelog
+
+| Version | Date       | Notes                                                    |
+|--------:|------------|----------------------------------------------------------|
+| 0.2.0   | 2025-10-28 | Typed `style` parameter (`solid`/`regular`/`brands`)     |
+| 0.1.0   | 2024-10-27 | Initial provider and asset tooling available             |

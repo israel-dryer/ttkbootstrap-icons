@@ -52,3 +52,10 @@ ttkicons-gmi-quick
 # Full builder
 ttkicons-gmi-build --preset gmi --version latest
 ```
+
+## Changelog
+
+| Version | Date       | Notes                                                        |
+|--------:|------------|--------------------------------------------------------------|
+| 0.2.0   | 2025-10-28 | Typed `style` parameter (baseline/outlined/round/sharp/twotone) |
+| 0.1.0   | 2024-10-27 | Initial provider and basic usage docs                        |
