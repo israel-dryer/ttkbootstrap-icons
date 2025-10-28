@@ -441,15 +441,14 @@ class IconPreviewerApp:
                         default_style = provider.get_default_style()  # type: ignore[attr-defined]
                     except Exception:
                         default_style = None
-                # Build style display labels
+                # Show styles exactly as they should be used as parameters
+                # Use raw style identifiers for display to avoid casing confusion
                 if styles:
-                    try:
-                        style_labels = [provider.style_display_name(s) for s in styles]
-                    except Exception:
-                        style_labels = [s.title() for s in styles]
+                    style_labels = list(styles)
 
                 # Build names per style to avoid preview errors when a style limits coverage
                 names_by_style = {}
+                display_names_by_style = {}
                 has_multi_fonts = hasattr(provider, "styles")
                 if styles:
                     if has_multi_fonts:
@@ -459,18 +458,28 @@ class IconPreviewerApp:
                                 _, gm_text = provider.load_assets(style=s)
                                 gm = json.loads(gm_text)
                                 names_by_style[s] = extract_names(gm)
+                                display_names_by_style[s] = names_by_style[s]
                             except Exception:
                                 names_by_style[s] = []
+                                display_names_by_style[s] = []
                     else:
                         # Single font; filter strictly by suffix to avoid invalid names (e.g., Devicon)
                         for s in styles:
                             names = [n for n in all_names if n.lower().endswith("-" + s)]
                             names_by_style[s] = sorted(set(names))
+                            # For display, show base names only to avoid redundancy with style selector
+                            base_names = []
+                            suffix = "-" + s
+                            for n in names_by_style[s]:
+                                if n.lower().endswith(suffix):
+                                    base_names.append(n[: -len(suffix)])
+                            display_names_by_style[s] = sorted(set(base_names))
 
                 data[name] = {
                     "class": make_icon_class(provider),
                     "names": all_names,
                     "names_by_style": names_by_style,
+                    "display_names_by_style": display_names_by_style,
                     "styles": styles,
                     "style_labels": style_labels,
                     "display": provider.display_name(),
@@ -622,8 +631,11 @@ class IconPreviewerApp:
             self.style_var.set("")
             self.current_style = None
         display_names = initial_data["names"]
-        if self.current_style and initial_data.get("names_by_style"):
-            display_names = initial_data["names_by_style"].get(self.current_style, display_names)
+        if self.current_style:
+            if initial_data.get("display_names_by_style"):
+                display_names = initial_data["display_names_by_style"].get(self.current_style, display_names)
+            elif initial_data.get("names_by_style"):
+                display_names = initial_data["names_by_style"].get(self.current_style, display_names)
         self.grid = VirtualIconGrid(
             grid_frame,
             initial_data["class"],
@@ -665,8 +677,11 @@ class IconPreviewerApp:
                 self.current_style = None
 
             display_names = data["names"]
-            if self.current_style and data.get("names_by_style"):
-                display_names = data["names_by_style"].get(self.current_style, display_names)
+            if self.current_style:
+                if data.get("display_names_by_style"):
+                    display_names = data["display_names_by_style"].get(self.current_style, display_names)
+                elif data.get("names_by_style"):
+                    display_names = data["names_by_style"].get(self.current_style, display_names)
             self.grid.change_icon_set(data["class"], display_names)
             # Apply style to grid
             self.grid.update_style(self.current_style)
@@ -712,8 +727,11 @@ class IconPreviewerApp:
         # Also filter names to only those valid for this style to avoid errors
         data = self.icon_data.get(self.current_icon_set, {})
         names = data.get("names", [])
-        if style and data.get("names_by_style"):
-            names = data["names_by_style"].get(style, names)
+        if style:
+            if data.get("display_names_by_style"):
+                names = data["display_names_by_style"].get(style, names)
+            elif data.get("names_by_style"):
+                names = data["names_by_style"].get(style, names)
         self.grid.change_icon_set(data.get("class"), names)
         self.grid.update_style(style)
         self._update_status()

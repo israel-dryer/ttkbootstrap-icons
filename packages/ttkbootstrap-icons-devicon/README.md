@@ -30,7 +30,6 @@ from ttkbootstrap_icons_devicon import DevIcon
 
 root = tk.Tk()
 
-# You can pass base names and choose variants via 'style'
 py = DevIcon("python", size=24, color="#3776AB", style="plain")
 re = DevIcon("react", size=24, color="#61dafb", style="original")
 

@@ -1,3 +1,5 @@
+from typing import Literal
+
 from ttkbootstrap_icons.icon import Icon
 from .provider import DeviconFontProvider
 
@@ -23,8 +25,11 @@ def _ensure_variant_name(name: str, style: str) -> str:
     return f"{name}-{style}"
 
 
+DeviconStyle = Literal["plain", "plain-wordmark", "original", "original-wordmark"]
+
+
 class DevIcon(Icon):
-    def __init__(self, name: str, size: int = 24, color: str = "black", style: str = "plain"):
+    def __init__(self, name: str, size: int = 24, color: str = "black", style: DeviconStyle = "plain"):
         # Initialize provider once; style is naming-level for this single-font provider
         DevIcon.initialize_with_provider(DeviconFontProvider())
         resolved = _ensure_variant_name(name, style)
