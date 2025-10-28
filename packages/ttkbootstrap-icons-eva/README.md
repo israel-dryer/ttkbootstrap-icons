@@ -13,6 +13,7 @@ Requires `ttkbootstrap-icons` (installed automatically) and `Pillow`.
 ## Info
 
 // Name: Eva Icons
+
 - Source: https://github.com/akveo/eva-icons (NPM: eva-icons)
 - Variants (font): `outline`, `fill`
 
@@ -59,11 +60,17 @@ If CSS is unavailable, the tool falls back to deriving a glyph map from the TTF 
 ### Styles
 
 - Supported styles: `outline`, `fill`
-- You may also pass fully-qualified names (e.g., `activity-outline` or `activity-fill`). If the style suffix is missing, it is appended automatically based on the provided `style` parameter.
-- The previewer shows base names with a Style dropdown; copying an icon copies the base name. Use it with the chosen style in code for clarity.
+- Eva encodes fill as the base name (e.g., `archive`), and outline with a `-outline` suffix (e.g., `archive-outline`).
+- `*-fill` is accepted as an alias and resolved to the base name (e.g., `archive-fill` → `archive`).
+- Passing a style parameter without a suffix resolves as:
+    - `style="fill"` → base name (e.g., `EvaIcon("archive", style="fill")` → `archive`).
+    - `style="outline"` → `-outline` (e.g., `EvaIcon("archive", style="outline")` → `archive-outline`).
+- Fully‑qualified names are honored as given.
+- The previewer shows base names with a Style dropdown.
 
 ## Changelog
 
-| Version | Date       | Notes                                                                 |
-|--------:|------------|-----------------------------------------------------------------------|
-| 0.1.0   | 2025-10-28 | Initial provider; style variants via parameter; CSS/TTF builder preset |
+| Version | Date       | Notes                                                                                   |
+|--------:|------------|-----------------------------------------------------------------------------------------|
+|   0.2.0 | 2025-10-28 | Default style set to fill; improved name+style resolution (fill→base, outline→-outline) |
+|   0.1.0 | 2025-10-28 | Initial provider; style variants via parameter; CSS/TTF builder preset                  |
