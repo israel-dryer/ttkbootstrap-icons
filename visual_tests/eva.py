@@ -1,31 +1,48 @@
 import tkinter as tk
 from tkinter import ttk
+import random
 
 from ttkbootstrap_icons_eva import EvaIcon
+from ttkbootstrap_icons_eva.provider import EvaFontProvider
 
-app = tk.Tk()
 
-# outline style
-p_frame = ttk.LabelFrame(app, text="fill")
-p_frame.pack(padx=10, pady=10, fill='x', expand=True)
+def main():
+    random.seed()
+    app = tk.Tk()
+    app.title("Eva Icons styles")
 
-a_plain = EvaIcon("archive")
-ttk.Label(p_frame, image=a_plain.image, compound="left", text="default").pack(padx=10, pady=10, side='left')
+    prov = EvaFontProvider()
+    idx = prov.build_display_index()
+    styles = idx.get("styles", []) or [prov.get_default_style() or "fill"]
+    default_style = prov.get_default_style() or (styles[0] if styles else "fill")
 
-a2_plain = EvaIcon("archive-fill")
-ttk.Label(p_frame, image=a2_plain.image, compound="left", text="style in name").pack(padx=10, pady=10, side='left')
+    keepalive = []
 
-a3_plain = EvaIcon("archive", style="fill")
-ttk.Label(p_frame, image=a3_plain.image, compound="left", text="style as param").pack(padx=10, pady=10, side='left')
+    for style in styles:
+        frame = ttk.LabelFrame(app, text=str(style))
+        frame.pack(padx=10, pady=10, fill="x", expand=True)
 
-# fill style
-pw_frame = ttk.LabelFrame(app, text="outline")
-pw_frame.pack(padx=10, pady=10, fill='x', expand=True)
+        names = idx.get("display_names_by_style", {}).get(style) or idx.get("names", [])
+        if not names:
+            continue
+        name = random.choice(names)
 
-a4_plain = EvaIcon("archive-outline")
-ttk.Label(pw_frame, image=a4_plain.image, compound="left", text="style in name").pack(padx=10, pady=10, side='left')
+        if style == default_style:
+            a1 = EvaIcon(name)
+            ttk.Label(frame, image=a1.image, compound="left", text="default (no style)").pack(padx=10, pady=10, side="left")
+            keepalive.append(a1)
 
-a5_plain = EvaIcon("archive", style="outline")
-ttk.Label(pw_frame, image=a5_plain.image, compound="left", text="style as param").pack(padx=10, pady=10, side='left')
+        a2 = EvaIcon(name, style=style)
+        ttk.Label(frame, image=a2.image, compound="left", text="style as property").pack(padx=10, pady=10, side="left")
+        keepalive.append(a2)
 
-app.mainloop()
+        a3 = EvaIcon(f"{name}-{style}")
+        ttk.Label(frame, image=a3.image, compound="left", text="style as name").pack(padx=10, pady=10, side="left")
+        keepalive.append(a3)
+
+    app.mainloop()
+
+
+if __name__ == "__main__":
+    main()
+
