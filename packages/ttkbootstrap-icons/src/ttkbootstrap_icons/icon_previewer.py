@@ -218,11 +218,12 @@ class IconPreviewerApp:
                         if name != "none":
                             if sty == "fill":
                                 if not low.endswith("-fill"):
-                                    cand = f"{name}-fill"
-                                    if cand in Icon._icon_map:
-                                        resolved = cand
+                                    resolved = f"{name}-fill"
                             else:
-                                if low.endswith("-fill"):
+                                if low.endswith("-outline"):
+                                    # Strip '-outline' alias unconditionally
+                                    resolved = name[:-8]
+                                elif low.endswith("-fill"):
                                     base = name[:-5]
                                     if base in Icon._icon_map:
                                         resolved = base

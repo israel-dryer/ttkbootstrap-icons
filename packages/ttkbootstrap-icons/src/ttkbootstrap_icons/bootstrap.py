@@ -12,13 +12,14 @@ class BootstrapIcon(Icon):
         if name != "none":
             low = name.lower()
             if style_l == "fill":
+                # Always target the '-fill' variant for consistency
                 if not low.endswith("-fill"):
-                    cand = f"{name}-fill"
-                    if cand in Icon._icon_map:
-                        resolved = cand
+                    resolved = f"{name}-fill"
             else:  # outline
-                if low.endswith("-fill"):
-                    base = name[:-5]
-                    if base in Icon._icon_map:
-                        resolved = base
+                # Accept '-outline' as alias: strip suffix unconditionally
+                if low.endswith("-outline"):
+                    resolved = name[:-8]
+                # Or strip '-fill' to get base outline
+                elif low.endswith("-fill"):
+                    resolved = name[:-5]
         super().__init__(resolved, size, color)
