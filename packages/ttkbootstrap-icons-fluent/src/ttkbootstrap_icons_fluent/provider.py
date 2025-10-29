@@ -65,3 +65,75 @@ class FluentFontProvider(MultiStyleFontProvider):
     def style_display_name(self, style: str) -> str:  # pragma: no cover
         mapping = {"regular": "Regular", "filled": "Filled", "light": "Light"}
         return mapping.get(style, super().style_display_name(style))
+
+    def build_display_index(self) -> dict:
+        import json
+        styles = self.list_styles()
+        names_by_style: dict[str, list[str]] = {}
+        display_names_by_style: dict[str, list[str]] = {}
+        for s in styles:
+            try:
+                font_bytes, gm_text = self.load_assets(style=s)
+                gm = json.loads(gm_text)
+            except Exception:
+                gm = {}
+            internal = []
+            from io import BytesIO
+            try:
+                from fontTools.ttLib import TTFont  # type: ignore
+            except Exception:
+                TTFont = None
+            if isinstance(gm, dict):
+                if TTFont is not None:
+                    try:
+                        tt = TTFont(BytesIO(font_bytes))
+                        cmap = set()
+                        for table in tt["cmap"].tables:
+                            cmap.update(table.cmap.keys())
+                        for k, v in gm.items():
+                            if not v:
+                                continue
+                            try:
+                                cp = int(v, 16) if isinstance(v, str) else int(v)
+                            except Exception:
+                                continue
+                            if cp in cmap:
+                                internal.append(k)
+                        internal = sorted(set(internal))
+                    except Exception:
+                        internal = sorted([k for k, v in gm.items() if v])
+                else:
+                    internal = sorted([k for k, v in gm.items() if v])
+            elif isinstance(gm, list):
+                internal = sorted({g.get("name") for g in gm if isinstance(g, dict) and g.get("name")})
+            else:
+                internal = []
+            names_by_style[s] = internal
+            # Display names: strip prefix, style suffix, and trailing numeric size
+            disp = []
+            suffix = f"-{s}"
+            for n in internal:
+                b = n
+                ln = n.lower()
+                if ln.startswith("ic-fluent-"):
+                    b = b[len("ic-fluent-"):]
+                    ln = b.lower()
+                if ln.endswith(suffix):
+                    b = b[: -len(suffix)]
+                    ln = b.lower()
+                parts = b.rsplit('-', 1)
+                if len(parts) == 2 and parts[1].isdigit():
+                    b = parts[0]
+                disp.append(b)
+            display_names_by_style[s] = sorted(set(disp))
+
+        default_style = self.get_default_style()
+        base_names = display_names_by_style.get(default_style or (styles[0] if styles else ""), []) if styles else []
+        return {
+            "names": base_names,
+            "names_by_style": names_by_style,
+            "display_names_by_style": display_names_by_style,
+            "styles": styles,
+            "style_labels": styles,
+            "default_style": default_style,
+        }

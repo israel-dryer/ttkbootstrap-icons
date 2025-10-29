@@ -34,7 +34,6 @@ def _resolve_name_with_map(name: str, style: EvaStyle) -> str:
     # No explicit suffix in the name; resolve by requested style
     if style == "outline":
         cand = f"{low}-outline"
-        print("cand: ", cand, "icon map", mp)
         if cand in mp:
             return cand
         # Fallback to base if outline variant missing
@@ -64,7 +63,6 @@ class EvaIcon(Icon):
             except Exception:
                 pass
         resolved = _resolve_name_with_map(name, style)
-        print("resolved: ", resolved, "name: ", name, "style: ", style)
         if os.environ.get("TTKICONS_DEBUG"):
             try:
                 print(f"[ttkicons DEBUG] provider=eva style={style} name={name} -> resolved={resolved}")

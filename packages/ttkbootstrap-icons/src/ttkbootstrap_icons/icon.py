@@ -37,6 +37,8 @@ class Icon(ABC):
     _cache: dict[tuple[str, int, str, str], PhotoImage] = {}
     _initialized: bool = False
     _icon_set: str = ""
+    _pad_factor: float = 0.10
+    _y_bias: float = 0.0
 
     def __init__(self, name: str, size: int = 24, color: str = "black"):
         """
@@ -130,7 +132,7 @@ class Icon(ABC):
             raise ValueError(f"Icon '{self.name}' not found in icon map.")
 
         # Add an internal padding to reduce edge clipping for fonts with tight bearings
-        pad = max(1, int(self.size * 0.10))
+        pad = max(1, int(self.size * self._pad_factor))
         eff_size = max(1, self.size - 2 * pad)
         font = ImageFont.truetype(self._font_path, eff_size)
 
@@ -149,6 +151,9 @@ class Icon(ABC):
 
         dx = pad + (inner_w - glyph_w) // 2 - bbox[0]
         dy = pad + (inner_h - full_height) // 2 + (ascent - bbox[3])
+        # Apply provider-specific vertical bias (fraction of size; negative moves up)
+        if Icon._y_bias:
+            dy += int(self.size * Icon._y_bias)
 
         draw.text((dx, dy), glyph, font=font, fill=self.color)
 
@@ -191,6 +196,18 @@ class Icon(ABC):
             font_path = tmp_font.name
         icon_map = json.loads(json_text)
         cls._configure(font_path=font_path, icon_map=icon_map)
+        try:
+            pad = getattr(provider, "get_pad_factor", lambda: 0.10)()
+            if isinstance(pad, (int, float)) and 0 <= pad <= 0.5:
+                cls._pad_factor = float(pad)
+        except Exception:
+            cls._pad_factor = 0.10
+        try:
+            yb = getattr(provider, "get_y_bias", lambda: 0.0)()
+            if isinstance(yb, (int, float)) and -0.5 <= yb <= 0.5:
+                cls._y_bias = float(yb)
+        except Exception:
+            cls._y_bias = 0.0
 
     @classmethod
     def cleanup(cls):
