@@ -20,18 +20,19 @@ pip install ttkbootstrap-icons
 Optional providers (install any you want):
 
 ```bash
-pip install ttkbootstrap-icons-fa       # Font Awesome (Free)
-pip install ttkbootstrap-icons-fluent   # Fluent System Icons
-pip install ttkbootstrap-icons-gmi      # Google Material Icons (baseline/outlined/round/sharp/twotone)
-pip install ttkbootstrap-icons-ion      # Ionicons v2 (font)
-pip install ttkbootstrap-icons-lucide   # Lucide Icons
-pip install ttkbootstrap-icons-mat      # Material Design Icons (MDI)
-pip install ttkbootstrap-icons-remix    # Remix Icon
-pip install ttkbootstrap-icons-simple   # Simple Icons (community font)
-pip install ttkbootstrap-icons-weather  # Weather Icons
-pip install ttkbootstrap-icons-devicon  # Devicon
-pip install ttkbootstrap-icons-eva      # Eva Icons
-pip install ttkbootstrap-icons-rpga     # RPG Awesome
+pip install ttkbootstrap-icons-fa        # Font Awesome (Free)
+pip install ttkbootstrap-icons-fluent    # Fluent System Icons
+pip install ttkbootstrap-icons-gmi       # Google Material Icons (baseline/outlined/round/sharp/twotone)
+pip install ttkbootstrap-icons-ion       # Ionicons v2 (font)
+pip install ttkbootstrap-icons-lucide    # Lucide Icons
+pip install ttkbootstrap-icons-mat       # Material Design Icons (MDI)
+pip install ttkbootstrap-icons-remix     # Remix Icon
+pip install ttkbootstrap-icons-simple    # Simple Icons (community font)
+pip install ttkbootstrap-icons-weather   # Weather Icons
+pip install ttkbootstrap-icons-devicon   # Devicon
+pip install ttkbootstrap-icons-eva       # Eva Icons
+pip install ttkbootstrap-icons-rpga      # RPG Awesome
+pip install ttkbootstrap-icons-meteocons # Meteocons (font-based)
 ```
 
 ## Quick Start
@@ -130,7 +131,8 @@ transparent_icon = BootstrapIcon("none", size=24)
 
 ## Icon Previewer
 
-Browse installed icon sets with search, styles, size and color controls. The previewer auto‑discovers any provider packages you have installed.
+Browse installed icon sets with search, styles, size and color controls. The previewer auto‑discovers any provider
+packages you have installed.
 
 ### Using the CLI Command
 
@@ -262,4 +264,5 @@ Israel Dryer (israel.dryer@gmail.com)
 - [Devicon](https://devicon.dev)
 - [Eva Icons](https://akveo.github.io/eva-icons/)
 - [RPG Awesome](https://github.com/nagoshiashumari/Rpg-Awesome)
+- [Meteocons](https://demo.alessioatzeni.com/meteocons/#)
 - [ttkbootstrap](https://ttkbootstrap.readthedocs.io/)
