@@ -1,4 +1,4 @@
-from .provider import MaterialFontProvider
+from .provider import MaterialProvider
 from .icon import MatIcon
 
-__all__ = ["MaterialFontProvider", "MatIcon"]
+__all__ = ["MaterialProvider", "MatIcon"]

@@ -1,37 +1,36 @@
-from dataclasses import dataclass
-
 from ttkbootstrap_icons.providers import BaseFontProvider
 
 
-@dataclass
-class MaterialFontProvider(BaseFontProvider):
-    name: str = "mat"
-    package: str = "ttkbootstrap_icons_mat"
-    font_filename: str = ""
-    glyphmap_filename: str = "glyphmap.json"
+class MaterialProvider(BaseFontProvider):
+    """Initialize the provider with style configuration.
 
-    def display_name(self) -> str:  # pragma: no cover
-        return "Material Design Icons"
+    Uses a single font file (`materialdesignicons-webfont.ttf`) for all styles.
+    Style selection is performed by predicates that test for the suffix.
+    """
 
-    def build_display_index(self) -> dict:
-        import json
-        try:
-            _, gm_text = self.load_assets(style=None)
-            gm = json.loads(gm_text)
-        except Exception:
-            gm = {}
-        if isinstance(gm, dict):
-            internal = sorted(list(gm.keys()))
-        elif isinstance(gm, list):
-            internal = sorted({g.get("name") for g in gm if isinstance(g, dict) and g.get("name")})
-        else:
-            internal = []
-        # MDI often has -outline or other suffixes; we keep raw names, no styles
-        return {
-            "names": internal,
-            "names_by_style": {},
-            "display_names_by_style": {},
-            "styles": [],
-            "style_labels": [],
-            "default_style": None,
-        }
+    def __init__(self):
+        super().__init__(
+            name="mat",
+            display_name="Material Design Icons",
+            package="ttkbootstrap_icons_mat",
+            default_style="fill",
+            styles={
+                "outline": {"filename": "fonts/materialdesignicons-webfont.ttf",
+                            "predicate": MaterialProvider._is_outline_style},
+                "fill": {"filename": "fonts/materialdesignicons-webfont.ttf",
+                         "predicate": MaterialProvider._is_fill_style}
+            }
+        )
+
+    @staticmethod
+    def _is_fill_style(name: str) -> bool:
+        return not name.endswith("-outline")
+
+    @staticmethod
+    def _is_outline_style(name: str) -> bool:
+        return name.endswith("-outline")
+
+    @staticmethod
+    def format_glyph_name(glyph_name: str) -> str:
+        """Display friendly name for font name"""
+        return str(glyph_name).lower().replace('-outline', '')
