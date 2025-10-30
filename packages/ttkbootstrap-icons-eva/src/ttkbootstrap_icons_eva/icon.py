@@ -1,71 +1,60 @@
-import os
-import json
-import tempfile
 from typing import Literal
 
 from ttkbootstrap_icons.icon import Icon
-from .provider import EvaFontProvider
+from ttkbootstrap_icons_eva.provider import EvaProvider
 
-
-EvaStyle = Literal["outline", "fill"]
-
-
-def _resolve_name_with_map(name: str, style: EvaStyle) -> str:
-    # Normalize and short-circuit the transparent placeholder
-    low = (name or "").lower()
-    if low == "none":
-        return "none"
-
-    # Access the loaded icon map (populated after initialize_with_provider)
-    mp = Icon._icon_map
-
-    # If an explicit suffix is provided in the name, honor it with Eva-specific rules:
-    # - "-outline" entries exist as-is in the glyph map
-    # - Eva does not encode "-fill" in glyph names; treat "*-fill" as the base name when possible
-    if low.endswith("-outline"):
-        return low
-    if low.endswith("-fill"):
-        base = low[:-5]
-        if base in mp:
-            return base
-        # If a provider ever includes explicit -fill keys, allow them; otherwise fall back to base
-        return low if low in mp else base
-
-    # No explicit suffix in the name; resolve by requested style
-    if style == "outline":
-        cand = f"{low}-outline"
-        if cand in mp:
-            return cand
-        # Fallback to base if outline variant missing
-        return low
-    else:  # fill
-        # Prefer the base name for fill since Eva encodes fills without a suffix
-        if low in mp:
-            return low
-        # As a safety net, accept a "-fill" entry if present
-        cand = f"{low}-fill"
-        return cand if cand in mp else low
+EvaStyles = Literal['fill', 'outline']
 
 
 class EvaIcon(Icon):
-    def __init__(self, name: str, size: int = 24, color: str = "black", style: EvaStyle = "fill"):
-        EvaIcon.initialize_with_provider(EvaFontProvider())
-        # Fallback: If the icon map is unexpectedly empty (dev envs, reloads),
-        # load assets directly and reconfigure so resolution works reliably.
-        if not Icon._icon_map:
-            try:
-                prov = EvaFontProvider()
-                font_bytes, gm_text = prov.load_assets()
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".ttf") as tmp_font:
-                    tmp_font.write(font_bytes)
-                    font_path = tmp_font.name
-                Icon._configure(font_path=font_path, icon_map=json.loads(gm_text))
-            except Exception:
-                pass
-        resolved = _resolve_name_with_map(name, style)
-        if os.environ.get("TTKICONS_DEBUG"):
-            try:
-                print(f"[ttkicons DEBUG] provider=eva style={style} name={name} -> resolved={resolved}")
-            except Exception:
-                pass
+    """Convenience icon for the Eva Icon glyph set.
+
+    Resolves the provided name (optionally with a style) using `EvaProvider`,
+    then initializes the base `Icon` with the resolved glyph.
+
+    Args:
+        name: Glyph name. May be a friendly name (e.g. "award") or a raw glyph
+            (e.g. "award-outline"). If you pass a conflicting style (e.g. name ends
+            with "-outline" but you set `style="fill"`), a `ValueError` is raised.
+        size: Pixel size of the rasterized image (default: 24).
+        color: Foreground color used to render the glyph (default: "black").
+        style: Optional style override: "fill", "outline". If omitted, the provider's default style is used.
+            When `name` already encodes a style suffix (e.g. "-outline"), that suffix takes precedence.
+
+    Raises:
+        ValueError: If the name cannot be resolved for the requested style.
+    """
+
+    def __init__(self, name: str, size: int = 24, color: str = "black", style: EvaStyles | None = None):
+        prov = EvaProvider()
+        EvaIcon.initialize_with_provider(prov)
+        resolved = prov.resolve_icon_name(name, style)
         super().__init__(resolved, size, color)
+
+
+if __name__ == '__main__':
+    import tkinter as tk
+    from tkinter import ttk
+
+    root = tk.Tk()
+    root.title("Eva Icons")
+    root.minsize(300, 200)
+    options = {"fill": "x", "padx": 10, "pady": 10}
+
+    # using the default style
+    icon0 = EvaIcon("award")
+    ttk.Label(root, text="default style", image=icon0.image, compound="left").pack(**options)
+
+    # using the style parameter
+    icon1 = EvaIcon("award", style="fill")
+    ttk.Label(root, text="plain with style param", image=icon1.image, compound="left").pack(**options)
+
+    # using the style in name
+    icon2 = EvaIcon("award-outline")
+    ttk.Label(root, text="plain with style in name", image=icon2.image, compound="left").pack(**options)
+
+    # using the style parameter
+    icon3 = EvaIcon("award", style="outline")
+    ttk.Label(root, text="plain-wordmark with style param", image=icon3.image, compound="left").pack(**options)
+
+    root.mainloop()
