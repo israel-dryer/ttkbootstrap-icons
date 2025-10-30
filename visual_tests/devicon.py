@@ -3,7 +3,7 @@ from tkinter import ttk
 import random
 
 from ttkbootstrap_icons_devicon import DevIcon
-from ttkbootstrap_icons_devicon.provider import DeviconFontProvider
+from ttkbootstrap_icons_devicon.provider import DeviconProvider
 
 
 def main():
@@ -11,7 +11,7 @@ def main():
     app = tk.Tk()
     app.title("Devicon variants")
 
-    prov = DeviconFontProvider()
+    prov = DeviconProvider()
     idx = prov.build_display_index()
     styles = idx.get("styles", []) or [prov.get_default_style() or "plain"]
     default_style = prov.get_default_style() or (styles[0] if styles else "plain")
