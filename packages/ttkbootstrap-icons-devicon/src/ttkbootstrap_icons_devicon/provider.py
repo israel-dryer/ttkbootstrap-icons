@@ -9,20 +9,18 @@ class DeviconProvider(BaseFontProvider):
 
         Uses a single font file (`devicon.ttf`) for all styles. Style selection
         is performed by predicates that test for the suffix.
-
-        Note:
-            The provider expects glyphmaps named `glyphmap.json` (single-file) or
-            `glyphmap-<style>.json` when styles require separate maps.
         """
         super().__init__(
             name="devicon",
             package="ttkbootstrap_icons_devicon",
             default_style="plain",
             styles={
-                "plain": {"filename": "fonts/devicon.ttf"},
-                "plain-wordmark": {"filename": "fonts/devicon.ttf"},
-                "original": {"filename": "fonts/devicon.ttf"},
-                "original-wordmark": {"filename": "fonts/devicon.ttf"}
+                "plain": {"filename": "fonts/devicon.ttf", "predicate": DeviconProvider._is_plain_style},
+                "plain-wordmark": {"filename": "fonts/devicon.ttf",
+                                   "predicate": DeviconProvider._is_plain_wordmark_style},
+                "original": {"filename": "fonts/devicon.ttf", "predicate": DeviconProvider._is_original_style},
+                "original-wordmark": {"filename": "fonts/devicon.ttf",
+                                      "predicate": DeviconProvider._is_original_wordmark_style}
             }
         )
 
