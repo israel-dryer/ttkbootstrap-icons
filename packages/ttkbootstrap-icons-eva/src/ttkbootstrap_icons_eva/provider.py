@@ -11,6 +11,7 @@ class EvaProvider(BaseFontProvider):
     def __init__(self):
         super().__init__(
             name="eva",
+            display_name="Eva Icons",
             package="ttkbootstrap_icons_eva",
             default_style="fill",
             styles={
