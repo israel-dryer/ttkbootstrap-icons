@@ -1,249 +1,281 @@
 from __future__ import annotations
 
-from abc import ABC
 import json
-from dataclasses import dataclass
+from abc import ABC
+from collections.abc import Callable
+from copy import deepcopy
 from importlib.resources import files
-import os
-from pathlib import Path
-from typing import Optional, Tuple
+from types import MappingProxyType
+from typing import Optional, Mapping, ClassVar
+
+from typing_extensions import TypedDict, NotRequired, Unpack
 
 
-@dataclass
-class BaseFontProvider(ABC):
-    """Base provider for font-based icon sets.
-
-    Subclasses should set:
-    - name: short identifier (e.g., "bootstrap", "lucide", "fa")
-    - package: the package where assets live
-    - font_filename: path (relative to package) to a .ttf font
-    - glyphmap_filename: path (relative to package) to the icon JSON map
-    """
-
+class FontProviderOptions(TypedDict):
+    """Options for configuring a font provider."""
     name: str
     package: str
-    font_filename: str
-    glyphmap_filename: str
+    display_name: NotRequired[str]
+    filename: NotRequired[str]
+    styles: NotRequired[Mapping[str, Mapping[str, str | Callable[[str], bool]]]]
+    default_style: NotRequired[str]
 
+
+class BaseFontProvider(ABC):
+    """Base class for icon providers with class-level caches."""
+
+    __slots__ = (
+        "_name", "_package", "_display_name", "_filename",
+        "_default_style", "_styles", "_styles_view", "_name_lookup"
+    )
+
+    # Global caches shared per provider class
+    _glyphmap_cache_global: ClassVar[dict[tuple[type, str], dict]] = {}
+    _font_bytes_cache_global: ClassVar[dict[tuple[type, str], bytes]] = {}
+    _name_lookup_global: ClassVar[dict[type, dict[str, dict[str, str]]]] = {}
+
+    _name: str
+    _package: str
+    _display_name: str
+    _filename: Optional[str]
+    _default_style: Optional[str]
+    _styles: Mapping[str, Mapping[str, str | Callable[[str], bool]]]
+    _styles_view: Mapping[str, Mapping[str, str | Callable[[str], bool]]]
+    _name_lookup: dict[str, dict[str, str]]
+
+    def __init__(self, **kwargs: Unpack[FontProviderOptions]):
+        self._name = kwargs.get('name')  # required
+        self._display_name = kwargs.get('display_name', self._name)
+        self._package = kwargs.get('package')  # required
+        self._filename = kwargs.get('filename')
+        self._default_style = kwargs.get('default_style')
+
+        self._styles = deepcopy(kwargs.get("styles", {}))
+        self._styles_view = MappingProxyType(self._styles)
+
+        # If styles are defined but default_style is missing/invalid, pick the first key
+        if self.has_styles and (not self._default_style or self._default_style not in self._styles):
+            self._default_style = next(iter(self._styles.keys()))
+
+        # Build lookup once (cached across instances)
+        self._name_lookup = self.build_name_lookup()
+
+    # -----------------------------
+    # Properties
+    # -----------------------------
+    @property
+    def has_styles(self) -> bool:
+        """Return True if this provider defines styles."""
+        return len(self._styles) > 0
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
     def display_name(self) -> str:
-        return getattr(self, "display", self.name)
+        return self._display_name
 
-    def style_display_name(self, style: str) -> str:
-        return style.title()
-    def list_styles(self) -> list[str]:
-        """Return available style identifiers for this provider (if any)."""
-        return []
+    @property
+    def default_style(self) -> Optional[str]:
+        return self._default_style
 
-    def get_default_style(self) -> str | None:
-        """Return the default style identifier, if any."""
-        return None
+    @property
+    def style_list(self) -> tuple[str, ...]:
+        return tuple(self._styles_view.keys())
 
-    def load_assets(self, style: Optional[str] = None) -> Tuple[bytes, str]:
-        """Return (font_bytes, glyphmap_json_text)."""
+    @property
+    def style_map(self) -> Mapping[str, Mapping[str, str | Callable[[str], bool]]]:
+        # return immutable view to avoid per-call copies
+        return self._styles_view
+
+    @property
+    def package(self) -> str:
+        return self._package
+
+    @property
+    def font_filename(self) -> Optional[str]:
+        return self._filename
+
+    @property
+    def uses_single_file(self) -> bool:
+        if self._filename:
+            return True
+        if not self.has_styles:
+            return False
+        try:
+            style_files = list({s['filename'] for s in self._styles.values()})
+        except KeyError:
+            return False
+        return len(style_files) == 1
+
+    # -----------------------------
+    # Asset Loading
+    # -----------------------------
+    def _read_glyphmap_for_style(self, style: Optional[str]) -> dict:
+        if self.uses_single_file:
+            glyphmap_name = "glyphmap.json"
+            style_key = "single"
+        else:
+            style_key = style or self._default_style
+            if not style_key:
+                raise ValueError(f"No style specified and no default_style configured for provider '{self._name}'.")
+            glyphmap_name = f"glyphmap-{style_key}.json"
+
+        gkey = (type(self), style_key)
+        cached = self._glyphmap_cache_global.get(gkey)
+        if cached is not None:
+            return cached
+
+        pkg = files(self.package)
+        glyphmap_path = pkg.joinpath(glyphmap_name)
+        try:
+            glyphmap_text = glyphmap_path.read_text(encoding="utf-8")
+            glyphmap = json.loads(glyphmap_text)
+        except Exception as e:
+            raise FileNotFoundError(f"Glyphmap not accessible for provider '{self.name}': {glyphmap_path}") from e
+
+        self._glyphmap_cache_global[gkey] = glyphmap
+        return glyphmap
+
+    def load_assets(self, style: Optional[str] = None) -> tuple[bytes, str]:
         pkg = files(self.package)
 
-        # Resolve font file: explicit filename or first .ttf/.otf in fonts/
-        if self.font_filename:
-            font_path = pkg.joinpath(self.font_filename)
+        if self.has_styles:
+            style_key = style or self._default_style
+            if not style_key:
+                raise ValueError(f"No style specified and no default_style configured for provider '{self._name}'.")
+            filename = self._styles.get(style_key, {}).get("filename") or self._filename
         else:
-            # Fallback: pick first .ttf or .otf under package
-            candidates = list(pkg.rglob("*.ttf")) + list(pkg.rglob("*.otf"))
-            if not candidates:
-                raise FileNotFoundError(
-                    f"No font found for provider '{self.name}' in package '{self.package}'."
-                )
-            font_path = candidates[0]
+            filename = self._filename
 
-        # Ensure the file exists
-        try:
-            _ = font_path.read_bytes()
-        except Exception as e:
-            raise FileNotFoundError(f"Font not accessible for provider '{self.name}': {font_path}") from e
+        if not filename:
+            raise FileNotFoundError(f"Font filename not set for provider '{self.name}'.")
 
-        glyphmap_path = pkg.joinpath(self.glyphmap_filename)
+        # font bytes cache
+        fkey = (type(self), filename)
+        font_bytes = self._font_bytes_cache_global.get(fkey)
+        if font_bytes is None:
+            font_bytes = pkg.joinpath(filename).read_bytes()
+            self._font_bytes_cache_global[fkey] = font_bytes
 
-        # Debug output for troubleshooting which font is being loaded
-        if os.environ.get("TTKICONS_DEBUG"):
-            try:
-                print(f"[ttkicons DEBUG] provider={self.name} style={style or ''} font={font_path}")
-            except Exception:
-                pass
+        # glyphmap name
+        if self.uses_single_file:
+            glyphmap_filename = "glyphmap.json"
+        else:
+            style_key = style or self._default_style
+            glyphmap_filename = f"glyphmap-{style_key}.json"
 
-        font_bytes = font_path.read_bytes()
-        glyphmap_json = glyphmap_path.read_text(encoding="utf-8")
+        glyphmap_json = pkg.joinpath(glyphmap_filename).read_text(encoding="utf-8")
         return font_bytes, glyphmap_json
 
-    def build_display_index(self) -> dict:
-        """Return display metadata for the previewer (generic default).
+    # -----------------------------
+    # Name Handling
+    # -----------------------------
+    @staticmethod
+    def format_glyph_name(glyph_name: str) -> str:
+        return str(glyph_name).lower()
 
-        Returns a dict with keys:
-        - names: list[str]
-        - names_by_style: dict[str, list[str]]
-        - display_names_by_style: dict[str, list[str]]
-        - styles: list[str]
-        - style_labels: list[str]
-        - default_style: Optional[str]
+    def resolve_icon_name(self, name: str, style: Optional[str] = None) -> str:
+        """Resolve a user-supplied icon name to the actual glyph name.
+
+        Rules:
+        - If *style* is explicitly provided, we resolve within that style only. If the *name*
+          clearly encodes a conflicting style suffix (e.g., "-fill" vs requested "outline"),
+          a ValueError is raised.
+        - If *style* is not provided, infer the style from a "-<style>" suffix when present;
+          otherwise use the provider's default style (or "base" when no styles).
         """
-        try:
-            _, gm_text = self.load_assets(style=None)
-            glyphmap = json.loads(gm_text)
-        except Exception:
-            glyphmap = {}
+        if name == "none":
+            return "none"
 
-        def extract_names(glyphmap_obj) -> list[str]:
-            if isinstance(glyphmap_obj, dict):
-                sample = next(iter(glyphmap_obj.values()), None)
-                if isinstance(sample, dict):
-                    return sorted([str(k) for k in glyphmap_obj.keys()])
-                return sorted([str(k) for k in glyphmap_obj.keys()])
-            if isinstance(glyphmap_obj, list):
-                names = [g.get("name") for g in glyphmap_obj if isinstance(g, dict) and g.get("name")]
-                return sorted(set([str(n) for n in names if n]))
-            return []
+        if self.has_styles:
+            inferred_style = None
+            for s in self.style_list:
+                if name.endswith(f"-{s}"):
+                    inferred_style = s
+                    break
 
-        all_names = extract_names(glyphmap)
+            if style is not None and inferred_style is not None and style != inferred_style:
+                raise ValueError(
+                    f"{name} is not valid for style '{style}' in {self.name}. Try style '{inferred_style}' or use an unsuffixed name."
+                )
 
-        # Styles
-        try:
-            styles = list(self.list_styles())  # type: ignore[attr-defined]
-        except Exception:
-            styles = []
+            lookup_style = style or inferred_style or self.default_style or "base"
+            lookup = self._name_lookup.get(lookup_style, {})
+            if not lookup:
+                raise ValueError(f"Style '{lookup_style}' is not valid for {self.name}. Available: {self.style_list}")
 
-        names_by_style: dict[str, list[str]] = {}
-        display_names_by_style: dict[str, list[str]] = {}
-        if styles:
-            has_multi_fonts = hasattr(self, "styles")
-            if has_multi_fonts:
-                for s in styles:
-                    try:
-                        _, gm_text_s = self.load_assets(style=s)
-                        gm_s = json.loads(gm_text_s)
-                        names = extract_names(gm_s)
-                    except Exception:
-                        names = []
-                    names_by_style[s] = names
-                    display_names_by_style[s] = list(names)
-            else:
-                for s in styles:
-                    suffix = "-" + s
-                    names = [n for n in all_names if str(n).lower().endswith(suffix)]
-                    names_by_style[s] = sorted(set(names))
-                    base = []
-                    for n in names_by_style[s]:
-                        ln = str(n).lower()
-                        if ln.endswith(suffix):
-                            base.append(n[: -len(suffix)])
-                        else:
-                            base.append(n)
-                    display_names_by_style[s] = sorted(set(base))
+            formatted = self.format_glyph_name(name)
+            if name in lookup:
+                return lookup[name]
+            composite = f"{name}-{lookup_style}"
+            if composite in lookup:
+                return lookup[composite]
+            if formatted in lookup:
+                return lookup[formatted]
+            raise ValueError(f"{name} not found in lookup for {self.name} in {lookup_style} style.")
 
-        try:
-            default_style = self.get_default_style()  # type: ignore[attr-defined]
-        except Exception:
-            default_style = None
+        # no styles
+        lookup = self._name_lookup.get("base", {})
+        formatted = self.format_glyph_name(name)
+        if name in lookup:
+            return lookup[name]
+        if formatted in lookup:
+            return lookup[formatted]
+        raise ValueError(f"{name} is not a valid icon for {self.name}.")
 
-        return {
-            "names": all_names,
-            "names_by_style": names_by_style,
-            "display_names_by_style": display_names_by_style,
-            "styles": styles,
-            "style_labels": list(styles),
-            "default_style": default_style,
-        }
+    def get_icons_names_for_display(self) -> dict[str, dict[str, str]]:
+        if self.has_styles:
+            return {s: {k: v for k, v in d.items() if k != v} for s, d in self._name_lookup.items() if s != "base"}
+        base = self._name_lookup.get("base", {})
+        return {"base": {k: v for k, v in base.items() if k != v}}
 
+    def build_name_lookup(self) -> dict[str, dict[str, str]]:
+        cached = self._name_lookup_global.get(type(self))
+        if cached is not None:
+            return cached
 
-@dataclass
-class MultiStyleFontProvider(BaseFontProvider):
-    """Provider that supports multiple styles.
+        lookup: dict[str, dict[str, str]] = {}
 
-    Set `styles` to a mapping of style -> relative TTF path (under the package).
-    If `style` is None, uses a `default_style`.
-    """
+        def fallback_predicate(_: str) -> bool:
+            return True
 
-    styles: dict
-    default_style: str = "regular"
-
-    def load_assets(self, style: Optional[str] = None) -> Tuple[bytes, str]:
-        chosen = (style or self.default_style).lower()
-        if chosen not in self.styles:
-            raise FileNotFoundError(f"Style '{chosen}' not found for provider '{self.name}'.")
-        self.font_filename = self.styles[chosen]
-        return super().load_assets(style=style)
-
-    def list_styles(self) -> list[str]:
-        return sorted(self.styles.keys())
-
-    def get_default_style(self) -> str | None:
-        return self.default_style
-
-
-class BuiltinBootstrapProvider(BaseFontProvider):
-    def __init__(self) -> None:
-        super().__init__(
-            name="bootstrap",
-            package="ttkbootstrap_icons.assets",
-            font_filename="bootstrap.ttf",
-            glyphmap_filename="bootstrap.json",
-        )
-
-    def display_name(self) -> str:  # pragma: no cover
-        return "Bootstrap Icons"
-
-    def list_styles(self) -> list[str]:
-        return ["outline", "fill"]
-
-    def get_default_style(self) -> str | None:  # pragma: no cover
-        return "outline"
-
-    def build_display_index(self) -> dict:
-        import json
-        _, gm_text = self.load_assets()
-        gm = json.loads(gm_text)
-        all_names = sorted(list(gm.keys())) if isinstance(gm, dict) else []
-        outline = [n for n in all_names if not n.lower().endswith("-fill")]
-        filled = [n for n in all_names if n.lower().endswith("-fill")]
-        names_by_style = {"outline": outline, "fill": filled}
-        display_names_by_style = {
-            "outline": outline,
-            "fill": sorted({n[:-5] for n in filled}),
-        }
-        return {
-            "names": display_names_by_style["outline"],
-            "names_by_style": names_by_style,
-            "display_names_by_style": display_names_by_style,
-            "styles": ["outline", "fill"],
-            "style_labels": ["outline", "fill"],
-            "default_style": "outline",
-        }
-
-
-class BuiltinLucideProvider(BaseFontProvider):
-    def __init__(self) -> None:
-        super().__init__(
-            name="lucide",
-            package="ttkbootstrap_icons.assets",
-            font_filename="lucide.ttf",
-            glyphmap_filename="lucide.json",
-        )
-
-    def display_name(self) -> str:  # pragma: no cover
-        return "Lucide Icons"
-
-    def build_display_index(self) -> dict:
-        import json
-        _, gm_text = self.load_assets()
-        gm = json.loads(gm_text)
-        if isinstance(gm, dict):
-            names = sorted(list(gm.keys()))
-        elif isinstance(gm, list):
-            names = sorted({g.get("name") for g in gm if isinstance(g, dict) and g.get("name")})
+        if self.has_styles:
+            for style in self.style_list:
+                cfg = self._styles.get(style, {})
+                pred = cfg.get("predicate", fallback_predicate)
+                if not callable(pred):
+                    pred = fallback_predicate
+                style_lookup: dict[str, str] = {}
+                glyphmap = self._read_glyphmap_for_style(style)
+                for n in glyphmap.keys():
+                    if pred(n):
+                        formatted = self.format_glyph_name(n)
+                        style_lookup[formatted] = n
+                        style_lookup[n] = n
+                        style_lookup[f"{n}-{style}"] = n
+                lookup[style] = style_lookup
         else:
-            names = []
+            glyphmap = self._read_glyphmap_for_style(None)
+            base_lookup: dict[str, str] = {}
+            for n in glyphmap.keys():
+                formatted = self.format_glyph_name(n)
+                base_lookup[formatted] = n
+                base_lookup[n] = n
+            lookup["base"] = base_lookup
+
+        self._name_lookup_global[type(self)] = lookup
+        return lookup
+
+    def build_display_index(self) -> dict:
+        # Ensure lookup exists
+        if type(self) not in self._name_lookup_global:
+            self.build_name_lookup()
+
         return {
-            "names": names,
-            "names_by_style": {},
-            "display_names_by_style": {},
-            "styles": [],
-            "style_labels": [],
-            "default_style": None,
+            "names_by_style": self.get_icons_names_for_display(),
+            "has_styles": self.has_styles,
+            "styles": self.style_list,
+            "default_style": self.default_style,
         }

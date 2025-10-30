@@ -1,226 +1,227 @@
+from __future__ import annotations
+
 import json
 import os
 import tempfile
 from abc import ABC
-from importlib.resources import files
-from typing import Any, Optional
+from typing import Any, Optional, ClassVar, Tuple
 
 from PIL import Image, ImageDraw, ImageFont
 from PIL.ImageTk import PhotoImage
+from tkinter import PhotoImage as TkPhotoImage
+
 from .providers import BaseFontProvider
 
-_transparent_image_cache = {}
 
-
-def create_transparent_icon(size: int = 16) -> PhotoImage:
-    """
-    Create a fully transparent PIL image of the given size.
-
-    Args:
-        size: Tuple specifying (width, height) of the transparent image.
-
-    Returns:
-        A PIL.Image object with RGBA mode and full transparency.
-    """
-    if size in _transparent_image_cache:
-        return _transparent_image_cache.get(size)
-    else:
-        img = Image.new("RGBA", (size, size), (255, 0, 0, 0))
-        pm = PhotoImage(image=img)
-        _transparent_image_cache[size] = pm
-        return pm
+def create_transparent_icon(size: int = 16) -> TkPhotoImage:
+    """Return or create a transparent placeholder image of given size."""
+    return Icon._get_transparent(size)
 
 
 class Icon(ABC):
-    _icon_map: dict[str, str] = {}
-    _font_path: Optional[str] = None
-    _cache: dict[tuple[str, int, str, str], PhotoImage] = {}
-    _initialized: bool = False
-    _icon_set: str = ""
-    _pad_factor: float = 0.10
-    _y_bias: float = 0.0
+    """Base class for rendered TTF-based icons (PIL → PhotoImage).
+
+    Performance features:
+      • Class-level caches for rendered images and PIL fonts.
+      • Class-level cache for transparent placeholders.
+      • Reuses a temporary font file per (provider, style).
+      • __slots__ to reduce per-instance overhead.
+    """
+    __slots__ = ("name", "size", "color", "_img")
+
+    # shared icon-set state
+    _icon_map: ClassVar[dict[str, Any]] = {}
+    _font_path: ClassVar[Optional[str]] = None
+    _initialized: ClassVar[bool] = False
+    _icon_set: ClassVar[str] = ""
+    _pad_factor: ClassVar[float] = 0.10
+    _y_bias: ClassVar[float] = 0.0
+
+    # caches
+    _cache: ClassVar[dict[Tuple[str, int, str, str], PhotoImage]] = {}  # rendered PhotoImage cache
+    _font_cache: ClassVar[dict[Tuple[str, int], ImageFont.FreeTypeFont]] = {}  # PIL font by (path, size)
+    _transparent_cache: ClassVar[dict[int, PhotoImage]] = {}  # transparent placeholders
+    _fontfile_cache: ClassVar[dict[str, str]] = {}  # icon_set_id -> temp font path
 
     def __init__(self, name: str, size: int = 24, color: str = "black"):
-        """
-        Initialize a new  icon instance.
+        """Create a new icon.
 
         Args:
-            name: The name of the icon to render (must exist in the icon map).
-            size: The desired size of the icon in pixels.
-            color: The fill color to use when rendering the icon.
+            name: Resolved icon key in the icon map.
+            size: Pixel size.
+            color: Foreground color.
         """
-        if not self._initialized:
-            raise RuntimeError("Icon.initialize() must be called before creating icons.")
+        if not Icon._initialized:
+            raise RuntimeError("Icon provider not initialized. Call initialize_with_provider() before creating icons.")
 
         self.name = name
         self.size = size
         self.color = color
-        self._img: Optional[PhotoImage] = self._render()
+        self._img: Optional[TkPhotoImage] = self._render()
 
     @property
-    def image(self):
+    def image(self) -> TkPhotoImage:
         return self._img
+
+    @classmethod
+    def _get_transparent(cls, size: int) -> PhotoImage:
+        pm = cls._transparent_cache.get(size)
+        if pm is not None:
+            return pm
+        img = Image.new("RGBA", (size, size), (255, 255, 255, 0))
+        pm = PhotoImage(image=img)
+        cls._transparent_cache[size] = pm
+        return pm
 
     @classmethod
     def _configure(cls, font_path: str, icon_map: dict[str, Any] | list[dict[str, Any]]):
         if not os.path.exists(font_path):
             raise FileNotFoundError(f"Font not found: {font_path}")
 
-        cls._icon_map = {}
+        mapping: dict[str, Any] = {}
 
         if isinstance(icon_map, list):
-            # Lucide-style (list of dicts)
-            items = icon_map
+            # Lucide-style: list of dicts with fields like {"name": "...", "unicode": "EA01"}
+            for entry in icon_map:
+                if not isinstance(entry, dict):
+                    continue
+                name = str(entry.get("name", "")).strip()
+                if not name:
+                    continue
+                uni = entry.get("unicode")
+                if uni is None:
+                    continue
+                try:
+                    codepoint = int(uni, 16) if isinstance(uni, str) else int(uni)
+                    mapping[name] = chr(codepoint)
+                except Exception:
+                    # Skip malformed entries
+                    continue
+
         elif isinstance(icon_map, dict):
-            # Determine Lucide-style dict vs Bootstrap
-            sample_val = next(iter(icon_map.values()))
+            # Could be: {'house': 'EA01', ...} (Bootstrap) OR {'house': {'unicode': '...'}, ...} (Lucide dict-of-dicts)
+            # Detect dict-of-dicts by sampling the first value
+            try:
+                sample_val = next(iter(icon_map.values()))
+            except StopIteration:
+                sample_val = None
+
             if isinstance(sample_val, dict):
                 # Lucide-style dict of dicts
-                items = [{"name": k, **v} for k, v in icon_map.items()]
+                for name, detail in icon_map.items():
+                    if not isinstance(detail, dict):
+                        continue
+                    uni = detail.get("unicode")
+                    if uni is None:
+                        continue
+                    try:
+                        codepoint = int(uni, 16) if isinstance(uni, str) else int(uni)
+                        mapping[str(name)] = chr(codepoint)
+                    except Exception:
+                        continue
             else:
                 # Bootstrap flat dict
                 for name, code in icon_map.items():
                     try:
                         codepoint = int(code, 16) if isinstance(code, str) else int(code)
-                        cls._icon_map[name] = chr(codepoint)
-                    except Exception as e:
-                        print(f"Skipped icon '{name}': {e}")
-                cls._font_path = font_path
-                cls._initialized = True
-                return
+                        mapping[str(name)] = chr(codepoint)
+                    except Exception:
+                        continue
         else:
-            raise TypeError("icon_map must be a list or dict")
+            raise TypeError("icon_map must be a list[dict] or dict")
 
-        # Process Lucide-style items
-        for icon in items:
-            name = icon.get("name")
-            code_str = icon.get("encodedCode") or icon.get("unicode")
-            if not name or not code_str:
-                continue
-            try:
-                if isinstance(code_str, str):
-                    code_str = code_str.lstrip("\\").lstrip("0x")
-                    codepoint = int(code_str, 16)
-                else:
-                    codepoint = int(code_str)
-                cls._icon_map[name] = chr(codepoint)
-            except Exception as e:
-                print(f"Skipped icon '{name}': {e}")
-
-        cls._font_path = font_path
-        cls._initialized = True
+        Icon._icon_map = mapping
+        Icon._font_path = font_path
+        Icon._initialized = True
 
     def _render(self) -> PhotoImage:
-        """
-        Render the icon as a `PhotoImage`, using PIL and caching the result.
+        """Render the icon as a `PhotoImage`, using PIL and caching the result."""
+        # Cache key: (name, size, color, font_path)
+        key = (self.name, self.size, self.color, Icon._font_path or "")
+        cached = Icon._cache.get(key)
+        if cached is not None:
+            return cached
 
-        Returns:
-            A `PhotoImage` object.
+        # Glyph lookup
+        glyph_val = Icon._icon_map.get(self.name)
+        if glyph_val is None:
+            return Icon._get_transparent(self.size)
+        glyph = chr(glyph_val) if isinstance(glyph_val, int) else str(glyph_val)
 
-        Raises:
-            ValueError: If the icon name does not exist in the icon map.
-        """
-        key = (self.name, self.size, self.color, self._icon_set)
-        if key in Icon._cache:
-            return Icon._cache[key]
+        # Build or reuse a PIL font for (font_path, size)
+        fp = Icon._font_path
+        if not fp:
+            return Icon._get_transparent(self.size)
+        eff_size = max(1, int(self.size))
+        fkey = (fp, eff_size)
+        font = Icon._font_cache.get(fkey)
+        if font is None:
+            font = ImageFont.truetype(fp, eff_size)
+            Icon._font_cache[fkey] = font
 
-        if self.name == "none":
-            return create_transparent_icon(self.size)
-
-        glyph = self._icon_map.get(self.name)
-        if not glyph:
-            raise ValueError(f"Icon '{self.name}' not found in icon map.")
-
-        # Add an internal padding to reduce edge clipping for fonts with tight bearings
-        pad = max(1, int(self.size * self._pad_factor))
-        eff_size = max(1, self.size - 2 * pad)
-        font = ImageFont.truetype(self._font_path, eff_size)
-
-        bbox = font.getbbox(glyph)
-        glyph_w, glyph_h = bbox[2] - bbox[0], bbox[3] - bbox[1]
+        # Layout
+        pad = int(self.size * Icon._pad_factor)
         ascent, descent = font.getmetrics()
+        bbox = font.getbbox(glyph)
+        glyph_w = bbox[2] - bbox[0]
         full_height = ascent + descent
 
         canvas_size = self.size
         img = Image.new("RGBA", (canvas_size, canvas_size), (255, 255, 255, 0))
         draw = ImageDraw.Draw(img)
 
-        # Constrain layout to an inner box with padding on all sides
         inner_w = canvas_size - 2 * pad
         inner_h = canvas_size - 2 * pad
-
         dx = pad + (inner_w - glyph_w) // 2 - bbox[0]
         dy = pad + (inner_h - full_height) // 2 + (ascent - bbox[3])
-        # Apply provider-specific vertical bias (fraction of size; negative moves up)
         if Icon._y_bias:
             dy += int(self.size * Icon._y_bias)
 
         draw.text((dx, dy), glyph, font=font, fill=self.color)
 
-        tk_img = PhotoImage(image=img)
-        Icon._cache[key] = tk_img
-        return tk_img
-
-    @classmethod
-    def initialize(cls, icon_set: str):
-        """
-        Initialize the Lucide icon system by loading font and icon map from package assets.
-        """
-        cls._icon_set = icon_set
-        assets = files("ttkbootstrap_icons.assets")
-        font_data = assets.joinpath(f"{icon_set}.ttf").read_bytes()
-        json_text = assets.joinpath(f"{icon_set}.json").read_text(encoding="utf-8")
-
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".ttf") as tmp_font:
-            tmp_font.write(font_data)
-            font_path = tmp_font.name
-
-        icon_map = json.loads(json_text)
-        cls._configure(font_path=font_path, icon_map=icon_map)
+        pm = PhotoImage(image=img)
+        Icon._cache[key] = pm
+        return pm
 
     @classmethod
     def initialize_with_provider(cls, provider: BaseFontProvider, style: str | None = None):
         """Initialize icon rendering using an external provider.
 
-        The provider supplies font bytes and a glyph map JSON. We write the
-        font to a temporary file and configure the renderer.
+        Reuses a temp font path per (provider, style) for efficiency.
         """
-        # Avoid re-loading if already initialized for this provider+style
         icon_set_id = f"{provider.name}:{style or 'default'}"
-        if cls._initialized and cls._icon_set == icon_set_id:
+        if Icon._initialized and Icon._icon_set == icon_set_id:
             return
-        cls._icon_set = icon_set_id
-        font_data, json_text = provider.load_assets(style=style)
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".ttf") as tmp_font:
-            tmp_font.write(font_data)
-            font_path = tmp_font.name
+        Icon._icon_set = icon_set_id
+
+        # Reuse temp font if already created for this icon set
+        font_path = Icon._fontfile_cache.get(icon_set_id)
+        if not font_path or not os.path.exists(font_path):
+            font_bytes, json_text = provider.load_assets(style=style)
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".ttf") as tmp_font:
+                tmp_font.write(font_bytes)
+                font_path = tmp_font.name
+            Icon._fontfile_cache[icon_set_id] = font_path
+        else:
+            # Still need glyphmap JSON for configure
+            _, json_text = provider.load_assets(style=style)
+
         icon_map = json.loads(json_text)
         cls._configure(font_path=font_path, icon_map=icon_map)
-        try:
-            pad = getattr(provider, "get_pad_factor", lambda: 0.10)()
-            if isinstance(pad, (int, float)) and 0 <= pad <= 0.5:
-                cls._pad_factor = float(pad)
-        except Exception:
-            cls._pad_factor = 0.10
-        try:
-            yb = getattr(provider, "get_y_bias", lambda: 0.0)()
-            if isinstance(yb, (int, float)) and -0.5 <= yb <= 0.5:
-                cls._y_bias = float(yb)
-        except Exception:
-            cls._y_bias = 0.0
 
     @classmethod
     def cleanup(cls):
-        """Remove the temporary font file and reset all internal icon state"""
-        if cls._font_path and os.path.exists(cls._font_path):
+        """Remove the temporary font file and reset internal icon state."""
+        if Icon._font_path and os.path.exists(Icon._font_path):
             try:
-                os.remove(cls._font_path)
+                os.remove(Icon._font_path)
             except Exception as e:
                 raise Exception(f"Error cleaning up icon: {e}")
-        cls._initialized = False
-        cls._icon_map.clear()
-        cls._cache.clear()
-        cls._font_path = None
+        Icon._initialized = False
+        Icon._icon_map.clear()
+        Icon._cache.clear()
+        Icon._font_cache.clear()
+        Icon._font_path = None
 
     def __str__(self):
         return str(self._img)
