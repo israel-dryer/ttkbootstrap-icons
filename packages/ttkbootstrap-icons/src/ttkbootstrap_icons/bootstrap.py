@@ -92,42 +92,15 @@ class BootstrapProvider(BaseFontProvider):
 
     @staticmethod
     def _is_outline_style(name: str) -> bool:
-        """Return True if the raw glyph name belongs to the outline style.
-
-        Args:
-            name: Raw glyph name (e.g. "house" or "house-fill").
-
-        Returns:
-            True if the glyph does not end with ``-fill``.
-        """
         return '-fill' not in name
 
     @staticmethod
     def _is_fill_style(name: str) -> bool:
-        """Return True if the raw glyph name belongs to the fill style.
-
-        Args:
-            name: Raw glyph name (e.g. "house" or "house-fill").
-
-        Returns:
-            True if the glyph ends with ``-fill``.
-        """
         return '-fill' in name
 
     @staticmethod
     def format_glyph_name(glyph_name: str) -> str:
-        """Normalize a glyph name for friendly lookup.
-
-        For Bootstrap, friendly names remove the ``-fill`` suffix and are
-        lower-cased so that "House-Fill" → "house".
-
-        Args:
-            glyph_name: Raw glyph name.
-
-        Returns:
-            A normalized (lower-case) friendly name without the ``-fill`` suffix.
-        """
-        # Normalize bootstrap names by stripping '-fill' suffix for friendly lookups
+        """Display friendly name for font name"""
         return str(glyph_name).lower().replace('-fill', '')
 
 
