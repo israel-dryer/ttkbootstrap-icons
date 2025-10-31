@@ -1,5 +1,4 @@
-from .provider import LucideFontProvider
 from .icon import LucideIcon
+from .provider import LucideProvider
 
-__all__ = ["LucideFontProvider", "LucideIcon"]
-
+__all__ = ["LucideProvider", "LucideIcon"]
