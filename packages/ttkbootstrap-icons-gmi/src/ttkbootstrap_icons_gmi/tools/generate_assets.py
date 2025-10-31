@@ -68,26 +68,26 @@ def main(argv=None):
         return None
 
     # Candidate URLs for fonts and codepoints
-    # Use raw GitHub fallbacks; some fonts are OTF
+    # Use Google Fonts CDN (fonts.gstatic.com) - these are the official webfont versions
     base_candidates = [
+        f"https://fonts.gstatic.com/s/materialicons/v145/flUhRq6tzZclQEJ-Vdg-IuiaDsNZ.ttf",
         f"https://raw.githubusercontent.com/google/material-design-icons/master/font/MaterialIcons-Regular.ttf",
-        f"https://raw.githubusercontent.com/google/material-design-icons/master/iconfont/MaterialIcons-Regular.ttf",
     ]
     outlined_candidates = [
+        f"https://fonts.gstatic.com/s/materialiconsoutlined/v110/gok-H7zzDkdnRel8-DQ6KAXJ69wP1tGnf4ZGhUcd.otf",
         f"https://raw.githubusercontent.com/google/material-design-icons/master/font/MaterialIconsOutlined-Regular.otf",
-        f"https://raw.githubusercontent.com/google/material-design-icons/master/iconfont/MaterialIconsOutlined-Regular.otf",
     ]
     round_candidates = [
+        f"https://fonts.gstatic.com/s/materialiconsround/v109/LDItaoyNOAY6Uewc665JcIzCKsKc_M9flwmJ.otf",
         f"https://raw.githubusercontent.com/google/material-design-icons/master/font/MaterialIconsRound-Regular.otf",
-        f"https://raw.githubusercontent.com/google/material-design-icons/master/iconfont/MaterialIconsRound-Regular.otf",
     ]
     sharp_candidates = [
+        f"https://fonts.gstatic.com/s/materialiconssharp/v110/oPWQ_lt5nv4pWNJpghLP75WiFR4kLh3kvmvR.otf",
         f"https://raw.githubusercontent.com/google/material-design-icons/master/font/MaterialIconsSharp-Regular.otf",
-        f"https://raw.githubusercontent.com/google/material-design-icons/master/iconfont/MaterialIconsSharp-Regular.otf",
     ]
     twotone_candidates = [
+        f"https://fonts.gstatic.com/s/materialiconstwotone/v111/hESh6WRmNCxEqUmNyh3JDeGxjVVyMg4tHGctNCu3.otf",
         f"https://raw.githubusercontent.com/google/material-design-icons/master/font/MaterialIconsTwoTone-Regular.otf",
-        f"https://raw.githubusercontent.com/google/material-design-icons/master/iconfont/MaterialIconsTwoTone-Regular.otf",
     ]
     codepoints_candidates = [
         f"https://raw.githubusercontent.com/google/material-design-icons/master/font/MaterialIcons-Regular.codepoints",
@@ -129,15 +129,21 @@ def main(argv=None):
     if not mapping:
         raise SystemExit("Parsed codepoints mapping is empty.")
 
-    write_glyphmap(pkg_root / "glyphmap.json", mapping)
-    print(f"Wrote: {pkg_root / 'glyphmap.json'}")
+    # Write separate glyphmap files for each style
+    # Material Icons use the same codepoints across all styles
+    for style in ["baseline", "outlined", "round", "sharp"]:
+        glyphmap_path = pkg_root / f"glyphmap-{style}.json"
+        write_glyphmap(glyphmap_path, mapping)
+        print(f"Wrote: {glyphmap_path}")
+
+    print("\nDownloaded fonts:")
     for label, p in (
         ("baseline", base_font), ("outlined", outlined_font), ("round", round_font), ("sharp", sharp_font), ("twotone", twotone_font)
     ):
         if p:
-            print(f"{label} font: {p}")
+            print(f"  {label}: {p}")
         else:
-            print(f"{label} font: not downloaded")
+            print(f"  {label}: not downloaded")
 
 
 if __name__ == "__main__":
