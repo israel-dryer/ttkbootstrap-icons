@@ -5,9 +5,6 @@ from ttkbootstrap_icons_simple.provider import SimpleProvider
 class SimpleIcon(Icon):
     """Convenience icon for the Simple Icon glyph set.
 
-    Resolves the provided name (optionally with a style) using `SimpleProvider`,
-    then initializes the base `Icon` with the resolved glyph.
-
     Args:
         name: glyph name.
         size: Pixel size of the rasterized image (default: 24).

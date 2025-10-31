@@ -2,11 +2,7 @@ from ttkbootstrap_icons.providers import BaseFontProvider
 
 
 class SimpleProvider(BaseFontProvider):
-    """Initialize the provider with style configuration.
-
-    Uses a single font file (`SimpleIcons.ttf`) for all styles. Style selection
-    is performed by predicates that test for the suffix.
-    """
+    """Initialize the provider"""
 
     def __init__(self):
         super().__init__(
