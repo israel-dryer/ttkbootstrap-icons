@@ -1,14 +1,18 @@
-from dataclasses import dataclass
-
 from ttkbootstrap_icons.providers import BaseFontProvider
 
 
-@dataclass
-class IonFontProvider(BaseFontProvider):
-    name: str = "ion"
-    package: str = "ttkbootstrap_icons_ion"
-    font_filename: str = ""
-    glyphmap_filename: str = "glyphmap.json"
+class IonProvider(BaseFontProvider):
+    """Initialize the provider with style configuration.
 
-    def display_name(self) -> str:  # pragma: no cover
-        return "Ionicons"
+    Uses a single font file (`ionicons.ttf`) for all styles. Style selection
+    is performed by predicates that test for the suffix.
+    """
+
+    def __init__(self):
+        super().__init__(
+            name="ion",
+            display_name="Ion Icons",
+            package="ttkbootstrap_icons_ion",
+            filename="fonts/ionicons.ttf",
+            scale_to_fit=True,
+        )

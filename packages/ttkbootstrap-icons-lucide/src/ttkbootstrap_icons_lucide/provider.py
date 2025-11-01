@@ -1,17 +1,23 @@
-from dataclasses import dataclass
-
 from ttkbootstrap_icons.providers import BaseFontProvider
 
 
-@dataclass
-class LucideFontProvider(BaseFontProvider):
-    name: str = "lucide"
-    package: str = "ttkbootstrap_icons_lucide"
-    # If local fonts are not shipped yet, you can temporarily fall back by copying
-    # assets from the base package into this provider's fonts/ and glyphmap.json.
-    font_filename: str = "fonts/lucide.ttf"
-    glyphmap_filename: str = "glyphmap.json"
+class LucideProvider(BaseFontProvider):
+    """Initialize the provider with style configuration.
 
-    def display_name(self) -> str:  # pragma: no cover
-        return "Lucide Icons"
+    Uses a single font file (`lucide.ttf`) for all styles. Style selection
+    is performed by predicates that test for the suffix.
+    """
 
+    def __init__(self):
+        super().__init__(
+            name="lucide",
+            display_name="Lucide Icons",
+            package="ttkbootstrap_icons_lucide",
+            filename="fonts/lucide.ttf",
+            scale_to_fit=True,
+        )
+
+    @staticmethod
+    def format_glyph_name(glyph_name: str) -> str:
+        """Display friendly name for font name"""
+        return str(glyph_name).lower().replace("icon-", "")

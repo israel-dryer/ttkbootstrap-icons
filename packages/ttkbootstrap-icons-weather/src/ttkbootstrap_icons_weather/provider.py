@@ -1,14 +1,14 @@
-from dataclasses import dataclass
-
 from ttkbootstrap_icons.providers import BaseFontProvider
 
 
-@dataclass
-class WeatherFontProvider(BaseFontProvider):
-    name: str = "weather"
-    package: str = "ttkbootstrap_icons_weather"
-    font_filename: str = ""
-    glyphmap_filename: str = "glyphmap.json"
+class WeatherProvider(BaseFontProvider):
+    """Initialize the provider"""
 
-    def display_name(self) -> str:  # pragma: no cover
-        return "Weather Icons"
+    def __init__(self):
+        super().__init__(
+            name="weather",
+            display_name="Weather Icons",
+            package="ttkbootstrap_icons_weather",
+            filename="fonts/weathericons-regular-webfont.ttf",
+            scale_to_fit=True,
+        )

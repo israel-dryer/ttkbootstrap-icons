@@ -13,6 +13,12 @@ from ttkbootstrap_icons.tooling import (
 )
 from urllib.error import HTTPError, URLError
 
+"""
+    TODO automate the normalization
+    - strip prefix
+    - strip sizes
+    - use first instance of each item with same key
+"""
 
 PRESETS = {
     # Microsoft Fluent System Icons from GitHub releases

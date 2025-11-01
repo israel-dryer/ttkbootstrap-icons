@@ -1,67 +1,29 @@
-from dataclasses import dataclass
-
-from importlib.resources import files
-from ttkbootstrap_icons.providers import MultiStyleFontProvider
+from ttkbootstrap_icons.providers import BaseFontProvider
 
 
-@dataclass
-class FluentFontProvider(MultiStyleFontProvider):
-    name: str = "fluent"
-    package: str = "ttkbootstrap_icons_fluent"
-    font_filename: str = ""
-    glyphmap_filename: str = "glyphmap.json"
-    styles: dict = None  # type: ignore
-    default_style: str = "regular"
+class FluentProvider(BaseFontProvider):
+    """Initialize the provider with style configuration"""
 
-    def __post_init__(self):
-        if self.styles is None:
-            self.styles = {
-                "regular": "fonts/FluentSystemIcons-Regular.ttf",
-                "filled": "fonts/FluentSystemIcons-Filled.ttf",
-                "light": "fonts/FluentSystemIcons-Light.ttf",
-            }
+    def __init__(self):
+        super().__init__(
+            name="fluent",
+            display_name="Fluent Icons Icons",
+            package="ttkbootstrap_icons_fluent",
+            default_style="regular",
+            styles={
+                "regular": {"filename": "fonts/FluentSystemIcons-Regular.ttf"},
+                "filled": {"filename": "fonts/FluentSystemIcons-Filled.ttf"},
+                "light": {"filename": "fonts/FluentSystemIcons-Light.ttf"},
+            },
+            scale_to_fit=True,
+        )
 
-    def list_styles(self) -> list[str]:
-        # Return only styles whose font files exist
-        pkg = files(self.package)
-        available = []
-        for style, rel in self.styles.items():
-            try:
-                if pkg.joinpath(rel).is_file():
-                    available.append(style)
-            except Exception:
-                continue
-        return sorted(available)
-
-    def get_default_style(self) -> str | None:
-        styles = self.list_styles()
-        if not styles:
-            return None
-        return self.default_style if self.default_style in styles else styles[0]
-
-    def load_assets(self, style: str | None = None):
-        chosen = style or self.get_default_style()
-        if not chosen:
-            # Defer to base which will error meaningfully
-            return super().load_assets(style=None)
-        # Prefer a style-specific glyphmap if present, e.g., glyphmap-regular.json
-        original_map = self.glyphmap_filename
-        candidate = f"glyphmap-{chosen}.json"
-        try:
-            pkg = files(self.package)
-            if pkg.joinpath(candidate).is_file():
-                self.glyphmap_filename = candidate
-        except Exception:
-            pass
-        try:
-            return super().load_assets(style=chosen)
-        finally:
-            # Restore to avoid leaking state across calls
-            self.glyphmap_filename = original_map
-
-    def display_name(self) -> str:  # pragma: no cover
-        return "Fluent System Icons"
-
-    def style_display_name(self, style: str) -> str:  # pragma: no cover
-        mapping = {"regular": "Regular", "filled": "Filled", "light": "Light"}
-        return mapping.get(style, super().style_display_name(style))
+    @staticmethod
+    def format_glyph_name(glyph_name: str) -> str:
+        """Display friendly name for font name"""
+        return str(glyph_name).lower().replace(
+            '-regular', '').replace(
+            "-filled", "").replace(
+            "-light", "").replace(
+            "ic-fluent-", ""
+        )

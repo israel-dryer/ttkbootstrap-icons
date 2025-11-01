@@ -1,5 +1,4 @@
-from .provider import GoogleMaterialProvider
 from .icon import GMIIcon
+from .provider import GMIProvider
 
-__all__ = ["GoogleMaterialProvider", "GMIIcon"]
-
+__all__ = ["GMIProvider", "GMIIcon"]

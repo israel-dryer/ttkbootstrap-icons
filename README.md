@@ -32,7 +32,6 @@ pip install ttkbootstrap-icons-weather  # Weather Icons
 pip install ttkbootstrap-icons-devicon  # Devicon
 pip install ttkbootstrap-icons-eva      # Eva Icons
 pip install ttkbootstrap-icons-rpga     # RPG Awesome
-pip install ttkbootstrap-icons-meteocons # Meteocons (font-based)
 ```
 
 ## Quick Start
@@ -263,5 +262,4 @@ Israel Dryer (israel.dryer@gmail.com)
 - [Devicon](https://devicon.dev)
 - [Eva Icons](https://akveo.github.io/eva-icons/)
 - [RPG Awesome](https://github.com/nagoshiashumari/Rpg-Awesome)
-- [Meteocons](https://demo.alessioatzeni.com/meteocons/#)
 - [ttkbootstrap](https://ttkbootstrap.readthedocs.io/)

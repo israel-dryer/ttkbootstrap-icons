@@ -1,28 +1,20 @@
-from dataclasses import dataclass
-
-from ttkbootstrap_icons.providers import MultiStyleFontProvider
+from ttkbootstrap_icons.providers import BaseFontProvider
 
 
-@dataclass
-class FontAwesomeFontProvider(MultiStyleFontProvider):
-    name: str = "fa"
-    package: str = "ttkbootstrap_icons_fa"
-    font_filename: str = ""
-    glyphmap_filename: str = "glyphmap.json"
-    styles: dict = None  # type: ignore
-    default_style: str = "solid"
+class FAProvider(BaseFontProvider):
+    """Initialize the provider with style configuration"""
 
-    def __post_init__(self):
-        if self.styles is None:
-            self.styles = {
-                "solid": "fonts/fa-solid-900.ttf",
-                "regular": "fonts/fa-regular-400.ttf",
-                "brands": "fonts/fa-brands-400.ttf",
-            }
-
-    def display_name(self) -> str:  # pragma: no cover
-        return "Font Awesome"
-
-    def style_display_name(self, style: str) -> str:  # pragma: no cover
-        mapping = {"solid": "Solid", "regular": "Regular", "brands": "Brands"}
-        return mapping.get(style, super().style_display_name(style))
+    def __init__(self):
+        super().__init__(
+            name="fontawesome",
+            display_name="Font Awesome",
+            package="ttkbootstrap_icons_fa",
+            default_style="solid",
+            styles={
+                "solid": {"filename": "fonts/fa-solid-900.ttf"},
+                "regular": {"filename": "fonts/fa-regular-400.ttf"},
+                "brands": {"filename": "fonts/fa-brands-400.ttf"},
+            },
+            pad_factor=0.15,
+            scale_to_fit=True,
+        )

@@ -1,4 +1,4 @@
-from .provider import DeviconFontProvider
+from .provider import DeviconProvider
 from .icon import DevIcon
 
-__all__ = ["DeviconFontProvider", "DevIcon"]
+__all__ = ["DeviconProvider", "DevIcon"]
