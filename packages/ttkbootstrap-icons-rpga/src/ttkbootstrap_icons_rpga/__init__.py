@@ -1,4 +1,4 @@
 from .icon import RPGAIcon
-from .provider import RPGAProvider
+from .provider import RPGAFontProvider
 
-__all__ = ["RPGAProvider", "RPGAIcon"]
+__all__ = ["RPGAFontProvider", "RPGAIcon"]

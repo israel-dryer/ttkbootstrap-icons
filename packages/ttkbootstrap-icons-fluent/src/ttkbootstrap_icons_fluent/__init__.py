@@ -1,4 +1,4 @@
 from .icon import FluentIcon
-from .provider import FluentProvider
+from .provider import FluentSystemFontProvider
 
-__all__ = ["FluentProvider", "FluentIcon"]
+__all__ = ["FluentSystemFontProvider", "FluentIcon"]

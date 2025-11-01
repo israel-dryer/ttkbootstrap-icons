@@ -1,5 +1,5 @@
 from ttkbootstrap_icons.icon import Icon
-from ttkbootstrap_icons_weather.provider import WeatherProvider
+from ttkbootstrap_icons_weather.provider import WeatherFontProvider
 
 
 class WeatherIcon(Icon):
@@ -18,7 +18,7 @@ class WeatherIcon(Icon):
     """
 
     def __init__(self, name: str, size: int = 24, color: str = "black", **kwargs):
-        prov = WeatherProvider()
+        prov = WeatherFontProvider()
         WeatherIcon.initialize_with_provider(prov)
         resolved = prov.resolve_icon_name(name, **kwargs)
         super().__init__(resolved, size, color)

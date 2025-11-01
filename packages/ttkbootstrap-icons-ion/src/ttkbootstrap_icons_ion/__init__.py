@@ -1,4 +1,4 @@
-from .provider import IonProvider
+from .provider import IonFontProvider
 from .icon import IonIcon
 
-__all__ = ["IonProvider", "IonIcon"]
+__all__ = ["IonFontProvider", "IonIcon"]

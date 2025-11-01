@@ -1,7 +1,7 @@
 from ttkbootstrap_icons.providers import BaseFontProvider
 
 
-class LucideProvider(BaseFontProvider):
+class LucideFontProvider(BaseFontProvider):
     """Initialize the provider with style configuration.
 
     Uses a single font file (`lucide.ttf`) for all styles. Style selection
@@ -13,6 +13,9 @@ class LucideProvider(BaseFontProvider):
             name="lucide",
             display_name="Lucide Icons",
             package="ttkbootstrap_icons_lucide",
+            homepage="http://lucide.dev/icons/",
+            license_url="https://lucide.dev/license",
+            icon_version="0.511.0",
             filename="fonts/lucide.ttf",
             scale_to_fit=True,
         )

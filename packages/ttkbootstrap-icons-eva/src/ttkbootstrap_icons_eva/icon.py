@@ -1,7 +1,7 @@
 from typing import Literal
 
 from ttkbootstrap_icons.icon import Icon
-from ttkbootstrap_icons_eva.provider import EvaProvider
+from ttkbootstrap_icons_eva.provider import EvaFontProvider
 
 EvaStyles = Literal['fill', 'outline']
 
@@ -26,7 +26,7 @@ class EvaIcon(Icon):
     """
 
     def __init__(self, name: str, size: int = 24, color: str = "black", style: EvaStyles | None = None):
-        prov = EvaProvider()
+        prov = EvaFontProvider()
         EvaIcon.initialize_with_provider(prov)
         resolved = prov.resolve_icon_name(name, style)
         super().__init__(resolved, size, color)

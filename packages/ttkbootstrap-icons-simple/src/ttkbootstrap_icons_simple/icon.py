@@ -1,5 +1,5 @@
 from ttkbootstrap_icons.icon import Icon
-from ttkbootstrap_icons_simple.provider import SimpleProvider
+from ttkbootstrap_icons_simple.provider import SimpleFontProvider
 
 
 class SimpleIcon(Icon):
@@ -15,7 +15,7 @@ class SimpleIcon(Icon):
     """
 
     def __init__(self, name: str, size: int = 24, color: str = "black", **kwargs):
-        prov = SimpleProvider()
+        prov = SimpleFontProvider()
         SimpleIcon.initialize_with_provider(prov)
         resolved = prov.resolve_icon_name(name, **kwargs)
         super().__init__(resolved, size, color)

@@ -49,13 +49,13 @@ class BootstrapIcon(Icon):
     """
 
     def __init__(self, name: str, size: int = 24, color: str = "black", style: BootstrapStyles | None = None):
-        prov = BootstrapProvider()
+        prov = BootstrapFontProvider()
         BootstrapIcon.initialize_with_provider(prov)
         resolved = prov.resolve_icon_name(name, style)
         super().__init__(resolved, size, color)
 
 
-class BootstrapProvider(BaseFontProvider):
+class BootstrapFontProvider(BaseFontProvider):
     """Provider for the Bootstrap Icons dataset.
 
     Bootstrap ships two styles—"outline" and "fill"—encoded by the presence of a
@@ -81,12 +81,15 @@ class BootstrapProvider(BaseFontProvider):
         """
         super().__init__(
             name="bootstrap",
-            display_name="Bootstrap",
+            display_name="Bootstrap Icons",
             package="ttkbootstrap_icons.assets",
+            homepage="https://icons.getbootstrap.com/",
+            license_url="https://github.com/twbs/icons/blob/main/LICENSE",
+            icon_version="1.13.1",
             default_style="outline",
             styles={
-                "fill": {"filename": "bootstrap.ttf", "predicate": BootstrapProvider._is_fill_style},
-                "outline": {"filename": "bootstrap.ttf", "predicate": BootstrapProvider._is_outline_style},
+                "fill": {"filename": "bootstrap.ttf", "predicate": BootstrapFontProvider._is_fill_style},
+                "outline": {"filename": "bootstrap.ttf", "predicate": BootstrapFontProvider._is_outline_style},
             }
         )
 

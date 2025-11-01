@@ -1,5 +1,5 @@
-from .provider import TypiconsProvider
+from .provider import TypiconsFontProvider
 from .icon import TypiconsIcon
 
-__all__ = ["TypiconsProvider", "TypiconsIcon"]
+__all__ = ["TypiconsFontProvider", "TypiconsIcon"]
 

@@ -1,7 +1,7 @@
 from ttkbootstrap_icons.providers import BaseFontProvider
 
 
-class MeteoconsProvider(BaseFontProvider):
+class MeteoconsFontProvider(BaseFontProvider):
     """Initialize the provider"""
 
     def __init__(self):
@@ -10,5 +10,8 @@ class MeteoconsProvider(BaseFontProvider):
             display_name="Meteocons",
             package="ttkbootstrap_icons_meteocons",
             filename="fonts/meteocons.ttf",
+            homepage="https://bas.dev/work/meteocons",
+            license_url="https://github.com/basmilius/weather-icons/blob/dev/LICENSE",
+            icon_version="2.0.0",
             scale_to_fit=True,
         )

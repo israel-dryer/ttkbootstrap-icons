@@ -1,7 +1,7 @@
 from typing import Literal
 
 from ttkbootstrap_icons.icon import Icon
-from ttkbootstrap_icons_devicon.provider import DeviconProvider
+from ttkbootstrap_icons_devicon.provider import DeviconFontProvider
 
 DevStyles = Literal['plain', 'plain-wordmark', 'original', 'original-wordmark']
 
@@ -27,7 +27,7 @@ class DevIcon(Icon):
     """
 
     def __init__(self, name: str, size: int = 24, color: str = "black", style: DevStyles | None = None):
-        prov = DeviconProvider()
+        prov = DeviconFontProvider()
         DevIcon.initialize_with_provider(prov)
         resolved = prov.resolve_icon_name(name, style)
         super().__init__(resolved, size, color)

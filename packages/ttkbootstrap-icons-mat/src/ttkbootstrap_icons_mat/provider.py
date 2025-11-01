@@ -1,7 +1,7 @@
 from ttkbootstrap_icons.providers import BaseFontProvider
 
 
-class MaterialProvider(BaseFontProvider):
+class MaterialDesignFontProvider(BaseFontProvider):
     """Initialize the provider with style configuration.
 
     Uses a single font file (`materialdesignicons-webfont.ttf`) for all styles.
@@ -13,12 +13,15 @@ class MaterialProvider(BaseFontProvider):
             name="mat",
             display_name="Material Design Icons",
             package="ttkbootstrap_icons_mat",
+            homepage="https://pictogrammers.com/library/mdi/",
+            license_url="https://pictogrammers.com/docs/general/license/",
+            icon_version="7.4.47",
             default_style="fill",
             styles={
                 "outline": {"filename": "fonts/materialdesignicons-webfont.ttf",
-                            "predicate": MaterialProvider._is_outline_style},
+                            "predicate": MaterialDesignFontProvider._is_outline_style},
                 "fill": {"filename": "fonts/materialdesignicons-webfont.ttf",
-                         "predicate": MaterialProvider._is_fill_style}
+                         "predicate": MaterialDesignFontProvider._is_fill_style}
             },
             scale_to_fit=True,
         )

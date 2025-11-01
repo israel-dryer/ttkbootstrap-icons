@@ -1,5 +1,5 @@
 from ttkbootstrap_icons.icon import Icon
-from ttkbootstrap_icons_lucide.provider import LucideProvider
+from ttkbootstrap_icons_lucide.provider import LucideFontProvider
 
 
 class LucideIcon(Icon):
@@ -18,7 +18,7 @@ class LucideIcon(Icon):
     """
 
     def __init__(self, name: str, size: int = 24, color: str = "black", **kwargs):
-        prov = LucideProvider()
+        prov = LucideFontProvider()
         LucideIcon.initialize_with_provider(prov)
         resolved = prov.resolve_icon_name(name, **kwargs)
         super().__init__(resolved, size, color)
@@ -34,7 +34,7 @@ if __name__ == '__main__':
     options = {"fill": "x", "padx": 10, "pady": 10}
 
     # using the default style
-    icon0 = LucideIcon("wheat", size=64)
+    icon0 = LucideIcon("user-star", size=64)
     ttk.Label(root, text="default style", image=icon0.image, compound="left").pack(**options)
 
     root.mainloop()

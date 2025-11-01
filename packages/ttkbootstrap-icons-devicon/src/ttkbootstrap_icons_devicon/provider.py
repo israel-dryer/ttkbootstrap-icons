@@ -3,7 +3,7 @@ import re
 from ttkbootstrap_icons.providers import BaseFontProvider
 
 
-class DeviconProvider(BaseFontProvider):
+class DeviconFontProvider(BaseFontProvider):
     def __init__(self):
         """Initialize the provider with style configuration.
 
@@ -12,15 +12,19 @@ class DeviconProvider(BaseFontProvider):
         """
         super().__init__(
             name="devicon",
+            display_name="Devicon",
             package="ttkbootstrap_icons_devicon",
+            homepage="https://devicon.dev/",
+            license_url="https://github.com/devicons/devicon/blob/master/LICENSE",
+            icon_version="2.17.0",
             default_style="plain",
             styles={
-                "plain": {"filename": "fonts/devicon.ttf", "predicate": DeviconProvider._is_plain_style},
+                "plain": {"filename": "fonts/devicon.ttf", "predicate": DeviconFontProvider._is_plain_style},
                 "plain-wordmark": {"filename": "fonts/devicon.ttf",
-                                   "predicate": DeviconProvider._is_plain_wordmark_style},
-                "original": {"filename": "fonts/devicon.ttf", "predicate": DeviconProvider._is_original_style},
+                                   "predicate": DeviconFontProvider._is_plain_wordmark_style},
+                "original": {"filename": "fonts/devicon.ttf", "predicate": DeviconFontProvider._is_original_style},
                 "original-wordmark": {"filename": "fonts/devicon.ttf",
-                                      "predicate": DeviconProvider._is_original_wordmark_style}
+                                      "predicate": DeviconFontProvider._is_original_wordmark_style}
             },
             pad_factor=0.15,
             scale_to_fit=True,

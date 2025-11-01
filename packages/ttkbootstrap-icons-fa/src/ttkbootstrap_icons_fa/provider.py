@@ -1,14 +1,17 @@
 from ttkbootstrap_icons.providers import BaseFontProvider
 
 
-class FAProvider(BaseFontProvider):
+class FontAwesome6FontProvider(BaseFontProvider):
     """Initialize the provider with style configuration"""
 
     def __init__(self):
         super().__init__(
             name="fontawesome",
-            display_name="Font Awesome",
+            display_name="Font Awesome 6 (Free)",
             package="ttkbootstrap_icons_fa",
+            homepage="https://fontawesome.com/v6/icons",
+            license_url="https://fontawesome.com/license",
+            icon_version="6.7.2",
             default_style="solid",
             styles={
                 "solid": {"filename": "fonts/fa-solid-900.ttf"},
