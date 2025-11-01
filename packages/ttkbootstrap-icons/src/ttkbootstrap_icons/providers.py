@@ -17,6 +17,9 @@ class FontProviderOptions(TypedDict):
     package: str
     display_name: NotRequired[str]
     filename: NotRequired[str]
+    homepage: NotRequired[str]
+    license_url: NotRequired[str]
+    icon_version: NotRequired[str]
     styles: NotRequired[Mapping[str, Mapping[str, str | Callable[[str], bool]]]]
     default_style: NotRequired[str]
     pad_factor: NotRequired[float]
@@ -28,9 +31,9 @@ class BaseFontProvider(ABC):
     """Base class for icon providers with class-level caches."""
 
     __slots__ = (
-        "_name", "_package", "_display_name", "_filename",
-        "_default_style", "_styles", "_styles_view", "_name_lookup",
-        "_pad_factor", "_y_bias", "_scale_to_fit"
+        "_name", "_package", "_display_name", "_filename", "_homepage",
+        "_license_url", "_default_style", "_styles", "_styles_view",
+        "_name_lookup", "_pad_factor", "_y_bias", "_scale_to_fit", "_icon_version"
     )
 
     # Global caches shared per provider class
@@ -42,7 +45,10 @@ class BaseFontProvider(ABC):
     _package: str
     _display_name: str
     _filename: Optional[str]
+    _homepage: Optional[str]
+    _license_url: Optional[str]
     _default_style: Optional[str]
+    _icon_version: Optional[str]
     _styles: Mapping[str, Mapping[str, str | Callable[[str], bool]]]
     _styles_view: Mapping[str, Mapping[str, str | Callable[[str], bool]]]
     _name_lookup: dict[str, dict[str, str]]
@@ -55,6 +61,9 @@ class BaseFontProvider(ABC):
         self._display_name = kwargs.get('display_name', self._name)
         self._package = kwargs.get('package')  # required
         self._filename = kwargs.get('filename')
+        self._homepage = kwargs.get('homepage')
+        self._license_url = kwargs.get('license_url')
+        self._icon_version = kwargs.get('icon_version')
         self._default_style = kwargs.get('default_style')
 
         self._styles = deepcopy(kwargs.get("styles", {}))
@@ -84,6 +93,18 @@ class BaseFontProvider(ABC):
     @property
     def display_name(self) -> str:
         return self._display_name
+
+    @property
+    def icon_version(self):
+        return self._icon_version
+
+    @property
+    def homepage(self):
+        return self._homepage
+
+    @property
+    def license_url(self):
+        return self._license_url
 
     @property
     def default_style(self) -> Optional[str]:

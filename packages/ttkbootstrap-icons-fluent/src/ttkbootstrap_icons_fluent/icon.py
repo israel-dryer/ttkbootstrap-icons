@@ -1,7 +1,7 @@
 from typing import Literal
 
 from ttkbootstrap_icons.icon import Icon
-from ttkbootstrap_icons_fluent.provider import FluentProvider
+from ttkbootstrap_icons_fluent.provider import FluentSystemFontProvider
 
 FluentStyles = Literal['regular', 'filled', 'light']
 
@@ -26,7 +26,7 @@ class FluentIcon(Icon):
     """
 
     def __init__(self, name: str, size: int = 24, color: str = "black", style: FluentStyles | None = None):
-        prov = FluentProvider()
+        prov = FluentSystemFontProvider()
         resolved_style = prov.resolve_icon_style(name, style)
         FluentIcon.initialize_with_provider(prov, resolved_style)
         resolved = prov.resolve_icon_name(name, style)

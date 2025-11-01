@@ -1,14 +1,17 @@
 from ttkbootstrap_icons.providers import BaseFontProvider
 
 
-class FluentProvider(BaseFontProvider):
+class FluentSystemFontProvider(BaseFontProvider):
     """Initialize the provider with style configuration"""
 
     def __init__(self):
         super().__init__(
             name="fluent",
-            display_name="Fluent Icons Icons",
+            display_name="Fluent System Icons",
             package="ttkbootstrap_icons_fluent",
+            homepage="https://github.com/microsoft/fluentui-system-icons",
+            license_url="https://github.com/microsoft/fluentui-system-icons/blob/main/LICENSE",
+            icon_version="1.1.261",
             default_style="regular",
             styles={
                 "regular": {"filename": "fonts/FluentSystemIcons-Regular.ttf"},

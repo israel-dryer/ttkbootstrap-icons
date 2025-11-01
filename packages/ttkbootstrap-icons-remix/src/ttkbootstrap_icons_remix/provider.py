@@ -11,8 +11,11 @@ class RemixProvider(BaseFontProvider):
     def __init__(self):
         super().__init__(
             name="remix",
-            display_name="Remix Icons",
+            display_name="Remix Icon",
             package="ttkbootstrap_icons_remix",
+            homepage="https://remixicon.com/",
+            license_url="https://github.com/Remix-Design/RemixIcon/blob/master/License",
+            icon_version="4.7.0",
             default_style="fill",
             styles={
                 "line": {"filename": "fonts/remixicon.ttf", "predicate": RemixProvider._is_line_style},

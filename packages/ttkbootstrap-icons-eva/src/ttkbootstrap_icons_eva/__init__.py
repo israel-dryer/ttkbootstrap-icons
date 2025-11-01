@@ -1,4 +1,4 @@
 from .icon import EvaIcon
-from .provider import EvaProvider
+from .provider import EvaFontProvider
 
-__all__ = ["EvaProvider", "EvaIcon"]
+__all__ = ["EvaFontProvider", "EvaIcon"]

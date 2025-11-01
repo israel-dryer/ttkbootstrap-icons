@@ -13,6 +13,9 @@ class MaterialProvider(BaseFontProvider):
             name="mat",
             display_name="Material Design Icons",
             package="ttkbootstrap_icons_mat",
+            homepage="https://pictogrammers.com/library/mdi/",
+            license_url="https://pictogrammers.com/docs/general/license/",
+            icon_version="7.4.47",
             default_style="fill",
             styles={
                 "outline": {"filename": "fonts/materialdesignicons-webfont.ttf",

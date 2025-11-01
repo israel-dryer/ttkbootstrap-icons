@@ -13,6 +13,9 @@ class TypiconsProvider(BaseFontProvider):
             name="typicons",
             display_name="Typicons",
             package="ttkbootstrap_icons_typicons",
+            homepage="https://www.s-ings.com/typicons/",
+            license_url="https://github.com/stephenhutchings/typicons.font/blob/master/LICENCE.md",
+            icon_version="2.1.2",
             default_style="fill",
             styles={
                 "outline": {"filename": "fonts/typicons.ttf", "predicate": TypiconsProvider._is_outline_style},

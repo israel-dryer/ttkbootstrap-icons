@@ -1,7 +1,7 @@
 from ttkbootstrap_icons.providers import BaseFontProvider
 
 
-class EvaProvider(BaseFontProvider):
+class EvaFontProvider(BaseFontProvider):
     """Initialize the provider with style configuration.
 
     Uses a single font file (`eva-icons.ttf`) for all styles. Style selection
@@ -13,10 +13,13 @@ class EvaProvider(BaseFontProvider):
             name="eva",
             display_name="Eva Icons",
             package="ttkbootstrap_icons_eva",
+            homepage="https://akveo.github.io/eva-icons/#/",
+            license_url="https://github.com/akveo/eva-icons/blob/master/LICENSE.txt",
+            icon_version="1.1.3",
             default_style="fill",
             styles={
-                "outline": {"filename": "fonts/eva-icons.ttf", "predicate": EvaProvider._is_outline_style},
-                "fill": {"filename": "fonts/eva-icons.ttf", "predicate": EvaProvider._is_fill_style}
+                "outline": {"filename": "fonts/eva-icons.ttf", "predicate": EvaFontProvider._is_outline_style},
+                "fill": {"filename": "fonts/eva-icons.ttf", "predicate": EvaFontProvider._is_fill_style}
             },
             scale_to_fit=True,
         )
