@@ -1,7 +1,7 @@
 from ttkbootstrap_icons.providers import BaseFontProvider
 
 
-class RPGAProvider(BaseFontProvider):
+class RPGAFontProvider(BaseFontProvider):
     """Initialize the provider with style configuration.
 
     Uses a single font file (`rpgawesome-webfont.ttf`) for all styles. Style selection

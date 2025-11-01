@@ -1,4 +1,4 @@
 from .icon import MeteoIcon
-from .provider import MeteoconsProvider
+from .provider import MeteoconsFontProvider
 
-__all__ = ["MeteoconsProvider", "MeteoIcon"]
+__all__ = ["MeteoconsFontProvider", "MeteoIcon"]

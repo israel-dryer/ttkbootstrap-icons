@@ -1,5 +1,5 @@
 from ttkbootstrap_icons.icon import Icon
-from ttkbootstrap_icons_ion.provider import IonProvider
+from ttkbootstrap_icons_ion.provider import IonFontProvider
 
 
 class IonIcon(Icon):
@@ -18,7 +18,7 @@ class IonIcon(Icon):
     """
 
     def __init__(self, name: str, size: int = 24, color: str = "black", **kwargs):
-        prov = IonProvider()
+        prov = IonFontProvider()
         IonIcon.initialize_with_provider(prov)
         resolved = prov.resolve_icon_name(name, **kwargs)
         super().__init__(resolved, size, color)

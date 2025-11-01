@@ -1,4 +1,4 @@
 from .icon import SimpleIcon
-from .provider import SimpleProvider
+from .provider import SimpleFontProvider
 
-__all__ = ["SimpleProvider", "SimpleIcon"]
+__all__ = ["SimpleFontProvider", "SimpleIcon"]

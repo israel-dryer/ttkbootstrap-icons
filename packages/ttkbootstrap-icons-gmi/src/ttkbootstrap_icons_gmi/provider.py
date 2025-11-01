@@ -1,7 +1,7 @@
 from ttkbootstrap_icons.providers import BaseFontProvider
 
 
-class GMIProvider(BaseFontProvider):
+class GoogleMaterialIconFontProvider(BaseFontProvider):
     """Initialize the provider with style configuration"""
 
     def __init__(self):
@@ -10,6 +10,9 @@ class GMIProvider(BaseFontProvider):
             display_name="Google Material Icons",
             package="ttkbootstrap_icons_gmi",
             default_style="baseline",
+            homepage="https://github.com/marella/material-design-icons",
+            license_url="https://github.com/marella/material-design-icons/blob/main/LICENSE",
+            icon_version="0.14.15",
             styles={
                 "baseline": {"filename": "fonts/MaterialIcons-Regular.ttf"},
                 "outlined": {"filename": "fonts/MaterialIconsOutlined-Regular.otf"},

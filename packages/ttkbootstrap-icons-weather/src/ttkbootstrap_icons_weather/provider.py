@@ -1,7 +1,7 @@
 from ttkbootstrap_icons.providers import BaseFontProvider
 
 
-class WeatherProvider(BaseFontProvider):
+class WeatherFontProvider(BaseFontProvider):
     """Initialize the provider"""
 
     def __init__(self):

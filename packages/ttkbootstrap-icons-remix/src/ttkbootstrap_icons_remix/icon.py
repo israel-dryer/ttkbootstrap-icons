@@ -1,7 +1,7 @@
 from typing import Literal
 
 from ttkbootstrap_icons.icon import Icon
-from ttkbootstrap_icons_remix.provider import RemixProvider
+from ttkbootstrap_icons_remix.provider import RemixFontProvider
 
 RemixStyles = Literal['fill', 'line']
 
@@ -26,7 +26,7 @@ class RemixIcon(Icon):
     """
 
     def __init__(self, name: str, size: int = 24, color: str = "black", style: RemixStyles | None = None):
-        prov = RemixProvider()
+        prov = RemixFontProvider()
         RemixIcon.initialize_with_provider(prov)
         resolved = prov.resolve_icon_name(name, style)
         super().__init__(resolved, size, color)

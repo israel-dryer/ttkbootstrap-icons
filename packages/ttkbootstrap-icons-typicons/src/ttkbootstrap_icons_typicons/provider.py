@@ -1,7 +1,7 @@
 from ttkbootstrap_icons.providers import BaseFontProvider
 
 
-class TypiconsProvider(BaseFontProvider):
+class TypiconsFontProvider(BaseFontProvider):
     """Provider for the Typicons font.
 
     Uses a single font file (`typicons.ttf`) for all styles. Style selection
@@ -18,8 +18,8 @@ class TypiconsProvider(BaseFontProvider):
             icon_version="2.1.2",
             default_style="fill",
             styles={
-                "outline": {"filename": "fonts/typicons.ttf", "predicate": TypiconsProvider._is_outline_style},
-                "fill": {"filename": "fonts/typicons.ttf", "predicate": TypiconsProvider._is_fill_style}
+                "outline": {"filename": "fonts/typicons.ttf", "predicate": TypiconsFontProvider._is_outline_style},
+                "fill": {"filename": "fonts/typicons.ttf", "predicate": TypiconsFontProvider._is_fill_style}
             },
             scale_to_fit=True,
         )

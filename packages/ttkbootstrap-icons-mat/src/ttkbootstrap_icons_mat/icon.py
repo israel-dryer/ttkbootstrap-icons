@@ -1,7 +1,7 @@
 from typing import Literal
 
 from ttkbootstrap_icons.icon import Icon
-from ttkbootstrap_icons_mat.provider import MaterialProvider
+from ttkbootstrap_icons_mat.provider import MaterialDesignFontProvider
 
 MatStyles = Literal['fill', 'outline']
 
@@ -26,7 +26,7 @@ class MatIcon(Icon):
     """
 
     def __init__(self, name: str, size: int = 24, color: str = "black", style: MatStyles | None = None):
-        prov = MaterialProvider()
+        prov = MaterialDesignFontProvider()
         MatIcon.initialize_with_provider(prov)
         resolved = prov.resolve_icon_name(name, style)
         super().__init__(resolved, size, color)

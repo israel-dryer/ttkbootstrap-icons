@@ -1,7 +1,7 @@
 from typing import Literal
 
 from ttkbootstrap_icons.icon import Icon
-from ttkbootstrap_icons_gmi.provider import GMIProvider
+from ttkbootstrap_icons_gmi.provider import GoogleMaterialIconFontProvider
 
 GMIStyles = Literal['baseline', 'outlined', 'round', 'sharp']
 
@@ -26,7 +26,7 @@ class GMIIcon(Icon):
     """
 
     def __init__(self, name: str, size: int = 24, color: str = "black", style: GMIStyles | None = None):
-        prov = GMIProvider()
+        prov = GoogleMaterialIconFontProvider()
         # Resolve the style from the name if not explicitly provided
         resolved_style = prov.resolve_icon_style(name, style)
         GMIIcon.initialize_with_provider(prov, resolved_style)

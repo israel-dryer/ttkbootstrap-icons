@@ -1,7 +1,7 @@
 from ttkbootstrap_icons.providers import BaseFontProvider
 
 
-class MaterialProvider(BaseFontProvider):
+class MaterialDesignFontProvider(BaseFontProvider):
     """Initialize the provider with style configuration.
 
     Uses a single font file (`materialdesignicons-webfont.ttf`) for all styles.
@@ -19,9 +19,9 @@ class MaterialProvider(BaseFontProvider):
             default_style="fill",
             styles={
                 "outline": {"filename": "fonts/materialdesignicons-webfont.ttf",
-                            "predicate": MaterialProvider._is_outline_style},
+                            "predicate": MaterialDesignFontProvider._is_outline_style},
                 "fill": {"filename": "fonts/materialdesignicons-webfont.ttf",
-                         "predicate": MaterialProvider._is_fill_style}
+                         "predicate": MaterialDesignFontProvider._is_fill_style}
             },
             scale_to_fit=True,
         )
