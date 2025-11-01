@@ -32,7 +32,7 @@ class DeviconFontProvider(BaseFontProvider):
 
     @staticmethod
     def _is_plain_style(name: str) -> bool:
-        return '-plain' in name
+        return '-plain' in name and not '-plain-wordmark' in name
 
     @staticmethod
     def _is_plain_wordmark_style(name: str) -> bool:
@@ -40,7 +40,7 @@ class DeviconFontProvider(BaseFontProvider):
 
     @staticmethod
     def _is_original_style(name: str) -> bool:
-        return '-original' in name
+        return '-original' in name and not '-original-wordmark' in name
 
     @staticmethod
     def _is_original_wordmark_style(name: str) -> bool:

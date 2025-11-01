@@ -116,7 +116,6 @@ class BaseFontProvider(ABC):
 
     @property
     def style_map(self) -> Mapping[str, Mapping[str, str | Callable[[str], bool]]]:
-        # return immutable view to avoid per-call copies
         return self._styles_view
 
     @property
@@ -322,7 +321,10 @@ class BaseFontProvider(ABC):
                         formatted = self.format_glyph_name(n)
                         style_lookup[formatted] = n
                         style_lookup[n] = n
-                        style_lookup[f"{n}-{style}"] = n
+                        # Only add the style suffix if it's not already present anywhere in the name
+                        # This handles both cases like "archive-fill" and "shield-fill-check"
+                        if f"-{style}" not in n.lower():
+                            style_lookup[f"{n}-{style}"] = n
                 lookup[style] = style_lookup
         else:
             glyphmap = self._read_glyphmap_for_style(None)
@@ -341,8 +343,19 @@ class BaseFontProvider(ABC):
         if type(self) not in self._name_lookup_global:
             self.build_name_lookup()
 
+        # Get unique glyph names (values) for each style for display in browser
+        if self.has_styles:
+            names_by_style = {
+                style: {v: v for v in set(lookup.values())}
+                for style, lookup in self._name_lookup.items()
+                if style != "base"
+            }
+        else:
+            base_lookup = self._name_lookup.get("base", {})
+            names_by_style = {"base": {v: v for v in set(base_lookup.values())}}
+
         return {
-            "names_by_style": self.get_icons_names_for_display(),
+            "names_by_style": names_by_style,
             "has_styles": self.has_styles,
             "styles": self.style_list,
             "default_style": self.default_style,

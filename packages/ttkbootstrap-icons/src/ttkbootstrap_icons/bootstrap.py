@@ -101,11 +101,6 @@ class BootstrapFontProvider(BaseFontProvider):
     def _is_fill_style(name: str) -> bool:
         return '-fill' in name
 
-    @staticmethod
-    def format_glyph_name(glyph_name: str) -> str:
-        """Display friendly name for font name"""
-        return str(glyph_name).lower().replace('-fill', '')
-
 
 if __name__ == '__main__':
     import tkinter as tk

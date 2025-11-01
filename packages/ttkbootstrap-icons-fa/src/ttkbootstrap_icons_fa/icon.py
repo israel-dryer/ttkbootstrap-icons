@@ -1,7 +1,7 @@
 from typing import Literal
 
 from ttkbootstrap_icons.icon import Icon
-from ttkbootstrap_icons_fa.provider import FontAwesome6FontProvider
+from ttkbootstrap_icons_fa.provider import FontAwesomeFontProvider
 
 FAStyles = Literal['regular', 'solid', 'brands']
 
@@ -26,7 +26,7 @@ class FAIcon(Icon):
     """
 
     def __init__(self, name: str, size: int = 24, color: str = "black", style: FAStyles | None = None):
-        prov = FontAwesome6FontProvider()
+        prov = FontAwesomeFontProvider()
         # Resolve the style from the name if not explicitly provided
         resolved_style = prov.resolve_icon_style(name, style)
         FAIcon.initialize_with_provider(prov, resolved_style)

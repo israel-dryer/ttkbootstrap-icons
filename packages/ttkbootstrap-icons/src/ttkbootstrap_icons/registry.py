@@ -30,7 +30,8 @@ def load_external_providers(registry: ProviderRegistry) -> None:
     for ep in entry_points(group="ttkbootstrap_icons.providers"):
         try:
             ProviderCls = ep.load()
-            registry.register_provider(ProviderCls.name, ProviderCls())
+            provider_instance = ProviderCls()
+            registry.register_provider(provider_instance.name, provider_instance)
         except Exception:
             # Ignore bad entry points, but continue loading others
             pass

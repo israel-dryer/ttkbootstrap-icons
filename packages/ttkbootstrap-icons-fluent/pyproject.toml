@@ -14,7 +14,7 @@ Homepage = "https://github.com/israel-dryer/ttkbootstrap-icons"
 
 # Auto-discovery hook for your base registry
 [project.entry-points."ttkbootstrap_icons.providers"]
-fluent = "ttkbootstrap_icons_fluent.provider:FluentFontProvider"
+fluent = "ttkbootstrap_icons_fluent.provider:FluentSystemFontProvider"
 
 [project.scripts]
 ttkicons-fluent-build = "ttkbootstrap_icons_fluent.tools.generate_assets:main"
