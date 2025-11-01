@@ -1,58 +1,72 @@
-from typing import Literal, Optional
+from typing import Literal
 
 from ttkbootstrap_icons.icon import Icon
-from .provider import FluentFontProvider
+from ttkbootstrap_icons_fluent.provider import FluentProvider
 
-
-FluentStyle = Literal["regular", "filled", "light"]
+FluentStyles = Literal['regular', 'filled', 'light']
 
 
 class FluentIcon(Icon):
-    def __init__(self, name: str, size: int = 24, color: str = "black", style: Optional[FluentStyle] = None):
-        base_style = (style or "").lower() if style is not None else None
-        # Infer style from name if not provided
-        inferred_style = None
-        for sfx in ("regular", "filled", "light"):
-            if name.lower().endswith(f"-{sfx}"):
-                inferred_style = sfx
-                break
+    """Convenience icon for the Fluent Icon glyph set.
 
-        style_l = base_style or inferred_style or "regular"
+    Resolves the provided name (optionally with a style) using `FluentProvider`,
+    then initializes the base `Icon` with the resolved glyph.
 
-        provider = FluentFontProvider()
-        FluentIcon.initialize_with_provider(provider, style=style_l)
+    Args:
+        name: Glyph name. May be a friendly name (e.g. "settings-16") or a raw glyph
+            (e.g. "settings-16-regular"). If you pass a conflicting style (e.g. name ends
+            with "-regular" but you set `style="filled"`), a `ValueError` is raised.
+        size: Pixel size of the rasterized image (default: 24).
+        color: Foreground color used to render the glyph (default: "black").
+        style: Optional style override: "filled", "regular", "light". If omitted, the provider's default style is used.
+            When `name` already encodes a style suffix (e.g. "-regular"), that suffix takes precedence.
 
-        # Normalize to 'ic-fluent-<base>-<style>' or 'ic-fluent-<base>-<size>-<style>'
-        full_name = name
-        low = full_name.lower()
-        if not low.startswith("ic-fluent-"):
-            full_name = f"ic-fluent-{full_name}"
-            low = full_name.lower()
-        if not low.endswith(("-regular", "-filled", "-light")):
-            if style_l in ("regular", "filled", "light"):
-                full_name = f"{full_name}-{style_l}"
-                low = full_name.lower()
+    Raises:
+        ValueError: If the name cannot be resolved for the requested style.
+    """
 
-        def has_size_segment(stem: str) -> bool:
-            if '-' not in stem:
-                return False
-            tail = stem.rsplit('-', 1)[-1]
-            return tail.isdigit()
+    def __init__(self, name: str, size: int = 24, color: str = "black", style: FluentStyles | None = None):
+        prov = FluentProvider()
+        resolved_style = prov.resolve_icon_style(name, style)
+        FluentIcon.initialize_with_provider(prov, resolved_style)
+        resolved = prov.resolve_icon_name(name, style)
+        super().__init__(resolved, size, color)
 
-        stem = full_name
-        for suf in ("-regular", "-filled", "-light"):
-            if stem.lower().endswith(suf):
-                stem = stem[: -len(suf)]
-                break
-        if not has_size_segment(stem):
-            preferred = ["20", "24", "16", "28", "32", "48"]
-            chosen = None
-            for sz in preferred:
-                cand = f"{stem}-{sz}{full_name[len(stem):]}"
-                if cand in Icon._icon_map:
-                    chosen = cand
-                    break
-            if chosen:
-                full_name = chosen
 
-        super().__init__(full_name, size, color)
+if __name__ == '__main__':
+    import tkinter as tk
+    from tkinter import ttk
+
+    root = tk.Tk()
+    root.title("Fluent Icons")
+    root.minsize(300, 200)
+    options = {"fill": "x", "padx": 10, "pady": 10}
+
+    # using the default style
+    icon0 = FluentIcon("add-12", size=64)
+    ttk.Label(root, text="default style", image=icon0.image, compound="left").pack(**options)
+
+    # using the style parameter
+    icon1 = FluentIcon("add-square-20", style="filled", size=64)
+    ttk.Label(root, text="filled with style param", image=icon1.image, compound="left").pack(**options)
+
+    icon1_1 = FluentIcon("add-square-20-filled", size=64)
+    ttk.Label(root, text="filled with style in name", image=icon1_1.image, compound="left").pack(**options)
+
+    # using the style in name
+    icon2 = FluentIcon("settings-16-regular", size=64)
+    ttk.Label(root, text="regular with style in name", image=icon2.image, compound="left").pack(**options)
+
+    # using the style parameter
+    icon3 = FluentIcon("settings-16", style="regular", size=64)
+    ttk.Label(root, text="regular with style param", image=icon3.image, compound="left").pack(**options)
+
+    # using the style in name
+    icon4 = FluentIcon("save-32-light", size=64)
+    ttk.Label(root, text="light with style in name", image=icon4.image, compound="left").pack(**options)
+
+    # using the style parameter
+    icon5 = FluentIcon("ic-fluent-save-32", style="light", size=64)
+    ttk.Label(root, text="light with style param", image=icon5.image, compound="left").pack(**options)
+
+    root.mainloop()

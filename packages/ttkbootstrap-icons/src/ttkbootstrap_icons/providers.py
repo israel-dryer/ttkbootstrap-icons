@@ -6,9 +6,9 @@ from collections.abc import Callable
 from copy import deepcopy
 from importlib.resources import files
 from types import MappingProxyType
-from typing import Optional, Mapping, ClassVar
+from typing import ClassVar, Mapping, Optional
 
-from typing_extensions import TypedDict, NotRequired, Unpack
+from typing_extensions import NotRequired, TypedDict, Unpack
 
 
 class FontProviderOptions(TypedDict):
@@ -175,6 +175,18 @@ class BaseFontProvider(ABC):
     @staticmethod
     def format_glyph_name(glyph_name: str) -> str:
         return str(glyph_name).lower()
+
+    def resolve_icon_style(self, name: str, style: Optional[str] = None):
+        """Resolve a user-supplied icon name and style to the actual style"""
+        if style is not None:
+            return style
+
+        if self.has_styles:
+            for s in self.style_list:
+                if f"-{s}" in name:
+                    return s
+            return self.default_style
+        return None
 
     def resolve_icon_name(self, name: str, style: Optional[str] = None) -> str:
         """Resolve a user-supplied icon name to the actual glyph name.

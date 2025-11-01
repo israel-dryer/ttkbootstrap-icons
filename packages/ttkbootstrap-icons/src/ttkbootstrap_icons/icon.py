@@ -27,11 +27,11 @@ class Icon(ABC):
       • Reuses a temporary font file per (provider, style).
       • __slots__ to reduce per-instance overhead.
     """
-    __slots__ = ("name", "size", "color", "_img")
+    __slots__ = ("name", "size", "color", "_img", "_font_path", "_icon_set_id")
 
     # shared icon-set state
     _icon_map: ClassVar[dict[str, Any]] = {}
-    _font_path: ClassVar[Optional[str]] = None
+    _current_font_path: ClassVar[Optional[str]] = None
     _initialized: ClassVar[bool] = False
     _icon_set: ClassVar[str] = ""
     _pad_factor: ClassVar[float] = 0.10
@@ -42,6 +42,7 @@ class Icon(ABC):
     _font_cache: ClassVar[dict[Tuple[str, int], ImageFont.FreeTypeFont]] = {}  # PIL font by (path, size)
     _transparent_cache: ClassVar[dict[int, PhotoImage]] = {}  # transparent placeholders
     _fontfile_cache: ClassVar[dict[str, str]] = {}  # icon_set_id -> temp font path
+    _icon_map_cache: ClassVar[dict[str, dict[str, Any]]] = {}  # icon_set_id -> icon_map
 
     def __init__(self, name: str, size: int = 24, color: str = "black"):
         """Create a new icon.
@@ -57,6 +58,9 @@ class Icon(ABC):
         self.name = name
         self.size = size
         self.color = color
+        # Store the current font path and icon_set_id so this instance uses the correct font
+        self._font_path = Icon._current_font_path
+        self._icon_set_id = Icon._icon_set
         self._img: Optional[TkPhotoImage] = self._render()
 
     @property
@@ -131,25 +135,28 @@ class Icon(ABC):
             raise TypeError("icon_map must be a list[dict] or dict")
 
         Icon._icon_map = mapping
-        Icon._font_path = font_path
+        Icon._current_font_path = font_path
         Icon._initialized = True
 
     def _render(self) -> PhotoImage:
         """Render the icon as a `PhotoImage`, using PIL and caching the result."""
+        # Use instance font path and look up the icon map for this icon set
+        fp = self._font_path
+        icon_map = Icon._icon_map_cache.get(self._icon_set_id, Icon._icon_map)
+
         # Cache key: (name, size, color, font_path)
-        key = (self.name, self.size, self.color, Icon._font_path or "")
+        key = (self.name, self.size, self.color, fp or "")
         cached = Icon._cache.get(key)
         if cached is not None:
             return cached
 
         # Glyph lookup
-        glyph_val = Icon._icon_map.get(self.name)
+        glyph_val = icon_map.get(self.name)
         if glyph_val is None:
             return Icon._get_transparent(self.size)
         glyph = chr(glyph_val) if isinstance(glyph_val, int) else str(glyph_val)
 
         # Build or reuse a PIL font for (font_path, size)
-        fp = Icon._font_path
         if not fp:
             return Icon._get_transparent(self.size)
         eff_size = max(1, int(self.size))
@@ -198,7 +205,10 @@ class Icon(ABC):
         font_path = Icon._fontfile_cache.get(icon_set_id)
         if not font_path or not os.path.exists(font_path):
             font_bytes, json_text = provider.load_assets(style=style)
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".ttf") as tmp_font:
+            # Use .otf suffix for OpenType fonts, .ttf for TrueType
+            # PIL can handle both, but better to be accurate
+            suffix = ".otf" if len(font_bytes) > 4 and font_bytes[:4] == b'OTTO' else ".ttf"
+            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_font:
                 tmp_font.write(font_bytes)
                 font_path = tmp_font.name
             Icon._fontfile_cache[icon_set_id] = font_path
@@ -206,22 +216,30 @@ class Icon(ABC):
             # Still need glyphmap JSON for configure
             _, json_text = provider.load_assets(style=style)
 
-        icon_map = json.loads(json_text)
-        cls._configure(font_path=font_path, icon_map=icon_map)
+        icon_map_data = json.loads(json_text)
+        cls._configure(font_path=font_path, icon_map=icon_map_data)
+        # Cache the icon map for this icon_set_id
+        Icon._icon_map_cache[icon_set_id] = Icon._icon_map.copy()
 
     @classmethod
     def cleanup(cls):
-        """Remove the temporary font file and reset internal icon state."""
-        if Icon._font_path and os.path.exists(Icon._font_path):
-            try:
-                os.remove(Icon._font_path)
-            except Exception as e:
-                raise Exception(f"Error cleaning up icon: {e}")
+        """Remove all temporary font files and reset internal icon state."""
+        # Clean up all cached font files
+        for font_path in Icon._fontfile_cache.values():
+            if font_path and os.path.exists(font_path):
+                try:
+                    os.remove(font_path)
+                except Exception:
+                    pass  # Ignore cleanup errors
+
+        # Reset all state
         Icon._initialized = False
         Icon._icon_map.clear()
+        Icon._icon_map_cache.clear()
         Icon._cache.clear()
         Icon._font_cache.clear()
-        Icon._font_path = None
+        Icon._fontfile_cache.clear()
+        Icon._current_font_path = None
 
     def __str__(self):
         return str(self._img)
