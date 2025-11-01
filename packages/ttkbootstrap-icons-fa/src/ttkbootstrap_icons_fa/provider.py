@@ -1,7 +1,7 @@
 from ttkbootstrap_icons.providers import BaseFontProvider
 
 
-class FontAwesome6FontProvider(BaseFontProvider):
+class FontAwesomeFontProvider(BaseFontProvider):
     """Initialize the provider with style configuration"""
 
     def __init__(self):

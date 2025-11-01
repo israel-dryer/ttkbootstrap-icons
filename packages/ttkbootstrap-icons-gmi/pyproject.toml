@@ -13,7 +13,7 @@ license = "MIT"
 Homepage = "https://github.com/israel-dryer/ttkbootstrap-icons"
 
 [project.entry-points."ttkbootstrap_icons.providers"]
-gmi = "ttkbootstrap_icons_gmi.provider:GoogleMaterialProvider"
+gmi = "ttkbootstrap_icons_gmi.provider:GoogleMaterialIconFontProvider"
 
 [project.scripts]
 ttkicons-gmi-build = "ttkbootstrap_icons_gmi.tools.generate_assets:main"

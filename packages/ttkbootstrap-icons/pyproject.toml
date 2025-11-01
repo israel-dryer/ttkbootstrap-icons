@@ -33,7 +33,7 @@ classifiers = [
 dependencies = ["pillow>=9.1.0"]
 
 [project.scripts]
-ttkbootstrap-icons = "ttkbootstrap_icons.icon_previewer:main"
+ttkbootstrap-icons = "ttkbootstrap_icons.browser:main"
 ttkicons-build-all = "ttkbootstrap_icons.tools.build_all:main"
 
 [project.urls]

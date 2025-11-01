@@ -14,7 +14,7 @@ Homepage = "https://github.com/israel-dryer/ttkbootstrap-icons"
 
 # Auto-discovery hook for your base registry
 [project.entry-points."ttkbootstrap_icons.providers"]
-mat = "ttkbootstrap_icons_mat.provider:MaterialFontProvider"
+mat = "ttkbootstrap_icons_mat.provider:MaterialDesignFontProvider"
 
 [project.scripts]
 ttkicons-mat-build = "ttkbootstrap_icons_mat.tools.generate_assets:main"

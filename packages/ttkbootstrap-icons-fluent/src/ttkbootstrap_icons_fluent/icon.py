@@ -57,6 +57,10 @@ if __name__ == '__main__':
     icon2 = FluentIcon("settings-16-regular", size=64)
     ttk.Label(root, text="regular with style in name", image=icon2.image, compound="left").pack(**options)
 
+    # using the style in name
+    icon2 = FluentIcon("ic-fluent-cube-16-regular", size=64)
+    ttk.Label(root, text="regular with style in name", image=icon2.image, compound="left").pack(**options)
+
     # using the style parameter
     icon3 = FluentIcon("settings-16", style="regular", size=64)
     ttk.Label(root, text="regular with style param", image=icon3.image, compound="left").pack(**options)
