@@ -1,4 +1,4 @@
-from .provider import FontAwesomeFontProvider
 from .icon import FAIcon
+from .provider import FAProvider
 
-__all__ = ["FontAwesomeFontProvider", "FAIcon"]
+__all__ = ["FAProvider", "FAIcon"]

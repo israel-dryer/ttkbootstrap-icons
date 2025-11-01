@@ -226,6 +226,17 @@ class BaseFontProvider(ABC):
                 return lookup[composite]
             if formatted in lookup:
                 return lookup[formatted]
+
+            # If we inferred a style from the name suffix, try stripping it
+            # This handles cases where the glyph names don't include style suffixes
+            if inferred_style is not None and name.endswith(f"-{inferred_style}"):
+                base_name = name[:-len(f"-{inferred_style}")]
+                if base_name in lookup:
+                    return lookup[base_name]
+                formatted_base = self.format_glyph_name(base_name)
+                if formatted_base in lookup:
+                    return lookup[formatted_base]
+
             raise ValueError(f"{name} not found in lookup for {self.name} in {lookup_style} style.")
 
         # no styles
