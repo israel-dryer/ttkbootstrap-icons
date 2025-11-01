@@ -344,15 +344,28 @@ class BaseFontProvider(ABC):
             self.build_name_lookup()
 
         # Get unique glyph names (values) for each style for display in browser
+        # Preserve a stable, insertion-based order instead of using an unordered set.
         if self.has_styles:
-            names_by_style = {
-                style: {v: v for v in set(lookup.values())}
-                for style, lookup in self._name_lookup.items()
-                if style != "base"
-            }
+            names_by_style: dict[str, dict[str, str]] = {}
+            for style, lookup in self._name_lookup.items():
+                if style == "base":
+                    continue
+                seen: set[str] = set()
+                ordered: list[str] = []
+                for v in lookup.values():
+                    if v not in seen:
+                        seen.add(v)
+                        ordered.append(v)
+                names_by_style[style] = {name: name for name in ordered}
         else:
             base_lookup = self._name_lookup.get("base", {})
-            names_by_style = {"base": {v: v for v in set(base_lookup.values())}}
+            seen: set[str] = set()
+            ordered: list[str] = []
+            for v in base_lookup.values():
+                if v not in seen:
+                    seen.add(v)
+                    ordered.append(v)
+            names_by_style = {"base": {name: name for name in ordered}}
 
         return {
             "names_by_style": names_by_style,

@@ -6,8 +6,10 @@ Minimal, provider-driven previewer UI.
 
 import atexit
 import tkinter as tk
+import webbrowser
 from tkinter import ttk
 
+from ttkbootstrap_icons import BootstrapIcon
 from ttkbootstrap_icons.bootstrap import BootstrapFontProvider
 from ttkbootstrap_icons.icon import Icon
 from ttkbootstrap_icons.registry import ProviderRegistry, load_external_providers
@@ -114,6 +116,7 @@ class SimpleIconGrid:
                                 self.on_select(icon_name)
                         except Exception:
                             pass
+
                     return _handler
 
                 self.canvas.tag_bind(img, "<Button-1>", _make_select_handler(name))
@@ -224,11 +227,52 @@ class IconPreviewerApp:
         self.provider_name_label = ttk.Label(provider_frame, text="", font=("Arial", 10, "bold"))
         self.provider_name_label.pack(anchor="w")
 
+        # Combined version + icon count line
         self.provider_version_label = ttk.Label(provider_frame, text="", foreground="gray", font=("Arial", 9))
         self.provider_version_label.pack(anchor="w")
 
-        self.provider_count_label = ttk.Label(provider_frame, text="", foreground="gray", font=("Arial", 9))
-        self.provider_count_label.pack(anchor="w")
+        # Links section
+        self.links_spacer = ttk.Frame(provider_frame, height=24)
+        self.links_spacer.pack(fill="x")
+
+        self.links_title_label = ttk.Label(provider_frame, text="Links:", font=("Arial", 9, "bold"))
+        self.links_title_label.pack(anchor="w")
+
+        self.links_container = ttk.Frame(provider_frame)
+        self.links_container.pack(fill="x")
+
+        # Homepage and License links (clickable)
+        self.provider_homepage_link = tk.Label(
+            self.links_container,
+            text="",
+            fg="#0066cc",
+            cursor="hand2",
+            font=("Arial", 9, "underline"),
+        )
+        # Small icon for homepage link
+        try:
+            self._home_icon = BootstrapIcon("house", size=14, style="fill")
+            self.provider_homepage_link.config(image=self._home_icon.image, compound="left")
+            self.provider_homepage_link.image = self._home_icon.image
+        except Exception:
+            self._home_icon = None
+        self.provider_homepage_link.pack(anchor="w", pady=(2, 0))
+
+        self.provider_license_link = tk.Label(
+            self.links_container,
+            text="",
+            fg="#0066cc",
+            cursor="hand2",
+            font=("Arial", 9, "underline"),
+        )
+        # Small icon for license link
+        try:
+            self._license_icon = BootstrapIcon("file-earmark-text", size=14, style="fill")
+            self.provider_license_link.config(image=self._license_icon.image, compound="left")
+            self.provider_license_link.image = self._license_icon.image
+        except Exception:
+            self._license_icon = None
+        self.provider_license_link.pack(anchor="w")
 
         preview_frame = ttk.LabelFrame(self.info_panel, text="Preview", padding=10)
         preview_frame.pack(fill="x", pady=(0, 10))
@@ -257,8 +301,7 @@ class IconPreviewerApp:
         provider = provider_data["provider"]
 
         self.provider_name_label.config(text=provider.display_name)
-        version_text = f"Version: {provider.icon_version}" if provider.icon_version else "Version: N/A"
-        self.provider_version_label.config(text=version_text)
+        version_text = f"v{provider.icon_version}" if provider.icon_version else "Version: N/A"
         names_by_style = provider_data.get("names_by_style", {})
         if self.current_style and self.current_style in names_by_style:
             icon_count = len(names_by_style[self.current_style])
@@ -267,8 +310,71 @@ class IconPreviewerApp:
             icon_count = len(names_by_style[first_style])
         else:
             icon_count = 0
-        count_text = f"Icons: {icon_count:,}"
-        self.provider_count_label.config(text=count_text)
+        meta_text = f"{version_text}  •  {icon_count:,} icons"
+        self.provider_version_label.config(text=meta_text)
+        # Ensure legacy count label remains hidden
+        try:
+            if self.provider_count_label.winfo_ismapped():
+                self.provider_count_label.pack_forget()
+        except Exception:
+            pass
+
+        # Update homepage link visibility and binding
+        homepage = getattr(provider, "homepage", None)
+        if homepage:
+            self.provider_homepage_link.config(text="Homepage")
+            # Rebind to ensure latest URL
+            try:
+                self.provider_homepage_link.unbind("<Button-1>")
+            except Exception:
+                pass
+            self.provider_homepage_link.bind("<Button-1>", lambda e, url=homepage: webbrowser.open(url))
+            if not self.provider_homepage_link.winfo_ismapped():
+                self.provider_homepage_link.pack(anchor="w", pady=(2, 0))
+        else:
+            self.provider_homepage_link.config(text="")
+            try:
+                self.provider_homepage_link.unbind("<Button-1>")
+            except Exception:
+                pass
+            if self.provider_homepage_link.winfo_ismapped():
+                self.provider_homepage_link.pack_forget()
+
+        # Update license link visibility and binding
+        license_url = getattr(provider, "license_url", None)
+        if license_url:
+            self.provider_license_link.config(text="License")
+            try:
+                self.provider_license_link.unbind("<Button-1>")
+            except Exception:
+                pass
+            self.provider_license_link.bind("<Button-1>", lambda e, url=license_url: webbrowser.open(url))
+            if not self.provider_license_link.winfo_ismapped():
+                self.provider_license_link.pack(anchor="w")
+        else:
+            self.provider_license_link.config(text="")
+            try:
+                self.provider_license_link.unbind("<Button-1>")
+            except Exception:
+                pass
+            if self.provider_license_link.winfo_ismapped():
+                self.provider_license_link.pack_forget()
+
+        # Show or hide the links section title (and spacer) depending on availability
+        try:
+            has_any_link = bool(homepage) or bool(license_url)
+            if has_any_link:
+                if not self.links_spacer.winfo_ismapped():
+                    self.links_spacer.pack(fill="x")
+                if not self.links_title_label.winfo_ismapped():
+                    self.links_title_label.pack(anchor="w")
+            else:
+                if self.links_title_label.winfo_ismapped():
+                    self.links_title_label.pack_forget()
+                if self.links_spacer.winfo_ismapped():
+                    self.links_spacer.pack_forget()
+        except Exception:
+            pass
 
         if icon_name:
             try:
@@ -323,7 +429,7 @@ class IconPreviewerApp:
         row = ttk.Frame(control)
         row.pack(fill="x")
 
-        ttk.Label(row, text="Icon Set:").pack(side="left", padx=(0, 5))
+        ttk.Label(row, text="Icon Set:", width=10).pack(side="left", padx=(0, 5))
         self.icon_set_map = {v.get("display", k): k for k, v in self.icon_data.items()}
         displays = sorted(self.icon_set_map.keys(), key=str.casefold)
         self.icon_set_var = tk.StringVar(
@@ -361,7 +467,7 @@ class IconPreviewerApp:
 
         row2 = ttk.Frame(control)
         row2.pack(fill="x", pady=(6, 0))
-        ttk.Label(row2, text="Search:").pack(side="left", padx=(0, 5))
+        ttk.Label(row2, text="Search:", width=10).pack(side="left", padx=(0, 5))
         self.search_var = tk.StringVar()
         search_entry = ttk.Entry(row2, textvariable=self.search_var, width=40)
         search_entry.pack(side="left", fill="x", expand=True)
@@ -477,8 +583,11 @@ class IconPreviewerApp:
 
 
 def main():
+    from ttkbootstrap_icons import BootstrapIcon
     root = tk.Tk()
-    app = IconPreviewerApp(root)
+    app_icon = BootstrapIcon("grid-3x3-gap-fill", color="#2F6FED")
+    root.iconphoto(True, app_icon.image)
+    IconPreviewerApp(root)
     root.mainloop()
 
 
