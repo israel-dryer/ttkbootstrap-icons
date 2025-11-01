@@ -175,7 +175,7 @@ class SimpleIconGrid:
 class IconPreviewerApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("ttkbootstrap-icons Previewer")
+        self.root.title("TTkBootstrap Icons Browser")
         self.root.geometry("1100x750")
         self.root.resizable(False, False)
         atexit.register(Icon.cleanup)
