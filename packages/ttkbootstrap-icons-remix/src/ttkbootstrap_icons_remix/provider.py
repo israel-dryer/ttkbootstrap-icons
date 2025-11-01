@@ -10,14 +10,16 @@ class RemixProvider(BaseFontProvider):
 
     def __init__(self):
         super().__init__(
-            name="eva",
+            name="remix",
             display_name="Remix Icons",
             package="ttkbootstrap_icons_remix",
             default_style="fill",
             styles={
                 "line": {"filename": "fonts/remixicon.ttf", "predicate": RemixProvider._is_line_style},
                 "fill": {"filename": "fonts/remixicon.ttf", "predicate": RemixProvider._is_fill_style}
-            }
+            },
+            pad_factor=0.15,
+            scale_to_fit=True,
         )
 
     @staticmethod

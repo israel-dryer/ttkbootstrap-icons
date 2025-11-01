@@ -19,7 +19,8 @@ class MaterialProvider(BaseFontProvider):
                             "predicate": MaterialProvider._is_outline_style},
                 "fill": {"filename": "fonts/materialdesignicons-webfont.ttf",
                          "predicate": MaterialProvider._is_fill_style}
-            }
+            },
+            scale_to_fit=True,
         )
 
     @staticmethod

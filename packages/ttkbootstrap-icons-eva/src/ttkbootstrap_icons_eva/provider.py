@@ -17,7 +17,8 @@ class EvaProvider(BaseFontProvider):
             styles={
                 "outline": {"filename": "fonts/eva-icons.ttf", "predicate": EvaProvider._is_outline_style},
                 "fill": {"filename": "fonts/eva-icons.ttf", "predicate": EvaProvider._is_fill_style}
-            }
+            },
+            scale_to_fit=True,
         )
 
     @staticmethod

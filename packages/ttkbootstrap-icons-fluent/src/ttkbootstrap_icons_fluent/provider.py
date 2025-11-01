@@ -14,7 +14,8 @@ class FluentProvider(BaseFontProvider):
                 "regular": {"filename": "fonts/FluentSystemIcons-Regular.ttf"},
                 "filled": {"filename": "fonts/FluentSystemIcons-Filled.ttf"},
                 "light": {"filename": "fonts/FluentSystemIcons-Light.ttf"},
-            }
+            },
+            scale_to_fit=True,
         )
 
     @staticmethod

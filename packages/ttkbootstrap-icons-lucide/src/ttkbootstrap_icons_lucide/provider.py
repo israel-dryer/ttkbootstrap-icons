@@ -13,7 +13,8 @@ class LucideProvider(BaseFontProvider):
             name="lucide",
             display_name="Lucide Icons",
             package="ttkbootstrap_icons_lucide",
-            filename="fonts/lucide.ttf"
+            filename="fonts/lucide.ttf",
+            scale_to_fit=True,
         )
 
     @staticmethod

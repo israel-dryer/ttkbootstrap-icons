@@ -9,5 +9,7 @@ class SimpleProvider(BaseFontProvider):
             name="simple",
             display_name="Simple Icons",
             package="ttkbootstrap_icons_simple",
-            filename="fonts/SimpleIcons.ttf"
+            filename="fonts/SimpleIcons.ttf",
+            pad_factor=0.15,
+            scale_to_fit=True,
         )

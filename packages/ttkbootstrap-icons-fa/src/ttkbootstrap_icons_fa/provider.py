@@ -14,5 +14,7 @@ class FAProvider(BaseFontProvider):
                 "solid": {"filename": "fonts/fa-solid-900.ttf"},
                 "regular": {"filename": "fonts/fa-regular-400.ttf"},
                 "brands": {"filename": "fonts/fa-brands-400.ttf"},
-            }
+            },
+            pad_factor=0.15,
+            scale_to_fit=True,
         )

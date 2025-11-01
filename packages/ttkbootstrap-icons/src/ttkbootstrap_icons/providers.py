@@ -19,6 +19,9 @@ class FontProviderOptions(TypedDict):
     filename: NotRequired[str]
     styles: NotRequired[Mapping[str, Mapping[str, str | Callable[[str], bool]]]]
     default_style: NotRequired[str]
+    pad_factor: NotRequired[float]
+    y_bias: NotRequired[float]
+    scale_to_fit: NotRequired[bool]
 
 
 class BaseFontProvider(ABC):
@@ -26,7 +29,8 @@ class BaseFontProvider(ABC):
 
     __slots__ = (
         "_name", "_package", "_display_name", "_filename",
-        "_default_style", "_styles", "_styles_view", "_name_lookup"
+        "_default_style", "_styles", "_styles_view", "_name_lookup",
+        "_pad_factor", "_y_bias", "_scale_to_fit"
     )
 
     # Global caches shared per provider class
@@ -42,6 +46,9 @@ class BaseFontProvider(ABC):
     _styles: Mapping[str, Mapping[str, str | Callable[[str], bool]]]
     _styles_view: Mapping[str, Mapping[str, str | Callable[[str], bool]]]
     _name_lookup: dict[str, dict[str, str]]
+    _pad_factor: float
+    _y_bias: float
+    _scale_to_fit: bool
 
     def __init__(self, **kwargs: Unpack[FontProviderOptions]):
         self._name = kwargs.get('name')  # required
@@ -53,11 +60,13 @@ class BaseFontProvider(ABC):
         self._styles = deepcopy(kwargs.get("styles", {}))
         self._styles_view = MappingProxyType(self._styles)
 
-        # If styles are defined but default_style is missing/invalid, pick the first key
+        self._pad_factor = kwargs.get('pad_factor', 0.10)
+        self._y_bias = kwargs.get('y_bias', 0.0)
+        self._scale_to_fit = kwargs.get('scale_to_fit', True)
+
         if self.has_styles and (not self._default_style or self._default_style not in self._styles):
             self._default_style = next(iter(self._styles.keys()))
 
-        # Build lookup once (cached across instances)
         self._name_lookup = self.build_name_lookup()
 
     # -----------------------------
@@ -108,6 +117,21 @@ class BaseFontProvider(ABC):
         except KeyError:
             return False
         return len(style_files) == 1
+
+    @property
+    def pad_factor(self) -> float:
+        """Padding factor for icon rendering (0.0-1.0)."""
+        return self._pad_factor
+
+    @property
+    def y_bias(self) -> float:
+        """Vertical bias adjustment for icon rendering."""
+        return self._y_bias
+
+    @property
+    def scale_to_fit(self) -> bool:
+        """Whether to scale down glyphs that exceed the available space."""
+        return self._scale_to_fit
 
     # -----------------------------
     # Asset Loading

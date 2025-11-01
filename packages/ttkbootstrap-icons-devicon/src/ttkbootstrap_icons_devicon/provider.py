@@ -21,7 +21,9 @@ class DeviconProvider(BaseFontProvider):
                 "original": {"filename": "fonts/devicon.ttf", "predicate": DeviconProvider._is_original_style},
                 "original-wordmark": {"filename": "fonts/devicon.ttf",
                                       "predicate": DeviconProvider._is_original_wordmark_style}
-            }
+            },
+            pad_factor=0.15,
+            scale_to_fit=True,
         )
 
     @staticmethod

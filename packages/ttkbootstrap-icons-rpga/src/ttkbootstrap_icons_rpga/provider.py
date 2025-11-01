@@ -13,5 +13,7 @@ class RPGAProvider(BaseFontProvider):
             name="rpga",
             display_name="RPG Awesome Icons",
             package="ttkbootstrap_icons_rpga",
-            filename="fonts/rpgawesome-webfont.ttf"
+            filename="fonts/rpgawesome-webfont.ttf",
+            pad_factor=0.15,
+            scale_to_fit=True,
         )

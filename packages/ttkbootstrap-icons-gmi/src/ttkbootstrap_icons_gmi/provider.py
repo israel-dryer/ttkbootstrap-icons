@@ -15,5 +15,6 @@ class GMIProvider(BaseFontProvider):
                 "outlined": {"filename": "fonts/MaterialIconsOutlined-Regular.otf"},
                 "round": {"filename": "fonts/MaterialIconsRound-Regular.otf"},
                 "sharp": {"filename": "fonts/MaterialIconsSharp-Regular.otf"}
-            }
+            },
+            scale_to_fit=True,
         )

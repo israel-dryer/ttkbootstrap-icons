@@ -9,5 +9,6 @@ class WeatherProvider(BaseFontProvider):
             name="weather",
             display_name="Weather Icons",
             package="ttkbootstrap_icons_weather",
-            filename="fonts/weathericons-regular-webfont.ttf"
+            filename="fonts/weathericons-regular-webfont.ttf",
+            scale_to_fit=True,
         )

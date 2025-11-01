@@ -13,5 +13,6 @@ class IonProvider(BaseFontProvider):
             name="ion",
             display_name="Ion Icons",
             package="ttkbootstrap_icons_ion",
-            filename="fonts/ionicons.ttf"
+            filename="fonts/ionicons.ttf",
+            scale_to_fit=True,
         )

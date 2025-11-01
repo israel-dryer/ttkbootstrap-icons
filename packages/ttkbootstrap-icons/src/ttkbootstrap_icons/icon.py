@@ -29,20 +29,17 @@ class Icon(ABC):
     """
     __slots__ = ("name", "size", "color", "_img", "_font_path", "_icon_set_id")
 
-    # shared icon-set state
     _icon_map: ClassVar[dict[str, Any]] = {}
     _current_font_path: ClassVar[Optional[str]] = None
     _initialized: ClassVar[bool] = False
     _icon_set: ClassVar[str] = ""
-    _pad_factor: ClassVar[float] = 0.10
-    _y_bias: ClassVar[float] = 0.0
 
-    # caches
-    _cache: ClassVar[dict[Tuple[str, int, str, str], PhotoImage]] = {}  # rendered PhotoImage cache
-    _font_cache: ClassVar[dict[Tuple[str, int], ImageFont.FreeTypeFont]] = {}  # PIL font by (path, size)
-    _transparent_cache: ClassVar[dict[int, PhotoImage]] = {}  # transparent placeholders
-    _fontfile_cache: ClassVar[dict[str, str]] = {}  # icon_set_id -> temp font path
-    _icon_map_cache: ClassVar[dict[str, dict[str, Any]]] = {}  # icon_set_id -> icon_map
+    _cache: ClassVar[dict[Tuple[str, int, str, str], PhotoImage]] = {}
+    _font_cache: ClassVar[dict[Tuple[str, int], ImageFont.FreeTypeFont]] = {}
+    _transparent_cache: ClassVar[dict[int, PhotoImage]] = {}
+    _fontfile_cache: ClassVar[dict[str, str]] = {}
+    _icon_map_cache: ClassVar[dict[str, dict[str, Any]]] = {}
+    _render_params_cache: ClassVar[dict[str, dict[str, Any]]] = {}
 
     def __init__(self, name: str, size: int = 24, color: str = "black"):
         """Create a new icon.
@@ -58,7 +55,6 @@ class Icon(ABC):
         self.name = name
         self.size = size
         self.color = color
-        # Store the current font path and icon_set_id so this instance uses the correct font
         self._font_path = Icon._current_font_path
         self._icon_set_id = Icon._icon_set
         self._img: Optional[TkPhotoImage] = self._render()
@@ -140,25 +136,36 @@ class Icon(ABC):
 
     def _render(self) -> PhotoImage:
         """Render the icon as a `PhotoImage`, using PIL and caching the result."""
-        # Use instance font path and look up the icon map for this icon set
         fp = self._font_path
         icon_map = Icon._icon_map_cache.get(self._icon_set_id, Icon._icon_map)
 
-        # Cache key: (name, size, color, font_path)
+        render_params = Icon._render_params_cache.get(self._icon_set_id, {
+            "pad_factor": 0.10,
+            "y_bias": 0.0,
+            "scale_to_fit": True,
+        })
+        pad_factor = render_params["pad_factor"]
+        y_bias = render_params["y_bias"]
+        scale_to_fit = render_params["scale_to_fit"]
+
         key = (self.name, self.size, self.color, fp or "")
         cached = Icon._cache.get(key)
         if cached is not None:
             return cached
 
-        # Glyph lookup
         glyph_val = icon_map.get(self.name)
         if glyph_val is None:
             return Icon._get_transparent(self.size)
         glyph = chr(glyph_val) if isinstance(glyph_val, int) else str(glyph_val)
 
-        # Build or reuse a PIL font for (font_path, size)
         if not fp:
             return Icon._get_transparent(self.size)
+
+        canvas_size = self.size
+        pad = int(self.size * pad_factor)
+        inner_w = canvas_size - 2 * pad
+        inner_h = canvas_size - 2 * pad
+
         eff_size = max(1, int(self.size))
         fkey = (fp, eff_size)
         font = Icon._font_cache.get(fkey)
@@ -166,23 +173,33 @@ class Icon(ABC):
             font = ImageFont.truetype(fp, eff_size)
             Icon._font_cache[fkey] = font
 
-        # Layout
-        pad = int(self.size * Icon._pad_factor)
         ascent, descent = font.getmetrics()
         bbox = font.getbbox(glyph)
         glyph_w = bbox[2] - bbox[0]
+        glyph_h = bbox[3] - bbox[1]
+
+        if scale_to_fit and (glyph_w > inner_w or glyph_h > inner_h):
+            scale = min(inner_w / max(glyph_w, 1), inner_h / max(glyph_h, 1)) * 0.95
+            scaled_size = max(1, int(eff_size * scale))
+            fkey_scaled = (fp, scaled_size)
+            font = Icon._font_cache.get(fkey_scaled)
+            if font is None:
+                font = ImageFont.truetype(fp, scaled_size)
+                Icon._font_cache[fkey_scaled] = font
+            ascent, descent = font.getmetrics()
+            bbox = font.getbbox(glyph)
+            glyph_w = bbox[2] - bbox[0]
+            glyph_h = bbox[3] - bbox[1]
+
         full_height = ascent + descent
 
-        canvas_size = self.size
         img = Image.new("RGBA", (canvas_size, canvas_size), (255, 255, 255, 0))
         draw = ImageDraw.Draw(img)
 
-        inner_w = canvas_size - 2 * pad
-        inner_h = canvas_size - 2 * pad
         dx = pad + (inner_w - glyph_w) // 2 - bbox[0]
         dy = pad + (inner_h - full_height) // 2 + (ascent - bbox[3])
-        if Icon._y_bias:
-            dy += int(self.size * Icon._y_bias)
+        if y_bias:
+            dy += int(self.size * y_bias)
 
         draw.text((dx, dy), glyph, font=font, fill=self.color)
 
@@ -192,47 +209,43 @@ class Icon(ABC):
 
     @classmethod
     def initialize_with_provider(cls, provider: BaseFontProvider, style: str | None = None):
-        """Initialize icon rendering using an external provider.
-
-        Reuses a temp font path per (provider, style) for efficiency.
-        """
+        """Initialize icon rendering using an external provider."""
         icon_set_id = f"{provider.name}:{style or 'default'}"
         if Icon._initialized and Icon._icon_set == icon_set_id:
             return
         Icon._icon_set = icon_set_id
 
-        # Reuse temp font if already created for this icon set
+        Icon._render_params_cache[icon_set_id] = {
+            "pad_factor": provider.pad_factor,
+            "y_bias": provider.y_bias,
+            "scale_to_fit": provider.scale_to_fit,
+        }
+
         font_path = Icon._fontfile_cache.get(icon_set_id)
         if not font_path or not os.path.exists(font_path):
             font_bytes, json_text = provider.load_assets(style=style)
-            # Use .otf suffix for OpenType fonts, .ttf for TrueType
-            # PIL can handle both, but better to be accurate
             suffix = ".otf" if len(font_bytes) > 4 and font_bytes[:4] == b'OTTO' else ".ttf"
             with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_font:
                 tmp_font.write(font_bytes)
                 font_path = tmp_font.name
             Icon._fontfile_cache[icon_set_id] = font_path
         else:
-            # Still need glyphmap JSON for configure
             _, json_text = provider.load_assets(style=style)
 
         icon_map_data = json.loads(json_text)
         cls._configure(font_path=font_path, icon_map=icon_map_data)
-        # Cache the icon map for this icon_set_id
         Icon._icon_map_cache[icon_set_id] = Icon._icon_map.copy()
 
     @classmethod
     def cleanup(cls):
         """Remove all temporary font files and reset internal icon state."""
-        # Clean up all cached font files
         for font_path in Icon._fontfile_cache.values():
             if font_path and os.path.exists(font_path):
                 try:
                     os.remove(font_path)
                 except Exception:
-                    pass  # Ignore cleanup errors
+                    pass
 
-        # Reset all state
         Icon._initialized = False
         Icon._icon_map.clear()
         Icon._icon_map_cache.clear()
