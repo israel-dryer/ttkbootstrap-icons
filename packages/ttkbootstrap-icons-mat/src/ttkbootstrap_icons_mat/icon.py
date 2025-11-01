@@ -42,23 +42,23 @@ if __name__ == '__main__':
     options = {"fill": "x", "padx": 10, "pady": 10}
 
     # using the default style
-    icon0 = MatIcon("bell")
+    icon0 = MatIcon("bell", size=64)
     ttk.Label(root, text="default style", image=icon0.image, compound="left").pack(**options)
 
     # using the style parameter
-    icon1 = MatIcon("bell", style="fill")
+    icon1 = MatIcon("bell", style="fill", size=64)
     ttk.Label(root, text="fill with style param", image=icon1.image, compound="left").pack(**options)
 
     # using style in name
-    icon4 = MatIcon("bell-fill")
+    icon4 = MatIcon("bell-fill", size=64)
     ttk.Label(root, text="fill with style in name", image=icon4.image, compound="left").pack(**options)
 
     # using the style in name
-    icon3 = MatIcon("bell-outline")
+    icon3 = MatIcon("bell-outline", size=64)
     ttk.Label(root, text="outline with style in name", image=icon3.image, compound="left").pack(**options)
 
     # using the style parameter
-    icon4 = MatIcon("bell", style="outline")
+    icon4 = MatIcon("bell", style="outline", size=64)
     ttk.Label(root, text="outline with style param", image=icon4.image, compound="left").pack(**options)
 
     root.mainloop()

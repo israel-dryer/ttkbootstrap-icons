@@ -31,7 +31,7 @@ if __name__ == '__main__':
     options = {"fill": "x", "padx": 10, "pady": 10}
 
     # using the default style
-    icon0 = SimpleIcon("alchemy")
+    icon0 = SimpleIcon("alchemy", size=64)
     ttk.Label(root, text="default style", image=icon0.image, compound="left").pack(**options)
 
     root.mainloop()

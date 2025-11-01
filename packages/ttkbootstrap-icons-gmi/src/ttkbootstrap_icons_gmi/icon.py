@@ -44,22 +44,22 @@ if __name__ == '__main__':
     options = {"fill": "x", "padx": 10, "pady": 5}
 
     # Default style
-    icon0 = GMIIcon("home", size=48)
+    icon0 = GMIIcon("home", size=64)
     ttk.Label(root, text="Default (baseline)", image=icon0.image, compound="left").pack(**options)
 
     # Using style parameter
-    icon1 = GMIIcon("home", style="outlined", size=48)
+    icon1 = GMIIcon("home", style="outlined", size=64)
     ttk.Label(root, text="Outlined (via style param)", image=icon1.image, compound="left").pack(**options)
 
     # Using style in name
-    icon2 = GMIIcon("home-outlined", size=48)
+    icon2 = GMIIcon("home-outlined", size=64)
     ttk.Label(root, text="Round (via name suffix)", image=icon2.image, compound="left").pack(**options)
 
     # Using style in name
-    icon2 = GMIIcon("home-round", size=48)
+    icon2 = GMIIcon("home-round", size=64)
     ttk.Label(root, text="Round (via name suffix)", image=icon2.image, compound="left").pack(**options)
 
-    icon3 = GMIIcon("home", style="sharp", size=48)
+    icon3 = GMIIcon("home", style="sharp", size=64)
     ttk.Label(root, text="Sharp (via style param)", image=icon3.image, compound="left").pack(**options)
 
     root.mainloop()

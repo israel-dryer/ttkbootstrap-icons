@@ -42,22 +42,22 @@ if __name__ == '__main__':
     options = {"fill": "x", "padx": 10, "pady": 10}
 
     # using the default style
-    icon0 = EvaIcon("award")
+    icon0 = EvaIcon("award", size=64)
     ttk.Label(root, text="default style", image=icon0.image, compound="left").pack(**options)
 
     # using the style parameter
-    icon1 = EvaIcon("award", style="fill")
+    icon1 = EvaIcon("award", style="fill", size=64)
     ttk.Label(root, text="fill with style param", image=icon1.image, compound="left").pack(**options)
 
-    icon1_1 = EvaIcon("award-fill")
+    icon1_1 = EvaIcon("award-fill", size=64)
     ttk.Label(root, text="fill with style in name", image=icon1_1.image, compound="left").pack(**options)
 
     # using the style in name
-    icon2 = EvaIcon("award-outline")
+    icon2 = EvaIcon("award-outline", size=64)
     ttk.Label(root, text="outline with style in name", image=icon2.image, compound="left").pack(**options)
 
     # using the style parameter
-    icon3 = EvaIcon("award", style="outline")
+    icon3 = EvaIcon("award", style="outline", size=64)
     ttk.Label(root, text="outline with style param", image=icon3.image, compound="left").pack(**options)
 
     root.mainloop()

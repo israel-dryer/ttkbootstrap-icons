@@ -114,23 +114,23 @@ if __name__ == '__main__':
     options = {"fill": "x", "padx": 10, "pady": 10}
 
     # using the default style
-    icon0 = BootstrapIcon("house")
+    icon0 = BootstrapIcon("house", size=64)
     ttk.Label(root, text="default style", image=icon0.image, compound="left").pack(**options)
 
     # using the style parameter
-    icon1 = BootstrapIcon("house", style="outline")
+    icon1 = BootstrapIcon("house", style="outline", size=64)
     ttk.Label(root, text="outline with style param", image=icon1.image, compound="left").pack(**options)
 
     # using the style in name
-    icon2 = BootstrapIcon("house-outline")
+    icon2 = BootstrapIcon("house-outline", size=64)
     ttk.Label(root, text="outline wit style in name", image=icon2.image, compound="left").pack(**options)
 
     # using the style parameter
-    icon3 = BootstrapIcon("house", style="fill")
+    icon3 = BootstrapIcon("house", style="fill", size=64)
     ttk.Label(root, text="fill with style param", image=icon3.image, compound="left").pack(**options)
 
     # using the style in name
-    icon4 = BootstrapIcon("house-fill")
+    icon4 = BootstrapIcon("house-fill", size=64)
     ttk.Label(root, text="fill with style in name", image=icon4.image, compound="left").pack(**options)
 
     root.mainloop()
