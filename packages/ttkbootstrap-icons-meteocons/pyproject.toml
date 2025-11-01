@@ -5,7 +5,7 @@ description = "Meteocons (font-based) provider for ttkbootstrap-icons"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [{ name = "Israel Dryer" }]
-dependencies = ["Pillow>=9.1", "ttkbootstrap-icons>=2.2.0"]
+dependencies = ["Pillow>=9.1", "ttkbootstrap-icons>=2.0.0"]
 
 license = "MIT"
 
@@ -13,7 +13,7 @@ license = "MIT"
 Homepage = "https://github.com/israel-dryer/ttkbootstrap-icons"
 
 [project.entry-points."ttkbootstrap_icons.providers"]
-meteocons = "ttkbootstrap_icons_meteocons.provider:MeteoconsFontProvider"
+meteocons = "ttkbootstrap_icons_meteocons.provider:MeteoconsProvider"
 
 [project.scripts]
 ttkicons-meteocons-build = "ttkbootstrap_icons_meteocons.tools.generate_assets:main"

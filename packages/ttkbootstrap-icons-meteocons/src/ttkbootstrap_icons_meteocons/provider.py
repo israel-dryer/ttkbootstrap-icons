@@ -1,16 +1,14 @@
-from dataclasses import dataclass
-
 from ttkbootstrap_icons.providers import BaseFontProvider
 
 
-@dataclass
-class MeteoconsFontProvider(BaseFontProvider):
-    name: str = "meteocons"
-    package: str = "ttkbootstrap_icons_meteocons"
-    # Leave blank to auto-detect first .ttf/.otf under package (fonts/ preferred)
-    font_filename: str = ""
-    glyphmap_filename: str = "glyphmap.json"
+class MeteoconsProvider(BaseFontProvider):
+    """Initialize the provider"""
 
-    def display_name(self) -> str:  # pragma: no cover
-        return "Meteocons"
-
+    def __init__(self):
+        super().__init__(
+            name="meteocons",
+            display_name="Meteocons",
+            package="ttkbootstrap_icons_meteocons",
+            filename="fonts/meteocons.ttf",
+            scale_to_fit=True,
+        )
