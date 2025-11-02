@@ -13,10 +13,10 @@ def main():
     i0 = DevIcon("python-plain", size=64)
     ttk.Label(root, text="plain", image=i0.image, compound="left").pack(**opts)
 
-    i1 = DevIcon("python", style="original", size=64)
+    i1 = DevIcon("qtest", style="original", size=64)
     ttk.Label(root, text="original (style)", image=i1.image, compound="left").pack(**opts)
 
-    i2 = DevIcon("python-original-wordmark", size=64)
+    i2 = DevIcon("qtest-original-wordmark", size=64)
     ttk.Label(root, text="original-wordmark (name)", image=i2.image, compound="left").pack(**opts)
 
     root.mainloop()
