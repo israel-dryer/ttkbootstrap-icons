@@ -188,11 +188,15 @@ class StatefulIconMixin:
         # No explicit spec → derive from parent's foreground map
         fg_map = style.map(parent_style, "foreground")
         if fg_map and isinstance(fg_map, list):
-            # Validate that we have proper tuples/lists of length 2
+            # TTK state maps can have multiple state flags: (*states, value)
+            # e.g., ('pressed', '!disabled', '#fff') means pressed AND not disabled
             for item in fg_map:
-                if isinstance(item, (tuple, list)) and len(item) == 2:
-                    st, val = item
+                if isinstance(item, (tuple, list)) and len(item) >= 2:
+                    # Last element is the value, everything before is state flags
+                    *state_flags, val = item
                     if isinstance(val, str) and val:
+                        # Combine state flags with space: "pressed !disabled"
+                        st = " ".join(state_flags) if len(state_flags) > 1 else state_flags[0]
                         out.append((st, self.name, val))  # type: ignore[attr-defined]
 
         # If we couldn't derive any states from the map, use the base foreground color
