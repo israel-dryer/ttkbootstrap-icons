@@ -73,6 +73,7 @@ nav:
       - Simple Icons: providers/simple.md
       - Typicons: providers/typicons.md
       - Weather Icons: providers/weather.md
+  - PyInstaller: pyinstaller.md
   -  API:
       - Core:
           - Overview: api/core.md
@@ -96,6 +97,10 @@ nav:
       - Weather Icons: api/weather.md
   - Contributing: contributing.md
   - License: license.md
+
+
+
+
 
 
 
