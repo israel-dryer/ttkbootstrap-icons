@@ -11,12 +11,12 @@ def main():
     opts = {"fill": "x", "padx": 10, "pady": 8}
 
     i0 = FAIcon("house", size=64, style="solid")
-    ttk.Label(root, text="solid", image=i0.image, compound="left").pack(**opts)
+    ttk.Label(root, text="solid: house", image=i0.image, compound="left").pack(**opts)
 
-    i1 = FAIcon("house", size=64, style="regular")
-    ttk.Label(root, text="regular", image=i1.image, compound="left").pack(**opts)
+    i1 = FAIcon("bell", size=64, style="regular")
+    ttk.Label(root, text="regular: bell", image=i1.image, compound="left").pack(**opts)
 
-    i2 = FAIcon("github", size=64, style="brands")
+    i2 = FAIcon("square-x-twitter", size=64, style="brands")
     ttk.Label(root, text="brands", image=i2.image, compound="left").pack(**opts)
 
     root.mainloop()
