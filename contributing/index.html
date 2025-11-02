@@ -266,6 +266,28 @@
   
   
     <li class="md-nav__item">
+      <a href="../stateful-icons/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Stateful Icons
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../icon-browser/" class="md-nav__link">
         
   
@@ -296,10 +318,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
             
   
   
@@ -312,8 +334,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             Providers
           </label>
@@ -708,10 +730,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
         
           
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
             
   
   
@@ -724,8 +746,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             API
           </label>
@@ -746,10 +768,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_1" >
         
           
-          <label class="md-nav__link" for="__nav_6_1" id="__nav_6_1_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_1" id="__nav_7_1_label" tabindex="0">
             
   
   
@@ -762,8 +784,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_1_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6_1">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_1">
             <span class="md-nav__icon md-icon"></span>
             Core
           </label>
@@ -805,6 +827,29 @@
   
   <span class="md-ellipsis">
     Icon
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/core/stateful_icon_mixin/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Stateful Icon Mixin
     
   </span>
   
@@ -1460,15 +1505,15 @@
   
 
 
-<h1 id="contributing">Contributing<a class="headerlink" href="#contributing" title="Permanent link">&para;</a></h1>
+<div><h1 id="contributing">Contributing<a class="headerlink" href="#contributing" title="Permanent link">¶</a></h1>
 <p>Thanks for helping improve ttkbootstrap-icons! Contributions are welcome for both the core package and additional icon providers.</p>
 <p>This guide focuses on adding a new font-based provider package and what (if anything) needs to change in the base package and documentation.</p>
-<hr />
-<h2 id="overview-how-providers-work">Overview: How providers work<a class="headerlink" href="#overview-how-providers-work" title="Permanent link">&para;</a></h2>
+<hr>
+<h2 id="overview-how-providers-work">Overview: How providers work<a class="headerlink" href="#overview-how-providers-work" title="Permanent link">¶</a></h2>
 <p>External providers are discovered via Python entry points (group: <code>ttkbootstrap_icons.providers</code>). The base package’s registry loads each entry point and the Icon Browser lists all discovered providers. Because of this, most new providers do not require changes to the core code.</p>
 <p>At build time, the site documentation pulls each provider’s README into <code>providers/</code> using <code>mkdocs-gen-files</code>.</p>
-<hr />
-<h2 id="add-a-new-provider-package">Add a new provider package<a class="headerlink" href="#add-a-new-provider-package" title="Permanent link">&para;</a></h2>
+<hr>
+<h2 id="add-a-new-provider-package">Add a new provider package<a class="headerlink" href="#add-a-new-provider-package" title="Permanent link">¶</a></h2>
 <p>Follow this pattern under <code>packages/</code>:</p>
 <div class="language-text highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>packages/
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  ttkbootstrap-icons-&lt;slug&gt;/
@@ -1482,36 +1527,36 @@
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>        fonts/                  # provider font files
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>        LICENSES/               # upstream license texts (required)
 </code></pre></div>
-<h3 id="1-package-metadata-pyprojecttoml">1) Package metadata (<code>pyproject.toml</code>)<a class="headerlink" href="#1-package-metadata-pyprojecttoml" title="Permanent link">&para;</a></h3>
+<h3 id="1-package-metadata-pyprojecttoml">1) Package metadata (<code>pyproject.toml</code>)<a class="headerlink" href="#1-package-metadata-pyprojecttoml" title="Permanent link">¶</a></h3>
 <ul>
 <li>Name: <code>ttkbootstrap-icons-&lt;slug&gt;</code></li>
 <li>Entry point (required):</li>
 </ul>
-<div class="language-toml highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">[project.entry-points.</span><span class="s2">&quot;ttkbootstrap_icons.providers&quot;</span><span class="k">]</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="err">&lt;</span><span class="n">slug</span><span class="err">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;ttkbootstrap_icons_&lt;slug&gt;.provider:YourProviderClass&quot;</span>
+<div class="language-toml highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">[project.entry-points.</span><span class="s2">"ttkbootstrap_icons.providers"</span><span class="k">]</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="err">&lt;</span><span class="n">slug</span><span class="err">&gt;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"ttkbootstrap_icons_&lt;slug&gt;.provider:YourProviderClass"</span>
 </code></pre></div>
 <p>Tip: make sure the class name matches the actual exported class (e.g., <code>TypiconsFontProvider</code>).</p>
-<h3 id="2-provider-class-providerpy">2) Provider class (<code>provider.py</code>)<a class="headerlink" href="#2-provider-class-providerpy" title="Permanent link">&para;</a></h3>
+<h3 id="2-provider-class-providerpy">2) Provider class (<code>provider.py</code>)<a class="headerlink" href="#2-provider-class-providerpy" title="Permanent link">¶</a></h3>
 <p>Subclass <code>BaseFontProvider</code> and set the required fields.</p>
 <div class="language-python highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">ttkbootstrap_icons.providers</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseFontProvider</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">YourProviderClass</span><span class="p">(</span><span class="n">BaseFontProvider</span><span class="p">):</span>
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;&lt;slug&gt;&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>            <span class="n">display_name</span><span class="o">=</span><span class="s2">&quot;Display Name&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>            <span class="n">package</span><span class="o">=</span><span class="s2">&quot;ttkbootstrap_icons_&lt;slug&gt;&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>            <span class="n">name</span><span class="o">=</span><span class="s2">"&lt;slug&gt;"</span><span class="p">,</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>            <span class="n">display_name</span><span class="o">=</span><span class="s2">"Display Name"</span><span class="p">,</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>            <span class="n">package</span><span class="o">=</span><span class="s2">"ttkbootstrap_icons_&lt;slug&gt;"</span><span class="p">,</span>
 <a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>            <span class="c1"># For a single font file:</span>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>            <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;fonts/&lt;fontfile&gt;.ttf&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>            <span class="n">filename</span><span class="o">=</span><span class="s2">"fonts/&lt;fontfile&gt;.ttf"</span><span class="p">,</span>
 <a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>            <span class="c1"># OR for style-based providers (same or different font files):</span>
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>            <span class="n">default_style</span><span class="o">=</span><span class="s2">&quot;fill&quot;</span><span class="p">,</span>  <span class="c1"># example</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>            <span class="n">default_style</span><span class="o">=</span><span class="s2">"fill"</span><span class="p">,</span>  <span class="c1"># example</span>
 <a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>            <span class="n">styles</span><span class="o">=</span><span class="p">{</span>
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>                <span class="s2">&quot;fill&quot;</span><span class="p">:</span>    <span class="p">{</span><span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;fonts/&lt;fontfile&gt;.ttf&quot;</span><span class="p">,</span> <span class="s2">&quot;predicate&quot;</span><span class="p">:</span> <span class="n">YourProviderClass</span><span class="o">.</span><span class="n">_is_fill</span><span class="p">},</span>
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>                <span class="s2">&quot;outline&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;fonts/&lt;fontfile&gt;.ttf&quot;</span><span class="p">,</span> <span class="s2">&quot;predicate&quot;</span><span class="p">:</span> <span class="n">YourProviderClass</span><span class="o">.</span><span class="n">_is_outline</span><span class="p">},</span>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>                <span class="s2">"fill"</span><span class="p">:</span>    <span class="p">{</span><span class="s2">"filename"</span><span class="p">:</span> <span class="s2">"fonts/&lt;fontfile&gt;.ttf"</span><span class="p">,</span> <span class="s2">"predicate"</span><span class="p">:</span> <span class="n">YourProviderClass</span><span class="o">.</span><span class="n">_is_fill</span><span class="p">},</span>
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>                <span class="s2">"outline"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"filename"</span><span class="p">:</span> <span class="s2">"fonts/&lt;fontfile&gt;.ttf"</span><span class="p">,</span> <span class="s2">"predicate"</span><span class="p">:</span> <span class="n">YourProviderClass</span><span class="o">.</span><span class="n">_is_outline</span><span class="p">},</span>
 <a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>            <span class="p">},</span>
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>            <span class="n">homepage</span><span class="o">=</span><span class="s2">&quot;https://...&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>            <span class="n">license_url</span><span class="o">=</span><span class="s2">&quot;https://...&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>            <span class="n">icon_version</span><span class="o">=</span><span class="s2">&quot;&lt;icon-set-version&gt;&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>            <span class="n">homepage</span><span class="o">=</span><span class="s2">"https://..."</span><span class="p">,</span>
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>            <span class="n">license_url</span><span class="o">=</span><span class="s2">"https://..."</span><span class="p">,</span>
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>            <span class="n">icon_version</span><span class="o">=</span><span class="s2">"&lt;icon-set-version&gt;"</span><span class="p">,</span>
 <a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>            <span class="c1"># optional tuning</span>
 <a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>            <span class="n">pad_factor</span><span class="o">=</span><span class="mf">0.10</span><span class="p">,</span>
 <a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>            <span class="n">y_bias</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
@@ -1520,18 +1565,18 @@
 <a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a>
 <a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a>    <span class="nd">@staticmethod</span>
 <a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_is_fill</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a>        <span class="k">return</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;-fill&quot;</span><span class="p">)</span>  <span class="c1"># example</span>
+<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a>        <span class="k">return</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"-fill"</span><span class="p">)</span>  <span class="c1"># example</span>
 <a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a>
 <a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a>    <span class="nd">@staticmethod</span>
 <a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_is_outline</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a>        <span class="k">return</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;-outline&quot;</span><span class="p">)</span>
+<a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a>        <span class="k">return</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"-outline"</span><span class="p">)</span>
 </code></pre></div>
 <p>Notes
 - Single-file providers: include <code>filename</code> and a single <code>glyphmap.json</code>.
 - Style providers: omit <code>filename</code> and provide <code>styles</code> with a <code>predicate</code> per style and <code>glyphmap-&lt;style&gt;.json</code> for each.
 - <code>icon_version</code> should reflect the upstream icon set version for display in the browser and docs.
 - You may override <code>format_glyph_name()</code> if you need to normalize upstream naming.</p>
-<h3 id="3-glyph-map-and-fonts">3) Glyph map and fonts<a class="headerlink" href="#3-glyph-map-and-fonts" title="Permanent link">&para;</a></h3>
+<h3 id="3-glyph-map-and-fonts">3) Glyph map and fonts<a class="headerlink" href="#3-glyph-map-and-fonts" title="Permanent link">¶</a></h3>
 <ul>
 <li>Put the font files under <code>fonts/</code>.</li>
 <li>Include one or more glyph maps:</li>
@@ -1539,44 +1584,44 @@
 <li>Per-style: <code>glyphmap-&lt;style&gt;.json</code> files</li>
 <li>Glyph map keys are the raw glyph names; the provider resolves friendly names to them.</li>
 </ul>
-<h3 id="4-optional-convenience-class-iconpy">4) Optional convenience class (<code>icon.py</code>)<a class="headerlink" href="#4-optional-convenience-class-iconpy" title="Permanent link">&para;</a></h3>
+<h3 id="4-optional-convenience-class-iconpy">4) Optional convenience class (<code>icon.py</code>)<a class="headerlink" href="#4-optional-convenience-class-iconpy" title="Permanent link">¶</a></h3>
 <p>Provide a thin wrapper that resolves names with your provider, then calls the base <code>Icon</code>.</p>
 <div class="language-python highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">ttkbootstrap_icons.icon</span><span class="w"> </span><span class="kn">import</span> <span class="n">Icon</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">ttkbootstrap_icons_</span><span class="o">&lt;</span><span class="n">slug</span><span class="o">&gt;.</span><span class="n">provider</span> <span class="kn">import</span><span class="w"> </span><span class="nn">YourProviderClass</span>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="k">class</span><span class="w"> </span><span class="nc">YourIcon</span><span class="p">(</span><span class="n">Icon</span><span class="p">):</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">24</span><span class="p">,</span> <span class="n">color</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">24</span><span class="p">,</span> <span class="n">color</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"black"</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>        <span class="n">prov</span> <span class="o">=</span> <span class="n">YourProviderClass</span><span class="p">()</span>
 <a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>        <span class="n">YourIcon</span><span class="o">.</span><span class="n">initialize_with_provider</span><span class="p">(</span><span class="n">prov</span><span class="p">)</span>
 <a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>        <span class="n">resolved</span> <span class="o">=</span> <span class="n">prov</span><span class="o">.</span><span class="n">resolve_icon_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 <a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">resolved</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">color</span><span class="p">)</span>
 </code></pre></div>
-<h3 id="5-readme-and-licenses">5) README and licenses<a class="headerlink" href="#5-readme-and-licenses" title="Permanent link">&para;</a></h3>
+<h3 id="5-readme-and-licenses">5) README and licenses<a class="headerlink" href="#5-readme-and-licenses" title="Permanent link">¶</a></h3>
 <ul>
 <li>Add <code>README.md</code> following the standardized sections (Install, Quick start, Styles, Icon Browser, License and Attribution). Include a local <code>browser.png</code> screenshot if desired.</li>
 <li>Add upstream license texts under <code>LICENSES/</code> and note them in your README.</li>
 </ul>
-<hr />
-<h2 id="testing-your-provider">Testing your provider<a class="headerlink" href="#testing-your-provider" title="Permanent link">&para;</a></h2>
+<hr>
+<h2 id="testing-your-provider">Testing your provider<a class="headerlink" href="#testing-your-provider" title="Permanent link">¶</a></h2>
 <p>Install your provider locally and run the browser:</p>
 <div class="language-bash highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>packages/ttkbootstrap-icons-&lt;slug&gt;
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>python<span class="w"> </span>-m<span class="w"> </span>ttkbootstrap_icons.browser
 </code></pre></div>
 <p>Verify discovery via entry points:</p>
-<div class="language-bash highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;from importlib.metadata import entry_points; print([ (e.name, e.value) for e in entry_points(group=&#39;ttkbootstrap_icons.providers&#39;) ])&quot;</span>
+<div class="language-bash highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"from importlib.metadata import entry_points; print([ (e.name, e.value) for e in entry_points(group='ttkbootstrap_icons.providers') ])"</span>
 </code></pre></div>
 <p>If the provider doesn’t appear, check:
 - The entry point target points to a valid, importable class.
 - The module/package layout matches <code>pyproject.toml</code> (<code>package-dir = { "" = "src" }</code>).</p>
-<hr />
-<h2 id="base-package-updates-when-needed">Base package updates (when needed)<a class="headerlink" href="#base-package-updates-when-needed" title="Permanent link">&para;</a></h2>
+<hr>
+<h2 id="base-package-updates-when-needed">Base package updates (when needed)<a class="headerlink" href="#base-package-updates-when-needed" title="Permanent link">¶</a></h2>
 <p>The core app auto-discovers providers. You generally do not need code changes in the base package.</p>
 <p>Documentation additions:
 - Providers nav: add your provider page to <code>mkdocs.yml</code> (Providers section) if you want it in the sidebar.
 - Generation map: add your package to <code>scripts/gen_providers_docs.py</code> (<code>PACKAGE_TO_DOC</code>) so your README is pulled into <code>docs/providers/</code> at build time. Also update the display name map inside <code>_generate_providers_table()</code> if needed.
 - Licenses: add your project to <code>THIRD-PARTY-NOTICES.md</code> and ensure the table in <code>docs/license.md</code> includes it (Name, Package, License link). Maintainers may help keep this in sync.</p>
-<hr />
-<h2 id="naming-conventions">Naming conventions<a class="headerlink" href="#naming-conventions" title="Permanent link">&para;</a></h2>
+<hr>
+<h2 id="naming-conventions">Naming conventions<a class="headerlink" href="#naming-conventions" title="Permanent link">¶</a></h2>
 <ul>
 <li>PyPI package: <code>ttkbootstrap-icons-&lt;slug&gt;</code> (lowercase, hyphenated)</li>
 <li>Python package: <code>ttkbootstrap_icons_&lt;slug&gt;</code> (lowercase, underscore)</li>
@@ -1584,13 +1629,13 @@
 <li>Icon class (optional): <code>&lt;Name&gt;Icon</code> (e.g., <code>FAIcon</code>, <code>RemixIcon</code>)</li>
 <li>Entry point key: <code>&lt;slug&gt;</code> (lowercase); this is how the registry lists your provider.</li>
 </ul>
-<hr />
-<h2 id="tips">Tips<a class="headerlink" href="#tips" title="Permanent link">&para;</a></h2>
+<hr>
+<h2 id="tips">Tips<a class="headerlink" href="#tips" title="Permanent link">¶</a></h2>
 <ul>
 <li>Keep glyph maps minimal and accurate; favor style-specific maps if upstream uses suffixes (e.g., <code>-line</code>, <code>-fill</code>).</li>
 <li>Validate names in the Icon Browser; try searching and copying names to ensure style handling is correct.</li>
 <li>Prefer stable upstream links in your README and include a <code>browser.png</code> for docs.</li>
-</ul>
+</ul></div>
 
 
 
