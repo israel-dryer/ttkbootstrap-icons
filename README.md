@@ -1,4 +1,4 @@
-﻿# ttkbootstrap-icons Monorepo
+﻿# ttkbootstrap-icons
 
 [![PyPI](https://img.shields.io/pypi/v/ttkbootstrap-icons.svg)](https://pypi.org/project/ttkbootstrap-icons/)
 [![Python Versions](https://img.shields.io/pypi/pyversions/ttkbootstrap-icons.svg)](https://pypi.org/project/ttkbootstrap-icons/)
@@ -55,7 +55,8 @@ python -m ttkbootstrap_icons.browser
 
 ## Packages
 
-This is a multi-package (monorepo) workspace.
+This is a multi-package (monorepo) workspace that includes all of the extension icon packages within the
+`ttkbootstrap-icons` family.
 
 | Package                                                                                                       | PyPI                                                           | Downloads                                                                                                                  | Description                                                |
 |:--------------------------------------------------------------------------------------------------------------|:---------------------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------|:-----------------------------------------------------------|
