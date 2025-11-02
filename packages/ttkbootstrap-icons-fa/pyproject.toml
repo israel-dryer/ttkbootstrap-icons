@@ -1,6 +1,6 @@
 [project]
 name = "ttkbootstrap-icons-fa"
-version = "1.0.0"
+version = "1.0.1"
 description = "Font Awesome Free (font-based) provider for ttkbootstrap-icons"
 readme = "README.md"
 requires-python = ">=3.10"
