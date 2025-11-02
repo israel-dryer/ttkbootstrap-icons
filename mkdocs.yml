@@ -1,0 +1,108 @@
+﻿site_name: ttkbootstrap-icons
+site_url: https://israel-dryer.github.io/ttkbootstrap-icons/
+repo_url: https://github.com/israel-dryer/ttkbootstrap-icons
+
+theme:
+  name: material
+  features:
+    - content.code.copy
+  icon:
+    logo: material/view-grid
+
+
+plugins:
+  - gen-files:
+      scripts:
+        - scripts/gen_providers_docs.py
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths:
+            - packages/ttkbootstrap-icons/src
+            - packages/ttkbootstrap-icons-devicon/src
+            - packages/ttkbootstrap-icons-eva/src
+            - packages/ttkbootstrap-icons-fa/src
+            - packages/ttkbootstrap-icons-fluent/src
+            - packages/ttkbootstrap-icons-gmi/src
+            - packages/ttkbootstrap-icons-ion/src
+            - packages/ttkbootstrap-icons-lucide/src
+            - packages/ttkbootstrap-icons-mat/src
+            - packages/ttkbootstrap-icons-meteocons/src
+            - packages/ttkbootstrap-icons-remix/src
+            - packages/ttkbootstrap-icons-rpga/src
+            - packages/ttkbootstrap-icons-simple/src
+            - packages/ttkbootstrap-icons-typicons/src
+            - packages/ttkbootstrap-icons-weather/src
+          options:
+            docstring_style: google
+            heading_level: 2
+            show_root_heading: true
+            members: true
+            inherited_members: true
+            show_source: false
+
+markdown_extensions:
+  - toc:
+      permalink: true
+      toc_depth: 2
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+      pygments_lang_class: true
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+
+nav:
+  - Overview: index.md
+  - Getting Started: getting-started.md
+  - Icon Browser: icon-browser.md
+  - Providers:
+      - Bootstrap: providers/bootstrap.md
+      - Devicon: providers/devicon.md
+      - Eva: providers/eva.md
+      - Fluent System Icons: providers/fluent-system-icons.md
+      - Font Awesome 6 (free): providers/font-awesome-6-free.md
+      - Google Material Icons: providers/google-material-icons.md
+      - Ion Icons: providers/ion.md
+      - Lucide: providers/lucide.md
+      - Material Design Icons: providers/material-design-icons.md
+      - Meteocons: providers/meteocons.md
+      - Remix Icons: providers/remix.md
+      - RPG Awesome: providers/rgpa.md
+      - Simple Icons: providers/simple.md
+      - Typicons: providers/typicons.md
+      - Weather Icons: providers/weather.md
+  - PyInstaller: pyinstaller.md
+  -  API:
+      - Core:
+          - Overview: api/core.md
+          - Icon: api/core/icon.md
+          - Providers Framework: api/core/providers.md
+          - Provider Registry: api/core/registry.md
+          - Bootstrap (Built-in): api/core/bootstrap.md
+      - Devicon: api/devicon.md
+      - Eva: api/eva.md
+      - Fluent System Icons: api/fluent.md
+      - Font Awesome: api/fa.md
+      - Google Material Icons: api/gmi.md
+      - Ion Icons: api/ion.md
+      - Lucide: api/lucide.md
+      - Material Design Icons: api/mat.md
+      - Meteocons: api/meteocons.md
+      - Remix Icons: api/remix.md
+      - RPG Awesome: api/rpga.md
+      - Simple Icons: api/simple.md
+      - Typicons: api/typicons.md
+      - Weather Icons: api/weather.md
+  - Contributing: contributing.md
+  - License: license.md
+
+
+
+
+
+
+
+
+

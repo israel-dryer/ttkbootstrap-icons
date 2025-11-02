@@ -2,10 +2,17 @@ from ttkbootstrap_icons.providers import BaseFontProvider
 
 
 class EvaFontProvider(BaseFontProvider):
-    """Initialize the provider with style configuration.
+    """Provider for the Eva Icons dataset.
 
-    Uses a single font file (`eva-icons.ttf`) for all styles. Style selection
-    is performed by predicates that test for the suffix.
+    Eva provides two styles - "fill" and "outline" - encoded via the
+    "-outline" suffix. A single font file backs both styles; style selection is
+    performed by simple name predicates.
+
+    Attributes:
+        name: Provider identifier ("eva").
+        display_name: Human-friendly name ("Eva Icons").
+        default_style: Default style ("fill").
+        styles: Map of style -> {filename, predicate}.
     """
 
     def __init__(self):

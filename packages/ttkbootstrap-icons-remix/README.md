@@ -1,6 +1,12 @@
-# Remix Icon (ttkbootstrap-icons-remix)
+# ttkbootstrap-icons-remix
 
-Remix Icons provider for ttkbootstrap-icons.
+An icon provider for the `ttkbootstrap-icons` library.  
+Remix Icon offers modern, consistent line and filled variants.
+
+[![PyPI](https://img.shields.io/pypi/v/ttkbootstrap-icons-remix.svg)](https://pypi.org/project/ttkbootstrap-icons-remix/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
+
+---
 
 ## Install
 
@@ -8,20 +14,9 @@ Remix Icons provider for ttkbootstrap-icons.
 pip install ttkbootstrap-icons-remix
 ```
 
-Requires `ttkbootstrap-icons` (installed automatically) and `Pillow`.
+---
 
-## Info
-
-- Name: Remix Icon
-- Icon Version (preset default): 3.5.0
-- Source: https://remixicon.com/ (npm: remixicon)
-
-## License and Attribution
-
-- Icons and code: Apache License 2.0
-- Attribution: Remix Icon — https://remixicon.com/
-
-## Usage
+## Quick start
 
 ```python
 import tkinter as tk
@@ -35,23 +30,33 @@ tk.Label(root, image=icon.image).pack()
 root.mainloop()
 ```
 
-This package registers a provider entry point, so the base icon previewer will automatically discover it.
+---
 
-## Generate assets (developer)
+## Styles
+
+| Variant | Description        |
+|:--------|:-------------------|
+| `line`  | Line/outline style |
+| `fill`  | Filled style       |
+
+---
+
+## Icon Browser
+
+Browse available icons with the built-in browser. From your terminal run:
 
 ```bash
-# Preset for Remix Icon via jsdelivr
-ttkicons-remix-build --preset remix3 --version 3.5.0
-
-# Or direct URL
-ttkicons-remix-build --font-url https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.ttf
+ttkbootstrap-icons
 ```
 
-Omitting metadata uses TTF-only extraction (needs `fonttools`).
+Use **Copy Name** in the browser to copy the icon name and style directly for use in your code.
 
-## Changelog
+![Icon Browser](browser.png)
 
-| Version | Date       | Notes                                 |
-|--------:|------------|---------------------------------------|
-| 0.2.0   | 2025-10-28 | Docs consistency; previewer UX tweaks |
-| 0.1.0   | 2024-10-27 | Initial provider and basic usage docs |
+---
+
+## License and Attribution
+
+- **Upstream license:** Remix Icon — https://remixicon.com/
+- **Wrapper license:** MIT © Israel Dryer
+

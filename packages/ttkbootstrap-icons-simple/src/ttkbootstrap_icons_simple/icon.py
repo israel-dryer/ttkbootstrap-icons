@@ -1,4 +1,4 @@
-from ttkbootstrap_icons.icon import Icon
+﻿from ttkbootstrap_icons.icon import Icon
 from ttkbootstrap_icons_simple.provider import SimpleFontProvider
 
 
@@ -21,17 +21,4 @@ class SimpleIcon(Icon):
         super().__init__(resolved, size, color)
 
 
-if __name__ == '__main__':
-    import tkinter as tk
-    from tkinter import ttk
 
-    root = tk.Tk()
-    root.title("Simple Icons")
-    root.minsize(300, 200)
-    options = {"fill": "x", "padx": 10, "pady": 10}
-
-    # using the default style
-    icon0 = SimpleIcon("alchemy", size=64)
-    ttk.Label(root, text="default style", image=icon0.image, compound="left").pack(**options)
-
-    root.mainloop()

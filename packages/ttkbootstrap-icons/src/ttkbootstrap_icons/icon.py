@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import json
 import os
@@ -19,13 +19,13 @@ def create_transparent_icon(size: int = 16) -> TkPhotoImage:
 
 
 class Icon(ABC):
-    """Base class for rendered TTF-based icons (PIL → PhotoImage).
+    """Base class for rendered TTF-based icons (PIL -> PhotoImage).
 
     Performance features:
-      • Class-level caches for rendered images and PIL fonts.
-      • Class-level cache for transparent placeholders.
-      • Reuses a temporary font file per (provider, style).
-      • __slots__ to reduce per-instance overhead.
+      - Class-level caches for rendered images and PIL fonts.
+      - Class-level cache for transparent placeholders.
+      - Reuses a temporary font file per (provider, style).
+      - __slots__ to reduce per-instance overhead.
     """
     __slots__ = ("name", "size", "color", "_img", "_font_path", "_icon_set_id")
 
@@ -256,3 +256,5 @@ class Icon(ABC):
 
     def __str__(self):
         return str(self._img)
+
+

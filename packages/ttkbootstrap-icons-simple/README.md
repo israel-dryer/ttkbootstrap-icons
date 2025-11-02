@@ -1,6 +1,12 @@
-# Simple Icons (ttkbootstrap-icons-simple)
+# ttkbootstrap-icons-simple
 
-Simple Icons provider for ttkbootstrap-icons.
+An icon provider for the `ttkbootstrap-icons` library.  
+Simple Icons provides brand logos as a simple, monochrome font.
+
+[![PyPI](https://img.shields.io/pypi/v/ttkbootstrap-icons-simple.svg)](https://pypi.org/project/ttkbootstrap-icons-simple/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
+
+---
 
 ## Install
 
@@ -8,21 +14,9 @@ Simple Icons provider for ttkbootstrap-icons.
 pip install ttkbootstrap-icons-simple
 ```
 
-Requires `ttkbootstrap-icons` (installed automatically) and `Pillow`.
+---
 
-## Info
-
-- Name: Simple Icons Font (community)
-- Icon Version (preset default): latest
-- Source: https://github.com/simple-icons/simple-icons-font
-
-## License and Attribution
-
-- Underlying icon set: Simple Icons â€” CC0 1.0 Universal (public domain) â€” https://simpleicons.org/
-- This font project: see the simple-icons-font repository for license details (often MIT for code)
-- Attribution: Simple Icons â€” https://simpleicons.org/
-
-## Usage
+## Quick start
 
 ```python
 import tkinter as tk
@@ -36,20 +30,29 @@ tk.Label(root, image=icon.image).pack()
 root.mainloop()
 ```
 
-This package registers a provider entry point, so the base icon previewer will automatically discover it.
+---
 
-## Generate assets (developer)
+## Styles
+
+This provider uses a single font without separate style variants.
+
+---
+
+## Icon Browser
+
+Browse available icons with the built-in browser. From your terminal run:
 
 ```bash
-# Provide a direct URL to a community TTF (no official preset)
-ttkicons-simple-build --font-url https://example.com/path/to/simple-icons.ttf
+ttkbootstrap-icons
 ```
 
-Omitting metadata uses TTF-only extraction (needs `fonttools`).
+Use **Copy Name** in the browser to copy the icon name and style directly for use in your code.
 
-## Changelog
+![Icon Browser](browser.png)
 
-| Version | Date       | Notes                                 |
-|--------:|------------|---------------------------------------|
-| 0.2.0   | 2025-10-28 | Docs consistency; previewer UX tweaks |
-| 0.1.0   | 2024-10-27 | Initial provider and basic usage docs |
+---
+
+## License and Attribution
+
+- **Upstream license:** Simple Icons — https://simpleicons.org/
+- **Wrapper license:** MIT © Israel Dryer

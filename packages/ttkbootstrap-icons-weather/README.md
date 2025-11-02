@@ -1,6 +1,12 @@
-# Weather Icons (ttkbootstrap-icons-weather)
+# ttkbootstrap-icons-weather
 
-Weather Icons provider for ttkbootstrap-icons.
+An icon provider for the `ttkbootstrap-icons` library.  
+Weather Icons is a classic set of weather-related glyphs.
+
+[![PyPI](https://img.shields.io/pypi/v/ttkbootstrap-icons-weather.svg)](https://pypi.org/project/ttkbootstrap-icons-weather/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
+
+---
 
 ## Install
 
@@ -8,22 +14,9 @@ Weather Icons provider for ttkbootstrap-icons.
 pip install ttkbootstrap-icons-weather
 ```
 
-Requires `ttkbootstrap-icons` (installed automatically) and `Pillow`.
+---
 
-## Info
-
-- Name: Weather Icons
-- Icon Version (preset default): 2.0.10
-- Source: https://erikflowers.github.io/weather-icons/ (CDN: https://cdnjs.com/libraries/weather-icons)
-
-## License and Attribution
-
-- Fonts: SIL Open Font License 1.1 (OFL-1.1)
-- Code: MIT License
-- Documentation: Creative Commons Attribution 3.0 (CC BY 3.0)
-- Attribution: Weather Icons by Erik Flowers â€” https://erikflowers.github.io/weather-icons/
-
-## Usage
+## Quick start
 
 ```python
 import tkinter as tk
@@ -37,30 +30,29 @@ tk.Button(root, image=icon.image).pack()
 root.mainloop()
 ```
 
-This package registers a provider entry point, so the base icon previewer will automatically discover it.
+---
 
-## Generate assets (developer)
+## Styles
+
+This provider uses a single font without separate style variants.
+
+---
+
+## Icon Browser
+
+Browse available icons with the built-in browser. From your terminal run:
 
 ```bash
-# Quick build (uses preset wi2)
-ttkicons-weather-quick
-
-# Preset for Weather Icons via cdnjs
-ttkicons-weather-build --preset wi2 --version 2.0.10
-
-# Or direct URL
-ttkicons-weather-build --font-url https://cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.10/font/weathericons-regular-webfont.ttf
-
-# Optional: provide CSS to get readable icon names
-ttkicons-weather-build --preset wi2 --version 2.0.10 \
-  --css-url https://cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.10/css/weather-icons.min.css
+ttkbootstrap-icons
 ```
 
-Omitting metadata uses TTF-only extraction (needs `fonttools`).
+Use **Copy Name** in the browser to copy the icon name and style directly for use in your code.
 
-## Changelog
+![Icon Browser](browser.png)
 
-| Version | Date       | Notes                                 |
-|--------:|------------|---------------------------------------|
-| 0.2.0   | 2025-10-28 | Docs consistency; previewer UX tweaks |
-| 0.1.0   | 2024-10-27 | Initial provider and basic usage docs |
+---
+
+## License and Attribution
+
+- **Upstream license:** Weather Icons — https://erikflowers.github.io/weather-icons/
+- **Wrapper license:** MIT © Israel Dryer

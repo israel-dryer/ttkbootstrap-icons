@@ -1,6 +1,12 @@
-# Lucide Icons (ttkbootstrap-icons-lucide)
+# ttkbootstrap-icons-lucide
 
-Lucide Icons provider for ttkbootstrap-icons.
+An icon provider for the `ttkbootstrap-icons` library.  
+Lucide Icons are crisp, outline-based glyphs that work well at various sizes.
+
+[![PyPI](https://img.shields.io/pypi/v/ttkbootstrap-icons-lucide.svg)](https://pypi.org/project/ttkbootstrap-icons-lucide/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
+
+---
 
 ## Install
 
@@ -8,15 +14,9 @@ Lucide Icons provider for ttkbootstrap-icons.
 pip install ttkbootstrap-icons-lucide
 ```
 
-Requires `ttkbootstrap-icons` and `Pillow`.
+---
 
-## Info
-
-- Name: Lucide Icons
-- Icon Version: see lucide.dev (varies)
-- Source: https://lucide.dev/
-
-## Usage
+## Quick start
 
 ```python
 import tkinter as tk
@@ -30,19 +30,30 @@ tk.Button(root, image=icon.image, text="Home", compound="left").pack()
 root.mainloop()
 ```
 
-## Generate assets (developer)
+---
+
+## Styles
+
+This provider uses a single font without separate style variants.
+
+---
+
+## Icon Browser
+
+Browse available icons with the built-in browser. From your terminal run:
 
 ```bash
-# Quick build (uses preset defaults if configured)
-ttkicons-lucide-quick
-
-# Full build (download JSON + font and write glyphmap.json)
-ttkicons-lucide-build
+ttkbootstrap-icons
 ```
 
-## Changelog
+Use **Copy Name** in the browser to copy the icon name and style directly for use in your code.
 
-| Version | Date       | Notes                                 |
-|--------:|------------|---------------------------------------|
-| 0.2.0   | 2025-10-28 | Docs consistency; previewer UX tweaks |
-| 0.1.0   | 2024-10-27 | Initial provider and basic usage docs |
+![Icon Browser](browser.png)
+
+---
+
+## License and Attribution
+
+- **Upstream license:** Lucide — https://lucide.dev/
+- **Wrapper license:** MIT © Israel Dryer
+
