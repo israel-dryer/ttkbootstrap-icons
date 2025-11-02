@@ -53,6 +53,12 @@ def main(argv=None):
     fonts_dir = pkg_root / "fonts"
     ensure_dir(fonts_dir)
 
+    # Determine style from preset
+    style = None
+    if args.preset:
+        # Extract style from preset name (e.g., "fa6-solid" -> "solid")
+        style = args.preset.split("-", 1)[1] if "-" in args.preset else None
+
     # Acquire font file
     font_path = None
     if args.font_file:
@@ -78,8 +84,15 @@ def main(argv=None):
     else:
         mapping = glyphmap_from_ttf(font_path)
 
-    write_glyphmap(pkg_root / "glyphmap.json", mapping)
-    print(f"Wrote: {pkg_root / 'glyphmap.json'}")
+    # Write glyphmap with appropriate filename
+    # For Font Awesome with multiple font files, use glyphmap-{style}.json
+    if style:
+        glyphmap_path = pkg_root / f"glyphmap-{style}.json"
+    else:
+        glyphmap_path = pkg_root / "glyphmap.json"
+
+    write_glyphmap(glyphmap_path, mapping)
+    print(f"Wrote: {glyphmap_path}")
     print(f"Font at: {font_path}")
 
 
@@ -88,5 +101,8 @@ if __name__ == "__main__":
 
 
 def default_main():
-    """Build using recommended defaults (fa6-solid preset)."""
-    return main(["--preset", "fa6-solid"])
+    """Build using recommended defaults (all three Font Awesome styles)."""
+    print("Generating Font Awesome assets for all styles...")
+    for preset in ["fa6-solid", "fa6-regular", "fa6-brands"]:
+        print(f"\nGenerating {preset}...")
+        main(["--preset", preset])
