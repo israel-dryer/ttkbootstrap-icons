@@ -56,6 +56,7 @@ markdown_extensions:
 nav:
   - Overview: index.md
   - Getting Started: getting-started.md
+  - Stateful Icons: stateful-icons.md
   - Icon Browser: icon-browser.md
   - Providers:
       - Bootstrap: providers/bootstrap.md
