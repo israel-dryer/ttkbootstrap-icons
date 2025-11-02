@@ -32,3 +32,4 @@ Thumbs.db
 # PyPI credentials (security)
 .pypirc
 /site/
+/dev-features/
