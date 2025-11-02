@@ -11,6 +11,11 @@ theme:
 
 
 plugins:
+  - mkdocs-video:
+      loop: True
+      css_style:
+        width: "auto"
+        height: "auto"
   - gen-files:
       scripts:
         - scripts/gen_providers_docs.py
@@ -56,6 +61,7 @@ markdown_extensions:
 nav:
   - Overview: index.md
   - Getting Started: getting-started.md
+  - Stateful Icons: stateful-icons.md
   - Icon Browser: icon-browser.md
   - Providers:
       - Bootstrap: providers/bootstrap.md

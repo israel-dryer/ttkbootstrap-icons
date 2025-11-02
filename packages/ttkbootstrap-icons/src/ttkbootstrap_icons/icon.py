@@ -4,13 +4,14 @@ import json
 import os
 import tempfile
 from abc import ABC
-from typing import Any, Optional, ClassVar, Tuple
+from tkinter import PhotoImage as TkPhotoImage
+from typing import Any, ClassVar, Optional, Tuple
 
 from PIL import Image, ImageDraw, ImageFont
 from PIL.ImageTk import PhotoImage
-from tkinter import PhotoImage as TkPhotoImage
 
 from .providers import BaseFontProvider
+from .stateful_icon_mixin import StatefulIconMixin
 
 
 def create_transparent_icon(size: int = 16) -> TkPhotoImage:
@@ -18,7 +19,7 @@ def create_transparent_icon(size: int = 16) -> TkPhotoImage:
     return Icon._get_transparent(size)
 
 
-class Icon(ABC):
+class Icon(StatefulIconMixin, ABC):
     """Base class for rendered TTF-based icons (PIL -> PhotoImage).
 
     Performance features:
@@ -58,6 +59,8 @@ class Icon(ABC):
         self._font_path = Icon._current_font_path
         self._icon_set_id = Icon._icon_set
         self._img: Optional[TkPhotoImage] = self._render()
+        super().__init__()
+        self._ensure_original_image()
 
     @property
     def image(self) -> TkPhotoImage:
@@ -139,11 +142,12 @@ class Icon(ABC):
         fp = self._font_path
         icon_map = Icon._icon_map_cache.get(self._icon_set_id, Icon._icon_map)
 
-        render_params = Icon._render_params_cache.get(self._icon_set_id, {
-            "pad_factor": 0.10,
-            "y_bias": 0.0,
-            "scale_to_fit": True,
-        })
+        render_params = Icon._render_params_cache.get(
+            self._icon_set_id, {
+                "pad_factor": 0.10,
+                "y_bias": 0.0,
+                "scale_to_fit": True,
+            })
         pad_factor = render_params["pad_factor"]
         y_bias = render_params["y_bias"]
         scale_to_fit = render_params["scale_to_fit"]
@@ -256,5 +260,3 @@ class Icon(ABC):
 
     def __str__(self):
         return str(self._img)
-
-
