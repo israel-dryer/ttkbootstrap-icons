@@ -3,7 +3,8 @@ Multi-State Button with Complex Interactions
 Combine multiple states for rich interaction feedback.
 """
 import tkinter as tk
-from tkinter import ttk
+
+
 import ttkbootstrap as tb
 from ttkbootstrap_icons_fa import FAIcon
 
@@ -14,7 +15,7 @@ def main():
     root.geometry("550x450")
 
     # Header
-    header = ttk.Label(
+    header = tb.Label(
         root,
         text="Multi-State Complex Interactions",
         font=("Segoe UI", 16, "bold"),
@@ -23,7 +24,7 @@ def main():
     header.pack()
 
     # Description
-    desc = ttk.Label(
+    desc = tb.Label(
         root,
         text="Interact with the button to see different state colors\nTry hover, click, and disable states",
         font=("Segoe UI", 10),
@@ -33,16 +34,16 @@ def main():
     desc.pack()
 
     # Container
-    container = ttk.Frame(root, padding=30)
+    container = tb.Frame(root, padding=30)
     container.pack(expand=True)
 
     # Download button with complex state mapping
     icon = FAIcon("download", size=32, style="solid")
-    download_btn = ttk.Button(
+    download_btn = tb.Button(
         container,
         text="Download File",
         compound="left",
-        style="success.TButton"
+        bootstyle="success"
     )
 
     icon.map(
@@ -58,7 +59,7 @@ def main():
     download_btn.pack(pady=20)
 
     # Control panel
-    control_frame = ttk.LabelFrame(container, text="Controls", padding=15)
+    control_frame = tb.LabelFrame(container, text="Controls", padding=15)
     control_frame.pack(pady=20, fill="x")
 
     # Toggle button state
@@ -70,17 +71,17 @@ def main():
         else:
             download_btn.configure(state="disabled")
 
-    ttk.Checkbutton(
+    tb.Checkbutton(
         control_frame,
         text="Enable Download Button",
         variable=enabled_var,
         command=toggle_button_state,
-        style="success.Roundtoggle.Toolbutton"
+        bootstyle="success-round-toggle-toolbutton"
     ).pack(anchor="w", pady=5)
 
     # Download counter
     download_count = tk.IntVar(value=0)
-    count_label = ttk.Label(
+    count_label = tb.Label(
         control_frame,
         text="Downloads: 0",
         font=("Segoe UI", 10)
@@ -96,7 +97,7 @@ def main():
     download_btn.configure(command=on_download)
 
     # State color legend
-    legend_frame = ttk.LabelFrame(root, text="State Colors", padding=15)
+    legend_frame = tb.LabelFrame(root, text="State Colors", padding=15)
     legend_frame.pack(pady=10, padx=40, fill="x")
 
     states = [
@@ -107,17 +108,17 @@ def main():
     ]
 
     for i, (state, color, description) in enumerate(states):
-        frame = ttk.Frame(legend_frame)
+        frame = tb.Frame(legend_frame)
         frame.pack(fill="x", pady=2)
 
-        ttk.Label(
+        tb.Label(
             frame,
             text=f"• {state}:",
             font=("Segoe UI", 9, "bold"),
             width=10
         ).pack(side="left")
 
-        ttk.Label(
+        tb.Label(
             frame,
             text=color,
             font=("Segoe UI", 9),
@@ -125,19 +126,19 @@ def main():
             width=10
         ).pack(side="left")
 
-        ttk.Label(
+        tb.Label(
             frame,
             text=description,
             font=("Segoe UI", 9),
-            foreground="gray"
+            bootstyle="secondary"
         ).pack(side="left", padx=5)
 
     # Instructions
-    instructions = ttk.Label(
+    instructions = tb.Label(
         root,
         text="Hover, click, and toggle the checkbox to see all state changes",
         font=("Segoe UI", 9),
-        foreground="gray",
+        bootstyle="secondary",
         padding=10
     )
     instructions.pack(side="bottom")

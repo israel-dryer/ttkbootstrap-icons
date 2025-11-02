@@ -2,9 +2,8 @@
 State Comparison Visual
 Shows all button states side by side for documentation screenshots.
 """
-import tkinter as tk
-from tkinter import ttk
 import ttkbootstrap as tb
+
 from ttkbootstrap_icons_fa import FAIcon
 
 
@@ -14,7 +13,7 @@ def main():
     root.geometry("600x400")
 
     # Header
-    header = ttk.Label(
+    header = tb.Label(
         root,
         text="Button State Comparison",
         font=("Segoe UI", 16, "bold"),
@@ -23,37 +22,38 @@ def main():
     header.pack()
 
     # Container frame
-    container = ttk.Frame(root, padding=20)
+    container = tb.Frame(root, padding=20)
     container.pack(fill="both", expand=True)
 
     # Normal state
-    ttk.Label(container, text="Normal State:", font=("Segoe UI", 11, "bold")).grid(row=0, column=0, sticky="w", pady=5)
+    tb.Label(container, text="Normal State:", font=("Segoe UI", 11, "bold")).grid(row=0, column=0, sticky="w", pady=5)
     icon1 = FAIcon("heart", size=32, style="solid")
-    btn1 = ttk.Button(container, text="Like", compound="left", style="primary.TButton")
+    btn1 = tb.Button(container, text="Like", compound="left", bootstyle="outline-primary")
     icon1.map(btn1)
     btn1.grid(row=0, column=1, padx=20, pady=5)
 
     # Hover state (simulated with label)
-    ttk.Label(container, text="Hover State:", font=("Segoe UI", 11, "bold")).grid(row=1, column=0, sticky="w", pady=5)
-    ttk.Label(container, text="(Move mouse over button to see)", foreground="gray").grid(row=2, column=0, sticky="w")
+    tb.Label(container, text="Hover State:", font=("Segoe UI", 11, "bold")).grid(row=1, column=0, sticky="w", pady=5)
+    tb.Label(container, text="(Move mouse over button to see)", bootstyle="secondary").grid(row=2, column=0, sticky="w")
 
     # Pressed state (simulated)
-    ttk.Label(container, text="Pressed State:", font=("Segoe UI", 11, "bold")).grid(row=3, column=0, sticky="w", pady=5)
-    ttk.Label(container, text="(Click and hold to see)", foreground="gray").grid(row=4, column=0, sticky="w")
+    tb.Label(container, text="Pressed State:", font=("Segoe UI", 11, "bold")).grid(row=3, column=0, sticky="w", pady=5)
+    tb.Label(container, text="(Click and hold to see)", bootstyle="secondary").grid(row=4, column=0, sticky="w")
 
     # Disabled state
-    ttk.Label(container, text="Disabled State:", font=("Segoe UI", 11, "bold")).grid(row=5, column=0, sticky="w", pady=5)
+    tb.Label(container, text="Disabled State:", font=("Segoe UI", 11, "bold")).grid(
+        row=5, column=0, sticky="w", pady=5)
     icon2 = FAIcon("heart", size=32, style="solid")
-    btn2 = ttk.Button(container, text="Like", compound="left", state="disabled", style="primary.TButton")
+    btn2 = tb.Button(container, text="Like", compound="left", state="disabled", bootstyle="outline-primary")
     icon2.map(btn2)
     btn2.grid(row=5, column=1, padx=20, pady=5)
 
     # Info label
-    info = ttk.Label(
+    info = tb.Label(
         root,
         text="Hover over and click the top button to see state changes",
         font=("Segoe UI", 9),
-        foreground="gray",
+        bootstyle="secondary",
         padding=10
     )
     info.pack(side="bottom")

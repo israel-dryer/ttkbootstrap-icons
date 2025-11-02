@@ -3,7 +3,6 @@ Navigation Buttons with Active State
 Create navigation items that highlight when selected.
 """
 import tkinter as tk
-from tkinter import ttk
 import ttkbootstrap as tb
 from ttkbootstrap_icons_fa import FAIcon
 
@@ -14,7 +13,7 @@ def main():
     root.geometry("600x400")
 
     # Header
-    header = ttk.Label(
+    header = tb.Label(
         root,
         text="Navigation with Active States",
         font=("Segoe UI", 16, "bold"),
@@ -23,7 +22,7 @@ def main():
     header.pack()
 
     # Description
-    desc = ttk.Label(
+    desc = tb.Label(
         root,
         text="Click navigation items to see active state changes",
         font=("Segoe UI", 10),
@@ -32,7 +31,7 @@ def main():
     desc.pack()
 
     # Navigation frame
-    nav_frame = ttk.Frame(root, padding=20)
+    nav_frame = tb.Frame(root, padding=20)
     nav_frame.pack(fill="x")
 
     # Track active button
@@ -49,7 +48,7 @@ def main():
 
     # Home button with active state
     home_icon = FAIcon("house", size=20, style="solid")
-    home_btn = ttk.Button(nav_frame, text="Home", compound="left")
+    home_btn = tb.Button(nav_frame, text="Home", compound="left")
     home_btn.state(['selected'])  # Start as selected
     home_icon.map(
         home_btn,
@@ -63,7 +62,7 @@ def main():
 
     # Profile button
     profile_icon = FAIcon("user", size=20, style="solid")
-    profile_btn = ttk.Button(nav_frame, text="Profile", compound="left")
+    profile_btn = tb.Button(nav_frame, text="Profile", compound="left")
     profile_icon.map(
         profile_btn,
         statespec=[
@@ -76,7 +75,7 @@ def main():
 
     # Settings button
     settings_icon = FAIcon("gear", size=20, style="solid")
-    settings_btn = ttk.Button(nav_frame, text="Settings", compound="left")
+    settings_btn = tb.Button(nav_frame, text="Settings", compound="left")
     settings_icon.map(
         settings_btn,
         statespec=[
@@ -89,7 +88,7 @@ def main():
 
     # Messages button
     messages_icon = FAIcon("envelope", size=20, style="solid")
-    messages_btn = ttk.Button(nav_frame, text="Messages", compound="left")
+    messages_btn = tb.Button(nav_frame, text="Messages", compound="left")
     messages_icon.map(
         messages_btn,
         statespec=[
@@ -115,10 +114,10 @@ def main():
     messages_btn.configure(command=lambda: set_active("messages", *all_buttons))
 
     # Content area showing active page
-    content_frame = ttk.Frame(root, padding=20)
+    content_frame = tb.Frame(root, padding=20)
     content_frame.pack(fill="both", expand=True)
 
-    active_label = ttk.Label(
+    active_label = tb.Label(
         content_frame,
         text="",
         font=("Segoe UI", 24),
@@ -134,11 +133,11 @@ def main():
     update_content()  # Initial update
 
     # Legend
-    legend_frame = ttk.LabelFrame(root, text="Icon States", padding=10)
+    legend_frame = tb.LabelFrame(root, text="Icon States", padding=10)
     legend_frame.pack(pady=10, padx=40, fill="x", side="bottom")
 
-    ttk.Label(legend_frame, text="Blue = Active/Selected  |  Grey = Inactive  |  Dark Blue = Hover",
-              font=("Segoe UI", 9), foreground="gray").pack()
+    tb.Label(legend_frame, text="Blue = Active/Selected  |  Grey = Inactive  |  Dark Blue = Hover",
+              font=("Segoe UI", 9), bootstyle="secondary").pack()
 
     root.mainloop()
 

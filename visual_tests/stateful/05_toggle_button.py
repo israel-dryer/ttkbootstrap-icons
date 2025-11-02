@@ -3,7 +3,8 @@ Toggle Button with State Icons
 Create a toggle that shows different icons based on its checked state.
 """
 import tkinter as tk
-from tkinter import ttk
+
+
 import ttkbootstrap as tb
 from ttkbootstrap_icons_fa import FAIcon
 
@@ -14,7 +15,7 @@ def main():
     root.geometry("500x400")
 
     # Header
-    header = ttk.Label(
+    header = tb.Label(
         root,
         text="Toggle Button State Icons",
         font=("Segoe UI", 16, "bold"),
@@ -23,7 +24,7 @@ def main():
     header.pack()
 
     # Description
-    desc = ttk.Label(
+    desc = tb.Label(
         root,
         text="Toggle notifications on/off to see icon changes\nIcon and color change based on checked state",
         font=("Segoe UI", 10),
@@ -33,16 +34,16 @@ def main():
     desc.pack()
 
     # Container
-    container = ttk.Frame(root, padding=30)
+    container = tb.Frame(root, padding=30)
     container.pack(expand=True)
 
     # Create toggle button
     toggle_var = tk.BooleanVar(value=True)
-    toggle = ttk.Checkbutton(
+    toggle = tb.Checkbutton(
         container,
         text="Notifications",
         variable=toggle_var,
-        style="success.Toolbutton"
+        bootstyle="success-toolbutton"
     )
 
     # Create icon that changes based on checked state
@@ -60,10 +61,10 @@ def main():
     toggle.pack(pady=20)
 
     # Status display
-    status_frame = ttk.LabelFrame(container, text="Current Status", padding=20)
+    status_frame = tb.LabelFrame(container, text="Current Status", padding=20)
     status_frame.pack(pady=20, fill="x")
 
-    status_label = ttk.Label(
+    status_label = tb.Label(
         status_frame,
         text="",
         font=("Segoe UI", 12, "bold")
@@ -80,28 +81,28 @@ def main():
     update_status()  # Initial update
 
     # State legend
-    legend_frame = ttk.LabelFrame(root, text="Icon States", padding=15)
+    legend_frame = tb.LabelFrame(root, text="Icon States", padding=15)
     legend_frame.pack(pady=10, padx=40, fill="x")
 
-    ttk.Label(
+    tb.Label(
         legend_frame,
         text="• Enabled (checked): Green bell icon",
         font=("Segoe UI", 9),
         foreground="#28a745"
     ).pack(anchor="w", pady=2)
 
-    ttk.Label(
+    tb.Label(
         legend_frame,
         text="• Disabled (unchecked): Red bell-slash icon",
         font=("Segoe UI", 9),
         foreground="#dc3545"
     ).pack(anchor="w", pady=2)
 
-    ttk.Label(
+    tb.Label(
         legend_frame,
         text="• Hover: Darker shade of current state color",
         font=("Segoe UI", 9),
-        foreground="gray"
+        bootstyle="secondary"
     ).pack(anchor="w", pady=2)
 
     root.mainloop()
