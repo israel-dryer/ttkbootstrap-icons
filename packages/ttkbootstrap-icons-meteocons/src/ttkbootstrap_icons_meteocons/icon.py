@@ -1,4 +1,4 @@
-from ttkbootstrap_icons_meteocons.provider import MeteoconsProvider
+from ttkbootstrap_icons_meteocons.provider import MeteoconsFontProvider
 
 from ttkbootstrap_icons.icon import Icon
 
@@ -19,7 +19,7 @@ class MeteoIcon(Icon):
     """
 
     def __init__(self, name: str, size: int = 24, color: str = "black", **kwargs):
-        prov = MeteoconsProvider()
+        prov = MeteoconsFontProvider()
         MeteoIcon.initialize_with_provider(prov)
         resolved = prov.resolve_icon_name(name, **kwargs)
         super().__init__(resolved, size, color)

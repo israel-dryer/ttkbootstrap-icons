@@ -13,7 +13,7 @@ license = "MIT"
 Homepage = "https://github.com/israel-dryer/ttkbootstrap-icons"
 
 [project.entry-points."ttkbootstrap_icons.providers"]
-typicons = "ttkbootstrap_icons_typicons.provider:TypiconsProvider"
+typicons = "ttkbootstrap_icons_typicons.provider:TypiconsFontProvider"
 
 [project.scripts]
 ttkicons-typicons-build = "ttkbootstrap_icons_typicons.tools.generate_assets:main"

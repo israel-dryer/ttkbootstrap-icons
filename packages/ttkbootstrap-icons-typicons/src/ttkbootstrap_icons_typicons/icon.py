@@ -1,4 +1,4 @@
-from ttkbootstrap_icons_typicons.provider import TypiconsProvider
+from ttkbootstrap_icons_typicons.provider import TypiconsFontProvider
 
 from ttkbootstrap_icons.icon import Icon
 
@@ -11,7 +11,7 @@ class TypiconsIcon(Icon):
     """
 
     def __init__(self, name: str, size: int = 24, color: str = "black", **kwargs):
-        prov = TypiconsProvider()
+        prov = TypiconsFontProvider()
         TypiconsIcon.initialize_with_provider(prov)
         resolved = prov.resolve_icon_name(name, **kwargs)
         super().__init__(resolved, size, color)

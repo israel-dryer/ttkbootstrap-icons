@@ -32,6 +32,10 @@ def load_external_providers(registry: ProviderRegistry) -> None:
             ProviderCls = ep.load()
             provider_instance = ProviderCls()
             registry.register_provider(provider_instance.name, provider_instance)
-        except Exception:
-            # Ignore bad entry points, but continue loading others
-            pass
+        except Exception as exc:
+            # Print a lightweight warning to help debug bad entry points
+            try:
+                print(f"[ttkbootstrap-icons] Failed to load provider entry point '{ep.name}' -> {ep.value}: {exc}")
+            except Exception:
+                # Ensure failures here never break app startup
+                pass

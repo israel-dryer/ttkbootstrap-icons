@@ -1,6 +1,12 @@
-# Material Design Icons (ttkbootstrap-icons-mat)
+# ttkbootstrap-icons-mat
 
-Material Icons provider for ttkbootstrap-icons.
+An icon provider for the `ttkbootstrap-icons` library.  
+Material Design Icons (community) offers a large collection of UI glyphs as a single TTF.
+
+[![PyPI](https://img.shields.io/pypi/v/ttkbootstrap-icons-mat.svg)](https://pypi.org/project/ttkbootstrap-icons-mat/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
+
+---
 
 ## Install
 
@@ -8,20 +14,9 @@ Material Icons provider for ttkbootstrap-icons.
 pip install ttkbootstrap-icons-mat
 ```
 
-Requires `ttkbootstrap-icons` (installed automatically) and `Pillow`.
+---
 
-## Info
-
-- Name: Material Design Icons (MDI)
-- Icon Version (preset default): 7.4.47
-- Source: https://github.com/Templarian/MaterialDesign-Webfont (npm: @mdi/font)
-
-## License and Attribution
-
-- Icons and code: Apache License 2.0
-- Attribution: Material Design Icons — https://materialdesignicons.com/ and @mdi/font
-
-## Usage
+## Quick start
 
 ```python
 import tkinter as tk
@@ -35,23 +30,30 @@ tk.Label(root, image=icon.image).pack()
 root.mainloop()
 ```
 
-This package registers a provider entry point, so the base icon previewer will automatically discover it.
+---
 
-## Generate assets (developer)
+## Styles
+
+This provider uses a single font without separate style variants.
+
+---
+
+## Icon Browser
+
+Browse available icons with the built-in browser. From your terminal run:
 
 ```bash
-# Use preset for Material Design Icons (MDI) via jsdelivr
-ttkicons-mat-build --preset mdi --version 7.4.47
-
-# Or direct URL
-ttkicons-mat-build --font-url https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/fonts/materialdesignicons-webfont.ttf
+ttkbootstrap-icons
 ```
 
-Omitting metadata uses TTF-only extraction (needs `fonttools`).
+Use **Copy Name** in the browser to copy the icon name and style directly for use in your code.
 
-## Changelog
+![Icon Browser](browser.png)
 
-| Version | Date       | Notes                                 |
-|--------:|------------|---------------------------------------|
-| 0.2.0   | 2025-10-28 | Docs consistency; previewer UX tweaks |
-| 0.1.0   | 2024-10-27 | Initial provider and basic usage docs |
+---
+
+## License and Attribution
+
+- **Upstream license:** Material Design Icons — https://materialdesignicons.com/
+- **Wrapper license:** MIT © Israel Dryer
+

@@ -1,0 +1,58 @@
+site_name: TTkBootstrap Icons
+site_url: https://israel-dryer.github.io/ttkbootstrap-icons/
+repo_url: https://github.com/israel-dryer/ttkbootstrap-icons
+
+theme:
+  name: material
+  features:
+    - content.code.copy
+    - content.tabs.link
+  icon:
+    logo: material/view-grid
+
+
+plugins:
+  - gen-files:
+      scripts:
+        - scripts/gen_providers_docs.py
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+      pygments_lang_class: true
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+
+nav:
+  - Overview: index.md
+  - Getting Started: getting-started.md
+  - Icon Browser: icon-browser.md
+  - Providers:
+      - Bootstrap: providers/bootstrap.md
+      - Devicon: providers/devicon.md
+      - Eva: providers/eva.md
+      - Fluent System Icons: providers/fluent-system-icons.md
+      - Font Awesome 6 (free): providers/font-awesome-6-free.md
+      - Google Material Icons: providers/google-material-icons.md
+      - Ion Icons: providers/ion.md
+      - Lucide: providers/lucide.md
+      - Material Design Icons: providers/material-design-icons.md
+      - Meteocons: providers/meteocons.md
+      - Remix Icons: providers/remix.md
+      - RPG Awesome: providers/rgpa.md
+      - Simple Icons: providers/simple.md
+      - Typicons: providers/typicons.md
+      - Weather Icons: providers/weather.md
+  - Contributing: contributing.md
+  - License: license.md
+
+
+
+

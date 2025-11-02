@@ -13,7 +13,7 @@ license = "MIT"
 Homepage = "https://github.com/israel-dryer/ttkbootstrap-icons"
 
 [project.entry-points."ttkbootstrap_icons.providers"]
-meteocons = "ttkbootstrap_icons_meteocons.provider:MeteoconsProvider"
+meteocons = "ttkbootstrap_icons_meteocons.provider:MeteoconsFontProvider"
 
 [project.scripts]
 ttkicons-meteocons-build = "ttkbootstrap_icons_meteocons.tools.generate_assets:main"

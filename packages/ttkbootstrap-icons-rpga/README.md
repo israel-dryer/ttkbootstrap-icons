@@ -1,6 +1,12 @@
-# RPG Awesome (ttkbootstrap-icons-rpga)
+# ttkbootstrap-icons-rpga
 
-RPG Awesome provider for ttkbootstrap-icons.
+An icon provider for the `ttkbootstrap-icons` library.  
+RPG Awesome is a fantasy-themed set of glyphs based on Font Awesome.
+
+[![PyPI](https://img.shields.io/pypi/v/ttkbootstrap-icons-rpga.svg)](https://pypi.org/project/ttkbootstrap-icons-rpga/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
+
+---
 
 ## Install
 
@@ -8,20 +14,9 @@ RPG Awesome provider for ttkbootstrap-icons.
 pip install ttkbootstrap-icons-rpga
 ```
 
-Requires `ttkbootstrap-icons` (installed automatically) and `Pillow`.
+---
 
-## Info
-
-- Name: RPG Awesome
-- Source: https://github.com/nagoshiashumari/Rpg-Awesome (CDN: https://cdnjs.com/libraries/rpg-awesome)
-- Class prefix: `ra-`
-
-## License and Attribution
-
-- Icons and code: MIT License (per repository license)
-- Attribution: RPG Awesome — https://nagoshiashumari.github.io/Rpg-Awesome/
-
-## Usage
+## Quick start
 
 ```python
 import tkinter as tk
@@ -35,26 +30,30 @@ tk.Button(root, image=icon.image, text="Sword", compound="left").pack()
 root.mainloop()
 ```
 
-This package registers a provider entry point, so the base icon previewer will automatically discover it.
+---
 
-## Generate assets (developer)
+## Styles
 
-Use the bundled tool to fetch the TTF and produce `glyphmap.json` with readable names from upstream CSS:
+This provider uses a single font without separate style variants.
+
+---
+
+## Icon Browser
+
+Browse available icons with the built-in browser. From your terminal run:
 
 ```bash
-# Use preset (pulls TTF and CSS from cdnjs)
-ttkicons-rpga-build --preset rpga --version 0.2.0
-
-# Or specify sources directly
-ttkicons-rpga-build \
-  --font-url https://cdnjs.cloudflare.com/ajax/libs/rpg-awesome/0.2.0/fonts/rpgawesome-webfont.ttf \
-  --css-url  https://cdnjs.cloudflare.com/ajax/libs/rpg-awesome/0.2.0/css/rpg-awesome.min.css
+ttkbootstrap-icons
 ```
 
-If CSS is unavailable, the tool falls back to deriving a glyph map from the TTF (requires `fonttools`).
+Use **Copy Name** in the browser to copy the icon name and style directly for use in your code.
 
-## Changelog
+![Icon Browser](browser.png)
 
-| Version | Date       | Notes                                                       |
-|--------:|------------|-------------------------------------------------------------|
-| 0.1.0   | 2025-10-28 | Initial provider; CSS/TTF builder preset; `ra-` class map   |
+---
+
+## License and Attribution
+
+- **Upstream license:** RPG Awesome — https://nagoshiashumari.github.io/Rpg-Awesome/
+- **Wrapper license:** MIT © Israel Dryer
+

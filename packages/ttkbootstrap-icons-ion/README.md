@@ -1,6 +1,12 @@
-# Ionicons (ttkbootstrap-icons-ion)
+# ttkbootstrap-icons-ion
 
-Ion Icons provider for ttkbootstrap-icons.
+An icon provider for the `ttkbootstrap-icons` library.  
+Ionicons v2 provides a familiar set of UI glyphs as a single TTF font.
+
+[![PyPI](https://img.shields.io/pypi/v/ttkbootstrap-icons-ion.svg)](https://pypi.org/project/ttkbootstrap-icons-ion/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
+
+---
 
 ## Install
 
@@ -8,20 +14,9 @@ Ion Icons provider for ttkbootstrap-icons.
 pip install ttkbootstrap-icons-ion
 ```
 
-Requires `ttkbootstrap-icons` (installed automatically) and `Pillow`.
+---
 
-## Info
-
-- Name: Ionicons v2 (font-based)
-- Icon Version (preset default): 2.0.1
-- Source: https://ionic.io/ionicons (CDN: https://cdnjs.com/libraries/ionicons)
-
-## License and Attribution
-
-- Icons and code: MIT License
-- Attribution: Ionicons — https://ionic.io/ionicons
-
-## Usage
+## Quick start
 
 ```python
 import tkinter as tk
@@ -35,33 +30,30 @@ tk.Button(root, image=icon.image).pack()
 root.mainloop()
 ```
 
-This package registers a provider entry point, so the base icon previewer will automatically discover it.
+---
 
-## Generate assets (developer)
+## Styles
 
-```bash
-# Preset for Ionicons v2 font via cdnjs (automatically fetches CSS for readable names)
-ttkicons-ion-build --preset ion2 --version 2.0.1
+This provider uses a single font without separate style variants.
 
-# Or direct URL
-ttkicons-ion-build --font-url https://cdnjs.cloudflare.com/ajax/libs/ionicons/2.0.1/fonts/ionicons.ttf
-```
+---
 
-Readable names
-- The builder will try to fetch the matching CSS (ionicons.min.css) to map class names (e.g., `.ion-alert`) to codepoints.
-- You can explicitly pass a CSS source:
+## Icon Browser
+
+Browse available icons with the built-in browser. From your terminal run:
 
 ```bash
-ttkicons-ion-build \
-  --font-url https://cdnjs.cloudflare.com/ajax/libs/ionicons/2.0.1/fonts/ionicons.ttf \
-  --css-url  https://cdnjs.cloudflare.com/ajax/libs/ionicons/2.0.1/css/ionicons.min.css
+ttkbootstrap-icons
 ```
 
-Omitting metadata uses TTF-only extraction (needs `fonttools`).
+Use **Copy Name** in the browser to copy the icon name and style directly for use in your code.
 
-## Changelog
+![Icon Browser](browser.png)
 
-| Version | Date       | Notes                                 |
-|--------:|------------|---------------------------------------|
-| 0.2.0   | 2025-10-28 | Docs consistency; previewer UX tweaks |
-| 0.1.0   | 2024-10-27 | Initial provider and basic usage docs |
+---
+
+## License and Attribution
+
+- **Upstream license:** Ionicons — https://ionic.io/ionicons
+- **Wrapper license:** MIT © Israel Dryer
+

@@ -1,8 +1,12 @@
-# Meteocons (ttkbootstrap-icons-meteocons)
+# ttkbootstrap-icons-meteocons
 
-Meteocons provider for ttkbootstrap-icons.
+An icon provider for the `ttkbootstrap-icons` library.  
+Meteocons is a compact weather-themed icon font.
 
-Icon reference and live preview: https://demo.alessioatzeni.com/meteocons/#
+[![PyPI](https://img.shields.io/pypi/v/ttkbootstrap-icons-meteocons.svg)](https://pypi.org/project/ttkbootstrap-icons-meteocons/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
+
+---
 
 ## Install
 
@@ -10,53 +14,46 @@ Icon reference and live preview: https://demo.alessioatzeni.com/meteocons/#
 pip install ttkbootstrap-icons-meteocons
 ```
 
-Requires `ttkbootstrap-icons` (installed automatically) and `Pillow`.
+---
 
-## Info
-
-- Name: Meteocons
-- Source: https://github.com/fontello/meteocons.font
-- Demo: https://demo.alessioatzeni.com/meteocons/#
-
-## Usage
+## Quick start
 
 ```python
 import tkinter as tk
-from ttkbootstrap_icons_meteocons import MeteoconsIcon
+from ttkbootstrap_icons_meteocons import MeteoIcon
 
 root = tk.Tk()
 
-icon = MeteoconsIcon("a", size=24, color="#0077ff")
+icon = MeteoIcon("a", size=24, color="#0077ff")
 tk.Button(root, image=icon.image, text="Meteocons", compound="left").pack()
 
 root.mainloop()
 ```
 
-Assets (font + glyphmap) are bundled with the package. No build steps are
-required for end users.
+---
 
-## Generate assets (developer)
+## Styles
 
-Only needed when updating to a newer upstream font.
+This provider uses a single font without separate style variants.
+
+---
+
+## Icon Browser
+
+Browse available icons with the built-in browser. From your terminal run:
 
 ```bash
-# From a local font file
-python -m ttkbootstrap_icons_meteocons.tools.generate_assets --font-file path/to/meteocons.ttf
-
-# (Optional) Attempt to fetch from upstream preset
-python -m ttkbootstrap_icons_meteocons.tools.generate_assets --preset fontello
+ttkbootstrap-icons
 ```
 
-The generator derives names from the font cmap and filters whitespace/blank
-glyphs. Results are written to `glyphmap.json` under the package.
+Use **Copy Name** in the browser to copy the icon name and style directly for use in your code.
 
-## License
+![Icon Browser](browser.png)
 
-See upstream project for icon licensing. This package provides integration for
-use with Tkinter; the icon set remains under its original license.
+---
 
-## Changelog
+## License and Attribution
 
-| Version | Date       | Notes                                 |
-|--------:|------------|---------------------------------------|
-| 0.1.0   | 2025-10-28 | Initial provider and basic usage docs |
+- **Upstream license:** Meteocons — https://demo.alessioatzeni.com/meteocons/
+- **Wrapper license:** MIT © Israel Dryer
+

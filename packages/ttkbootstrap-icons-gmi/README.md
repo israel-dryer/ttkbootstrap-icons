@@ -1,6 +1,12 @@
-# Material Icons (ttkbootstrap-icons-gmi)
+# ttkbootstrap-icons-gmi
 
-Google Material Icons provider (baseline/outlined/round/sharp/twotone) for ttkbootstrap-icons.
+An icon provider for the `ttkbootstrap-icons` library.  
+Google Material Icons offer baseline, outlined, round, sharp and twotone variants.
+
+[![PyPI](https://img.shields.io/pypi/v/ttkbootstrap-icons-gmi.svg)](https://pypi.org/project/ttkbootstrap-icons-gmi/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
+
+---
 
 ## Install
 
@@ -8,20 +14,9 @@ Google Material Icons provider (baseline/outlined/round/sharp/twotone) for ttkbo
 pip install ttkbootstrap-icons-gmi
 ```
 
-Requires `ttkbootstrap-icons` and `Pillow`.
+---
 
-## Info
-
-- Name: Material Icons
-- Icon Version (preset default): latest
-- Source: https://github.com/google/material-design-icons
-
-## License and Attribution
-
-- Icons and code: Apache License 2.0 (per material-design-icons repository)
-- Attribution: Google Material Icons — https://fonts.google.com/icons
-
-## Usage
+## Quick start
 
 ```python
 import tkinter as tk
@@ -43,19 +38,36 @@ for lbl, icon in [
 root.mainloop()
 ```
 
-## Build assets (maintainers)
+---
+
+## Styles
+
+| Variant     | Description               |
+|:------------|:--------------------------|
+| `baseline`  | Standard Material baseline|
+| `outlined`  | Outline variant           |
+| `round`     | Rounded corners           |
+| `sharp`     | Sharper corners           |
+| `twotone`   | Two-tone variant          |
+
+---
+
+## Icon Browser
+
+Browse available icons with the built-in browser. From your terminal run:
 
 ```bash
-# Quick build: downloads fonts and codepoints; writes glyphmap.json
-ttkicons-gmi-quick
-
-# Full builder
-ttkicons-gmi-build --preset gmi --version latest
+ttkbootstrap-icons
 ```
 
-## Changelog
+Use **Copy Name** in the browser to copy the icon name and style directly for use in your code.
 
-| Version | Date       | Notes                                                        |
-|--------:|------------|--------------------------------------------------------------|
-| 0.2.0   | 2025-10-28 | Typed `style` parameter (baseline/outlined/round/sharp/twotone) |
-| 0.1.0   | 2024-10-27 | Initial provider and basic usage docs                        |
+![Icon Browser](browser.png)
+
+---
+
+## License and Attribution
+
+- **Upstream license:** Google Material Icons — https://fonts.google.com/icons
+- **Wrapper license:** MIT © Israel Dryer
+
