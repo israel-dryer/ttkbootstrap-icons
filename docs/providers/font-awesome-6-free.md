@@ -64,6 +64,7 @@ Use **Copy Name** in the browser to copy the icon name and style directly for us
 ## License and Attribution
 
 - **Upstream license:** Font Awesome (varies by asset) â€” https://fontawesome.com/
-- **Wrapper license:** MIT Â© Israel Dryer
+- **Wrapper license:** MIT © Israel Dryer
+
 
 

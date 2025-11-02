@@ -20,15 +20,15 @@ pip install ttkbootstrap-icons-gmi
 
 ```python
 import tkinter as tk
-from ttkbootstrap_icons_gmi import GMIIcon
+from ttkbootstrap_icons_gmi import GMatIcon
 
 root = tk.Tk()
 
-base = GMIIcon("home", 24, "#555", style="baseline")
-outlined = GMIIcon("home", 24, "#555", style="outlined")
-rounded = GMIIcon("home", 24, "#555", style="round")
-sharp = GMIIcon("home", 24, "#555", style="sharp")
-twotone = GMIIcon("home", 24, "#555", style="twotone")
+base = GMatIcon("home", 24, "#555", style="baseline")
+outlined = GMatIcon("home", 24, "#555", style="outlined")
+rounded = GMatIcon("home", 24, "#555", style="round")
+sharp = GMatIcon("home", 24, "#555", style="sharp")
+twotone = GMatIcon("home", 24, "#555", style="twotone")
 
 for lbl, icon in [
     ("Baseline", base), ("Outlined", outlined), ("Round", rounded), ("Sharp", sharp), ("TwoTone", twotone)

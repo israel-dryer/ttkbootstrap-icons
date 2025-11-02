@@ -55,6 +55,7 @@ Use **Copy Name** in the browser to copy the icon name and style directly for us
 ## License and Attribution
 
 - **Upstream license:** RPG Awesome â€” https://nagoshiashumari.github.io/Rpg-Awesome/
-- **Wrapper license:** MIT Â© Israel Dryer
+- **Wrapper license:** MIT © Israel Dryer
+
 
 

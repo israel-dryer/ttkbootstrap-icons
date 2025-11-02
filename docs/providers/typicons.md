@@ -61,5 +61,6 @@ Use "Copy Name" in the browser to copy the icon name and style directly for use 
 ## License and Attribution
 
 - Upstream: Typicons â€” https://www.s-ings.com/typicons/
-- Wrapper license: MIT Â© Israel Dryer
+- Wrapper license: MIT © Israel Dryer
+
 

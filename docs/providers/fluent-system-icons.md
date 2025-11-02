@@ -61,6 +61,7 @@ Use **Copy Name** in the browser to copy the icon name and style directly for us
 ## License and Attribution
 
 - **Upstream license:** Microsoft Fluent UI System Icons â€” https://github.com/microsoft/fluentui-system-icons
-- **Wrapper license:** MIT Â© Israel Dryer
+- **Wrapper license:** MIT © Israel Dryer
+
 
 

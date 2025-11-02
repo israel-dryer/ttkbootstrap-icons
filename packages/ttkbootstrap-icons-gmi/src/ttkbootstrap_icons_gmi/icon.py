@@ -3,10 +3,10 @@
 from ttkbootstrap_icons.icon import Icon
 from ttkbootstrap_icons_gmi.provider import GoogleMaterialIconFontProvider
 
-GMIStyles = Literal['baseline', 'outlined', 'round', 'sharp']
+GMatStyles = Literal['baseline', 'outlined', 'round', 'sharp']
 
 
-class GMIIcon(Icon):
+class GMatIcon(Icon):
     """Convenience icon for the GMI Icon glyph set.
 
     Resolves the provided name (optionally with a style) using `GMIProvider`,
@@ -24,13 +24,10 @@ class GMIIcon(Icon):
         ValueError: If the name cannot be resolved for the requested style.
     """
 
-    def __init__(self, name: str, size: int = 24, color: str = "black", style: GMIStyles | None = None):
+    def __init__(self, name: str, size: int = 24, color: str = "black", style: GMatStyles | None = None):
         prov = GoogleMaterialIconFontProvider()
         # Resolve the style from the name if not explicitly provided
         resolved_style = prov.resolve_icon_style(name, style)
-        GMIIcon.initialize_with_provider(prov, resolved_style)
+        GMatIcon.initialize_with_provider(prov, resolved_style)
         resolved = prov.resolve_icon_name(name, style)
         super().__init__(resolved, size, color)
-
-
-

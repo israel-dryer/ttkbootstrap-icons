@@ -55,6 +55,7 @@ Use **Copy Name** in the browser to copy the icon name and style directly for us
 ## License and Attribution
 
 - **Upstream license:** Lucide â€” https://lucide.dev/
-- **Wrapper license:** MIT Â© Israel Dryer
+- **Wrapper license:** MIT © Israel Dryer
+
 
 

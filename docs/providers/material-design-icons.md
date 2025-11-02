@@ -55,6 +55,7 @@ Use **Copy Name** in the browser to copy the icon name and style directly for us
 ## License and Attribution
 
 - **Upstream license:** Material Design Icons â€” https://materialdesignicons.com/
-- **Wrapper license:** MIT Â© Israel Dryer
+- **Wrapper license:** MIT © Israel Dryer
+
 
 
