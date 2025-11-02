@@ -48,7 +48,7 @@ ttkbootstrap-icons
 
 Use **Copy Name** in the browser to copy the icon name and style directly for use in your code.
 
-![Icon Browser](browser.png)
+![Icon Browser](https://raw.githubusercontent.com/israel-dryer/ttkbootstrap-icons/main/packages/ttkbootstrap-icons-rpga/browser.png)
 
 ---
 
