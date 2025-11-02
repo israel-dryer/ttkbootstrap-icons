@@ -12,6 +12,7 @@ license = "MIT"
 [project.urls]
 Homepage = "https://github.com/israel-dryer/ttkbootstrap-icons"
 
+# Auto-discovery hook for the base registry
 [project.entry-points."ttkbootstrap_icons.providers"]
 lucide = "ttkbootstrap_icons_lucide.provider:LucideFontProvider"
 
@@ -20,7 +21,7 @@ ttkicons-lucide-build = "ttkbootstrap_icons_lucide.tools.generate_assets:main"
 ttkicons-lucide-quick = "ttkbootstrap_icons_lucide.tools.generate_assets:default_main"
 
 [tool.setuptools.package-data]
-"ttkbootstrap_icons_lucide" = ["fonts/*.*", "glyphmap.json"]
+"ttkbootstrap_icons_lucide" = ["fonts/*.ttf", "glyphmap.json", "LICENSES/*"]
 
 [tool.setuptools]
 package-dir = { "" = "src" }

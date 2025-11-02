@@ -12,6 +12,7 @@ license = "MIT"
 [project.urls]
 Homepage = "https://github.com/israel-dryer/ttkbootstrap-icons"
 
+# Auto-discovery hook for the base registry
 [project.entry-points."ttkbootstrap_icons.providers"]
 typicons = "ttkbootstrap_icons_typicons.provider:TypiconsFontProvider"
 
@@ -20,7 +21,7 @@ ttkicons-typicons-build = "ttkbootstrap_icons_typicons.tools.generate_assets:mai
 ttkicons-typicons-quick = "ttkbootstrap_icons_typicons.tools.generate_assets:default_main"
 
 [tool.setuptools.package-data]
-"ttkbootstrap_icons_typicons" = ["fonts/*.*", "glyphmap.json", "LICENSES/*"]
+"ttkbootstrap_icons_typicons" = ["fonts/*.ttf", "glyphmap.json", "LICENSES/*"]
 
 [tool.setuptools]
 package-dir = { "" = "src" }

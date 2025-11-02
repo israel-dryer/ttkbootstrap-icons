@@ -12,6 +12,7 @@ license = "MIT"
 [project.urls]
 Homepage = "https://github.com/israel-dryer/ttkbootstrap-icons"
 
+# Auto-discovery hook for the base registry
 [project.entry-points."ttkbootstrap_icons.providers"]
 rpga = "ttkbootstrap_icons_rpga.provider:RPGAFontProvider"
 
