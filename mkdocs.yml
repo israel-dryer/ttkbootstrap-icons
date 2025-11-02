@@ -11,6 +11,11 @@ theme:
 
 
 plugins:
+  - mkdocs-video:
+      loop: True
+      css_style:
+        width: "auto"
+        height: "auto"
   - gen-files:
       scripts:
         - scripts/gen_providers_docs.py

@@ -96,6 +96,45 @@ Style tips
 
 ---
 
+## Using stateful icons
+
+Icons can automatically change their appearance based on widget states like hover, pressed, disabled, or selected. This creates dynamic, interactive interfaces with minimal code.
+
+### Simple toggle example
+
+Here's how to create a toggle button that switches between two different icons:
+
+```python
+import ttkbootstrap as tb
+from ttkbootstrap_icons import BootstrapIcon
+
+app = tb.Window("Toggle Icon")
+
+# Create an icon that starts as muted
+sound = BootstrapIcon("mic-mute-fill", size=64)
+
+# Create a toggle button
+toggle = tb.Checkbutton(app, compound="image", bootstyle="toolbutton")
+toggle.pack(padx=20, pady=20)
+
+# Map the icon to change when selected
+sound.map(toggle, statespec=[("selected", {"name": "mic-fill"})])
+
+app.mainloop()
+```
+
+When you click the toggle, the icon automatically switches from `mic-mute-fill` to `mic-fill`. The stateful icon system handles all the state detection and rendering for you.
+
+**Other possibilities:**
+- Change icon colors on hover for visual feedback
+- Display dimmed icons when widgets are disabled
+- Highlight active navigation items with distinct colors
+- Create press animations by changing colors when clicked
+
+See [Stateful Icons](stateful-icons.md) for complete documentation, including automatic color mapping, custom state specifications, and advanced examples.
+
+---
+
 ## Troubleshooting
 
 Provider not showing in the browser

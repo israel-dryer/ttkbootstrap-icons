@@ -14,11 +14,12 @@ def main():
     ttk.Label(root, text="outline", image=i0.image, compound="left").pack(**opts)
 
     i1 = EvaIcon("activity", size=64, color="#333", style="fill")
-    ttk.Label(root, text="fill", image=i1.image, compound="left").pack(**opts)
+    lbl = ttk.Label(root, text="fill", compound="left")
+    i1.map(lbl, statespec=[("hover", "red")])
+    lbl.pack(**opts)
 
     root.mainloop()
 
 
 if __name__ == "__main__":
     main()
-
