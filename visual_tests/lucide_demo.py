@@ -10,8 +10,8 @@ def main():
     root.minsize(320, 240)
     opts = {"fill": "x", "padx": 10, "pady": 8}
 
-    i0 = LucideIcon("home", size=64, color="#333")
-    ttk.Label(root, text="home", image=i0.image, compound="left").pack(**opts)
+    i0 = LucideIcon("house", size=64, color="#333")
+    ttk.Label(root, text="house", image=i0.image, compound="left").pack(**opts)
 
     i1 = LucideIcon("heart", size=64, color="#e03131")
     ttk.Label(root, text="heart", image=i1.image, compound="left").pack(**opts)

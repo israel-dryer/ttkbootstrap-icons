@@ -14,9 +14,8 @@ def main():
     outl = GMatIcon("home", 64, "#555", style="outlined")
     rnd = GMatIcon("home", 64, "#555", style="round")
     shp = GMatIcon("home", 64, "#555", style="sharp")
-    two = GMatIcon("home", 64, "#555", style="twotone")
 
-    for lbl, ic in [("Baseline", base), ("Outlined", outl), ("Round", rnd), ("Sharp", shp), ("TwoTone", two)]:
+    for lbl, ic in [("Baseline", base), ("Outlined", outl), ("Round", rnd), ("Sharp", shp)]:
         ttk.Label(root, text=lbl, image=ic.image, compound="left").pack(**opts)
 
     root.mainloop()
