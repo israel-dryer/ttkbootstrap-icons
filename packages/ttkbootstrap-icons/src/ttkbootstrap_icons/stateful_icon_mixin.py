@@ -285,10 +285,21 @@ class StatefulIconMixin:
             if st not in existing_dict:
                 ordered.append((st, merged[st]))
 
-        # Ensure '' fallback (original untinted)
-        self._ensure_original_image()
+        # Create fallback image for '' state with normal foreground color
+        # If we don't have an explicit '' state already, render one with the normal color
+        fallback_img = merged.get("")
+        if fallback_img is None:
+            # Get the normal state foreground color
+            normal_color = style.lookup(parent_style, "foreground") or None
+            try:
+                fallback_img = self._render_icon(self.name, self.size, normal_color)  # type: ignore[attr-defined]
+            except Exception:
+                # Fall back to original untinted image if rendering fails
+                self._ensure_original_image()
+                fallback_img = self._original_image
+
         image_map = [(st, img) for st, img in ordered if st != ""]
-        image_map.append(("", self._original_image))
+        image_map.append(("", fallback_img))
 
         # Configure compound and apply map
         try:
