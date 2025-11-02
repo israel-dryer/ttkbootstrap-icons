@@ -28,10 +28,9 @@ base = GMatIcon("home", 24, "#555", style="baseline")
 outlined = GMatIcon("home", 24, "#555", style="outlined")
 rounded = GMatIcon("home", 24, "#555", style="round")
 sharp = GMatIcon("home", 24, "#555", style="sharp")
-twotone = GMatIcon("home", 24, "#555", style="twotone")
 
 for lbl, icon in [
-    ("Baseline", base), ("Outlined", outlined), ("Round", rounded), ("Sharp", sharp), ("TwoTone", twotone)
+    ("Baseline", base), ("Outlined", outlined), ("Round", rounded), ("Sharp", sharp)
 ]:
     tk.Button(root, image=icon.image, text=lbl, compound="left").pack()
 
@@ -48,7 +47,6 @@ root.mainloop()
 | `outlined`  | Outline variant           |
 | `round`     | Rounded corners           |
 | `sharp`     | Sharper corners           |
-| `twotone`   | Two-tone variant          |
 
 ---
 
