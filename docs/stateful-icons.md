@@ -1,5 +1,7 @@
 # Stateful Icons
 
+![Version Badge](https://img.shields.io/badge/since-v3.1.0-blue)
+
 Stateful Icons allow you to create dynamic, interactive icons that automatically change their appearance based on widget
 states like hover, pressed, disabled, and more. This powerful feature brings modern UI/UX patterns to your tkinter
 applications with minimal code.

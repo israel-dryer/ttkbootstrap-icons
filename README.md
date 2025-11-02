@@ -53,6 +53,29 @@ python -m ttkbootstrap_icons.browser
 
 ---
 
+## Stateful Icons (v3.1.0+)
+
+Icons can automatically change appearance based on widget states (hover, pressed, disabled, selected):
+
+```python
+import ttkbootstrap as tb
+from ttkbootstrap_icons import BootstrapIcon
+
+app = tb.Window()
+icon = BootstrapIcon("mic-mute-fill", size=64)
+toggle = tb.Checkbutton(app, compound="image", bootstyle="toolbutton")
+toggle.pack(padx=20, pady=20)
+
+# Icon automatically switches to mic-fill when selected
+icon.map(toggle, statespec=[("selected", {"name": "mic-fill"})])
+
+app.mainloop()
+```
+
+See the [Stateful Icons documentation](https://israel-dryer.github.io/ttkbootstrap-icons/stateful-icons/) for automatic color mapping, custom state specifications, and advanced examples.
+
+---
+
 ## Packages
 
 This is a multi-package (monorepo) workspace that includes all of the extension icon packages within the
