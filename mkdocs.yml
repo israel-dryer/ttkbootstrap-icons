@@ -78,6 +78,7 @@ nav:
       - Core:
           - Overview: api/core.md
           - Icon: api/core/icon.md
+          - Stateful Icon Mixin: api/core/stateful_icon_mixin.md
           - Providers Framework: api/core/providers.md
           - Provider Registry: api/core/registry.md
           - Bootstrap (Built-in): api/core/bootstrap.md
