@@ -5,13 +5,14 @@ description = "Eva Icons (font-based) provider for ttkbootstrap-icons"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [{ name = "Israel Dryer" }]
-dependencies = ["Pillow>=9.1", "ttkbootstrap-icons>=2.2.0"]
+dependencies = ["Pillow>=9.1", "ttkbootstrap-icons>=2.0.0"]
 
 license = "MIT"
 
 [project.urls]
 Homepage = "https://github.com/israel-dryer/ttkbootstrap-icons"
 
+# Auto-discovery hook for the base registry
 [project.entry-points."ttkbootstrap_icons.providers"]
 eva = "ttkbootstrap_icons_eva.provider:EvaFontProvider"
 
