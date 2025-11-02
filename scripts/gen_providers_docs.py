@@ -52,26 +52,10 @@ def main() -> None:
             print(f"[gen-files] Created stub providers/{dest_name} (missing {src})")
             continue
 
-        # Copy the README into the virtual docs/ tree at build time.
-        # Robust decoding: try common encodings to avoid UnicodeDecodeError on Windows.
-        raw = src.read_bytes()
-        for enc in ("utf-8", "utf-8-sig", "cp1252", "latin-1"):
-            try:
-                text = raw.decode(enc)
-                break
-            except UnicodeDecodeError:
-                continue
-        else:
-            text = raw.decode("utf-8", errors="replace")
-        # Rewrite local browser.png links to a provider-scoped asset path
+        # Do not write README into virtual docs anymore; committed files exist under docs/providers.
+        # Still compute asset path for image copying below.
         asset_rel_dir = f"assets/{dest_base}"
-        text = re.sub(r"\]\((?:\./)?browser\.png\)", f"]({asset_rel_dir}/browser.png)", text)
-        with mkdocs_gen_files.open(dest.as_posix(), "w") as fd:
-            fd.write(text)
-
-        # Make the "Edit on GitHub" link point to the source README
-        mkdocs_gen_files.set_edit_path(dest.as_posix(), src.as_posix())
-        print(f"[gen-files] Generated providers/{dest_name} from {src}")
+        print(f"[gen-files] Providers page committed on disk: providers/{dest_name}")
 
         # Copy screenshot asset if present
         for img_src in [
@@ -148,6 +132,11 @@ def main() -> None:
         _generate_providers_table()
     except Exception as exc:
         print(f"[gen-files] Skipped providers table generation: {exc}")
+
+    try:
+        _generate_api_pages()
+    except Exception as exc:
+        print(f"[gen-files] Skipped API pages generation: {exc}")
 
 
 def _count_glyphs_in_package(pkg_dir: Path) -> int:
@@ -303,6 +292,52 @@ def _generate_providers_table() -> None:
     with mkdocs_gen_files.open("index.md", "w") as fd:
         fd.write(new_content)
     mkdocs_gen_files.set_edit_path("index.md", index_src.as_posix())
+
+
+def _generate_api_pages() -> None:
+    """Generate mkdocstrings API pages for providers (core handled by docs/api/core.md)."""
+    api_path = Path("api")
+
+    # Providers
+    for pkg_name, _doc in PACKAGE_TO_DOC.items():
+        slug = pkg_name.replace("ttkbootstrap-icons-", "")
+        module = f"ttkbootstrap_icons_{slug}"
+        display = slug.title() if slug != "fa" else "Font Awesome"
+        # Provide nicer names when possible
+        name_map = {
+            "fa": "Font Awesome",
+            "gmi": "Google Material Icons",
+            "ion": "Ion Icons",
+            "remix": "Remix Icon",
+            "fluent": "Fluent System Icons",
+            "simple": "Simple Icons",
+            "weather": "Weather Icons",
+            "lucide": "Lucide",
+            "mat": "Material Design Icons",
+            "eva": "Eva",
+            "rpga": "RPG Awesome",
+            "devicon": "Devicon",
+            "typicons": "Typicons",
+            "meteocons": "Meteocons",
+        }
+        display = name_map.get(slug, display)
+        content = (
+            f"# {display} API\n\n"
+            f"::: {module}.icon\n"
+            "    options:\n"
+            "      show_root_heading: true\n"
+            "      members: true\n"
+            "      inherited_members: true\n"
+            "      show_source: false\n\n"
+            f"::: {module}.provider\n"
+            "    options:\n"
+            "      show_root_heading: true\n"
+            "      members: true\n"
+            "      inherited_members: true\n"
+            "      show_source: false\n"
+        )
+        with mkdocs_gen_files.open((api_path / f"{slug}.md").as_posix(), "w") as fd:
+            fd.write(content)
 
 
 # Run at import time; mkdocs-gen-files executes this script

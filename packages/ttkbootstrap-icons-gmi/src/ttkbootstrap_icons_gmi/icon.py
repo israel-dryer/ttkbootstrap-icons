@@ -1,4 +1,4 @@
-from typing import Literal
+﻿from typing import Literal
 
 from ttkbootstrap_icons.icon import Icon
 from ttkbootstrap_icons_gmi.provider import GoogleMaterialIconFontProvider
@@ -18,8 +18,7 @@ class GMIIcon(Icon):
             with "-outlined" but you set `style="round"`), a `ValueError` is raised.
         size: Pixel size of the rasterized image (default: 24).
         color: Foreground color used to render the glyph (default: "black").
-        style: Optional style override: "baseline", "outlined", "round", "sharp". If omitted, the provider's default
-        style is used.
+        style: Optional style override: "baseline", "outlined", "round", "sharp". If omitted, the provider's default style is used.
 
     Raises:
         ValueError: If the name cannot be resolved for the requested style.
@@ -34,32 +33,4 @@ class GMIIcon(Icon):
         super().__init__(resolved, size, color)
 
 
-if __name__ == '__main__':
-    import tkinter as tk
-    from tkinter import ttk
 
-    root = tk.Tk()
-    root.title("GMI Icons Demo")
-    root.minsize(400, 250)
-    options = {"fill": "x", "padx": 10, "pady": 5}
-
-    # Default style
-    icon0 = GMIIcon("home", size=64)
-    ttk.Label(root, text="Default (baseline)", image=icon0.image, compound="left").pack(**options)
-
-    # Using style parameter
-    icon1 = GMIIcon("home", style="outlined", size=64)
-    ttk.Label(root, text="Outlined (via style param)", image=icon1.image, compound="left").pack(**options)
-
-    # Using style in name
-    icon2 = GMIIcon("home-outlined", size=64)
-    ttk.Label(root, text="Round (via name suffix)", image=icon2.image, compound="left").pack(**options)
-
-    # Using style in name
-    icon2 = GMIIcon("home-round", size=64)
-    ttk.Label(root, text="Round (via name suffix)", image=icon2.image, compound="left").pack(**options)
-
-    icon3 = GMIIcon("home", style="sharp", size=64)
-    ttk.Label(root, text="Sharp (via style param)", image=icon3.image, compound="left").pack(**options)
-
-    root.mainloop()

@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 """Bootstrap icon provider and convenience Icon wrapper.
 
@@ -31,7 +31,7 @@ BootstrapStyles = Literal['outline', 'fill']
 class BootstrapIcon(Icon):
     """Convenience icon for the Bootstrap glyph set.
 
-    Resolves the provided name (optionally with a style) using `BootstrapProvider`,
+    Resolves the provided name (optionally with a style) using `BootstrapFontProvider`,
     then initializes the base `Icon` with the resolved glyph.
 
     Args:
@@ -58,15 +58,15 @@ class BootstrapIcon(Icon):
 class BootstrapFontProvider(BaseFontProvider):
     """Provider for the Bootstrap Icons dataset.
 
-    Bootstrap ships two styles—"outline" and "fill"—encoded by the presence of a
-    ``-fill`` suffix in the raw glyph name. Both styles share the same font file
-    and are separated via a predicate per style.
+    Bootstrap ships two styles - "outline" and "fill" - encoded by the presence of a
+    "-fill" suffix in the raw glyph name. Both styles share the same font file and
+    are separated via a predicate per style.
 
     Attributes:
         name: Provider identifier ("bootstrap").
         display_name: Human-friendly name ("Bootstrap").
         default_style: Default style ("outline").
-        styles: Map of style → {filename, predicate}.
+        styles: Map of style -> {filename, predicate}.
     """
 
     def __init__(self):
@@ -100,35 +100,5 @@ class BootstrapFontProvider(BaseFontProvider):
     @staticmethod
     def _is_fill_style(name: str) -> bool:
         return '-fill' in name
+ 
 
-
-if __name__ == '__main__':
-    import tkinter as tk
-    from tkinter import ttk
-
-    root = tk.Tk()
-    root.title("Bootstrap Icons")
-    root.minsize(300, 200)
-    options = {"fill": "x", "padx": 10, "pady": 10}
-
-    # using the default style
-    icon0 = BootstrapIcon("house", size=64)
-    ttk.Label(root, text="default style", image=icon0.image, compound="left").pack(**options)
-
-    # using the style parameter
-    icon1 = BootstrapIcon("house", style="outline", size=64)
-    ttk.Label(root, text="outline with style param", image=icon1.image, compound="left").pack(**options)
-
-    # using the style in name
-    icon2 = BootstrapIcon("house-outline", size=64)
-    ttk.Label(root, text="outline wit style in name", image=icon2.image, compound="left").pack(**options)
-
-    # using the style parameter
-    icon3 = BootstrapIcon("house", style="fill", size=64)
-    ttk.Label(root, text="fill with style param", image=icon3.image, compound="left").pack(**options)
-
-    # using the style in name
-    icon4 = BootstrapIcon("house-fill", size=64)
-    ttk.Label(root, text="fill with style in name", image=icon4.image, compound="left").pack(**options)
-
-    root.mainloop()

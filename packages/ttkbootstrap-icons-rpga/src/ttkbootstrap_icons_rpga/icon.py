@@ -1,4 +1,4 @@
-from ttkbootstrap_icons.icon import Icon
+﻿from ttkbootstrap_icons.icon import Icon
 from ttkbootstrap_icons_rpga.provider import RPGAFontProvider
 
 
@@ -24,17 +24,4 @@ class RPGAIcon(Icon):
         super().__init__(resolved, size, color)
 
 
-if __name__ == '__main__':
-    import tkinter as tk
-    from tkinter import ttk
 
-    root = tk.Tk()
-    root.title("RPGA Icons")
-    root.minsize(300, 200)
-    options = {"fill": "x", "padx": 10, "pady": 10}
-
-    # using the default style
-    icon0 = RPGAIcon("clockwork", size=64)
-    ttk.Label(root, text="default style", image=icon0.image, compound="left").pack(**options)
-
-    root.mainloop()

@@ -23,19 +23,4 @@ class MeteoIcon(Icon):
         MeteoIcon.initialize_with_provider(prov)
         resolved = prov.resolve_icon_name(name, **kwargs)
         super().__init__(resolved, size, color)
-
-
-if __name__ == '__main__':
-    import tkinter as tk
-    from tkinter import ttk
-
-    root = tk.Tk()
-    root.title("Meteocons Icons")
-    root.minsize(300, 200)
-    options = {"fill": "x", "padx": 10, "pady": 10}
-
-    # using the default style
-    icon0 = MeteoIcon("a", size=64)
-    ttk.Label(root, text="default style", image=icon0.image, compound="left").pack(**options)
-
-    root.mainloop()
+ 

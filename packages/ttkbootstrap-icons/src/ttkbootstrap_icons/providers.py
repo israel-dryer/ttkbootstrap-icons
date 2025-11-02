@@ -8,7 +8,10 @@ from importlib.resources import files
 from types import MappingProxyType
 from typing import ClassVar, Mapping, Optional
 
-from typing_extensions import NotRequired, TypedDict, Unpack
+try:  # Prefer stdlib typing (Py 3.11+) and fall back to typing_extensions
+    from typing import NotRequired, TypedDict, Unpack  # type: ignore[attr-defined]
+except Exception:  # pragma: no cover
+    from typing_extensions import NotRequired, TypedDict, Unpack
 
 
 class FontProviderOptions(TypedDict):
