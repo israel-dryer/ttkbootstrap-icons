@@ -60,5 +60,5 @@ Use **Copy Name** in the browser to copy the icon name and style directly for us
 
 ## License and Attribution
 
-- **Upstream license:** MIT (Eva Icons) — https://github.com/akveo/eva-icons
-- **Wrapper license:** MIT © Israel Dryer
+- **Upstream license:** MIT (Eva Icons) - https://github.com/akveo/eva-icons
+- **Wrapper license:** MIT - Israel Dryer

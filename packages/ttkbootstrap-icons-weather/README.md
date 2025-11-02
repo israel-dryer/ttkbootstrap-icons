@@ -54,5 +54,5 @@ Use **Copy Name** in the browser to copy the icon name and style directly for us
 
 ## License and Attribution
 
-- **Upstream license:** Weather Icons — https://erikflowers.github.io/weather-icons/
-- **Wrapper license:** MIT © Israel Dryer
+- **Upstream license:** Weather Icons - https://erikflowers.github.io/weather-icons/
+- **Wrapper license:** MIT - Israel Dryer

@@ -54,5 +54,5 @@ Use **Copy Name** in the browser to copy the icon name and style directly for us
 
 ## License and Attribution
 
-- **Upstream license:** Simple Icons — https://simpleicons.org/
-- **Wrapper license:** MIT © Israel Dryer
+- **Upstream license:** Simple Icons - https://simpleicons.org/
+- **Wrapper license:** MIT - Israel Dryer
