@@ -296,6 +296,12 @@ You can combine states using spaces:
 - **Use subclass names**: Helps ttk cache and reuse styles efficiently
 - **Limit states**: Only map states you actually need
 
+### StyleBuilderTTK Errors
+
+- **subclass**: When using this library with ttkbootstrap, the styling engine will sometimes confuse the automatic
+  subclass. If you run into this issue, just manually create a subclass using the `subclass` parameter to avoid issues
+  with StyleBuilderTTK.
+
 ---
 
 ## Next Steps
