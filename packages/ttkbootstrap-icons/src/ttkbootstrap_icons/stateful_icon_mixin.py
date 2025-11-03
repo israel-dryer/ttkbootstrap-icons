@@ -36,7 +36,8 @@ Nuances:
 from __future__ import annotations
 
 from tkinter.ttk import Style, Widget
-from typing import Literal, Optional
+from typing import Literal, Optional, ClassVar
+import weakref
 
 StateMapMode = Literal["replace", "merge"]
 # Accepted statespec entries:
@@ -73,6 +74,8 @@ class StatefulIconMixin:
 
     # Cached untinted base image for the '' fallback (per instance)
     _original_image: Optional[object] = None
+    _widget_mappings: ClassVar[dict[str, tuple]] = {}
+    _is_regenerating: ClassVar[bool] = False
 
     # ---------------- Rendering ----------------
 
@@ -206,6 +209,36 @@ class StatefulIconMixin:
                 out.append(("!disabled", self.name, base))  # type: ignore[attr-defined]
         return out
 
+    @classmethod
+    def _on_theme_changed(cls, event) -> None:
+        """Handle <<ThemeChanged>> event by regenerating all mapped icons."""
+        from .icon import Icon
+
+        cls._is_regenerating = True
+        try:
+            Icon._cache.clear()
+            mappings_copy = list(cls._widget_mappings.items())
+
+            for widget_id, mapping_data in mappings_copy:
+                try:
+                    icon, widget_ref, parent_style, subclass, statespec, mode = mapping_data
+                    widget = widget_ref()
+
+                    if widget is None:
+                        del cls._widget_mappings[widget_id]
+                        continue
+
+                    # Temporarily restore the original parent style
+                    widget.configure(style=parent_style)
+
+                    # Re-map with the original parent style
+                    icon.map(widget, subclass=subclass, statespec=statespec, mode=mode)
+                except Exception:
+                    if widget_id in cls._widget_mappings:
+                        del cls._widget_mappings[widget_id]
+        finally:
+            cls._is_regenerating = False
+
     # ---------------- Public API ----------------
 
     def map(
@@ -318,3 +351,22 @@ class StatefulIconMixin:
 
         style.map(new_style, image=image_map)
         widget.configure(style=new_style)
+
+        if not StatefulIconMixin._is_regenerating:
+            widget_id = str(widget)
+            StatefulIconMixin._widget_mappings[widget_id] = (
+                self,
+                weakref.ref(widget),
+                parent_style,
+                subclass,
+                statespec,
+                mode,
+            )
+
+            try:
+                toplevel = widget.winfo_toplevel()
+                if not hasattr(StatefulIconMixin, '_theme_bind_done'):
+                    toplevel.bind("<<ThemeChanged>>", StatefulIconMixin._on_theme_changed, add=True)
+                    StatefulIconMixin._theme_bind_done = True
+            except Exception:
+                pass
