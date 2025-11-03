@@ -6,6 +6,8 @@ Stateful Icons allow you to create dynamic, interactive icons that automatically
 states like hover, pressed, disabled, and more. This powerful feature brings modern UI/UX patterns to your tkinter
 applications with minimal code.
 
+![](assets/stateful_icons_demo.gif)
+
 ---
 
 ## What is State Mapping?
