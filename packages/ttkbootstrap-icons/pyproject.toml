@@ -30,7 +30,10 @@ classifiers = [
     "Topic :: Software Development :: User Interfaces",
     "Operating System :: OS Independent"
 ]
-dependencies = ["pillow>=9.1.0"]
+dependencies = [
+    "pillow>=9.1.0",
+    "typing-extensions>=4.7.1"
+]
 
 [project.scripts]
 ttkbootstrap-icons = "ttkbootstrap_icons.browser:main"
