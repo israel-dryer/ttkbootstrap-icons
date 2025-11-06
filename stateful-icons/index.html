@@ -1707,18 +1707,26 @@ change this behavior:</p>
 </code></pre></div>
 <hr>
 <h2 id="custom-child-style-names">Custom Child Style Names<a class="headerlink" href="#custom-child-style-names" title="Permanent link">¶</a></h2>
-<p>By default, child styles are auto-named based on the icons used. You can provide a custom name for better control:</p>
+<p>By default, child styles are auto-named using a hash of the icons used and their size (e.g., <code>"a3f4e7b2c1d6.TButton"</code>).
+This ensures style names won't conflict with ttkbootstrap's internal parsing.</p>
+<p>However, you can provide a custom name when you want to create a <strong>reusable style subclass</strong>:</p>
 <div class="language-python highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">icon</span><span class="o">.</span><span class="n">map</span><span class="p">(</span>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="n">button</span><span class="p">,</span>
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="n">subclass</span><span class="o">=</span><span class="s2">"MyCustomButton"</span><span class="p">,</span>  <span class="c1"># Creates "MyCustomButton.TButton" style</span>
 <a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">statespec</span><span class="o">=</span><span class="p">[(</span><span class="s2">"hover"</span><span class="p">,</span> <span class="s2">"#007bff"</span><span class="p">)]</span>
 <a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="p">)</span>
 </code></pre></div>
-<p>This is useful when:</p>
+<p><strong>When to use <code>subclass</code>:</strong></p>
 <ul>
-<li>You want predictable style names for debugging</li>
-<li>You're applying the same state mapping to multiple widgets</li>
-<li>You need to reference the style elsewhere in your code</li>
+<li>You're creating a reusable style that will be applied to multiple widgets</li>
+<li>You want predictable, human-readable style names for debugging</li>
+<li>You need to reference the style elsewhere in your code or extend it further</li>
+</ul>
+<p><strong>When to skip <code>subclass</code>:</strong></p>
+<ul>
+<li>For one-off icon mappings (the auto-generated hash works great)</li>
+<li>When you don't need to reference the style name later</li>
+<li>When you want to ensure unique styles for each icon configuration</li>
 </ul>
 <hr>
 <h2 id="working-with-different-icon-providers">Working with Different Icon Providers<a class="headerlink" href="#working-with-different-icon-providers" title="Permanent link">¶</a></h2>
@@ -1860,6 +1868,19 @@ change this behavior:</p>
 <li><strong>Use subclass names</strong>: Helps ttk cache and reuse styles efficiently</li>
 <li><strong>Limit states</strong>: Only map states you actually need</li>
 </ul>
+<h3 id="style-naming-and-reusability">Style Naming and Reusability<a class="headerlink" href="#style-naming-and-reusability" title="Permanent link">¶</a></h3>
+<p>By default, stateful icons generate a unique hashed style name (e.g., <code>"a3f4e7b2c1d6.TButton"</code>) for each icon
+configuration. This works perfectly for most use cases, but if you want to create a <strong>reusable style subclass</strong> that can
+be applied to multiple widgets or referenced elsewhere, use the <code>subclass</code> parameter:</p>
+<div class="language-python highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># Create a reusable style</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">icon</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">button1</span><span class="p">,</span> <span class="n">subclass</span><span class="o">=</span><span class="s2">"IconButton"</span><span class="p">,</span> <span class="n">statespec</span><span class="o">=</span><span class="p">[(</span><span class="s2">"hover"</span><span class="p">,</span> <span class="s2">"#007bff"</span><span class="p">)])</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="n">icon</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">button2</span><span class="p">,</span> <span class="n">subclass</span><span class="o">=</span><span class="s2">"IconButton"</span><span class="p">)</span>  <span class="c1"># Reuses the same style</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="c1"># Later, you can reference or extend this style</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="n">style</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Style</span><span class="p">()</span>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="n">style</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s2">"IconButton.TButton"</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</code></pre></div>
+<p>Without <code>subclass</code>, each call generates a new unique style, which is ideal for one-off icon mappings.</p>
 <hr>
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">¶</a></h2>
 <ul>
