@@ -150,7 +150,10 @@ icon.map(button, statespec=[("pressed", "#aa0000")], mode="replace")
 
 ## Custom Child Style Names
 
-By default, child styles are auto-named based on the icons used. You can provide a custom name for better control:
+By default, child styles are auto-named using a hash of the icons used and their size (e.g., `"a3f4e7b2c1d6.TButton"`).
+This ensures style names won't conflict with ttkbootstrap's internal parsing.
+
+However, you can provide a custom name when you want to create a **reusable style subclass**:
 
 ```python
 icon.map(
@@ -160,11 +163,17 @@ icon.map(
 )
 ```
 
-This is useful when:
+**When to use `subclass`:**
 
-- You want predictable style names for debugging
-- You're applying the same state mapping to multiple widgets
-- You need to reference the style elsewhere in your code
+- You're creating a reusable style that will be applied to multiple widgets
+- You want predictable, human-readable style names for debugging
+- You need to reference the style elsewhere in your code or extend it further
+
+**When to skip `subclass`:**
+
+- For one-off icon mappings (the auto-generated hash works great)
+- When you don't need to reference the style name later
+- When you want to ensure unique styles for each icon configuration
 
 ---
 
@@ -296,11 +305,23 @@ You can combine states using spaces:
 - **Use subclass names**: Helps ttk cache and reuse styles efficiently
 - **Limit states**: Only map states you actually need
 
-### StyleBuilderTTK Errors
+### Style Naming and Reusability
 
-- **subclass**: When using this library with ttkbootstrap, the styling engine will sometimes confuse the automatic
-  subclass. If you run into this issue, just manually create a subclass using the `subclass` parameter to avoid issues
-  with StyleBuilderTTK.
+By default, stateful icons generate a unique hashed style name (e.g., `"a3f4e7b2c1d6.TButton"`) for each icon
+configuration. This works perfectly for most use cases, but if you want to create a **reusable style subclass** that can
+be applied to multiple widgets or referenced elsewhere, use the `subclass` parameter:
+
+```python
+# Create a reusable style
+icon.map(button1, subclass="IconButton", statespec=[("hover", "#007bff")])
+icon.map(button2, subclass="IconButton")  # Reuses the same style
+
+# Later, you can reference or extend this style
+style = ttk.Style()
+style.configure("IconButton.TButton", padding=10)
+```
+
+Without `subclass`, each call generates a new unique style, which is ideal for one-off icon mappings.
 
 ---
 
