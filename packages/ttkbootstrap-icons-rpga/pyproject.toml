@@ -7,7 +7,7 @@ requires-python = ">=3.10"
 authors = [{ name = "Israel Dryer" }]
 dependencies = ["Pillow>=9.1", "ttkbootstrap-icons>=3.0.0"]
 
-license = "MIT"
+license = { text = "MIT" }
 
 [project.urls]
 Homepage = "https://github.com/israel-dryer/ttkbootstrap-icons"

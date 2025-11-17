@@ -1,6 +1,6 @@
 [project]
 name = "ttkbootstrap-icons-fa"
-version = "1.0.1"
+version = "1.0.2"
 description = "Font Awesome Free (font-based) provider for ttkbootstrap-icons"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -11,7 +11,7 @@ dependencies = ["Pillow>=9.1", "ttkbootstrap-icons>=3.0.0"]
 # - Fonts: SIL OFL 1.1
 # - Code (CSS/JS): MIT
 # - Icon designs: CC BY 4.0
-license = "MIT"
+license = { text = "MIT" }
 
 [project.urls]
 Homepage = "https://github.com/israel-dryer/ttkbootstrap-icons"
