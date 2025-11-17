@@ -85,7 +85,7 @@ import tkinter as tk
 from ttkbootstrap_icons_fa import FAIcon
 
 root = tk.Tk()
-solid = FAIcon("house", size=24, color="#0d6efd", style="solid")
+solid = FAIcon("atom", size=24, color="#0d6efd", style="solid")
 tk.Button(root, image=solid.image, text="Solid", compound="left").pack()
 root.mainloop()
 ```
