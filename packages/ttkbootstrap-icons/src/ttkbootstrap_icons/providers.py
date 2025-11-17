@@ -257,7 +257,7 @@ class BaseFontProvider(ABC):
 
             if style is not None and inferred_style is not None and style != inferred_style:
                 raise ValueError(
-                    f"{name} is not valid for style '{style}' in {self.name}. Try style '{inferred_style}' or use an unsuffixed name."
+                    f"'{name}' is not valid for style '{style}' in {self.name}. Try style '{inferred_style}' or use an unsuffixed name."
                 )
 
             lookup_style = style or inferred_style or self.default_style or "base"
@@ -293,7 +293,7 @@ class BaseFontProvider(ABC):
             return lookup[name]
         if formatted in lookup:
             return lookup[formatted]
-        raise ValueError(f"{name} is not a valid icon for {self.name}.")
+        raise ValueError(f"'{name}' is not a valid icon for {self.name}.")
 
     def get_icons_names_for_display(self) -> dict[str, dict[str, str]]:
         if self.has_styles:

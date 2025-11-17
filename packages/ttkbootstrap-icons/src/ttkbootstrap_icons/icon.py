@@ -14,6 +14,12 @@ from .providers import BaseFontProvider
 from .stateful_icon_mixin import StatefulIconMixin
 
 
+try:
+    _RESAMPLE_LANCZOS = Image.Resampling.LANCZOS  # Pillow >= 9.1.0
+except AttributeError:  # pragma: no cover - older Pillow fallback
+    _RESAMPLE_LANCZOS = Image.LANCZOS
+
+
 def create_transparent_icon(size: int = 16) -> TkPhotoImage:
     """Return or create a transparent placeholder image of given size."""
     return Icon._get_transparent(size)
@@ -165,12 +171,25 @@ class Icon(StatefulIconMixin, ABC):
         if not fp:
             return Icon._get_transparent(self.size)
 
-        canvas_size = self.size
-        pad = int(self.size * pad_factor)
+        target_size = self.size
+
+        # Oversample small icons for crisper rendering, then downscale.
+        # - Very small (< 32px): 3x
+        # - Small (< 64px): 2x
+        # - Larger: 1x (no oversampling)
+        if target_size < 32:
+            oversample = 3
+        elif target_size < 64:
+            oversample = 2
+        else:
+            oversample = 1
+
+        canvas_size = target_size * oversample
+        pad = int(canvas_size * pad_factor)
         inner_w = canvas_size - 2 * pad
         inner_h = canvas_size - 2 * pad
 
-        eff_size = max(1, int(self.size))
+        eff_size = max(1, int(canvas_size))
         fkey = (fp, eff_size)
         font = Icon._font_cache.get(fkey)
         if font is None:
@@ -203,9 +222,13 @@ class Icon(StatefulIconMixin, ABC):
         dx = pad + (inner_w - glyph_w) // 2 - bbox[0]
         dy = pad + (inner_h - full_height) // 2 + (ascent - bbox[3])
         if y_bias:
-            dy += int(self.size * y_bias)
+            dy += int(canvas_size * y_bias)
 
         draw.text((dx, dy), glyph, font=font, fill=self.color)
+
+        # Downscale oversampled icons to the requested size using a high-quality filter.
+        if oversample != 1:
+            img = img.resize((target_size, target_size), _RESAMPLE_LANCZOS)
 
         pm = PhotoImage(image=img)
         Icon._cache[key] = pm

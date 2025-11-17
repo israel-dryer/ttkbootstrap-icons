@@ -87,6 +87,7 @@ class BootstrapFontProvider(BaseFontProvider):
             license_url="https://github.com/twbs/icons/blob/main/LICENSE",
             icon_version="1.13.1",
             default_style="outline",
+            y_bias=0.02,
             styles={
                 "fill": {"filename": "bootstrap.ttf", "predicate": BootstrapFontProvider._is_fill_style},
                 "outline": {"filename": "bootstrap.ttf", "predicate": BootstrapFontProvider._is_outline_style},
