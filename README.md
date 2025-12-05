@@ -5,7 +5,7 @@
 [![Downloads](https://static.pepy.tech/badge/ttkbootstrap-icons)](https://pepy.tech/project/ttkbootstrap-icons)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-Font-based icons for Tkinter/ttkbootstrap with a built-in Bootstrap set and installable provider packages: Font Awesome,
+Font-based icons for Tkinter/ttkbootstrap with installable provider packages: Bootstrap Icons, Font Awesome,
 Material, Ionicons, Remix, Fluent, Simple, Weather, Lucide, Devicon, Eva, Typicons & more. Includes a fast Icon Browser
 for search, style selection, color/size controls, and click-to-copy names.
 
@@ -13,13 +13,15 @@ Docs: https://israel-dryer.github.io/ttkbootstrap-icons/
 
 ---
 
-## Install (Core)
+## Install
+
+Install the base package and at least one icon provider:
 
 ```bash
-pip install ttkbootstrap-icons
+pip install ttkbootstrap-icons ttkbootstrap-icons-bs
 ```
 
-Providers are install-what-you-need (examples):
+Additional providers (install what you need):
 
 ```bash
 pip install ttkbootstrap-icons-fa ttkbootstrap-icons-gmi ttkbootstrap-icons-remix
@@ -33,7 +35,7 @@ See the documentation for the full provider list and usage examples.
 
 ```python
 import tkinter as tk
-from ttkbootstrap_icons import BootstrapIcon
+from ttkbootstrap_icons_bs import BootstrapIcon
 
 root = tk.Tk()
 icon = BootstrapIcon("house", size=24, color="#0d6efd", style="fill")
@@ -59,7 +61,7 @@ Icons can automatically change appearance based on widget states (hover, pressed
 
 ```python
 import ttkbootstrap as tb
-from ttkbootstrap_icons import BootstrapIcon
+from ttkbootstrap_icons_bs import BootstrapIcon
 
 app = tb.Window()
 icon = BootstrapIcon("mic-mute-fill", size=64)
@@ -83,12 +85,14 @@ This is a multi-package (monorepo) workspace that includes all of the extension 
 
 | Package                                                                                                       | PyPI                                                           | Downloads                                                                                                                  | Description                                                |
 |:--------------------------------------------------------------------------------------------------------------|:---------------------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------|:-----------------------------------------------------------|
-| [ttkbootstrap-icons](https://israel-dryer.github.io/ttkbootstrap-icons/)                                      | [PyPI](https://pypi.org/project/ttkbootstrap-icons/)           | [![](https://static.pepy.tech/badge/ttkbootstrap-icons)](https://pepy.tech/project/ttkbootstrap-icons)                     | Core library, built-in Bootstrap provider and Icon Browser |
+| [ttkbootstrap-icons](https://israel-dryer.github.io/ttkbootstrap-icons/)                                      | [PyPI](https://pypi.org/project/ttkbootstrap-icons/)           | [![](https://static.pepy.tech/badge/ttkbootstrap-icons)](https://pepy.tech/project/ttkbootstrap-icons)                     | Core library with provider framework and Icon Browser      |
+| [ttkbootstrap-icons-bs](https://israel-dryer.github.io/ttkbootstrap-icons/providers/bootstrap/)               | [PyPI](https://pypi.org/project/ttkbootstrap-icons-bs/)        | [![](https://static.pepy.tech/badge/ttkbootstrap-icons-bs)](https://pepy.tech/project/ttkbootstrap-icons-bs)               | Bootstrap Icons                                            |
 | [ttkbootstrap-icons-fa](https://israel-dryer.github.io/ttkbootstrap-icons/providers/font-awesome-6-free/)     | [PyPI](https://pypi.org/project/ttkbootstrap-icons-fa/)        | [![](https://static.pepy.tech/badge/ttkbootstrap-icons-fa)](https://pepy.tech/project/ttkbootstrap-icons-fa)               | Font Awesome (Free)                                        |
 | [ttkbootstrap-icons-gmi](https://israel-dryer.github.io/ttkbootstrap-icons/providers/google-material-icons/)  | [PyPI](https://pypi.org/project/ttkbootstrap-icons-gmi/)       | [![](https://static.pepy.tech/badge/ttkbootstrap-icons-gmi)](https://pepy.tech/project/ttkbootstrap-icons-gmi)             | Google Material Icons                                      |
 | [ttkbootstrap-icons-ion](https://israel-dryer.github.io/ttkbootstrap-icons/providers/ion/)                    | [PyPI](https://pypi.org/project/ttkbootstrap-icons-ion/)       | [![](https://static.pepy.tech/badge/ttkbootstrap-icons-ion)](https://pepy.tech/project/ttkbootstrap-icons-ion)             | Ionicons v2 (font)                                         |
 | [ttkbootstrap-icons-remix](https://israel-dryer.github.io/ttkbootstrap-icons/providers/remix/)                | [PyPI](https://pypi.org/project/ttkbootstrap-icons-remix/)     | [![](https://static.pepy.tech/badge/ttkbootstrap-icons-remix)](https://pepy.tech/project/ttkbootstrap-icons-remix)         | Remix Icon                                                 |
 | [ttkbootstrap-icons-fluent](https://israel-dryer.github.io/ttkbootstrap-icons/providers/fluent-system-icons/) | [PyPI](https://pypi.org/project/ttkbootstrap-icons-fluent/)    | [![](https://static.pepy.tech/badge/ttkbootstrap-icons-fluent)](https://pepy.tech/project/ttkbootstrap-icons-fluent)       | Fluent System Icons                                        |
+| [ttkbootstrap-icons-fluent-reg](https://israel-dryer.github.io/ttkbootstrap-icons/providers/fluent-system-icons-regular/) | [PyPI](https://pypi.org/project/ttkbootstrap-icons-fluent-reg/) | [![](https://static.pepy.tech/badge/ttkbootstrap-icons-fluent-reg)](https://pepy.tech/project/ttkbootstrap-icons-fluent-reg) | Fluent System Icons (Regular only)                        |
 | [ttkbootstrap-icons-simple](https://israel-dryer.github.io/ttkbootstrap-icons/providers/simple/)              | [PyPI](https://pypi.org/project/ttkbootstrap-icons-simple/)    | [![](https://static.pepy.tech/badge/ttkbootstrap-icons-simple)](https://pepy.tech/project/ttkbootstrap-icons-simple)       | Simple Icons (brand logos)                                 |
 | [ttkbootstrap-icons-weather](https://israel-dryer.github.io/ttkbootstrap-icons/providers/weather/)            | [PyPI](https://pypi.org/project/ttkbootstrap-icons-weather/)   | [![](https://static.pepy.tech/badge/ttkbootstrap-icons-weather)](https://pepy.tech/project/ttkbootstrap-icons-weather)     | Weather Icons                                              |
 | [ttkbootstrap-icons-lucide](https://israel-dryer.github.io/ttkbootstrap-icons/providers/lucide/)              | [PyPI](https://pypi.org/project/ttkbootstrap-icons-lucide/)    | [![](https://static.pepy.tech/badge/ttkbootstrap-icons-lucide)](https://pepy.tech/project/ttkbootstrap-icons-lucide)       | Lucide Icons                                               |

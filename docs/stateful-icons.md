@@ -52,7 +52,7 @@ The simplest approach: icons automatically inherit the parent style's foreground
 
 ```python
 import ttkbootstrap as tb
-from ttkbootstrap_icons import BootstrapIcon
+from ttkbootstrap_icons_bs import BootstrapIcon
 
 root = tb.Window(themename="darkly")
 
@@ -87,7 +87,7 @@ In this example, the icon will:
 You can explicitly set icon colors for specific states:
 
 ```python
-from ttkbootstrap_icons import BootstrapIcon
+from ttkbootstrap_icons_bs import BootstrapIcon
 
 icon = BootstrapIcon("star", size=24)
 
@@ -109,7 +109,7 @@ icon.map(
 Display entirely different icons for different states:
 
 ```python
-from ttkbootstrap_icons import BootstrapIcon
+from ttkbootstrap_icons_bs import BootstrapIcon
 
 sound = BootstrapIcon("mic-mute-fill", 64)
 
@@ -200,10 +200,10 @@ from ttkbootstrap_icons_mat import MatIcon
 icon = MatIcon("favorite", size=24, style="outlined")
 icon.map(button, statespec=[("hover", {"name": "favorite", "color": "#f44336"})])
 
-# Bootstrap Icons (built-in)
-from ttkbootstrap_icons import Icon
+# Bootstrap Icons
+from ttkbootstrap_icons_bs import BootstrapIcon
 
-icon = Icon("heart", size=24)
+icon = BootstrapIcon("heart", size=24)
 icon.map(button, statespec=[("hover", "#dc3545")])
 ```
 

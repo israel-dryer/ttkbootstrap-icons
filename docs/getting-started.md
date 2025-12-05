@@ -12,23 +12,25 @@ This guide helps you install ttkbootstrap-icons, render your first icon in Tkint
 
 ---
 
-## Install the base package
+## Install packages
 
-The base package includes the built-in Bootstrap Icons provider and the Icon Browser app.
+Install the base package and at least one icon provider package:
 
 ```bash
-pip install ttkbootstrap-icons
+pip install ttkbootstrap-icons ttkbootstrap-icons-bs
 ```
+
+The base package includes the Icon Browser and provider framework. Icon provider packages (like Bootstrap Icons) are installed separately.
 
 ---
 
-## Your first icon (Bootstrap)
+## Your first icon
 
-Render a Bootstrap icon using the built-in provider:
+Render an icon using an installed provider package:
 
 ```python
 import tkinter as tk
-from ttkbootstrap_icons import BootstrapIcon
+from ttkbootstrap_icons_bs import BootstrapIcon
 
 root = tk.Tk()
 root.title("Hello Icons")
@@ -49,7 +51,7 @@ Notes
 
 ## Browse available icons
 
-Launch the graphical browser to search and preview icons (built-in + any installed providers):
+Launch the graphical browser to search and preview icons from all installed providers:
 
 ```bash
 # CLI
@@ -106,7 +108,7 @@ Here's how to create a toggle button that switches between two different icons:
 
 ```python
 import ttkbootstrap as tb
-from ttkbootstrap_icons import BootstrapIcon
+from ttkbootstrap_icons_bs import BootstrapIcon
 
 app = tb.Window("Toggle Icon")
 
