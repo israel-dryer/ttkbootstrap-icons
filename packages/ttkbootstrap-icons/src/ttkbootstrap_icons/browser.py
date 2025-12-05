@@ -9,10 +9,14 @@ import tkinter as tk
 import webbrowser
 from tkinter import ttk
 
-from ttkbootstrap_icons import BootstrapIcon
-from ttkbootstrap_icons.bootstrap import BootstrapFontProvider
 from ttkbootstrap_icons.icon import Icon
 from ttkbootstrap_icons.registry import ProviderRegistry, load_external_providers
+
+try:
+    from ttkbootstrap_icons_bs import BootstrapIcon, BootstrapFontProvider
+except ImportError:
+    BootstrapIcon = None
+    BootstrapFontProvider = None
 
 
 class SimpleIconGrid:
@@ -184,7 +188,8 @@ class IconPreviewerApp:
         atexit.register(Icon.cleanup)
 
         self.icon_data = self._load_icon_data()
-        self.current_icon_set = "bootstrap"
+        # Use the first available provider, or None if no providers installed
+        self.current_icon_set = next(iter(self.icon_data.keys()), None) if self.icon_data else None
         self.current_style = None
         self.current_size = 32
         self.current_color = "black"
@@ -193,7 +198,9 @@ class IconPreviewerApp:
         self._build_ui()
 
     def _load_icon_data(self):
-        providers = {"bootstrap": BootstrapFontProvider()}
+        providers = {}
+        if BootstrapFontProvider is not None:
+            providers["bootstrap"] = BootstrapFontProvider()
         registry = ProviderRegistry()
         load_external_providers(registry)
         for name in registry.names():
@@ -422,7 +429,60 @@ class IconPreviewerApp:
         self.selected_icon = icon_name
         self._update_info_panel(icon_name)
 
+    def _build_no_providers_ui(self):
+        """Display a helpful message when no icon providers are installed."""
+        main_frame = ttk.Frame(self.root, padding=40)
+        main_frame.pack(fill="both", expand=True)
+
+        title = ttk.Label(
+            main_frame,
+            text="No Icon Providers Installed",
+            font=("Arial", 16, "bold")
+        )
+        title.pack(pady=(20, 10))
+
+        message = ttk.Label(
+            main_frame,
+            text="The ttkbootstrap-icons base package requires icon provider packages to function.\n\n"
+                 "Install one or more icon provider packages:",
+            justify="center",
+            font=("Arial", 10)
+        )
+        message.pack(pady=10)
+
+        providers_frame = ttk.Frame(main_frame)
+        providers_frame.pack(pady=20)
+
+        providers = [
+            ("Bootstrap Icons", "pip install ttkbootstrap-icons-bs"),
+            ("Font Awesome", "pip install ttkbootstrap-icons-fa"),
+            ("Material Icons", "pip install ttkbootstrap-icons-mat"),
+            ("Google Material Icons", "pip install ttkbootstrap-icons-gmi"),
+            ("Ionicons", "pip install ttkbootstrap-icons-ion"),
+            ("And more...", "See https://github.com/israel-dryer/ttkbootstrap-icons"),
+        ]
+
+        for name, cmd in providers:
+            row = ttk.Frame(providers_frame)
+            row.pack(fill="x", pady=5)
+            ttk.Label(row, text=f"• {name}:", font=("Arial", 9, "bold"), width=20).pack(side="left")
+            code_label = ttk.Label(row, text=cmd, font=("Courier", 9), foreground="#0066cc")
+            code_label.pack(side="left")
+
+        footer = ttk.Label(
+            main_frame,
+            text="After installing a provider, restart the browser.",
+            font=("Arial", 9, "italic"),
+            foreground="gray"
+        )
+        footer.pack(pady=20)
+
     def _build_ui(self):
+        # Check if any providers are available
+        if not self.icon_data:
+            self._build_no_providers_ui()
+            return
+
         control = ttk.Frame(self.root, padding=10)
         control.pack(side="top", fill="x")
 
@@ -583,10 +643,13 @@ class IconPreviewerApp:
 
 
 def main():
-    from ttkbootstrap_icons import BootstrapIcon
     root = tk.Tk()
-    app_icon = BootstrapIcon("grid-3x3-gap-fill", color="#2F6FED")
-    root.iconphoto(True, app_icon.image)
+    try:
+        from ttkbootstrap_icons_bs import BootstrapIcon
+        app_icon = BootstrapIcon("grid-3x3-gap-fill", color="#2F6FED")
+        root.iconphoto(True, app_icon.image)
+    except ImportError:
+        pass
     IconPreviewerApp(root)
     root.mainloop()
 

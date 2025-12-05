@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 
 #import ttkbootstrap as tb
-from ttkbootstrap_icons import BootstrapIcon
+from ttkbootstrap_icons_bs import BootstrapIcon
 
 
 def main():

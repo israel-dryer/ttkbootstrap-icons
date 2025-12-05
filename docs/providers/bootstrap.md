@@ -1,13 +1,13 @@
-﻿# Bootstrap Icons (built-in)
+﻿# Bootstrap Icons
 
-The base `ttkbootstrap-icons` package includes the Bootstrap Icons provider out of the box. No extra install is required beyond the base package.
+Bootstrap Icons is a separate provider package for ttkbootstrap-icons.
 
 ---
 
 ## Install
 
 ```bash
-pip install ttkbootstrap-icons
+pip install ttkbootstrap-icons-bs
 ```
 
 ---
