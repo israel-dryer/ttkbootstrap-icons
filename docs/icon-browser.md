@@ -25,12 +25,12 @@ python -m ttkbootstrap_icons.browser
 
 ## Discovering providers
 
-The browser shows the built-in Bootstrap Icons and any additional providers you have installed. External providers are
-discovered via Python entry points in the group `ttkbootstrap_icons.providers`.
+The browser shows all installed icon providers. Providers are discovered via Python entry points in the group `ttkbootstrap_icons.providers`.
 
 Install any providers you need (examples):
 
 ```bash
+pip install ttkbootstrap-icons-bs           # Bootstrap Icons
 pip install ttkbootstrap-icons-fa           # Font Awesome Free
 pip install ttkbootstrap-icons-gmi          # Google Material Icons
 pip install ttkbootstrap-icons-remix        # Remix Icon

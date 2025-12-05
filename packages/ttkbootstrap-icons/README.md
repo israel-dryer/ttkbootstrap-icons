@@ -5,9 +5,7 @@
 [![Downloads](https://static.pepy.tech/badge/ttkbootstrap-icons)](https://pepy.tech/project/ttkbootstrap-icons)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](../../LICENSE)
 
-Font-based icons for Tkinter and ttkbootstrap, with a built-in Bootstrap Icons set and optional provider packages (Font
-Awesome, Material, Remix, Fluent, Simple, Weather, Lucide, Eva, Typicons, and more). Includes a lightweight Icon Browser
-to search and copy names.
+Base package for font-based icons in Tkinter and ttkbootstrap. Provides the provider framework and Icon Browser. Install icon provider packages separately (Bootstrap Icons, Font Awesome, Material, Remix, Fluent, Simple, Weather, Lucide, Eva, Typicons, and more).
 
 ---
 
