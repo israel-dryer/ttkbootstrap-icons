@@ -15,10 +15,12 @@ DEST_ROOT = Path("providers")
 
 # Map package folder names to provider doc filenames in docs/providers/
 PACKAGE_TO_DOC = {
+    "ttkbootstrap-icons-bs": "bootstrap.md",
     "ttkbootstrap-icons-devicon": "devicon.md",
     "ttkbootstrap-icons-eva": "eva.md",
     "ttkbootstrap-icons-fa": "font-awesome-6-free.md",
     "ttkbootstrap-icons-fluent": "fluent-system-icons.md",
+    "ttkbootstrap-icons-fluent-reg": "fluent-system-icons-regular.md",
     "ttkbootstrap-icons-gmi": "google-material-icons.md",
     "ttkbootstrap-icons-ion": "ion.md",
     "ttkbootstrap-icons-lucide": "lucide.md",
@@ -69,63 +71,6 @@ def main() -> None:
                 print(f"[gen-files]   + copied image to providers/{asset_rel_dir}/browser.png")
                 break
 
-    # Also generate a page for the built-in Bootstrap provider
-    bootstrap_dest = DEST_ROOT / "bootstrap.md"
-    bootstrap_md = (
-        "# Bootstrap Icons (built-in)\n\n"
-        "The base `ttkbootstrap-icons` package includes the Bootstrap Icons provider out of the box. "
-        "No extra install is required beyond the base package.\n\n"
-        "---\n\n"
-        "## Install\n\n"
-        "```bash\n"
-        "pip install ttkbootstrap-icons\n"
-        "```\n\n"
-        "---\n\n"
-        "## Quick start\n\n"
-        "```python\n"
-        "import tkinter as tk\n"
-        "from ttkbootstrap_icons import BootstrapIcon\n\n"
-        "root = tk.Tk()\n\n"
-        "outline = BootstrapIcon(\"house\", size=24, color=\"#333\", style=\"outline\")\n"
-        "filled = BootstrapIcon(\"house\", size=24, color=\"#333\", style=\"fill\")\n\n"
-        "tk.Label(root, text=\"Outline\", image=outline.image, compound=\"left\").pack()\n"
-        "tk.Label(root, text=\"Fill\", image=filled.image, compound=\"left\").pack()\n\n"
-        "root.mainloop()\n"
-        "```\n\n"
-        "---\n\n"
-        "## Styles\n\n"
-        "| Variant  | Description            |\n"
-        "|:---------|:-----------------------|\n"
-        "| `outline`| Outline stroke variant |\n"
-        "| `fill`   | Filled variant         |\n\n"
-        "---\n\n"
-        "## Icon Browser\n\n"
-        "Browse available icons with the built-in browser. From your terminal run:\n\n"
-        "```bash\n"
-        "ttkbootstrap-icons\n"
-        "```\n\n"
-        "Use \"Copy Name\" in the browser to copy the icon name and style directly for use in your code.\n\n"
-        "![Icon Browser](assets/bootstrap/browser.png)\n\n"
-        "---\n\n"
-        "## License and Attribution\n\n"
-        "- Upstream: Bootstrap Icons — https://icons.getbootstrap.com/\n"
-        "- Wrapper license: MIT (c) Israel Dryer\n"
-    )
-    with mkdocs_gen_files.open(bootstrap_dest.as_posix(), "w") as fd:
-        fd.write(bootstrap_md)
-    print("[gen-files] Generated providers/bootstrap.md (built-in provider)")
-
-    # Copy Bootstrap browser.png if present
-    for img_src in [
-        PKG_ROOT / "ttkbootstrap-icons" / "browser.png",
-        PKG_ROOT / "ttkbootstrap-icons" / "docs" / "browser.png",
-    ]:
-        if img_src.is_file():
-            img_dest = DEST_ROOT / "assets" / "bootstrap" / "browser.png"
-            with mkdocs_gen_files.open(img_dest.as_posix(), "wb") as fd:
-                fd.write(img_src.read_bytes())
-            print("[gen-files]   + copied Bootstrap image to providers/assets/bootstrap/browser.png")
-            break
 
     # Generate Providers overview table into the Overview page (index.md)
     try:
@@ -201,10 +146,12 @@ def _generate_providers_table() -> None:
     # Build rows: (name, link, package, version, count, downloads_badge)
     # Display names map matching nav
     name_map = {
+        "ttkbootstrap-icons-bs": "Bootstrap Icons",
         "ttkbootstrap-icons-devicon": "Devicon",
         "ttkbootstrap-icons-eva": "Eva",
         "ttkbootstrap-icons-fa": "Font Awesome 6 (free)",
         "ttkbootstrap-icons-fluent": "Fluent System Icons",
+        "ttkbootstrap-icons-fluent-reg": "Fluent System Icons (Regular)",
         "ttkbootstrap-icons-gmi": "Google Material Icons",
         "ttkbootstrap-icons-ion": "Ion Icons",
         "ttkbootstrap-icons-lucide": "Lucide",
@@ -218,35 +165,6 @@ def _generate_providers_table() -> None:
     }
 
     rows = []
-
-    # Built-in Bootstrap first
-    built_in_count = 0
-    # Count glyphs from assets in base package
-    base_assets = Path("packages/ttkbootstrap-icons/src/ttkbootstrap_icons/assets")
-    if base_assets.is_dir():
-        names = set()
-        for j in base_assets.glob("glyphmap*.json"):
-            try:
-                data = json.loads(j.read_text(encoding="utf-8"))
-                for k in data.keys():
-                    names.add(str(k))
-            except Exception:
-                continue
-        built_in_count = len(names)
-    # Version from bootstrap provider source (best-effort via regex)
-    version = None
-    boot_src = Path("packages/ttkbootstrap-icons/src/ttkbootstrap_icons/bootstrap.py")
-    try:
-        m = re.search(r"icon_version=\"([^\"]+)\"", boot_src.read_text(encoding="utf-8"))
-        if m:
-            version = m.group(1)
-    except Exception:
-        pass
-    bootstrap_row = (
-        f"| [Bootstrap](providers/bootstrap.md) | `ttkbootstrap-icons` | {version or '-'} | {built_in_count:,} | "
-        f"[![](https://static.pepy.tech/badge/ttkbootstrap-icons)](https://pepy.tech/project/ttkbootstrap-icons) |"
-    )
-    rows.append(bootstrap_row)
 
     for pkg_name, doc_name in PACKAGE_TO_DOC.items():
         disp = name_map.get(pkg_name, pkg_name)
@@ -301,15 +219,17 @@ def _generate_api_pages() -> None:
     # Providers
     for pkg_name, _doc in PACKAGE_TO_DOC.items():
         slug = pkg_name.replace("ttkbootstrap-icons-", "")
-        module = f"ttkbootstrap_icons_{slug}"
+        module = f"ttkbootstrap_icons_{slug.replace('-', '_')}"
         display = slug.title() if slug != "fa" else "Font Awesome"
         # Provide nicer names when possible
         name_map = {
+            "bs": "Bootstrap Icons",
             "fa": "Font Awesome",
             "gmi": "Google Material Icons",
             "ion": "Ion Icons",
             "remix": "Remix Icon",
             "fluent": "Fluent System Icons",
+            "fluent-reg": "Fluent System Icons (Regular)",
             "simple": "Simple Icons",
             "weather": "Weather Icons",
             "lucide": "Lucide",

@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 """Bootstrap icon provider and convenience Icon wrapper.
 
@@ -10,11 +10,11 @@ This module exposes:
 
 Example:
     from tkinter import ttk
-    
+
     # using the style parameter
     icon1 = BootstrapIcon("house", style="outline")
     ttk.Label(root, text="Home", image=icon1.image, compound="left").pack()
-    
+
     # using the style in name
     icon2 = BootstrapIcon("house-outline")
     ttk.Label(root, text="Home", image=icon2.image, compound="left").pack()
@@ -23,7 +23,7 @@ Example:
 from typing import Literal
 
 from ttkbootstrap_icons.icon import Icon
-from ttkbootstrap_icons.providers import BaseFontProvider
+from ttkbootstrap_icons_bs.provider import BootstrapFontProvider
 
 BootstrapStyles = Literal['outline', 'fill']
 
@@ -53,53 +53,3 @@ class BootstrapIcon(Icon):
         BootstrapIcon.initialize_with_provider(prov)
         resolved = prov.resolve_icon_name(name, style)
         super().__init__(resolved, size, color)
-
-
-class BootstrapFontProvider(BaseFontProvider):
-    """Provider for the Bootstrap Icons dataset.
-
-    Bootstrap ships two styles - "outline" and "fill" - encoded by the presence of a
-    "-fill" suffix in the raw glyph name. Both styles share the same font file and
-    are separated via a predicate per style.
-
-    Attributes:
-        name: Provider identifier ("bootstrap").
-        display_name: Human-friendly name ("Bootstrap").
-        default_style: Default style ("outline").
-        styles: Map of style -> {filename, predicate}.
-    """
-
-    def __init__(self):
-        """Initialize the provider with style configuration.
-
-        Uses a single font file (`bootstrap.ttf`) for both styles. Style selection
-        is performed by predicates that test for the ``-fill`` suffix.
-
-        Note:
-            The provider expects glyphmaps named `glyphmap.json` (single-file) or
-            `glyphmap-<style>.json` when styles require separate maps.
-        """
-        super().__init__(
-            name="bootstrap",
-            display_name="Bootstrap Icons",
-            package="ttkbootstrap_icons.assets",
-            homepage="https://icons.getbootstrap.com/",
-            license_url="https://github.com/twbs/icons/blob/main/LICENSE",
-            icon_version="1.13.1",
-            default_style="outline",
-            y_bias=0.02,
-            styles={
-                "fill": {"filename": "bootstrap.ttf", "predicate": BootstrapFontProvider._is_fill_style},
-                "outline": {"filename": "bootstrap.ttf", "predicate": BootstrapFontProvider._is_outline_style},
-            }
-        )
-
-    @staticmethod
-    def _is_outline_style(name: str) -> bool:
-        return '-fill' not in name
-
-    @staticmethod
-    def _is_fill_style(name: str) -> bool:
-        return '-fill' in name
- 
-

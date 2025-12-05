@@ -1,0 +1,30 @@
+[project]
+name = "ttkbootstrap-icons-bs"
+version = "1.0.0"
+description = "Bootstrap Icons (font-based) provider for ttkbootstrap-icons"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Israel Dryer" }]
+dependencies = ["Pillow>=9.1", "ttkbootstrap-icons>=4.0.0"]
+
+# Bootstrap Icons licensing:
+# - MIT License
+license = "MIT"
+
+[project.urls]
+Homepage = "https://github.com/israel-dryer/ttkbootstrap-icons"
+
+# Auto-discovery hook for your base registry
+[project.entry-points."ttkbootstrap_icons.providers"]
+bootstrap = "ttkbootstrap_icons_bs.provider:BootstrapFontProvider"
+
+[tool.setuptools.package-data]
+"ttkbootstrap_icons_bs" = ["assets/*.ttf", "assets/*.json"]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+include-package-data = true
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"

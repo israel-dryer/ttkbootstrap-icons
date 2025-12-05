@@ -57,7 +57,11 @@ class Icon(StatefulIconMixin, ABC):
             color: Foreground color.
         """
         if not Icon._initialized:
-            raise RuntimeError("Icon provider not initialized. Call initialize_with_provider() before creating icons.")
+            raise RuntimeError(
+                "Icon provider not initialized. You must install and initialize an icon provider first.\n"
+                "Install a provider: pip install ttkbootstrap-icons-bs (or -fa, -mat, etc.)\n"
+                "Then use the provider's icon class, e.g.: from ttkbootstrap_icons_bs import BootstrapIcon"
+            )
 
         self.name = name
         self.size = size

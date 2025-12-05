@@ -27,7 +27,17 @@ class ProviderRegistry:
 
 
 def load_external_providers(registry: ProviderRegistry) -> None:
-    for ep in entry_points(group="ttkbootstrap_icons.providers"):
+    providers_found = list(entry_points(group="ttkbootstrap_icons.providers"))
+
+    if not providers_found:
+        print("[ttkbootstrap-icons] No icon providers installed.")
+        print("[ttkbootstrap-icons] Install a provider package to use icons:")
+        print("[ttkbootstrap-icons]   pip install ttkbootstrap-icons-bs  # Bootstrap Icons")
+        print("[ttkbootstrap-icons]   pip install ttkbootstrap-icons-fa  # Font Awesome")
+        print("[ttkbootstrap-icons]   pip install ttkbootstrap-icons-mat # Material Icons")
+        print("[ttkbootstrap-icons] See: https://github.com/israel-dryer/ttkbootstrap-icons")
+
+    for ep in providers_found:
         try:
             ProviderCls = ep.load()
             provider_instance = ProviderCls()

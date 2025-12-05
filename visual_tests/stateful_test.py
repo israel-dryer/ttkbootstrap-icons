@@ -1,5 +1,5 @@
 import ttkbootstrap as tb
-from ttkbootstrap_icons import BootstrapIcon
+from ttkbootstrap_icons_bs import BootstrapIcon
 
 
 app = tb.Window()

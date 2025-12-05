@@ -25,10 +25,12 @@ plugins:
         python:
           paths:
             - packages/ttkbootstrap-icons/src
+            - packages/ttkbootstrap-icons-bs/src
             - packages/ttkbootstrap-icons-devicon/src
             - packages/ttkbootstrap-icons-eva/src
             - packages/ttkbootstrap-icons-fa/src
             - packages/ttkbootstrap-icons-fluent/src
+            - packages/ttkbootstrap-icons-fluent-reg/src
             - packages/ttkbootstrap-icons-gmi/src
             - packages/ttkbootstrap-icons-ion/src
             - packages/ttkbootstrap-icons-lucide/src
@@ -64,10 +66,11 @@ nav:
   - Stateful Icons: stateful-icons.md
   - Icon Browser: icon-browser.md
   - Providers:
-      - Bootstrap: providers/bootstrap.md
+      - Bootstrap Icons: providers/bootstrap.md
       - Devicon: providers/devicon.md
       - Eva: providers/eva.md
       - Fluent System Icons: providers/fluent-system-icons.md
+      - Fluent System Icons (Regular): providers/fluent-system-icons-regular.md
       - Font Awesome 6 (free): providers/font-awesome-6-free.md
       - Google Material Icons: providers/google-material-icons.md
       - Ion Icons: providers/ion.md
@@ -87,10 +90,11 @@ nav:
           - Stateful Icon Mixin: api/core/stateful_icon_mixin.md
           - Providers Framework: api/core/providers.md
           - Provider Registry: api/core/registry.md
-          - Bootstrap (Built-in): api/core/bootstrap.md
+      - Bootstrap Icons: api/bootstrap.md
       - Devicon: api/devicon.md
       - Eva: api/eva.md
       - Fluent System Icons: api/fluent.md
+      - Fluent System Icons (Regular): api/fluent-reg.md
       - Font Awesome: api/fa.md
       - Google Material Icons: api/gmi.md
       - Ion Icons: api/ion.md
