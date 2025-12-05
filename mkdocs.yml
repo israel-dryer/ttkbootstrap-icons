@@ -90,7 +90,7 @@ nav:
           - Stateful Icon Mixin: api/core/stateful_icon_mixin.md
           - Providers Framework: api/core/providers.md
           - Provider Registry: api/core/registry.md
-      - Bootstrap Icons: api/bootstrap.md
+      - Bootstrap Icons: api/bs.md
       - Devicon: api/devicon.md
       - Eva: api/eva.md
       - Fluent System Icons: api/fluent.md
