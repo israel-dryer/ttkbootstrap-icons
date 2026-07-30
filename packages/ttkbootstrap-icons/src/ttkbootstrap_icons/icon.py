@@ -141,11 +141,14 @@ class Icon(StatefulIconMixin, ABC):
         """
         icon_set = Icon._icon_set_current
         if icon_set is None:
-            raise RuntimeError(
-                "No icon provider is active. Install a provider and use its icon class, "
-                "e.g. `pip install ttkbootstrap-icons-mat` then "
-                "`from ttkbootstrap_icons_mat import MatIcon`."
-            )
+            from .packs import installed_packs, no_packs_message
+
+            if installed_packs():
+                raise RuntimeError(
+                    "No icon pack is active. Use a pack's icon class rather than Icon directly, "
+                    "e.g. `from ttkbootstrap_icons import MaterialIcon`."
+                )
+            raise RuntimeError(no_packs_message())
 
         self.name = name
         self.size = size

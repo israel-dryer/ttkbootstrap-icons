@@ -34,6 +34,35 @@ dependencies = [
     "typing-extensions>=4.7.1"
 ]
 
+# Icon packs are separate distributions because each ships its own fonts, but
+# they are presented as extras so users install one library:
+#     pip install ttkbootstrap-icons[material]
+#     pip install ttkbootstrap-icons[all]
+# Publish the pack releases BEFORE the base release that references them,
+# otherwise these floors point at versions PyPI does not have yet.
+[project.optional-dependencies]
+bootstrap = ["ttkbootstrap-icons-bs>=1.1.0"]
+devicon = ["ttkbootstrap-icons-devicon>=1.1.0"]
+eva = ["ttkbootstrap-icons-eva>=1.1.0"]
+fluent = ["ttkbootstrap-icons-fluent>=1.1.0"]
+fluent-regular = ["ttkbootstrap-icons-fluent-reg>=1.1.0"]
+fontawesome = ["ttkbootstrap-icons-fa>=1.1.0"]
+google-material = ["ttkbootstrap-icons-gmi>=1.1.0"]
+ionicons = ["ttkbootstrap-icons-ion>=1.1.0"]
+lucide = ["ttkbootstrap-icons-lucide>=1.1.0"]
+material = ["ttkbootstrap-icons-mat>=1.1.0"]
+meteocons = ["ttkbootstrap-icons-meteocons>=1.1.0"]
+remix = ["ttkbootstrap-icons-remix>=1.1.0"]
+rpg-awesome = ["ttkbootstrap-icons-rpga>=1.1.0"]
+simple = ["ttkbootstrap-icons-simple>=1.1.0"]
+typicons = ["ttkbootstrap-icons-typicons>=1.1.0"]
+weather = ["ttkbootstrap-icons-weather>=1.1.0"]
+all = [
+    "ttkbootstrap-icons[bootstrap,devicon,eva,fluent,fluent-regular,fontawesome]",
+    "ttkbootstrap-icons[google-material,ionicons,lucide,material,meteocons,remix]",
+    "ttkbootstrap-icons[rpg-awesome,simple,typicons,weather]",
+]
+
 [project.scripts]
 ttkbootstrap-icons = "ttkbootstrap_icons.browser:main"
 ttkicons-build-all = "ttkbootstrap_icons.tools.build_all:main"
