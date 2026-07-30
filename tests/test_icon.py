@@ -9,9 +9,16 @@ from ttkbootstrap_icons.render import RenderOptions
 
 
 class TestConstruction:
-    def test_requires_an_active_provider(self):
+    def test_bare_icon_points_at_a_pack_class(self, provider):
+        """With packs installed, the error steers you to the right class."""
         Icon.cleanup()
-        with pytest.raises(RuntimeError, match="No icon provider is active"):
+        with pytest.raises(RuntimeError, match="pack's icon class"):
+            Icon("anything")
+
+    def test_with_no_packs_it_explains_the_install(self, monkeypatch):
+        Icon.cleanup()
+        monkeypatch.setattr("ttkbootstrap_icons.packs.installed_packs", lambda: [])
+        with pytest.raises(RuntimeError, match=r'ttkbootstrap-icons\[bootstrap\]'):
             Icon("anything")
 
     def test_icon_holds_its_own_set(self, icon_set, sample_name):

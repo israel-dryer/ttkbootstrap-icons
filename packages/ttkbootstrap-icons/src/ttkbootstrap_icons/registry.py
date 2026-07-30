@@ -1,9 +1,19 @@
 from __future__ import annotations
 
+import warnings
 from importlib.metadata import entry_points
 from typing import Dict, Iterable, Optional
 
+from .packs import no_packs_message
 from .providers import BaseFontProvider
+
+
+class NoIconPacksWarning(UserWarning):
+    """Warned when provider discovery finds no icon packs installed."""
+
+
+class ProviderLoadWarning(UserWarning):
+    """Warned when an icon pack's entry point fails to load."""
 
 
 class ProviderRegistry:
@@ -27,25 +37,29 @@ class ProviderRegistry:
 
 
 def load_external_providers(registry: ProviderRegistry) -> None:
+    """Discover installed icon packs and register their providers.
+
+    Problems are raised as warnings rather than printed, so an application can
+    route them through `warnings` (silence them, turn them into errors, or send
+    them to a log) instead of finding text on its stdout.
+
+    Args:
+        registry: The registry to populate.
+    """
     providers_found = list(entry_points(group="ttkbootstrap_icons.providers"))
 
     if not providers_found:
-        print("[ttkbootstrap-icons] No icon providers installed.")
-        print("[ttkbootstrap-icons] Install a provider package to use icons:")
-        print("[ttkbootstrap-icons]   pip install ttkbootstrap-icons-bs  # Bootstrap Icons")
-        print("[ttkbootstrap-icons]   pip install ttkbootstrap-icons-fa  # Font Awesome")
-        print("[ttkbootstrap-icons]   pip install ttkbootstrap-icons-mat # Material Icons")
-        print("[ttkbootstrap-icons] See: https://github.com/israel-dryer/ttkbootstrap-icons")
+        warnings.warn(no_packs_message(), NoIconPacksWarning, stacklevel=2)
+        return
 
     for ep in providers_found:
         try:
-            ProviderCls = ep.load()
-            provider_instance = ProviderCls()
+            provider_instance = ep.load()()
             registry.register_provider(provider_instance.name, provider_instance)
         except Exception as exc:
-            # Print a lightweight warning to help debug bad entry points
-            try:
-                print(f"[ttkbootstrap-icons] Failed to load provider entry point '{ep.name}' -> {ep.value}: {exc}")
-            except Exception:
-                # Ensure failures here never break app startup
-                pass
+            # A broken pack must never stop an application from starting.
+            warnings.warn(
+                f"Icon pack entry point '{ep.name}' -> {ep.value} failed to load: {exc}",
+                ProviderLoadWarning,
+                stacklevel=2,
+            )
