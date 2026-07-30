@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
-from ttkbootstrap_icons_ion import IonIcon
+from tkinter_icons_ion import IonIcon
 
 
 def main():

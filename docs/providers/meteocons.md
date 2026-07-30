@@ -1,9 +1,9 @@
-﻿# ttkbootstrap-icons-meteocons
+# tkinter-icons-meteocons
 
-An icon provider for the `ttkbootstrap-icons` library.  
+An icon provider for the `tkinter-icons` library.  
 Meteocons is a compact weather-themed icon font.
 
-[![PyPI](https://img.shields.io/pypi/v/ttkbootstrap-icons-meteocons.svg)](https://pypi.org/project/ttkbootstrap-icons-meteocons/)
+[![PyPI](https://img.shields.io/pypi/v/tkinter-icons-meteocons.svg)](https://pypi.org/project/tkinter-icons-meteocons/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
 
 ---
@@ -11,7 +11,7 @@ Meteocons is a compact weather-themed icon font.
 ## Install
 
 ```bash
-pip install ttkbootstrap-icons-meteocons
+pip install tkinter-icons-meteocons
 ```
 
 ---
@@ -20,7 +20,7 @@ pip install ttkbootstrap-icons-meteocons
 
 ```python
 import tkinter as tk
-from ttkbootstrap_icons_meteocons import MeteoIcon
+from tkinter_icons_meteocons import MeteoIcon
 
 root = tk.Tk()
 
@@ -43,7 +43,7 @@ This provider uses a single font without separate style variants.
 Browse available icons with the built-in browser. From your terminal run:
 
 ```bash
-ttkbootstrap-icons
+tkinter-icons
 ```
 
 Use **Copy Name** in the browser to copy the icon name and style directly for use in your code.

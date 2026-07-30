@@ -1,5 +1,5 @@
 import ttkbootstrap as tb
-from ttkbootstrap_icons_bs import BootstrapIcon
+from tkinter_icons_bs import BootstrapIcon
 
 app = tb.Window("Stateful Icons Demo", themename="flatly")
 

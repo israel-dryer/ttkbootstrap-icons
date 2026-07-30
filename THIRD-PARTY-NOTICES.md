@@ -9,69 +9,69 @@ Note: Your usage of upstream assets is governed by their respective licenses. Th
 - Bootstrap Icons
   - Source: https://icons.getbootstrap.com/
   - License: MIT (code), SIL Open Font License 1.1 (font)
-  - Included in base package `ttkbootstrap-icons`
+  - Included in base package `tkinter-icons`
 
 ## Providers (optional, install separately)
 
-- Font Awesome Free — package: `ttkbootstrap-icons-fa`
+- Font Awesome Free — package: `tkinter-icons-fa`
   - Source: https://fontawesome.com/ (CDN: https://cdnjs.com/libraries/font-awesome)
   - Licenses: SIL OFL 1.1 (fonts), MIT (code), CC BY 4.0 (designs)
-  - Subpackage: packages/ttkbootstrap-icons-fa (see `src/ttkbootstrap_icons_fa/LICENSES/`)
+  - Subpackage: packages/tkinter-icons-fa (see `src/tkinter_icons_fa/LICENSES/`)
 
-- Material Design Icons (MDI) — package: `ttkbootstrap-icons-mat`
+- Material Design Icons (MDI) — package: `tkinter-icons-mat`
   - Source: https://github.com/Templarian/MaterialDesign-Webfont
   - License: Apache 2.0
-  - Subpackage: packages/ttkbootstrap-icons-mat (see `src/ttkbootstrap_icons_mat/LICENSES/`)
+  - Subpackage: packages/tkinter-icons-mat (see `src/tkinter_icons_mat/LICENSES/`)
 
-- Ionicons v2 (font) — package: `ttkbootstrap-icons-ion`
+- Ionicons v2 (font) — package: `tkinter-icons-ion`
   - Source: https://ionic.io/ionicons (CDN: https://cdnjs.com/libraries/ionicons)
   - License: MIT
-  - Subpackage: packages/ttkbootstrap-icons-ion (see `src/ttkbootstrap_icons_ion/LICENSES/`)
+  - Subpackage: packages/tkinter-icons-ion (see `src/tkinter_icons_ion/LICENSES/`)
 
-- Remix Icon — package: `ttkbootstrap-icons-remix`
+- Remix Icon — package: `tkinter-icons-remix`
   - Source: https://remixicon.com/
   - License: Apache 2.0
-  - Subpackage: packages/ttkbootstrap-icons-remix (see `src/ttkbootstrap_icons_remix/LICENSES/`)
+  - Subpackage: packages/tkinter-icons-remix (see `src/tkinter_icons_remix/LICENSES/`)
 
-- Fluent System Icons — package: `ttkbootstrap-icons-fluent`
+- Fluent System Icons — package: `tkinter-icons-fluent`
   - Source: https://github.com/microsoft/fluentui-system-icons
   - License: MIT
-  - Subpackage: packages/ttkbootstrap-icons-fluent (see `src/ttkbootstrap_icons_fluent/LICENSES/`)
+  - Subpackage: packages/tkinter-icons-fluent (see `src/tkinter_icons_fluent/LICENSES/`)
 
-- Simple Icons (community font) — package: `ttkbootstrap-icons-simple`
+- Simple Icons (community font) — package: `tkinter-icons-simple`
   - Source: https://github.com/simple-icons/simple-icons-font (underlying set: https://simpleicons.org/)
   - Licenses: CC0 1.0 (underlying set), MIT (font project wrapper — consult upstream)
-  - Subpackage: packages/ttkbootstrap-icons-simple (see `src/ttkbootstrap_icons_simple/LICENSES/`)
+  - Subpackage: packages/tkinter-icons-simple (see `src/tkinter_icons_simple/LICENSES/`)
 
-- Weather Icons — package: `ttkbootstrap-icons-weather`
+- Weather Icons — package: `tkinter-icons-weather`
   - Source: https://erikflowers.github.io/weather-icons/ (CDN: https://cdnjs.com/libraries/weather-icons)
   - Licenses: SIL OFL 1.1 (font), MIT (code), CC BY 3.0 (docs)
-  - Subpackage: packages/ttkbootstrap-icons-weather (see `src/ttkbootstrap_icons_weather/LICENSES/`)
+  - Subpackage: packages/tkinter-icons-weather (see `src/tkinter_icons_weather/LICENSES/`)
 
-- Lucide Icons — package: `ttkbootstrap-icons-lucide`
+- Lucide Icons — package: `tkinter-icons-lucide`
   - Source: https://lucide.dev/
   - License: ISC/MIT (project)
-  - Subpackage: packages/ttkbootstrap-icons-lucide (see `src/ttkbootstrap_icons_lucide/LICENSES/`)
+  - Subpackage: packages/tkinter-icons-lucide (see `src/tkinter_icons_lucide/LICENSES/`)
 
-- Material Icons (Google) — package: `ttkbootstrap-icons-gmi`
+- Material Icons (Google) — package: `tkinter-icons-gmi`
   - Source: https://github.com/google/material-design-icons
   - License: Apache 2.0
-  - Subpackage: packages/ttkbootstrap-icons-gmi (see `src/ttkbootstrap_icons_gmi/LICENSES/`)
+  - Subpackage: packages/tkinter-icons-gmi (see `src/tkinter_icons_gmi/LICENSES/`)
 
-- Eva Icons — package: `ttkbootstrap-icons-eva`
+- Eva Icons — package: `tkinter-icons-eva`
   - Source: https://github.com/akveo/eva-icons
   - License: MIT
-  - Subpackage: packages/ttkbootstrap-icons-eva (see `src/ttkbootstrap_icons_eva/LICENSES/`)
+  - Subpackage: packages/tkinter-icons-eva (see `src/tkinter_icons_eva/LICENSES/`)
 
-- RPG Awesome — package: `ttkbootstrap-icons-rpga`
+- RPG Awesome — package: `tkinter-icons-rpga`
   - Source: https://github.com/nagoshiashumari/Rpg-Awesome
   - License: MIT
-  - Subpackage: packages/ttkbootstrap-icons-rpga (see `src/ttkbootstrap_icons_rpga/LICENSES/`)
+  - Subpackage: packages/tkinter-icons-rpga (see `src/tkinter_icons_rpga/LICENSES/`)
 
-- Devicon — package: `ttkbootstrap-icons-devicon`
+- Devicon — package: `tkinter-icons-devicon`
   - Source: https://github.com/devicons/devicon
   - License: MIT
-  - Subpackage: packages/ttkbootstrap-icons-devicon (see `src/ttkbootstrap_icons_devicon/LICENSES/`)
+  - Subpackage: packages/tkinter-icons-devicon (see `src/tkinter_icons_devicon/LICENSES/`)
 
 ---
 

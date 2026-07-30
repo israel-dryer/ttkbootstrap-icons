@@ -1,4 +1,4 @@
-# Release Guide for ttkbootstrap-icons
+# Release Guide for tkinter-icons
 
 ## Quick Reference
 
@@ -51,12 +51,12 @@ Use the new PowerShell helper to build and publish a specific package (base or p
 
 # Examples
 # Publish to PyPI
-./publish.ps1 ttkbootstrap-icons             # base package (Bootstrap built-in)
-./publish.ps1 ttkbootstrap-icons-fa          # Font Awesome provider
-./publish.ps1 fluent                         # resolves to packages/ttkbootstrap-icons-fluent
+./publish.ps1 tkinter-icons             # base package (Bootstrap built-in)
+./publish.ps1 tkinter-icons-fa          # Font Awesome provider
+./publish.ps1 fluent                         # resolves to packages/tkinter-icons-fluent
 
 # Publish to TestPyPI
-./publish.ps1 ttkbootstrap-icons-remix -Dev
+./publish.ps1 tkinter-icons-remix -Dev
 ```
 
 Prereqs:
@@ -83,13 +83,13 @@ twine upload dist/*
 #### 3. Verify the Release
 
 1. Check PyPI/TestPyPI for the package you published (base or provider):
-   - Base: https://pypi.org/project/ttkbootstrap-icons/
-   - Example provider: https://pypi.org/project/ttkbootstrap-icons-fa/
+   - Base: https://pypi.org/project/tkinter-icons/
+   - Example provider: https://pypi.org/project/tkinter-icons-fa/
 2. Test installation:
    ```bash
-   pip install --upgrade ttkbootstrap-icons
-   pip install --upgrade ttkbootstrap-icons-fa   # example
-   ttkbootstrap-icons  # Test previewer CLI (auto-discovers installed providers)
+   pip install --upgrade tkinter-icons
+   pip install --upgrade tkinter-icons-fa   # example
+   tkinter-icons  # Test previewer CLI (auto-discovers installed providers)
    ```
 
 ### Version Numbering
@@ -128,7 +128,7 @@ You cannot delete releases from PyPI, but you can:
 2. Release a new patch version with fixes
 
 ```bash
-# On PyPI, go to: https://pypi.org/manage/project/ttkbootstrap-icons/releases/
+# On PyPI, go to: https://pypi.org/manage/project/tkinter-icons/releases/
 # Click the version → Options → Yank release
 ```
 

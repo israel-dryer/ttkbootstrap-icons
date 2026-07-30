@@ -1,9 +1,9 @@
-﻿# ttkbootstrap-icons-devicon
+# tkinter-icons-devicon
 
-An icon provider for the `ttkbootstrap-icons` library.  
+An icon provider for the `tkinter-icons` library.  
 Devicon provides brand and technology icons for programming languages and development tools.
 
-[![PyPI](https://img.shields.io/pypi/v/ttkbootstrap-icons-devicon.svg)](https://pypi.org/project/ttkbootstrap-icons-devicon/)
+[![PyPI](https://img.shields.io/pypi/v/tkinter-icons-devicon.svg)](https://pypi.org/project/tkinter-icons-devicon/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
 
 ---
@@ -11,7 +11,7 @@ Devicon provides brand and technology icons for programming languages and develo
 ## Install
 
 ```bash
-pip install ttkbootstrap-icons-devicon
+pip install tkinter-icons-devicon
 ```
 
 ---
@@ -20,7 +20,7 @@ pip install ttkbootstrap-icons-devicon
 
 ```python
 import tkinter as tk
-from ttkbootstrap_icons_devicon import DevIcon
+from tkinter_icons_devicon import DevIcon
 
 root = tk.Tk()
 
@@ -51,7 +51,7 @@ root.mainloop()
 Browse available icons with the built-in browser. From your terminal run:
 
 ```bash
-ttkbootstrap-icons
+tkinter-icons
 ```
 
 Use **Copy Name** in the browser to copy the icon name and style directly for use in your code.

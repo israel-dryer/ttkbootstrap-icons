@@ -1,9 +1,9 @@
-﻿# ttkbootstrap-icons-gmi
+# tkinter-icons-gmi
 
-An icon provider for the `ttkbootstrap-icons` library.  
+An icon provider for the `tkinter-icons` library.  
 Google Material Icons offer baseline, outlined, round, sharp and twotone variants.
 
-[![PyPI](https://img.shields.io/pypi/v/ttkbootstrap-icons-gmi.svg)](https://pypi.org/project/ttkbootstrap-icons-gmi/)
+[![PyPI](https://img.shields.io/pypi/v/tkinter-icons-gmi.svg)](https://pypi.org/project/tkinter-icons-gmi/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
 
 ---
@@ -11,7 +11,7 @@ Google Material Icons offer baseline, outlined, round, sharp and twotone variant
 ## Install
 
 ```bash
-pip install ttkbootstrap-icons-gmi
+pip install tkinter-icons-gmi
 ```
 
 ---
@@ -20,7 +20,7 @@ pip install ttkbootstrap-icons-gmi
 
 ```python
 import tkinter as tk
-from ttkbootstrap_icons_gmi import GMatIcon
+from tkinter_icons_gmi import GMatIcon
 
 root = tk.Tk()
 
@@ -57,7 +57,7 @@ root.mainloop()
 Browse available icons with the built-in browser. From your terminal run:
 
 ```bash
-ttkbootstrap-icons
+tkinter-icons
 ```
 
 Use **Copy Name** in the browser to copy the icon name and style directly for use in your code.

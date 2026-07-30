@@ -1,3 +1,3 @@
-﻿# Providers Framework (Core)
+# Providers Framework (Core)
 
-::: ttkbootstrap_icons.providers.BaseFontProvider
+::: tkinter_icons.providers.BaseFontProvider

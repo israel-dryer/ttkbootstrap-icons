@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import pytest
 
-from ttkbootstrap_icons.icon import Icon
-from ttkbootstrap_icons.stateful_icon_mixin import StatefulIconMixin
+from tkinter_icons.icon import Icon
+from tkinter_icons.stateful_icon_mixin import StatefulIconMixin
 
 pytestmark = pytest.mark.gui
 

@@ -1,6 +1,6 @@
-﻿site_name: ttkbootstrap-icons
-site_url: https://israel-dryer.github.io/ttkbootstrap-icons/
-repo_url: https://github.com/israel-dryer/ttkbootstrap-icons
+site_name: tkinter-icons
+site_url: https://israel-dryer.github.io/tkinter-icons/
+repo_url: https://github.com/israel-dryer/tkinter-icons
 
 theme:
   name: material
@@ -24,23 +24,23 @@ plugins:
       handlers:
         python:
           paths:
-            - packages/ttkbootstrap-icons/src
-            - packages/ttkbootstrap-icons-bs/src
-            - packages/ttkbootstrap-icons-devicon/src
-            - packages/ttkbootstrap-icons-eva/src
-            - packages/ttkbootstrap-icons-fa/src
-            - packages/ttkbootstrap-icons-fluent/src
-            - packages/ttkbootstrap-icons-fluent-reg/src
-            - packages/ttkbootstrap-icons-gmi/src
-            - packages/ttkbootstrap-icons-ion/src
-            - packages/ttkbootstrap-icons-lucide/src
-            - packages/ttkbootstrap-icons-mat/src
-            - packages/ttkbootstrap-icons-meteocons/src
-            - packages/ttkbootstrap-icons-remix/src
-            - packages/ttkbootstrap-icons-rpga/src
-            - packages/ttkbootstrap-icons-simple/src
-            - packages/ttkbootstrap-icons-typicons/src
-            - packages/ttkbootstrap-icons-weather/src
+            - packages/tkinter-icons/src
+            - packages/tkinter-icons-bs/src
+            - packages/tkinter-icons-devicon/src
+            - packages/tkinter-icons-eva/src
+            - packages/tkinter-icons-fa/src
+            - packages/tkinter-icons-fluent/src
+            - packages/tkinter-icons-fluent-reg/src
+            - packages/tkinter-icons-gmi/src
+            - packages/tkinter-icons-ion/src
+            - packages/tkinter-icons-lucide/src
+            - packages/tkinter-icons-mat/src
+            - packages/tkinter-icons-meteocons/src
+            - packages/tkinter-icons-remix/src
+            - packages/tkinter-icons-rpga/src
+            - packages/tkinter-icons-simple/src
+            - packages/tkinter-icons-typicons/src
+            - packages/tkinter-icons-weather/src
           options:
             docstring_style: google
             heading_level: 2

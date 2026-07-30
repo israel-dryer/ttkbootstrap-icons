@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from PIL import Image
 
-from ttkbootstrap_icons.render import (
+from tkinter_icons.render import (
     RenderOptions,
     auto_oversample,
     clear_font_cache,
@@ -80,7 +80,7 @@ class TestFontCache:
 
     def test_cache_is_bounded(self, icon_set):
         clear_font_cache()
-        from ttkbootstrap_icons.render import _FONT_CACHE_MAX, _font_cache
+        from tkinter_icons.render import _FONT_CACHE_MAX, _font_cache
 
         for size in range(8, 8 + _FONT_CACHE_MAX + 20):
             load_font(icon_set.font_key, icon_set.font_bytes, size)

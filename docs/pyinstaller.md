@@ -1,4 +1,4 @@
-﻿# PyInstaller Hooks
+# PyInstaller Hooks
 
 This package includes built-in PyInstaller support so the required font and glyphmap assets are bundled when you freeze your app.
 
@@ -21,7 +21,7 @@ If automatic detection does not work, point PyInstaller to the bundled hook dire
 
 ```bash
 # Using the command line
-pyinstaller --additional-hooks-dir path/to/site-packages/ttkbootstrap_icons/_pyinstaller your_app.py
+pyinstaller --additional-hooks-dir path/to/site-packages/tkinter_icons/_pyinstaller your_app.py
 ```
 
 Or in a `.spec` file:
@@ -32,7 +32,7 @@ Or in a `.spec` file:
 a = Analysis(
     ['your_app.py'],
     ...,
-    hookspath=['path/to/site-packages/ttkbootstrap_icons/_pyinstaller'],
+    hookspath=['path/to/site-packages/tkinter_icons/_pyinstaller'],
     ...,
 )
 ```
@@ -44,7 +44,7 @@ a = Analysis(
 Use this if you generate spec files or drive PyInstaller from Python:
 
 ```python
-from ttkbootstrap_icons import get_hook_dirs
+from tkinter_icons import get_hook_dirs
 
 hook_dirs = get_hook_dirs()  # pass to PyInstaller
 ```
@@ -64,7 +64,7 @@ Optionally, clean up temporary font files on exit:
 
 ```python
 import atexit
-from ttkbootstrap_icons import Icon
+from tkinter_icons import Icon
 
 atexit.register(Icon.cleanup)
 ```

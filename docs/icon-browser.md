@@ -12,30 +12,30 @@ and lets you search, filter by style (when applicable), change size and color, a
 From your terminal (after installing the base package):
 
 ```bash
-ttkbootstrap-icons
+tkinter-icons
 ```
 
 Or with Python directly:
 
 ```bash
-python -m ttkbootstrap_icons.browser
+python -m tkinter_icons.browser
 ```
 
 ---
 
 ## Discovering providers
 
-The browser shows all installed icon providers. Providers are discovered via Python entry points in the group `ttkbootstrap_icons.providers`.
+The browser shows all installed icon providers. Providers are discovered via Python entry points in the group `tkinter_icons.providers`.
 
 Install any providers you need (examples):
 
 ```bash
-pip install ttkbootstrap-icons-bs           # Bootstrap Icons
-pip install ttkbootstrap-icons-fa           # Font Awesome Free
-pip install ttkbootstrap-icons-gmi          # Google Material Icons
-pip install ttkbootstrap-icons-remix        # Remix Icon
-pip install ttkbootstrap-icons-fluent       # Fluent System Icons
-pip install ttkbootstrap-icons-typicons     # Typicons
+pip install tkinter-icons-bs           # Bootstrap Icons
+pip install tkinter-icons-fa           # Font Awesome Free
+pip install tkinter-icons-gmi          # Google Material Icons
+pip install tkinter-icons-remix        # Remix Icon
+pip install tkinter-icons-fluent       # Fluent System Icons
+pip install tkinter-icons-typicons     # Typicons
 ```
 
 If a provider does not appear, verify it is installed in the same Python environment that launches the browser.
@@ -56,7 +56,7 @@ If a provider does not appear, verify it is installed in the same Python environ
 Example usage in code after copying a name:
 
 ```python
-from ttkbootstrap_icons_fa import FAIcon
+from tkinter_icons_fa import FAIcon
 
 # Example: a solid icon named "house"
 icon = FAIcon("house-solid", size=24, color="#0d6efd")
@@ -70,7 +70,7 @@ icon = FAIcon("house-solid", size=24, color="#0d6efd")
     - Ensure it is installed in the same environment. Check with:
 
       ```bash
-      python -c "from importlib.metadata import entry_points; print([ (e.name, e.value) for e in entry_points(group='ttkbootstrap_icons.providers') ])"
+      python -c "from importlib.metadata import entry_points; print([ (e.name, e.value) for e in entry_points(group='tkinter_icons.providers') ])"
       ```
 
     - If you installed a provider recently, restart the browser.
@@ -79,7 +79,7 @@ icon = FAIcon("house-solid", size=24, color="#0d6efd")
     - Verify that the base package is installed and up to date:
 
       ```bash
-      pip install -U ttkbootstrap-icons
+      pip install -U tkinter-icons
       ```
 
 ---

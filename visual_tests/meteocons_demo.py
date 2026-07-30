@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
-from ttkbootstrap_icons_meteocons import MeteoIcon
+from tkinter_icons_meteocons import MeteoIcon
 
 
 def main():

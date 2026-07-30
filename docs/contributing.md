@@ -1,6 +1,6 @@
-﻿# Contributing
+# Contributing
 
-Thanks for helping improve ttkbootstrap-icons! Contributions are welcome for both the core package and additional icon providers.
+Thanks for helping improve tkinter-icons! Contributions are welcome for both the core package and additional icon providers.
 
 This guide focuses on adding a new font-based provider package and what (if anything) needs to change in the base package and documentation.
 
@@ -8,7 +8,7 @@ This guide focuses on adding a new font-based provider package and what (if anyt
 
 ## Overview: How providers work
 
-External providers are discovered via Python entry points (group: `ttkbootstrap_icons.providers`). The base package’s registry loads each entry point and the Icon Browser lists all discovered providers. Because of this, most new providers do not require changes to the core code.
+External providers are discovered via Python entry points (group: `tkinter_icons.providers`). The base package’s registry loads each entry point and the Icon Browser lists all discovered providers. Because of this, most new providers do not require changes to the core code.
 
 At build time, the site documentation pulls each provider’s README into `providers/` using `mkdocs-gen-files`.
 
@@ -20,11 +20,11 @@ Follow this pattern under `packages/`:
 
 ```
 packages/
-  ttkbootstrap-icons-<slug>/
+  tkinter-icons-<slug>/
     pyproject.toml
     README.md
     src/
-      ttkbootstrap_icons_<slug>/
+      tkinter_icons_<slug>/
         provider.py
         icon.py                 # optional convenience wrapper class
         glyphmap.json           # or glyphmap-<style>.json files
@@ -34,12 +34,12 @@ packages/
 
 ### 1) Package metadata (`pyproject.toml`)
 
-- Name: `ttkbootstrap-icons-<slug>`
+- Name: `tkinter-icons-<slug>`
 - Entry point (required):
 
 ```toml
-[project.entry-points."ttkbootstrap_icons.providers"]
-<slug> = "ttkbootstrap_icons_<slug>.provider:YourProviderClass"
+[project.entry-points."tkinter_icons.providers"]
+<slug> = "tkinter_icons_<slug>.provider:YourProviderClass"
 ```
 
 Tip: make sure the class name matches the actual exported class (e.g., `TypiconsFontProvider`).
@@ -49,14 +49,14 @@ Tip: make sure the class name matches the actual exported class (e.g., `Typicons
 Subclass `BaseFontProvider` and set the required fields.
 
 ```python
-from ttkbootstrap_icons.providers import BaseFontProvider
+from tkinter_icons.providers import BaseFontProvider
 
 class YourProviderClass(BaseFontProvider):
     def __init__(self):
         super().__init__(
             name="<slug>",
             display_name="Display Name",
-            package="ttkbootstrap_icons_<slug>",
+            package="tkinter_icons_<slug>",
             # For a single font file:
             filename="fonts/<fontfile>.ttf",
             # OR for style-based providers (same or different font files):
@@ -102,8 +102,8 @@ Notes
 Provide a thin wrapper that resolves names with your provider, then calls the base `Icon`.
 
 ```python
-from ttkbootstrap_icons.icon import Icon
-from ttkbootstrap_icons_<slug>.provider import YourProviderClass
+from tkinter_icons.icon import Icon
+from tkinter_icons_<slug>.provider import YourProviderClass
 
 class YourIcon(Icon):
     def __init__(self, name: str, size: int = 24, color: str = "black", **kwargs):
@@ -125,14 +125,14 @@ class YourIcon(Icon):
 Install your provider locally and run the browser:
 
 ```bash
-pip install -e packages/ttkbootstrap-icons-<slug>
-python -m ttkbootstrap_icons.browser
+pip install -e packages/tkinter-icons-<slug>
+python -m tkinter_icons.browser
 ```
 
 Verify discovery via entry points:
 
 ```bash
-python -c "from importlib.metadata import entry_points; print([ (e.name, e.value) for e in entry_points(group='ttkbootstrap_icons.providers') ])"
+python -c "from importlib.metadata import entry_points; print([ (e.name, e.value) for e in entry_points(group='tkinter_icons.providers') ])"
 ```
 
 If the provider doesn’t appear, check:
@@ -154,8 +154,8 @@ Documentation additions:
 
 ## Naming conventions
 
-- PyPI package: `ttkbootstrap-icons-<slug>` (lowercase, hyphenated)
-- Python package: `ttkbootstrap_icons_<slug>` (lowercase, underscore)
+- PyPI package: `tkinter-icons-<slug>` (lowercase, hyphenated)
+- Python package: `tkinter_icons_<slug>` (lowercase, underscore)
 - Provider class: `<Name>FontProvider` (e.g., `RemixFontProvider`, `TypiconsFontProvider`)
 - Icon class (optional): `<Name>Icon` (e.g., `FAIcon`, `RemixIcon`)
 - Entry point key: `<slug>` (lowercase); this is how the registry lists your provider.

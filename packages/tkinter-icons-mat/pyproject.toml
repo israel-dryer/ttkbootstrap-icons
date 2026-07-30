@@ -1,0 +1,34 @@
+[project]
+name = "tkinter-icons-mat"
+version = "1.1.0"
+description = "Material Icons (font-based) provider for tkinter-icons"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Israel Dryer" }]
+dependencies = ["Pillow>=9.1", "tkinter-icons>=5.0.0"]
+
+license = "MIT"
+
+[project.urls]
+Homepage = "https://github.com/israel-dryer/tkinter-icons"
+
+# Auto-discovery hook for your base registry
+[project.entry-points."tkinter_icons.providers"]
+mat = "tkinter_icons_mat.provider:MaterialDesignFontProvider"
+
+[project.scripts]
+tkicons-mat-build = "tkinter_icons_mat.tools.generate_assets:main"
+tkicons-mat-quick = "tkinter_icons_mat.tools.generate_assets:default_main"
+
+[tool.setuptools.package-data]
+"tkinter_icons_mat" = ["fonts/*.ttf", "glyphmap*.json", "metrics*.json", "LICENSES/*"]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+include-package-data = true
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+

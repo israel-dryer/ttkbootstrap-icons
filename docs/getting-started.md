@@ -1,6 +1,6 @@
-﻿# Getting Started
+# Getting Started
 
-This guide helps you install ttkbootstrap-icons, render your first icon in Tkinter, and browse additional icon sets via provider packages.
+This guide helps you install tkinter-icons, render your first icon in Tkinter, and browse additional icon sets via provider packages.
 
 ---
 
@@ -17,7 +17,7 @@ This guide helps you install ttkbootstrap-icons, render your first icon in Tkint
 Install the base package and at least one icon provider package:
 
 ```bash
-pip install ttkbootstrap-icons ttkbootstrap-icons-bs
+pip install tkinter-icons tkinter-icons-bs
 ```
 
 The base package includes the Icon Browser and provider framework. Icon provider packages (like Bootstrap Icons) are installed separately.
@@ -30,7 +30,7 @@ Render an icon using an installed provider package:
 
 ```python
 import tkinter as tk
-from ttkbootstrap_icons_bs import BootstrapIcon
+from tkinter_icons_bs import BootstrapIcon
 
 root = tk.Tk()
 root.title("Hello Icons")
@@ -55,10 +55,10 @@ Launch the graphical browser to search and preview icons from all installed prov
 
 ```bash
 # CLI
-ttkbootstrap-icons
+tkinter-icons
 
 # or via Python
-python -m ttkbootstrap_icons.browser
+python -m tkinter_icons.browser
 ```
 
 See: Icon Browser for details.
@@ -71,20 +71,20 @@ Install one or more provider packages. The browser and API will auto-discover th
 
 ```bash
 # Examples (install any you need)
-pip install ttkbootstrap-icons-fa         # Font Awesome Free
-pip install ttkbootstrap-icons-gmi        # Google Material Icons
-pip install ttkbootstrap-icons-remix      # Remix Icon
-pip install ttkbootstrap-icons-fluent     # Fluent System Icons
-pip install ttkbootstrap-icons-simple     # Simple Icons (brand logos)
-pip install ttkbootstrap-icons-weather    # Weather Icons
-pip install ttkbootstrap-icons-typicons   # Typicons
+pip install tkinter-icons-fa         # Font Awesome Free
+pip install tkinter-icons-gmi        # Google Material Icons
+pip install tkinter-icons-remix      # Remix Icon
+pip install tkinter-icons-fluent     # Fluent System Icons
+pip install tkinter-icons-simple     # Simple Icons (brand logos)
+pip install tkinter-icons-weather    # Weather Icons
+pip install tkinter-icons-typicons   # Typicons
 ```
 
 Using a provider in code:
 
 ```python
 import tkinter as tk
-from ttkbootstrap_icons_fa import FAIcon
+from tkinter_icons_fa import FAIcon
 
 root = tk.Tk()
 solid = FAIcon("atom", size=24, color="#0d6efd", style="solid")
@@ -108,7 +108,7 @@ Here's how to create a toggle button that switches between two different icons:
 
 ```python
 import ttkbootstrap as tb
-from ttkbootstrap_icons_bs import BootstrapIcon
+from tkinter_icons_bs import BootstrapIcon
 
 app = tb.Window("Toggle Icon")
 
@@ -143,7 +143,7 @@ Provider not showing in the browser
 - Confirm the provider is installed in the same Python environment as the browser:
 
 ```bash
-python -c "from importlib.metadata import entry_points; print([ (e.name, e.value) for e in entry_points(group='ttkbootstrap_icons.providers') ])"
+python -c "from importlib.metadata import entry_points; print([ (e.name, e.value) for e in entry_points(group='tkinter_icons.providers') ])"
 ```
 
 - Restart the browser after installing new providers.
@@ -152,7 +152,7 @@ Import or rendering errors
 - Update to the latest versions:
 
 ```bash
-pip install -U ttkbootstrap-icons
+pip install -U tkinter-icons
 ```
 
 - Ensure the provider package is up-to-date and that its fonts/glyphmap files are present.

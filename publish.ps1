@@ -13,11 +13,11 @@ function Resolve-PackageDir {
     $p1 = Join-Path 'packages' $Key
     if (Test-Path (Join-Path $p1 'pyproject.toml')) { return (Resolve-Path $p1).Path }
 
-    # packages/ttkbootstrap-icons-<key>
-    $p2 = Join-Path 'packages' ("ttkbootstrap-icons-" + $Key)
+    # packages/tkinter-icons-<key>
+    $p2 = Join-Path 'packages' ("tkinter-icons-" + $Key)
     if (Test-Path (Join-Path $p2 'pyproject.toml')) { return (Resolve-Path $p2).Path }
 
-    throw "Could not resolve package directory for '$Key'. Try: ttkbootstrap-icons-fa | fa | packages\ttkbootstrap-icons-fa"
+    throw "Could not resolve package directory for '$Key'. Try: tkinter-icons-fa | fa | packages\tkinter-icons-fa"
 }
 
 function Ensure-Tool {
@@ -39,7 +39,7 @@ try {
     Write-Host "> Building $pkgDir ..." -ForegroundColor Cyan
         # If building base package and no explicit -Version, try to infer from latest git tag
     if (-not $Version) {
-        $baseNames = @('ttkbootstrap-icons', 'packages/ttkbootstrap-icons')
+        $baseNames = @('tkinter-icons', 'packages/tkinter-icons')
         foreach ($bn in $baseNames) {
             if ($pkgDir -like "*\$bn") {
                 try {

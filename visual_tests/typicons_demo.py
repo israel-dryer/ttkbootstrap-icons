@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
-from ttkbootstrap_icons_typicons import TypiconsIcon
+from tkinter_icons_typicons import TypiconsIcon
 
 
 def main():

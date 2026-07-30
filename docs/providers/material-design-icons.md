@@ -1,9 +1,9 @@
-﻿# ttkbootstrap-icons-mat
+# tkinter-icons-mat
 
-An icon provider for the `ttkbootstrap-icons` library.  
+An icon provider for the `tkinter-icons` library.  
 Material Design Icons (community) offers a large collection of UI glyphs as a single TTF.
 
-[![PyPI](https://img.shields.io/pypi/v/ttkbootstrap-icons-mat.svg)](https://pypi.org/project/ttkbootstrap-icons-mat/)
+[![PyPI](https://img.shields.io/pypi/v/tkinter-icons-mat.svg)](https://pypi.org/project/tkinter-icons-mat/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
 
 ---
@@ -11,7 +11,7 @@ Material Design Icons (community) offers a large collection of UI glyphs as a si
 ## Install
 
 ```bash
-pip install ttkbootstrap-icons-mat
+pip install tkinter-icons-mat
 ```
 
 ---
@@ -20,7 +20,7 @@ pip install ttkbootstrap-icons-mat
 
 ```python
 import tkinter as tk
-from ttkbootstrap_icons_mat import MatIcon
+from tkinter_icons_mat import MatIcon
 
 root = tk.Tk()
 
@@ -43,7 +43,7 @@ This provider uses a single font without separate style variants.
 Browse available icons with the built-in browser. From your terminal run:
 
 ```bash
-ttkbootstrap-icons
+tkinter-icons
 ```
 
 Use **Copy Name** in the browser to copy the icon name and style directly for use in your code.

@@ -1,9 +1,9 @@
-﻿# ttkbootstrap-icons-simple
+# tkinter-icons-simple
 
-An icon provider for the `ttkbootstrap-icons` library.  
+An icon provider for the `tkinter-icons` library.  
 Simple Icons provides brand logos as a simple, monochrome font.
 
-[![PyPI](https://img.shields.io/pypi/v/ttkbootstrap-icons-simple.svg)](https://pypi.org/project/ttkbootstrap-icons-simple/)
+[![PyPI](https://img.shields.io/pypi/v/tkinter-icons-simple.svg)](https://pypi.org/project/tkinter-icons-simple/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
 
 ---
@@ -11,7 +11,7 @@ Simple Icons provides brand logos as a simple, monochrome font.
 ## Install
 
 ```bash
-pip install ttkbootstrap-icons-simple
+pip install tkinter-icons-simple
 ```
 
 ---
@@ -20,7 +20,7 @@ pip install ttkbootstrap-icons-simple
 
 ```python
 import tkinter as tk
-from ttkbootstrap_icons_simple import SimpleIcon
+from tkinter_icons_simple import SimpleIcon
 
 root = tk.Tk()
 
@@ -43,7 +43,7 @@ This provider uses a single font without separate style variants.
 Browse available icons with the built-in browser. From your terminal run:
 
 ```bash
-ttkbootstrap-icons
+tkinter-icons
 ```
 
 Use **Copy Name** in the browser to copy the icon name and style directly for use in your code.

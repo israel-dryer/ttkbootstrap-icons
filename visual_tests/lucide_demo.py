@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
-from ttkbootstrap_icons_lucide import LucideIcon
+from tkinter_icons_lucide import LucideIcon
 
 
 def main():

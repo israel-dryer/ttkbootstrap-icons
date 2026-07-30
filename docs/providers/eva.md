@@ -1,9 +1,9 @@
-﻿# ttkbootstrap-icons-eva
+# tkinter-icons-eva
 
-An icon provider for the `ttkbootstrap-icons` library.  
+An icon provider for the `tkinter-icons` library.  
 Eva Icons offers clean outline and filled variants for modern UIs.
 
-[![PyPI](https://img.shields.io/pypi/v/ttkbootstrap-icons-eva.svg)](https://pypi.org/project/ttkbootstrap-icons-eva/)
+[![PyPI](https://img.shields.io/pypi/v/tkinter-icons-eva.svg)](https://pypi.org/project/tkinter-icons-eva/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
 
 ---
@@ -11,7 +11,7 @@ Eva Icons offers clean outline and filled variants for modern UIs.
 ## Install
 
 ```bash
-pip install ttkbootstrap-icons-eva
+pip install tkinter-icons-eva
 ```
 
 ---
@@ -20,7 +20,7 @@ pip install ttkbootstrap-icons-eva
 
 ```python
 import tkinter as tk
-from ttkbootstrap_icons_eva import EvaIcon
+from tkinter_icons_eva import EvaIcon
 
 root = tk.Tk()
 
@@ -49,7 +49,7 @@ root.mainloop()
 Browse available icons with the built-in browser. From your terminal run:
 
 ```bash
-ttkbootstrap-icons
+tkinter-icons
 ```
 
 Use **Copy Name** in the browser to copy the icon name and style directly for use in your code.

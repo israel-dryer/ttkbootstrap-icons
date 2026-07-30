@@ -1,9 +1,9 @@
-﻿# ttkbootstrap-icons-fluent
+# tkinter-icons-fluent
 
-An icon provider for the `ttkbootstrap-icons` library.  
+An icon provider for the `tkinter-icons` library.  
 Fluent System Icons by Microsoft provide regular and filled styles across many sizes.
 
-[![PyPI](https://img.shields.io/pypi/v/ttkbootstrap-icons-fluent.svg)](https://pypi.org/project/ttkbootstrap-icons-fluent/)
+[![PyPI](https://img.shields.io/pypi/v/tkinter-icons-fluent.svg)](https://pypi.org/project/tkinter-icons-fluent/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
 
 ---
@@ -11,7 +11,7 @@ Fluent System Icons by Microsoft provide regular and filled styles across many s
 ## Install
 
 ```bash
-pip install ttkbootstrap-icons-fluent
+pip install tkinter-icons-fluent
 ```
 
 ---
@@ -20,7 +20,7 @@ pip install ttkbootstrap-icons-fluent
 
 ```python
 import tkinter as tk
-from ttkbootstrap_icons_fluent import FluentIcon
+from tkinter_icons_fluent import FluentIcon
 
 root = tk.Tk()
 
@@ -49,7 +49,7 @@ root.mainloop()
 Browse available icons with the built-in browser. From your terminal run:
 
 ```bash
-ttkbootstrap-icons
+tkinter-icons
 ```
 
 Use **Copy Name** in the browser to copy the icon name and style directly for use in your code.
