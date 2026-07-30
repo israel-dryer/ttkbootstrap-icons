@@ -75,7 +75,19 @@ class StatefulIconMixin:
 
     # Cached untinted base image for the '' fallback (per instance)
     _original_image: Optional[object] = None
-    _widget_mappings: ClassVar[dict[str, tuple]] = {}
+
+    #: Live mappings, keyed by (interpreter id, widget path). Tk reuses widget
+    #: path strings, so the path alone is not a stable identity — a new widget
+    #: can be handed the name of a destroyed one. Entries are removed by the
+    #: widget's own <Destroy> binding rather than being left to accumulate
+    #: until a theme change happens to notice the dead reference.
+    _widget_mappings: ClassVar[dict[tuple[int, str], tuple]] = {}
+
+    #: Interpreters whose root already carries the <<ThemeChanged>> binding.
+    #: A single global flag would leave a second root — or the next root in a
+    #: test suite — with no binding at all, silently ending theme following.
+    _theme_bound: ClassVar[set[int]] = set()
+
     _is_regenerating: ClassVar[bool] = False
 
     # ---------------- Rendering ----------------
@@ -212,33 +224,91 @@ class StatefulIconMixin:
 
     @classmethod
     def _on_theme_changed(cls, event) -> None:
-        """Handle <<ThemeChanged>> event by regenerating all mapped icons."""
+        """Regenerate every mapped icon after a `<<ThemeChanged>>` event.
+
+        Icons tint themselves from the parent style's `foreground`, so a theme
+        change invalidates every rendered image; the cache is cleared and each
+        live mapping is reapplied against its original parent style.
+        """
         from .icon import Icon
 
         cls._is_regenerating = True
         try:
             Icon.clear_cache()
-            mappings_copy = list(cls._widget_mappings.items())
 
-            for widget_id, mapping_data in mappings_copy:
+            for key, mapping_data in list(cls._widget_mappings.items()):
                 try:
                     icon, widget_ref, parent_style, subclass, statespec, mode = mapping_data
                     widget = widget_ref()
 
-                    if widget is None:
-                        del cls._widget_mappings[widget_id]
+                    if widget is None or not widget.winfo_exists():
+                        cls._widget_mappings.pop(key, None)
                         continue
 
-                    # Temporarily restore the original parent style
+                    # Restore the original parent style so the remap derives the
+                    # same child style name it did the first time.
                     widget.configure(style=parent_style)
-
-                    # Re-map with the original parent style
                     icon.map(widget, subclass=subclass, statespec=statespec, mode=mode)
                 except Exception:
-                    if widget_id in cls._widget_mappings:
-                        del cls._widget_mappings[widget_id]
+                    cls._widget_mappings.pop(key, None)
         finally:
             cls._is_regenerating = False
+
+    @classmethod
+    def _forget_widget(cls, key: tuple[int, str]) -> None:
+        """Drop a widget's mapping once the widget is gone."""
+        cls._widget_mappings.pop(key, None)
+
+    @classmethod
+    def _parent_style_for(cls, widget: Widget) -> str:
+        """Return the style `widget` had before any icon mapping was applied.
+
+        Reading `widget.cget("style")` directly is only right the first time.
+        On a second `map()` the widget already wears the derived child style,
+        so prefixing again compounds it — `abc123.abc123.TButton` — which both
+        grows without bound and defeats the merge in `mode="merge"`, since the
+        child style name is different every call. The original parent is
+        remembered per widget instead.
+        """
+        remembered = cls._widget_mappings.get((id(widget.tk), str(widget)))
+        if remembered is not None:
+            return remembered[2]
+        return widget.cget("style") or widget.winfo_class()
+
+    @classmethod
+    def _track(cls, widget: Widget, mapping: tuple) -> None:
+        """Record a live mapping and arrange for its removal on destroy.
+
+        The entry holds the icon itself, so it has to come out when the widget
+        does — otherwise every mapped widget leaks its icon for the life of the
+        process.
+        """
+        key = (id(widget.tk), str(widget))
+        cls._widget_mappings[key] = mapping
+
+        def _on_destroy(event, _widget=widget, _key=key):
+            # A container's <Destroy> also reaches this binding for its
+            # children; only the mapped widget's own destruction counts.
+            if event.widget is _widget:
+                StatefulIconMixin._forget_widget(_key)
+
+        try:
+            widget.bind("<Destroy>", _on_destroy, add=True)
+        except Exception:  # pragma: no cover - widget already being torn down
+            pass
+
+    @classmethod
+    def _bind_theme_listener(cls, widget: Widget) -> None:
+        """Ensure this widget's interpreter regenerates icons on theme change."""
+        interp = id(widget.tk)
+        if interp in cls._theme_bound:
+            return
+        try:
+            root = widget.winfo_toplevel()
+            root.bind("<<ThemeChanged>>", cls._on_theme_changed, add=True)
+            cls._theme_bound.add(interp)
+        except Exception:  # pragma: no cover
+            pass
 
     # ---------------- Public API ----------------
 
@@ -277,7 +347,7 @@ class StatefulIconMixin:
             None
         """
         style = Style()
-        parent_style = widget.cget("style") or widget.winfo_class()
+        parent_style = self._parent_style_for(widget)
 
         # Build (state, icon_name, color) triples
         triples = self._parse_statespec(style, parent_style, statespec)
@@ -356,20 +426,19 @@ class StatefulIconMixin:
         widget.configure(style=new_style)
 
         if not StatefulIconMixin._is_regenerating:
-            widget_id = str(widget)
-            StatefulIconMixin._widget_mappings[widget_id] = (
-                self,
-                weakref.ref(widget),
-                parent_style,
-                subclass,
-                statespec,
-                mode,
+            StatefulIconMixin._track(
+                widget,
+                (self, weakref.ref(widget), parent_style, subclass, statespec, mode),
             )
+            StatefulIconMixin._bind_theme_listener(widget)
 
-            try:
-                toplevel = widget.winfo_toplevel()
-                if not hasattr(StatefulIconMixin, '_theme_bind_done'):
-                    toplevel.bind("<<ThemeChanged>>", StatefulIconMixin._on_theme_changed, add=True)
-                    StatefulIconMixin._theme_bind_done = True
-            except Exception:
-                pass
+    def unmap(self, widget: Widget) -> None:
+        """Stop tracking `widget`, so theme changes no longer restyle it.
+
+        Rarely needed — a destroyed widget forgets itself — but useful to
+        release an icon early on a widget that outlives its icon.
+
+        Args:
+            widget: A widget previously passed to `map`.
+        """
+        StatefulIconMixin._forget_widget((id(widget.tk), str(widget)))
