@@ -153,20 +153,24 @@ class TestTkLifecycle:
         """A handle from a destroyed interpreter must never be handed out again."""
         import tkinter
 
-        first = tkinter.Tk()
-        first.withdraw()
+        # Tk 8.6 cannot reliably build a fresh interpreter once one has already
+        # been created and destroyed in the same process — it intermittently
+        # fails reloading the ttk themes. That is a Tk limitation, not something
+        # this library controls, and it can strike either root here depending on
+        # what ran earlier in the session.
+        def _new_root():
+            try:
+                root = tkinter.Tk()
+            except tkinter.TclError as exc:
+                pytest.skip(f"Tk refused another interpreter: {exc}")
+            root.withdraw()
+            return root
+
+        first = _new_root()
         Icon(sample_name, 24, "black").image
         first.destroy()
 
-        # Tk 8.6 cannot always build a second interpreter in one process — it
-        # intermittently fails reloading the ttk themes. That is a Tk
-        # limitation, not something this library controls.
-        try:
-            second = tkinter.Tk()
-        except tkinter.TclError as exc:
-            pytest.skip(f"Tk refused a second interpreter: {exc}")
-
-        second.withdraw()
+        second = _new_root()
         try:
             # Would raise "image doesn't exist" if the dead handle were reused.
             image = Icon(sample_name, 24, "black").image

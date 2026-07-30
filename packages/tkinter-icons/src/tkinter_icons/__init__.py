@@ -46,18 +46,31 @@ if TYPE_CHECKING:
     # IDEs resolve them. These are never executed at runtime — a pack that is
     # not installed must fail through __getattr__ with an actionable message,
     # not blow up on importing this module.
+    #
+    # Where a pack's own class name differs from its alias, BOTH are re-exported.
+    # Under PEP 484, `from X import A as B` binds only `B` for type checkers, so
+    # aliasing alone would leave the short spellings (FAIcon, MatIcon, ...)
+    # without autocomplete or hover — even though they resolve fine at runtime
+    # via __getattr__. `Pack.export_names` promises both spellings keep working;
+    # the redundant-looking `A as A` lines are what make that true statically.
     from tkinter_icons_bs import BootstrapIcon as BootstrapIcon
+    from tkinter_icons_devicon import DevIcon as DevIcon
     from tkinter_icons_devicon import DevIcon as DeviconIcon
     from tkinter_icons_eva import EvaIcon as EvaIcon
+    from tkinter_icons_fa import FAIcon as FAIcon
     from tkinter_icons_fa import FAIcon as FontAwesomeIcon
     from tkinter_icons_fluent import FluentIcon as FluentIcon
     from tkinter_icons_fluent_reg import FluentRegularIcon as FluentRegularIcon
+    from tkinter_icons_gmi import GMatIcon as GMatIcon
     from tkinter_icons_gmi import GMatIcon as GoogleMaterialIcon
     from tkinter_icons_ion import IonIcon as IonIcon
     from tkinter_icons_lucide import LucideIcon as LucideIcon
     from tkinter_icons_mat import MatIcon as MaterialIcon
+    from tkinter_icons_mat import MatIcon as MatIcon
     from tkinter_icons_meteocons import MeteoIcon as MeteoconsIcon
+    from tkinter_icons_meteocons import MeteoIcon as MeteoIcon
     from tkinter_icons_remix import RemixIcon as RemixIcon
+    from tkinter_icons_rpga import RPGAIcon as RPGAIcon
     from tkinter_icons_rpga import RPGAIcon as RpgAwesomeIcon
     from tkinter_icons_simple import SimpleIcon as SimpleIcon
     from tkinter_icons_typicons import TypiconsIcon as TypiconsIcon

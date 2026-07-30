@@ -5,26 +5,38 @@ import importlib
 from importlib.metadata import entry_points
 from typing import Iterable, List, Tuple
 
+from ..registry import LEGACY_PROVIDER_GROUP, PROVIDER_GROUP
+
 
 def discover_provider_packages() -> List[Tuple[str, str]]:
     """Return list of (name, base_package) for installed providers.
 
-    Uses the 'tkinter_icons.providers' entry points to infer the
-    provider package base (e.g., 'tkinter_icons_fa').
+    Scans both provider entry-point groups, matching `registry.py`. A pack
+    published before the rename registers under the legacy group, and scanning
+    only the current one would report "no providers discovered" for a pack that
+    the browser and icon classes can see perfectly well.
+
+    The base package is inferred from the entry point value, e.g.
+    'tkinter_icons_fa.provider:FontAwesomeFontProvider' -> 'tkinter_icons_fa'.
     """
     items: List[Tuple[str, str]] = []
-    for ep in entry_points(group="tkinter_icons.providers"):
-        try:
-            # ep.value looks like 'tkinter_icons_fa.provider:FontAwesomeFontProvider'
-            module_path = ep.value.split(":", 1)[0]
-            parts = module_path.split(".")
-            if len(parts) >= 2:
-                base_pkg = ".".join(parts[:2])
-            else:
-                base_pkg = parts[0]
-            items.append((ep.name, base_pkg))
-        except Exception:
-            continue
+    seen: set[str] = set()
+    for group in (PROVIDER_GROUP, LEGACY_PROVIDER_GROUP):
+        for ep in entry_points(group=group):
+            if ep.value in seen:
+                continue
+            seen.add(ep.value)
+            try:
+                # 'tkinter_icons_fa.provider:FontAwesomeFontProvider' -> 'tkinter_icons_fa'.
+                # This took the first *two* segments, yielding
+                # 'tkinter_icons_fa.provider' — so run_quick_for then tried to
+                # import 'tkinter_icons_fa.provider.tools.generate_assets', which
+                # does not exist. The bare except there swallowed the ImportError,
+                # so every provider silently reported as failed.
+                module_path = ep.value.split(":", 1)[0]
+                items.append((ep.name, module_path.split(".")[0]))
+            except Exception:
+                continue
     return items
 
 

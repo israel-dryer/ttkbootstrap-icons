@@ -449,14 +449,15 @@ class IconPreviewerApp:
         providers_frame = ttk.Frame(main_frame)
         providers_frame.pack(pady=20)
 
-        providers = [
-            ("Bootstrap Icons", "pip install tkinter-icons-bs"),
-            ("Font Awesome", "pip install tkinter-icons-fa"),
-            ("Material Icons", "pip install tkinter-icons-mat"),
-            ("Google Material Icons", "pip install tkinter-icons-gmi"),
-            ("Ionicons", "pip install tkinter-icons-ion"),
-            ("And more...", "See https://github.com/israel-dryer/tkinter-icons"),
-        ]
+        # Generated from the pack catalogue rather than hardcoded, so this stays
+        # correct as packs are added or renamed — and so the first screen a new
+        # user sees teaches the extras form the rest of the library uses, not the
+        # raw distribution names it replaces.
+        from tkinter_icons.packs import KNOWN_PACKS, REPO_URL
+
+        providers = [(pack.label, pack.install_command) for pack in KNOWN_PACKS[:5]]
+        providers.append(("Every pack", 'pip install "tkinter-icons[all]"'))
+        providers.append(("And more...", f"See {REPO_URL}"))
 
         for name, cmd in providers:
             row = ttk.Frame(providers_frame)
