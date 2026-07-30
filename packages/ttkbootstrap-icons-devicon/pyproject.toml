@@ -21,7 +21,7 @@ ttkicons-devicon-build = "ttkbootstrap_icons_devicon.tools.generate_assets:main"
 ttkicons-devicon-quick = "ttkbootstrap_icons_devicon.tools.generate_assets:default_main"
 
 [tool.setuptools.package-data]
-"ttkbootstrap_icons_devicon" = ["fonts/*.ttf", "glyphmap.json", "LICENSES/*"]
+"ttkbootstrap_icons_devicon" = ["fonts/*.ttf", "glyphmap*.json", "metrics*.json", "LICENSES/*"]
 
 [tool.setuptools]
 package-dir = { "" = "src" }

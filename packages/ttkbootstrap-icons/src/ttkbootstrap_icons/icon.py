@@ -1,289 +1,367 @@
-﻿from __future__ import annotations
+"""Tk-facing icon objects, layered over the pure-PIL renderer.
 
-import json
-import os
-import tempfile
+`Icon` binds a glyph to a Tk `PhotoImage`. The drawing itself lives in
+`ttkbootstrap_icons.render` and the per-provider data in
+`ttkbootstrap_icons.iconset`, so anything that does not need a widget — tests,
+asset pipelines, exporting an icon to a PNG — can skip this module entirely and
+call `render_glyph` or `Icon.render_pil`.
+
+Image caching is scoped to the Tk interpreter that created the images. A
+`PhotoImage` belongs to the interpreter it was made in, so caching them
+globally hands out dead handles once a root is destroyed and another is created
+— which is what happens in test suites and in apps that use more than one root.
+Each interpreter gets its own cache, dropped when its root is destroyed.
+"""
+
+from __future__ import annotations
+
+import tkinter
+import warnings
 from abc import ABC
-from tkinter import PhotoImage as TkPhotoImage
-from typing import Any, ClassVar, Optional, Tuple
+from typing import Any, ClassVar, Literal, Mapping, Optional
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
 from PIL.ImageTk import PhotoImage
 
+from .iconset import IconSet, clear_icon_sets, get_icon_set, icon_set_id
 from .providers import BaseFontProvider
+from .render import RenderOptions, clear_font_cache, render_glyph, snap_size
 from .stateful_icon_mixin import StatefulIconMixin
 
+#: What to do when an icon name is not in its set. Providers normally raise
+#: during name resolution, so this only catches glyphs that resolve but are
+#: absent from the loaded glyphmap.
+MissingPolicy = Literal["transparent", "warn", "raise"]
 
-try:
-    _RESAMPLE_LANCZOS = Image.Resampling.LANCZOS  # Pillow >= 9.1.0
-except AttributeError:  # pragma: no cover - older Pillow fallback
-    _RESAMPLE_LANCZOS = Image.LANCZOS
+_CacheKey = tuple[str, str, int, str, int]
 
 
-def create_transparent_icon(size: int = 16) -> TkPhotoImage:
-    """Return or create a transparent placeholder image of given size."""
+class _InterpreterCache:
+    """Rendered images belonging to one Tk interpreter.
+
+    Holds the icon images and transparent placeholders created in a single
+    interpreter, and is discarded wholesale when that interpreter's root window
+    is destroyed.
+    """
+
+    __slots__ = ("images", "transparent", "_bound")
+
+    def __init__(self) -> None:
+        self.images: dict[_CacheKey, PhotoImage] = {}
+        self.transparent: dict[int, PhotoImage] = {}
+        self._bound = False
+
+    def clear(self) -> None:
+        self.images.clear()
+        self.transparent.clear()
+
+    def bind_root(self, root: tkinter.Misc) -> None:
+        """Drop this cache when `root` is destroyed, once per interpreter."""
+        if self._bound:
+            return
+        self._bound = True
+
+        def _on_destroy(event, _root=root):
+            # <Destroy> reaches a toplevel's bindings for its children too;
+            # only the root's own destruction retires the interpreter.
+            if event.widget is _root:
+                Icon._retire_interpreter(_interp_id(_root))
+
+        try:
+            root.bind("<Destroy>", _on_destroy, add=True)
+        except tkinter.TclError:  # pragma: no cover - root already going away
+            pass
+
+
+def _interp_id(widget: tkinter.Misc) -> int:
+    """Return a stable id for the Tk interpreter behind `widget`."""
+    return id(widget.tk)
+
+
+def _require_root() -> tkinter.Misc:
+    """Return the current default Tk root, or explain why there isn't one."""
+    root = tkinter._default_root  # type: ignore[attr-defined]
+    if root is None:
+        raise RuntimeError(
+            "No Tk root window exists yet. Create a tkinter.Tk() (or ttkbootstrap.Window) "
+            "before building icon images.\n"
+            "To render without a display, use Icon.render_pil(...) which returns a PIL image."
+        )
+    return root
+
+
+def create_transparent_icon(size: int = 16) -> PhotoImage:
+    """Return a cached fully transparent square image of `size` pixels."""
     return Icon._get_transparent(size)
 
 
 class Icon(StatefulIconMixin, ABC):
-    """Base class for rendered TTF-based icons (PIL -> PhotoImage).
+    """A font glyph rendered to a Tk-compatible image.
 
-    Performance features:
-      - Class-level caches for rendered images and PIL fonts.
-      - Class-level cache for transparent placeholders.
-      - Reuses a temporary font file per (provider, style).
-      - __slots__ to reduce per-instance overhead.
+    Provider packages subclass this and resolve friendly names to glyph names
+    before delegating here, so you normally construct `BootstrapIcon`,
+    `FontAwesomeIcon`, and so on rather than `Icon` itself.
+
+    Rendering is lazy: the image is drawn on first access to `image`, so icons
+    can be built before a Tk root exists. Identical icons share one image.
+
+    Attributes:
+        name: The resolved glyph name within the icon set.
+        size: Requested pixel size. The rendered image may be one pixel larger
+            when odd sizes are snapped even — see `RenderOptions.snap_even`.
+        color: Foreground color.
+        on_missing: Class-level policy for names absent from the icon set.
     """
-    __slots__ = ("name", "size", "color", "_img", "_font_path", "_icon_set_id")
 
-    _icon_map: ClassVar[dict[str, Any]] = {}
-    _current_font_path: ClassVar[Optional[str]] = None
-    _initialized: ClassVar[bool] = False
-    _icon_set: ClassVar[str] = ""
+    __slots__ = ("name", "size", "color", "_img", "_icon_set", "_options")
 
-    _cache: ClassVar[dict[Tuple[str, int, str, str], PhotoImage]] = {}
-    _font_cache: ClassVar[dict[Tuple[str, int], ImageFont.FreeTypeFont]] = {}
-    _transparent_cache: ClassVar[dict[int, PhotoImage]] = {}
-    _fontfile_cache: ClassVar[dict[str, str]] = {}
-    _icon_map_cache: ClassVar[dict[str, dict[str, Any]]] = {}
-    _render_params_cache: ClassVar[dict[str, dict[str, Any]]] = {}
+    on_missing: ClassVar[MissingPolicy] = "transparent"
 
-    def __init__(self, name: str, size: int = 24, color: str = "black"):
-        """Create a new icon.
+    _icon_set_current: ClassVar[Optional[IconSet]] = None
+    _caches: ClassVar[dict[int, _InterpreterCache]] = {}
+
+    def __init__(
+        self,
+        name: str,
+        size: int = 24,
+        color: str = "black",
+        *,
+        options: Optional[RenderOptions] = None,
+    ):
+        """Create an icon.
 
         Args:
-            name: Resolved icon key in the icon map.
+            name: Resolved glyph name in the active icon set.
             size: Pixel size.
-            color: Foreground color.
+            color: Foreground color, in any form Pillow accepts.
+            options: Per-icon overrides of the provider's render options.
+
+        Raises:
+            RuntimeError: If no provider has been initialized.
         """
-        if not Icon._initialized:
+        icon_set = Icon._icon_set_current
+        if icon_set is None:
             raise RuntimeError(
-                "Icon provider not initialized. You must install and initialize an icon provider first.\n"
-                "Install a provider: pip install ttkbootstrap-icons-bs (or -fa, -mat, etc.)\n"
-                "Then use the provider's icon class, e.g.: from ttkbootstrap_icons_bs import BootstrapIcon"
+                "No icon provider is active. Install a provider and use its icon class, "
+                "e.g. `pip install ttkbootstrap-icons-mat` then "
+                "`from ttkbootstrap_icons_mat import MatIcon`."
             )
 
         self.name = name
         self.size = size
         self.color = color
-        self._font_path = Icon._current_font_path
-        self._icon_set_id = Icon._icon_set
-        self._img: Optional[TkPhotoImage] = self._render()
+        self._icon_set = icon_set
+        self._options = options or icon_set.options
+        self._img: Optional[PhotoImage] = None
         super().__init__()
-        self._ensure_original_image()
+
+    # -----------------------------
+    # Public surface
+    # -----------------------------
 
     @property
-    def image(self) -> TkPhotoImage:
+    def image(self) -> PhotoImage:
+        """The Tk-compatible image, rendered on first access."""
+        if self._img is None:
+            self._img = self._render()
         return self._img
+
+    @property
+    def icon_set(self) -> IconSet:
+        """The icon set this icon draws from."""
+        return self._icon_set
+
+    @property
+    def options(self) -> RenderOptions:
+        """The render options in effect for this icon."""
+        return self._options
+
+    @property
+    def rendered_size(self) -> int:
+        """The image's actual pixel size, after even-snapping."""
+        return snap_size(self.size, snap_even=self._options.snap_even)
+
+    def to_pil(self) -> Image.Image:
+        """Render this icon to a PIL image, bypassing Tk entirely."""
+        return self.render_pil(
+            self.name, self.size, self.color,
+            icon_set=self._icon_set, options=self._options,
+        )
+
+    @classmethod
+    def render_pil(
+        cls,
+        name: str,
+        size: int = 24,
+        color: str = "black",
+        *,
+        icon_set: Optional[IconSet] = None,
+        options: Optional[RenderOptions] = None,
+    ) -> Image.Image:
+        """Render a glyph to a PIL image without needing a Tk root.
+
+        The way in for anything that wants pixels rather than a widget image —
+        exporting a PNG, compositing, or testing the renderer headlessly.
+
+        Args:
+            name: Resolved glyph name.
+            size: Pixel size.
+            color: Foreground color.
+            icon_set: Which set to draw from. Defaults to the active one.
+            options: Overrides of the set's render options.
+
+        Returns:
+            A square RGBA image; fully transparent if `name` is not in the set.
+
+        Raises:
+            RuntimeError: If no icon set is given and none is initialized.
+        """
+        icon_set = icon_set or cls._icon_set_current
+        if icon_set is None:
+            raise RuntimeError("No icon set available. Initialize a provider first.")
+
+        glyph = icon_set.glyph(name)
+        if glyph is None:
+            cls._report_missing(name, icon_set)
+            snapped = snap_size(size, snap_even=(options or icon_set.options).snap_even)
+            return Image.new("RGBA", (snapped, snapped), (0, 0, 0, 0))
+
+        return render_glyph(
+            glyph, size, color,
+            font_key=icon_set.font_key,
+            font_bytes=icon_set.font_bytes,
+            ink=icon_set.ink(name),
+            options=options or icon_set.options,
+        )
+
+    @classmethod
+    def initialize_with_provider(cls, provider: BaseFontProvider, style: str | None = None) -> IconSet:
+        """Make a provider's style the active icon set.
+
+        Icon sets are cached, so switching back and forth between providers
+        costs nothing after the first load and does not disturb icons already
+        created — each icon holds its own set.
+
+        Args:
+            provider: The provider to load.
+            style: Style name, or `None` for the provider's default.
+
+        Returns:
+            The now-active `IconSet`.
+        """
+        set_id = icon_set_id(provider, style)
+        current = Icon._icon_set_current
+        if current is not None and current.id == set_id:
+            return current
+
+        icon_set = get_icon_set(provider, style)
+        Icon._icon_set_current = icon_set
+        return icon_set
+
+    @classmethod
+    def clear_cache(cls) -> None:
+        """Drop every rendered image, keeping loaded fonts and icon sets.
+
+        Call after changing something that affects how icons look — a theme
+        change, for instance — to force a redraw on next use.
+        """
+        for cache in cls._caches.values():
+            cache.clear()
+
+    @classmethod
+    def cache_info(cls) -> Mapping[str, int]:
+        """Return current cache sizes, for debugging and tests."""
+        from .iconset import registered_icon_sets
+
+        return {
+            "interpreters": len(cls._caches),
+            "images": sum(len(c.images) for c in cls._caches.values()),
+            "transparent": sum(len(c.transparent) for c in cls._caches.values()),
+            "icon_sets": len(registered_icon_sets()),
+        }
+
+    @classmethod
+    def cleanup(cls) -> None:
+        """Release every cached image, font, and icon set.
+
+        Not required for correctness — nothing is written to disk and caches
+        are dropped with their interpreter — but useful to reclaim memory in a
+        long-running process that has finished with icons.
+        """
+        for cache in cls._caches.values():
+            cache.clear()
+        cls._caches.clear()
+        cls._icon_set_current = None
+        clear_icon_sets()
+        clear_font_cache()
+
+    # -----------------------------
+    # Internals
+    # -----------------------------
+
+    @classmethod
+    def _cache_for(cls, root: tkinter.Misc) -> _InterpreterCache:
+        """Return the image cache for `root`'s interpreter, creating it if new."""
+        key = _interp_id(root)
+        cache = cls._caches.get(key)
+        if cache is None:
+            cache = _InterpreterCache()
+            cls._caches[key] = cache
+            cache.bind_root(root.winfo_toplevel() if root.master else root)
+        return cache
+
+    @classmethod
+    def _retire_interpreter(cls, interp_id: int) -> None:
+        """Discard the cache for an interpreter whose root has been destroyed."""
+        cache = cls._caches.pop(interp_id, None)
+        if cache is not None:
+            cache.clear()
+
+    @classmethod
+    def _report_missing(cls, name: str, icon_set: IconSet) -> None:
+        """Apply the `on_missing` policy for a name absent from `icon_set`."""
+        if cls.on_missing == "transparent":
+            return
+        message = f"Icon '{name}' is not in icon set '{icon_set.id}'."
+        if cls.on_missing == "raise":
+            raise KeyError(message)
+        warnings.warn(message, stacklevel=3)
 
     @classmethod
     def _get_transparent(cls, size: int) -> PhotoImage:
-        pm = cls._transparent_cache.get(size)
-        if pm is not None:
-            return pm
-        img = Image.new("RGBA", (size, size), (255, 255, 255, 0))
-        pm = PhotoImage(image=img)
-        cls._transparent_cache[size] = pm
-        return pm
-
-    @classmethod
-    def _configure(cls, font_path: str, icon_map: dict[str, Any] | list[dict[str, Any]]):
-        if not os.path.exists(font_path):
-            raise FileNotFoundError(f"Font not found: {font_path}")
-
-        mapping: dict[str, Any] = {}
-
-        if isinstance(icon_map, list):
-            # Lucide-style: list of dicts with fields like {"name": "...", "unicode": "EA01"}
-            for entry in icon_map:
-                if not isinstance(entry, dict):
-                    continue
-                name = str(entry.get("name", "")).strip()
-                if not name:
-                    continue
-                uni = entry.get("unicode")
-                if uni is None:
-                    continue
-                try:
-                    codepoint = int(uni, 16) if isinstance(uni, str) else int(uni)
-                    mapping[name] = chr(codepoint)
-                except Exception:
-                    # Skip malformed entries
-                    continue
-
-        elif isinstance(icon_map, dict):
-            # Could be: {'house': 'EA01', ...} (Bootstrap) OR {'house': {'unicode': '...'}, ...} (Lucide dict-of-dicts)
-            # Detect dict-of-dicts by sampling the first value
-            try:
-                sample_val = next(iter(icon_map.values()))
-            except StopIteration:
-                sample_val = None
-
-            if isinstance(sample_val, dict):
-                # Lucide-style dict of dicts
-                for name, detail in icon_map.items():
-                    if not isinstance(detail, dict):
-                        continue
-                    uni = detail.get("unicode")
-                    if uni is None:
-                        continue
-                    try:
-                        codepoint = int(uni, 16) if isinstance(uni, str) else int(uni)
-                        mapping[str(name)] = chr(codepoint)
-                    except Exception:
-                        continue
-            else:
-                # Bootstrap flat dict
-                for name, code in icon_map.items():
-                    try:
-                        codepoint = int(code, 16) if isinstance(code, str) else int(code)
-                        mapping[str(name)] = chr(codepoint)
-                    except Exception:
-                        continue
-        else:
-            raise TypeError("icon_map must be a list[dict] or dict")
-
-        Icon._icon_map = mapping
-        Icon._current_font_path = font_path
-        Icon._initialized = True
+        """Return a cached transparent placeholder for the current interpreter."""
+        root = _require_root()
+        cache = cls._cache_for(root)
+        photo = cache.transparent.get(size)
+        if photo is None:
+            photo = PhotoImage(image=Image.new("RGBA", (size, size), (255, 255, 255, 0)))
+            cache.transparent[size] = photo
+        return photo
 
     def _render(self) -> PhotoImage:
-        """Render the icon as a `PhotoImage`, using PIL and caching the result."""
-        fp = self._font_path
-        icon_map = Icon._icon_map_cache.get(self._icon_set_id, Icon._icon_map)
+        """Render this icon, reusing an identical image when one exists."""
+        root = _require_root()
+        cache = Icon._cache_for(root)
 
-        render_params = Icon._render_params_cache.get(
-            self._icon_set_id, {
-                "pad_factor": 0.10,
-                "y_bias": 0.0,
-                "scale_to_fit": True,
-            })
-        pad_factor = render_params["pad_factor"]
-        y_bias = render_params["y_bias"]
-        scale_to_fit = render_params["scale_to_fit"]
-
-        key = (self.name, self.size, self.color, fp or "")
-        cached = Icon._cache.get(key)
+        icon_set = self._icon_set
+        key: _CacheKey = (icon_set.id, self.name, self.size, self.color, hash(self._options))
+        cached = cache.images.get(key)
         if cached is not None:
             return cached
 
-        glyph_val = icon_map.get(self.name)
-        if glyph_val is None:
-            return Icon._get_transparent(self.size)
-        glyph = chr(glyph_val) if isinstance(glyph_val, int) else str(glyph_val)
+        if icon_set.glyph(self.name) is None:
+            Icon._report_missing(self.name, icon_set)
+            return Icon._get_transparent(self.rendered_size)
 
-        if not fp:
-            return Icon._get_transparent(self.size)
+        photo = PhotoImage(image=self.to_pil())
+        cache.images[key] = photo
+        return photo
 
-        target_size = self.size
+    def __repr__(self) -> str:
+        return f"<{type(self).__name__} {self.name!r} size={self.size} color={self.color!r}>"
 
-        # Oversample small icons for crisper rendering, then downscale.
-        # - Very small (< 32px): 3x
-        # - Small (< 64px): 2x
-        # - Larger: 1x (no oversampling)
-        if target_size < 32:
-            oversample = 3
-        elif target_size < 64:
-            oversample = 2
-        else:
-            oversample = 1
+    def __str__(self) -> str:
+        return str(self.image)
 
-        canvas_size = target_size * oversample
-        pad = int(canvas_size * pad_factor)
-        inner_w = canvas_size - 2 * pad
-        inner_h = canvas_size - 2 * pad
 
-        eff_size = max(1, int(canvas_size))
-        fkey = (fp, eff_size)
-        font = Icon._font_cache.get(fkey)
-        if font is None:
-            font = ImageFont.truetype(fp, eff_size)
-            Icon._font_cache[fkey] = font
-
-        ascent, descent = font.getmetrics()
-        bbox = font.getbbox(glyph)
-        glyph_w = bbox[2] - bbox[0]
-        glyph_h = bbox[3] - bbox[1]
-
-        if scale_to_fit and (glyph_w > inner_w or glyph_h > inner_h):
-            scale = min(inner_w / max(glyph_w, 1), inner_h / max(glyph_h, 1)) * 0.95
-            scaled_size = max(1, int(eff_size * scale))
-            fkey_scaled = (fp, scaled_size)
-            font = Icon._font_cache.get(fkey_scaled)
-            if font is None:
-                font = ImageFont.truetype(fp, scaled_size)
-                Icon._font_cache[fkey_scaled] = font
-            ascent, descent = font.getmetrics()
-            bbox = font.getbbox(glyph)
-            glyph_w = bbox[2] - bbox[0]
-            glyph_h = bbox[3] - bbox[1]
-
-        full_height = ascent + descent
-
-        img = Image.new("RGBA", (canvas_size, canvas_size), (255, 255, 255, 0))
-        draw = ImageDraw.Draw(img)
-
-        dx = pad + (inner_w - glyph_w) // 2 - bbox[0]
-        dy = pad + (inner_h - full_height) // 2 + (ascent - bbox[3])
-        if y_bias:
-            dy += int(canvas_size * y_bias)
-
-        draw.text((dx, dy), glyph, font=font, fill=self.color)
-
-        # Downscale oversampled icons to the requested size using a high-quality filter.
-        if oversample != 1:
-            img = img.resize((target_size, target_size), _RESAMPLE_LANCZOS)
-
-        pm = PhotoImage(image=img)
-        Icon._cache[key] = pm
-        return pm
-
-    @classmethod
-    def initialize_with_provider(cls, provider: BaseFontProvider, style: str | None = None):
-        """Initialize icon rendering using an external provider."""
-        icon_set_id = f"{provider.name}:{style or 'default'}"
-        if Icon._initialized and Icon._icon_set == icon_set_id:
-            return
-        Icon._icon_set = icon_set_id
-
-        Icon._render_params_cache[icon_set_id] = {
-            "pad_factor": provider.pad_factor,
-            "y_bias": provider.y_bias,
-            "scale_to_fit": provider.scale_to_fit,
-        }
-
-        font_path = Icon._fontfile_cache.get(icon_set_id)
-        if not font_path or not os.path.exists(font_path):
-            font_bytes, json_text = provider.load_assets(style=style)
-            suffix = ".otf" if len(font_bytes) > 4 and font_bytes[:4] == b'OTTO' else ".ttf"
-            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_font:
-                tmp_font.write(font_bytes)
-                font_path = tmp_font.name
-            Icon._fontfile_cache[icon_set_id] = font_path
-        else:
-            _, json_text = provider.load_assets(style=style)
-
-        icon_map_data = json.loads(json_text)
-        cls._configure(font_path=font_path, icon_map=icon_map_data)
-        Icon._icon_map_cache[icon_set_id] = Icon._icon_map.copy()
-
-    @classmethod
-    def cleanup(cls):
-        """Remove all temporary font files and reset internal icon state."""
-        for font_path in Icon._fontfile_cache.values():
-            if font_path and os.path.exists(font_path):
-                try:
-                    os.remove(font_path)
-                except Exception:
-                    pass
-
-        Icon._initialized = False
-        Icon._icon_map.clear()
-        Icon._icon_map_cache.clear()
-        Icon._cache.clear()
-        Icon._font_cache.clear()
-        Icon._fontfile_cache.clear()
-        Icon._current_font_path = None
-
-    def __str__(self):
-        return str(self._img)
+__all__ = ["Icon", "MissingPolicy", "create_transparent_icon"]

@@ -21,7 +21,7 @@ ttkicons-gmi-build = "ttkbootstrap_icons_gmi.tools.generate_assets:main"
 ttkicons-gmi-quick = "ttkbootstrap_icons_gmi.tools.generate_assets:default_main"
 
 [tool.setuptools.package-data]
-"ttkbootstrap_icons_gmi" = ["fonts/*.*", "glyphmap*.json", "LICENSES/*"]
+"ttkbootstrap_icons_gmi" = ["fonts/*.*", "glyphmap*.json", "metrics*.json", "LICENSES/*"]
 
 [tool.setuptools]
 package-dir = { "" = "src" }

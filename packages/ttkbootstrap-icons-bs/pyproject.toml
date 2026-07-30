@@ -19,7 +19,7 @@ Homepage = "https://github.com/israel-dryer/ttkbootstrap-icons"
 bootstrap = "ttkbootstrap_icons_bs.provider:BootstrapFontProvider"
 
 [tool.setuptools.package-data]
-"ttkbootstrap_icons_bs" = ["assets/*.ttf", "assets/*.json"]
+"ttkbootstrap_icons_bs" = ["assets/*.ttf", "assets/*.json", "assets/LICENSES/*"]
 
 [tool.setuptools]
 package-dir = { "" = "src" }

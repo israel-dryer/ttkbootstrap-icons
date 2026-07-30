@@ -37,6 +37,7 @@ dependencies = [
 [project.scripts]
 ttkbootstrap-icons = "ttkbootstrap_icons.browser:main"
 ttkicons-build-all = "ttkbootstrap_icons.tools.build_all:main"
+ttkicons-metrics = "ttkbootstrap_icons.tools.generate_metrics:main"
 
 [project.urls]
 Homepage = "https://github.com/israel-dryer/ttkbootstrap-icons"

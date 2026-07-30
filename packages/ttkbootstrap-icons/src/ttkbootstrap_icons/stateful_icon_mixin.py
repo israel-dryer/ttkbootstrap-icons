@@ -217,7 +217,7 @@ class StatefulIconMixin:
 
         cls._is_regenerating = True
         try:
-            Icon._cache.clear()
+            Icon.clear_cache()
             mappings_copy = list(cls._widget_mappings.items())
 
             for widget_id, mapping_data in mappings_copy:
