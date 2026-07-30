@@ -1,0 +1,28 @@
+[project]
+name = "tkinter-icons-fluent-reg"
+version = "1.1.0"
+description = "Fluent System Icons Regular (font-based) provider for tkinter-icons"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Israel Dryer" }]
+dependencies = ["Pillow>=9.1", "tkinter-icons>=5.0.0"]
+
+license = "MIT"
+
+[project.urls]
+Homepage = "https://github.com/israel-dryer/tkinter-icons"
+
+# Auto-discovery hook for your base registry
+[project.entry-points."tkinter_icons.providers"]
+fluent-regular = "tkinter_icons_fluent_reg.provider:FluentRegularFontProvider"
+
+[tool.setuptools.package-data]
+"tkinter_icons_fluent_reg" = ["fonts/*.ttf", "glyphmap*.json", "metrics*.json", "LICENSES/*"]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+include-package-data = true
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"

@@ -1,4 +1,4 @@
-# ttkbootstrap-icons
+# tkinter-icons
 
 Font-based icons for Tkinter and ttkbootstrap, with installable provider packages (Bootstrap Icons, Font Awesome, Material, Remix, Fluent, Simple, Weather, Lucide, Eva, Typicons, and more). Includes a lightweight Icon Browser to search and copy names.
 
@@ -19,7 +19,7 @@ Font-based icons for Tkinter and ttkbootstrap, with installable provider package
 Install the base package and at least one icon provider:
 
 ```bash
-pip install ttkbootstrap-icons ttkbootstrap-icons-bs
+pip install tkinter-icons tkinter-icons-bs
 ```
 
 ---
@@ -28,7 +28,7 @@ pip install ttkbootstrap-icons ttkbootstrap-icons-bs
 
 ```python
 import tkinter as tk
-from ttkbootstrap_icons_bs import BootstrapIcon
+from tkinter_icons_bs import BootstrapIcon
 
 root = tk.Tk()
 icon = BootstrapIcon("house", size=24, color="#0d6efd", style="fill")
@@ -45,9 +45,9 @@ Search and preview icons across all installed providers, then copy names for use
 ![Icon Browser](providers/assets/bootstrap/browser.png)
 
 ```bash
-ttkbootstrap-icons
+tkinter-icons
 # or
-python -m ttkbootstrap_icons.browser
+python -m tkinter_icons.browser
 ```
 
 See the Icon Browser page for details.
@@ -59,14 +59,14 @@ See the Icon Browser page for details.
 Install one or more provider packages to add icon sets. Common examples:
 
 ```bash
-pip install ttkbootstrap-icons-bs        # Bootstrap Icons
-pip install ttkbootstrap-icons-fa        # Font Awesome Free
-pip install ttkbootstrap-icons-gmi       # Google Material Icons
-pip install ttkbootstrap-icons-remix     # Remix Icon
-pip install ttkbootstrap-icons-fluent    # Fluent System Icons
-pip install ttkbootstrap-icons-simple    # Simple Icons (brand logos)
-pip install ttkbootstrap-icons-weather   # Weather Icons
-pip install ttkbootstrap-icons-typicons  # Typicons
+pip install tkinter-icons-bs        # Bootstrap Icons
+pip install tkinter-icons-fa        # Font Awesome Free
+pip install tkinter-icons-gmi       # Google Material Icons
+pip install tkinter-icons-remix     # Remix Icon
+pip install tkinter-icons-fluent    # Fluent System Icons
+pip install tkinter-icons-simple    # Simple Icons (brand logos)
+pip install tkinter-icons-weather   # Weather Icons
+pip install tkinter-icons-typicons  # Typicons
 ```
 
 Providers are auto-discovered by entry points; restart the browser after installing new ones.

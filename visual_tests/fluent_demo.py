@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
-from ttkbootstrap_icons_fluent import FluentIcon
+from tkinter_icons_fluent import FluentIcon
 
 
 def main():

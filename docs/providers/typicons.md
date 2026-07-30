@@ -1,9 +1,9 @@
-﻿# ttkbootstrap-icons-typicons
+# tkinter-icons-typicons
 
-An icon provider for the `ttkbootstrap-icons` library.  
+An icon provider for the `tkinter-icons` library.  
 Typicons is a versatile pictographic font with filled and outline styles.
 
-[![PyPI](https://img.shields.io/pypi/v/ttkbootstrap-icons-typicons.svg)](https://pypi.org/project/ttkbootstrap-icons-typicons/)
+[![PyPI](https://img.shields.io/pypi/v/tkinter-icons-typicons.svg)](https://pypi.org/project/tkinter-icons-typicons/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
 
 ---
@@ -11,7 +11,7 @@ Typicons is a versatile pictographic font with filled and outline styles.
 ## Install
 
 ```bash
-pip install ttkbootstrap-icons-typicons
+pip install tkinter-icons-typicons
 ```
 
 ---
@@ -20,7 +20,7 @@ pip install ttkbootstrap-icons-typicons
 
 ```python
 import tkinter as tk
-from ttkbootstrap_icons_typicons import TypiconsIcon
+from tkinter_icons_typicons import TypiconsIcon
 
 root = tk.Tk()
 
@@ -49,7 +49,7 @@ root.mainloop()
 Browse available icons with the built-in browser. From your terminal run:
 
 ```bash
-ttkbootstrap-icons
+tkinter-icons
 ```
 
 Use "Copy Name" in the browser to copy the icon name and style directly for use in your code.

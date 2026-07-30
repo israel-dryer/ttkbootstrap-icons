@@ -1,0 +1,90 @@
+[build-system]
+requires = ["setuptools>=68", "setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tkinter-icons"
+dynamic = ["version"]
+description = "Base package for font-based icons in Tkinter/ttkbootstrap with installable icon providers: Bootstrap, Font Awesome, Material, Ionicons, Remix, Fluent, Simple, Weather, Lucide, Eva & more."
+readme = { file = "README.md", content-type = "text/markdown" }
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+    { name = "Israel Dryer", email = "israel.dryer@gmail.com" }
+]
+keywords = ["tkinter", "ttk", "bootstrap", "gui", "desktop", "python3",
+    "ui", "widgets", "theming", "cross-platform", "modern",
+    "responsive", "python-gui", "icon"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Win32 (MS Windows)",
+    "Environment :: X11 Applications :: GTK",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: User Interfaces",
+    "Operating System :: OS Independent"
+]
+dependencies = [
+    "pillow>=9.1.0",
+    "typing-extensions>=4.7.1"
+]
+
+# Icon packs are separate distributions because each ships its own fonts, but
+# they are presented as extras so users install one library:
+#     pip install tkinter-icons[material]
+#     pip install tkinter-icons[all]
+# Publish the pack releases BEFORE the base release that references them,
+# otherwise these floors point at versions PyPI does not have yet.
+[project.optional-dependencies]
+bootstrap = ["tkinter-icons-bs>=1.1.0"]
+devicon = ["tkinter-icons-devicon>=1.1.0"]
+eva = ["tkinter-icons-eva>=1.1.0"]
+fluent = ["tkinter-icons-fluent>=1.1.0"]
+fluent-regular = ["tkinter-icons-fluent-reg>=1.1.0"]
+fontawesome = ["tkinter-icons-fa>=1.1.0"]
+google-material = ["tkinter-icons-gmi>=1.1.0"]
+ionicons = ["tkinter-icons-ion>=1.1.0"]
+lucide = ["tkinter-icons-lucide>=1.1.0"]
+material = ["tkinter-icons-mat>=1.1.0"]
+meteocons = ["tkinter-icons-meteocons>=1.1.0"]
+remix = ["tkinter-icons-remix>=1.1.0"]
+rpg-awesome = ["tkinter-icons-rpga>=1.1.0"]
+simple = ["tkinter-icons-simple>=1.1.0"]
+typicons = ["tkinter-icons-typicons>=1.1.0"]
+weather = ["tkinter-icons-weather>=1.1.0"]
+all = [
+    "tkinter-icons[bootstrap,devicon,eva,fluent,fluent-regular,fontawesome]",
+    "tkinter-icons[google-material,ionicons,lucide,material,meteocons,remix]",
+    "tkinter-icons[rpg-awesome,simple,typicons,weather]",
+]
+
+[project.scripts]
+tkinter-icons = "tkinter_icons.browser:main"
+tkicons-build-all = "tkinter_icons.tools.build_all:main"
+tkicons-metrics = "tkinter_icons.tools.generate_metrics:main"
+
+[project.urls]
+Homepage = "https://github.com/israel-dryer/tkinter-icons"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+include-package-data = true
+license-files = ["LICENSE", "LICENSE.*"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+tkinter_icons = [
+    "assets/**/*",
+    "_pyinstaller/*.py"
+]
+
+[tool.setuptools_scm]
+version_file = "src/tkinter_icons/_version.py"
+fallback_version = "5.0.0"

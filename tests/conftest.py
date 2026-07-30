@@ -9,10 +9,10 @@ from __future__ import annotations
 
 import pytest
 
-from ttkbootstrap_icons.icon import Icon
-from ttkbootstrap_icons.iconset import clear_icon_sets
-from ttkbootstrap_icons.registry import ProviderRegistry, load_external_providers
-from ttkbootstrap_icons.render import clear_font_cache
+from tkinter_icons.icon import Icon
+from tkinter_icons.iconset import clear_icon_sets
+from tkinter_icons.registry import ProviderRegistry, load_external_providers
+from tkinter_icons.render import clear_font_cache
 
 
 def pytest_configure(config):

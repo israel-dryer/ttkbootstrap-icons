@@ -1,0 +1,33 @@
+# Compatibility shim. `ttkbootstrap-icons` was renamed to `tkinter-icons` in
+# 5.0.0; this package forwards to it so existing installs keep working.
+#
+# The dependency is deliberately unpinned above the floor, so this is published
+# ONCE and never needs a release again — it forwards to every future version of
+# tkinter-icons on its own.
+[project]
+name = "ttkbootstrap-icons"
+version = "5.0.0"
+description = "Renamed to tkinter-icons. This package forwards to it and receives no further updates."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{ name = "Israel Dryer", email = "israel.dryer@gmail.com" }]
+classifiers = [
+    "Development Status :: 7 - Inactive",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: User Interfaces",
+]
+dependencies = ["tkinter-icons>=5.0.0"]
+
+[project.urls]
+Homepage = "https://github.com/israel-dryer/tkinter-icons"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"

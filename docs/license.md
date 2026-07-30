@@ -1,4 +1,4 @@
-﻿# License
+# License
 
 ## Project License (MIT)
 
@@ -36,26 +36,26 @@ the relevant upstream license texts under `LICENSES/`. Consult the subpackage RE
 #### Bootstrap Icons
 
 * License: MIT (code), SIL Open Font License 1.1 (font) - see: https://icons.getbootstrap.com/
-* Included in base package: `ttkbootstrap-icons`
+* Included in base package: `tkinter-icons`
 
 ### Providers (optional, install separately)
 
 | Name | Package | License(s) |
 |:--|:--|:--|
-| Font Awesome Free | `ttkbootstrap-icons-fa` | [SIL OFL 1.1; MIT; CC BY 4.0](https://fontawesome.com/) |
-| Material Design Icons (MDI) | `ttkbootstrap-icons-mat` | [Apache 2.0](https://github.com/Templarian/MaterialDesign-Webfont) |
-| Ionicons v2 | `ttkbootstrap-icons-ion` | [MIT](https://ionic.io/ionicons) |
-| Remix Icon | `ttkbootstrap-icons-remix` | [Apache 2.0](https://remixicon.com/) |
-| Fluent System Icons | `ttkbootstrap-icons-fluent` | [MIT](https://github.com/microsoft/fluentui-system-icons) |
-| Simple Icons | `ttkbootstrap-icons-simple` | [CC0 1.0 (set), MIT (font wrapper)](https://simpleicons.org/) |
-| Weather Icons | `ttkbootstrap-icons-weather` | [SIL OFL 1.1; MIT; CC BY 3.0](https://erikflowers.github.io/weather-icons/) |
-| Lucide Icons | `ttkbootstrap-icons-lucide` | [ISC/MIT](https://lucide.dev/) |
-| Material Icons (Google) | `ttkbootstrap-icons-gmi` | [Apache 2.0](https://github.com/google/material-design-icons) |
-| Eva Icons | `ttkbootstrap-icons-eva` | [MIT](https://github.com/akveo/eva-icons) |
-| RPG Awesome | `ttkbootstrap-icons-rpga` | [MIT](https://github.com/nagoshiashumari/Rpg-Awesome) |
-| Devicon | `ttkbootstrap-icons-devicon` | [MIT](https://github.com/devicons/devicon) |
-| Typicons | `ttkbootstrap-icons-typicons` | [SIL OFL 1.1](https://www.s-ings.com/typicons/) |
-| Meteocons | `ttkbootstrap-icons-meteocons` | [SIL OFL 1.1](https://demo.alessioatzeni.com/meteocons/) |
+| Font Awesome Free | `tkinter-icons-fa` | [SIL OFL 1.1; MIT; CC BY 4.0](https://fontawesome.com/) |
+| Material Design Icons (MDI) | `tkinter-icons-mat` | [Apache 2.0](https://github.com/Templarian/MaterialDesign-Webfont) |
+| Ionicons v2 | `tkinter-icons-ion` | [MIT](https://ionic.io/ionicons) |
+| Remix Icon | `tkinter-icons-remix` | [Apache 2.0](https://remixicon.com/) |
+| Fluent System Icons | `tkinter-icons-fluent` | [MIT](https://github.com/microsoft/fluentui-system-icons) |
+| Simple Icons | `tkinter-icons-simple` | [CC0 1.0 (set), MIT (font wrapper)](https://simpleicons.org/) |
+| Weather Icons | `tkinter-icons-weather` | [SIL OFL 1.1; MIT; CC BY 3.0](https://erikflowers.github.io/weather-icons/) |
+| Lucide Icons | `tkinter-icons-lucide` | [ISC/MIT](https://lucide.dev/) |
+| Material Icons (Google) | `tkinter-icons-gmi` | [Apache 2.0](https://github.com/google/material-design-icons) |
+| Eva Icons | `tkinter-icons-eva` | [MIT](https://github.com/akveo/eva-icons) |
+| RPG Awesome | `tkinter-icons-rpga` | [MIT](https://github.com/nagoshiashumari/Rpg-Awesome) |
+| Devicon | `tkinter-icons-devicon` | [MIT](https://github.com/devicons/devicon) |
+| Typicons | `tkinter-icons-typicons` | [SIL OFL 1.1](https://www.s-ings.com/typicons/) |
+| Meteocons | `tkinter-icons-meteocons` | [SIL OFL 1.1](https://demo.alessioatzeni.com/meteocons/) |
 
 ---
 

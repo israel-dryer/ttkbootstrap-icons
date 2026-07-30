@@ -1,9 +1,9 @@
-﻿# ttkbootstrap-icons-ion
+# tkinter-icons-ion
 
-An icon provider for the `ttkbootstrap-icons` library.  
+An icon provider for the `tkinter-icons` library.  
 Ionicons v2 provides a familiar set of UI glyphs as a single TTF font.
 
-[![PyPI](https://img.shields.io/pypi/v/ttkbootstrap-icons-ion.svg)](https://pypi.org/project/ttkbootstrap-icons-ion/)
+[![PyPI](https://img.shields.io/pypi/v/tkinter-icons-ion.svg)](https://pypi.org/project/tkinter-icons-ion/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
 
 ---
@@ -11,7 +11,7 @@ Ionicons v2 provides a familiar set of UI glyphs as a single TTF font.
 ## Install
 
 ```bash
-pip install ttkbootstrap-icons-ion
+pip install tkinter-icons-ion
 ```
 
 ---
@@ -20,7 +20,7 @@ pip install ttkbootstrap-icons-ion
 
 ```python
 import tkinter as tk
-from ttkbootstrap_icons_ion import IonIcon
+from tkinter_icons_ion import IonIcon
 
 root = tk.Tk()
 
@@ -43,7 +43,7 @@ This provider uses a single font without separate style variants.
 Browse available icons with the built-in browser. From your terminal run:
 
 ```bash
-ttkbootstrap-icons
+tkinter-icons
 ```
 
 Use **Copy Name** in the browser to copy the icon name and style directly for use in your code.

@@ -14,8 +14,8 @@ from pathlib import Path
 
 import pytest
 
-import ttkbootstrap_icons
-from ttkbootstrap_icons.packs import (
+import tkinter_icons
+from tkinter_icons.packs import (
     KNOWN_PACKS,
     PACK_BY_EXPORT,
     find_pack,
@@ -50,7 +50,7 @@ class TestCatalogue:
         assert set(pack.export_names) == {"MaterialIcon", "MatIcon"}
 
     @pytest.mark.parametrize(
-        "key", ["material", "ttkbootstrap-icons-mat", "ttkbootstrap_icons_mat", "mat"]
+        "key", ["material", "tkinter-icons-mat", "tkinter_icons_mat", "mat"]
     )
     def test_lookup_accepts_any_name_a_pack_goes_by(self, key):
         assert find_pack(key) is find_pack("material")
@@ -64,10 +64,10 @@ class TestCatalogue:
 
     def test_install_command_is_shell_quoted(self):
         # Unquoted brackets are a glob in most shells; zsh fails outright.
-        assert find_pack("material").install_command == 'pip install "ttkbootstrap-icons[material]"'
+        assert find_pack("material").install_command == 'pip install "tkinter-icons[material]"'
 
     def test_import_statement_uses_the_single_root(self):
-        assert find_pack("material").import_statement == "from ttkbootstrap_icons import MaterialIcon"
+        assert find_pack("material").import_statement == "from tkinter_icons import MaterialIcon"
 
 
 class TestCatalogueMatchesRepo:
@@ -99,13 +99,13 @@ class TestCatalogueMatchesRepo:
 
     @pytest.mark.parametrize("pack", KNOWN_PACKS, ids=lambda p: p.extra)
     def test_base_declares_an_extra_for_every_pack(self, pack):
-        base = PACKAGES / "ttkbootstrap-icons" / "pyproject.toml"
+        base = PACKAGES / "tkinter-icons" / "pyproject.toml"
         extras = tomllib.loads(base.read_text(encoding="utf-8-sig"))["project"]["optional-dependencies"]
         assert pack.extra in extras, f"no [{pack.extra}] extra in the base pyproject"
         assert any(pack.distribution in dep for dep in extras[pack.extra])
 
     def test_all_extra_covers_every_pack(self):
-        base = PACKAGES / "ttkbootstrap-icons" / "pyproject.toml"
+        base = PACKAGES / "tkinter-icons" / "pyproject.toml"
         extras = tomllib.loads(base.read_text(encoding="utf-8-sig"))["project"]["optional-dependencies"]
         combined = " ".join(extras["all"])
         missing = [p.extra for p in KNOWN_PACKS if p.extra not in combined]
@@ -116,12 +116,12 @@ class TestMessages:
     def test_no_packs_message_explains_the_split(self):
         text = no_packs_message()
         assert "renderer" in text
-        assert 'pip install "ttkbootstrap-icons[bootstrap]"' in text
+        assert 'pip install "tkinter-icons[bootstrap]"' in text
         assert '[all]' in text
 
     def test_missing_pack_message_names_the_extra(self):
         text = missing_pack_message("material")
-        assert 'pip install "ttkbootstrap-icons[material]"' in text
+        assert 'pip install "tkinter-icons[material]"' in text
         assert "Material Design Icons" in text
 
     def test_missing_pack_message_lists_what_is_installed(self, provider):
@@ -135,44 +135,44 @@ class TestMessages:
 
 class TestImportRoot:
     def test_installed_pack_resolves_from_the_base(self):
-        from ttkbootstrap_icons import BootstrapIcon
+        from tkinter_icons import BootstrapIcon
 
-        from ttkbootstrap_icons_bs import BootstrapIcon as direct
+        from tkinter_icons_bs import BootstrapIcon as direct
 
         assert BootstrapIcon is direct
 
     def test_alias_and_original_name_are_the_same_class(self):
-        assert ttkbootstrap_icons.FontAwesomeIcon is ttkbootstrap_icons.FAIcon
+        assert tkinter_icons.FontAwesomeIcon is tkinter_icons.FAIcon
 
     def test_original_package_import_still_works(self):
         """Existing code must keep working after the single root is added."""
-        module = importlib.import_module("ttkbootstrap_icons_fa")
-        assert module.FAIcon is ttkbootstrap_icons.FAIcon
+        module = importlib.import_module("tkinter_icons_fa")
+        assert module.FAIcon is tkinter_icons.FAIcon
 
     def test_missing_pack_raises_import_error_with_the_command(self, monkeypatch):
         pack = find_pack("material")
         monkeypatch.delitem(sys.modules, pack.module, raising=False)
-        monkeypatch.delitem(ttkbootstrap_icons.__dict__, pack.alias, raising=False)
+        monkeypatch.delitem(tkinter_icons.__dict__, pack.alias, raising=False)
         monkeypatch.setattr(
             importlib, "import_module",
             lambda name, *a, **k: (_ for _ in ()).throw(ModuleNotFoundError(name)),
         )
-        with pytest.raises(ImportError, match=r'pip install "ttkbootstrap-icons\[material\]"'):
-            getattr(ttkbootstrap_icons, "MaterialIcon")
+        with pytest.raises(ImportError, match=r'pip install "tkinter-icons\[material\]"'):
+            getattr(tkinter_icons, "MaterialIcon")
 
     def test_unknown_attribute_raises_attribute_error(self):
         with pytest.raises(AttributeError, match="NotAnIcon"):
-            ttkbootstrap_icons.NotAnIcon
+            tkinter_icons.NotAnIcon
 
     def test_dir_lists_every_pack_class(self):
-        listed = set(dir(ttkbootstrap_icons))
+        listed = set(dir(tkinter_icons))
         assert set(PACK_BY_EXPORT) <= listed
         assert {"Icon", "RenderOptions", "IconSet"} <= listed
 
     def test_resolved_class_is_cached_on_the_module(self):
-        ttkbootstrap_icons.__dict__.pop("BootstrapIcon", None)
-        ttkbootstrap_icons.BootstrapIcon
-        assert "BootstrapIcon" in ttkbootstrap_icons.__dict__
+        tkinter_icons.__dict__.pop("BootstrapIcon", None)
+        tkinter_icons.BootstrapIcon
+        assert "BootstrapIcon" in tkinter_icons.__dict__
 
     def test_installed_packs_reflects_the_environment(self):
         names = {p.extra for p in installed_packs()}

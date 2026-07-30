@@ -2,14 +2,14 @@
 
 Fluent System Icons Regular is a lightweight provider package that includes only the Regular style from Microsoft's Fluent System Icons.
 
-If you need multiple styles (Regular, Filled, Light), use the full [ttkbootstrap-icons-fluent](fluent-system-icons.md) package instead.
+If you need multiple styles (Regular, Filled, Light), use the full [tkinter-icons-fluent](fluent-system-icons.md) package instead.
 
 ---
 
 ## Install
 
 ```bash
-pip install ttkbootstrap-icons-fluent-reg
+pip install tkinter-icons-fluent-reg
 ```
 
 ---
@@ -18,7 +18,7 @@ pip install ttkbootstrap-icons-fluent-reg
 
 ```python
 import tkinter as tk
-from ttkbootstrap_icons_fluent_reg import FluentRegularIcon
+from tkinter_icons_fluent_reg import FluentRegularIcon
 
 root = tk.Tk()
 
@@ -41,12 +41,12 @@ root.mainloop()
 
 ## When to use this package
 
-**Use `ttkbootstrap-icons-fluent-reg` when:**
+**Use `tkinter-icons-fluent-reg` when:**
 - You only need the Regular style
 - You want to minimize package size
 - You want a simpler API without style selection
 
-**Use `ttkbootstrap-icons-fluent` when:**
+**Use `tkinter-icons-fluent` when:**
 - You need multiple styles (Regular, Filled, Light)
 - You want to switch between styles at runtime
 

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from ttkbootstrap_icons.icon import Icon, create_transparent_icon
-from ttkbootstrap_icons.render import RenderOptions
+from tkinter_icons.icon import Icon, create_transparent_icon
+from tkinter_icons.render import RenderOptions
 
 
 class TestConstruction:
@@ -17,8 +17,8 @@ class TestConstruction:
 
     def test_with_no_packs_it_explains_the_install(self, monkeypatch):
         Icon.cleanup()
-        monkeypatch.setattr("ttkbootstrap_icons.packs.installed_packs", lambda: [])
-        with pytest.raises(RuntimeError, match=r'ttkbootstrap-icons\[bootstrap\]'):
+        monkeypatch.setattr("tkinter_icons.packs.installed_packs", lambda: [])
+        with pytest.raises(RuntimeError, match=r'tkinter-icons\[bootstrap\]'):
             Icon("anything")
 
     def test_icon_holds_its_own_set(self, icon_set, sample_name):

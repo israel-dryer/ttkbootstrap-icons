@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
-from ttkbootstrap_icons_remix import RemixIcon
+from tkinter_icons_remix import RemixIcon
 
 
 def main():

@@ -1,5 +1,5 @@
 import ttkbootstrap as tb
-from ttkbootstrap_icons_fa import FAIcon
+from tkinter_icons_fa import FAIcon
 
 root = tb.Window()
 

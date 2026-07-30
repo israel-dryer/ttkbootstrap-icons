@@ -15,22 +15,22 @@ DEST_ROOT = Path("providers")
 
 # Map package folder names to provider doc filenames in docs/providers/
 PACKAGE_TO_DOC = {
-    "ttkbootstrap-icons-bs": "bootstrap.md",
-    "ttkbootstrap-icons-devicon": "devicon.md",
-    "ttkbootstrap-icons-eva": "eva.md",
-    "ttkbootstrap-icons-fa": "font-awesome-6-free.md",
-    "ttkbootstrap-icons-fluent": "fluent-system-icons.md",
-    "ttkbootstrap-icons-fluent-reg": "fluent-system-icons-regular.md",
-    "ttkbootstrap-icons-gmi": "google-material-icons.md",
-    "ttkbootstrap-icons-ion": "ion.md",
-    "ttkbootstrap-icons-lucide": "lucide.md",
-    "ttkbootstrap-icons-mat": "material-design-icons.md",
-    "ttkbootstrap-icons-meteocons": "meteocons.md",
-    "ttkbootstrap-icons-remix": "remix.md",
-    "ttkbootstrap-icons-rpga": "rgpa.md",
-    "ttkbootstrap-icons-simple": "simple.md",
-    "ttkbootstrap-icons-typicons": "typicons.md",
-    "ttkbootstrap-icons-weather": "weather.md",
+    "tkinter-icons-bs": "bootstrap.md",
+    "tkinter-icons-devicon": "devicon.md",
+    "tkinter-icons-eva": "eva.md",
+    "tkinter-icons-fa": "font-awesome-6-free.md",
+    "tkinter-icons-fluent": "fluent-system-icons.md",
+    "tkinter-icons-fluent-reg": "fluent-system-icons-regular.md",
+    "tkinter-icons-gmi": "google-material-icons.md",
+    "tkinter-icons-ion": "ion.md",
+    "tkinter-icons-lucide": "lucide.md",
+    "tkinter-icons-mat": "material-design-icons.md",
+    "tkinter-icons-meteocons": "meteocons.md",
+    "tkinter-icons-remix": "remix.md",
+    "tkinter-icons-rpga": "rgpa.md",
+    "tkinter-icons-simple": "simple.md",
+    "tkinter-icons-typicons": "typicons.md",
+    "tkinter-icons-weather": "weather.md",
 }
 
 
@@ -91,7 +91,7 @@ def _count_glyphs_in_package(pkg_dir: Path) -> int:
     src_dir = pkg_dir / "src"
     if not src_dir.is_dir():
         return 0
-    candidates = [p for p in src_dir.iterdir() if p.is_dir() and p.name.startswith("ttkbootstrap_icons_")]
+    candidates = [p for p in src_dir.iterdir() if p.is_dir() and p.name.startswith("tkinter_icons_")]
     if not candidates:
         return 0
     json_dir = candidates[0]
@@ -116,7 +116,7 @@ def _get_icon_version_from_provider(pkg_dir: Path) -> str | None:
     pyproj = pkg_dir / "pyproject.toml"
     try:
         data = tomllib.loads(pyproj.read_text(encoding="utf-8"))
-        eps = data.get("project", {}).get("entry-points", {}).get("ttkbootstrap_icons.providers", {})
+        eps = data.get("project", {}).get("entry-points", {}).get("tkinter_icons.providers", {})
         if not eps:
             return None
         # Add src to sys.path for import
@@ -146,22 +146,22 @@ def _generate_providers_table() -> None:
     # Build rows: (name, link, package, version, count, downloads_badge)
     # Display names map matching nav
     name_map = {
-        "ttkbootstrap-icons-bs": "Bootstrap Icons",
-        "ttkbootstrap-icons-devicon": "Devicon",
-        "ttkbootstrap-icons-eva": "Eva",
-        "ttkbootstrap-icons-fa": "Font Awesome 6 (free)",
-        "ttkbootstrap-icons-fluent": "Fluent System Icons",
-        "ttkbootstrap-icons-fluent-reg": "Fluent System Icons (Regular)",
-        "ttkbootstrap-icons-gmi": "Google Material Icons",
-        "ttkbootstrap-icons-ion": "Ion Icons",
-        "ttkbootstrap-icons-lucide": "Lucide",
-        "ttkbootstrap-icons-mat": "Material Design Icons",
-        "ttkbootstrap-icons-meteocons": "Meteocons",
-        "ttkbootstrap-icons-remix": "Remix Icons",
-        "ttkbootstrap-icons-rpga": "RPG Awesome",
-        "ttkbootstrap-icons-simple": "Simple Icons",
-        "ttkbootstrap-icons-typicons": "Typicons",
-        "ttkbootstrap-icons-weather": "Weather Icons",
+        "tkinter-icons-bs": "Bootstrap Icons",
+        "tkinter-icons-devicon": "Devicon",
+        "tkinter-icons-eva": "Eva",
+        "tkinter-icons-fa": "Font Awesome 6 (free)",
+        "tkinter-icons-fluent": "Fluent System Icons",
+        "tkinter-icons-fluent-reg": "Fluent System Icons (Regular)",
+        "tkinter-icons-gmi": "Google Material Icons",
+        "tkinter-icons-ion": "Ion Icons",
+        "tkinter-icons-lucide": "Lucide",
+        "tkinter-icons-mat": "Material Design Icons",
+        "tkinter-icons-meteocons": "Meteocons",
+        "tkinter-icons-remix": "Remix Icons",
+        "tkinter-icons-rpga": "RPG Awesome",
+        "tkinter-icons-simple": "Simple Icons",
+        "tkinter-icons-typicons": "Typicons",
+        "tkinter-icons-weather": "Weather Icons",
     }
 
     rows = []
@@ -218,8 +218,8 @@ def _generate_api_pages() -> None:
 
     # Providers
     for pkg_name, _doc in PACKAGE_TO_DOC.items():
-        slug = pkg_name.replace("ttkbootstrap-icons-", "")
-        module = f"ttkbootstrap_icons_{slug.replace('-', '_')}"
+        slug = pkg_name.replace("tkinter-icons-", "")
+        module = f"tkinter_icons_{slug.replace('-', '_')}"
         display = slug.title() if slug != "fa" else "Font Awesome"
         # Provide nicer names when possible
         name_map = {

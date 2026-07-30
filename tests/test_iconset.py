@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ttkbootstrap_icons.iconset import (
+from tkinter_icons.iconset import (
     IconSet,
     clear_icon_sets,
     get_icon_set,
@@ -108,7 +108,7 @@ class TestIconSetCache:
 class TestProviderMetrics:
     def test_metrics_load_for_default_style(self, provider):
         metrics = provider.load_metrics()
-        assert metrics, "provider ships no metrics.json — run ttkicons-metrics"
+        assert metrics, "provider ships no metrics.json — run tkicons-metrics"
         name, bounds = next(iter(metrics.items()))
         assert len(bounds) == 4
         assert all(isinstance(v, (int, float)) for v in bounds)
@@ -126,7 +126,7 @@ class TestProviderMetrics:
 
     def test_missing_metrics_degrade_to_empty(self, provider, monkeypatch):
         """A pack without metrics.json must load, not explode."""
-        from ttkbootstrap_icons.providers import BaseFontProvider
+        from tkinter_icons.providers import BaseFontProvider
 
         monkeypatch.setattr(BaseFontProvider, "_metrics_cache_global", {})
         monkeypatch.setattr(

@@ -1,9 +1,9 @@
-﻿# ttkbootstrap-icons-fa
+# tkinter-icons-fa
 
-An icon provider for the `ttkbootstrap-icons` library.  
+An icon provider for the `tkinter-icons` library.  
 Font Awesome Free offers large, well-known icon sets across solid, regular, and brand categories.
 
-[![PyPI](https://img.shields.io/pypi/v/ttkbootstrap-icons-fa.svg)](https://pypi.org/project/ttkbootstrap-icons-fa/)
+[![PyPI](https://img.shields.io/pypi/v/tkinter-icons-fa.svg)](https://pypi.org/project/tkinter-icons-fa/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
 
 ---
@@ -11,7 +11,7 @@ Font Awesome Free offers large, well-known icon sets across solid, regular, and 
 ## Install
 
 ```bash
-pip install ttkbootstrap-icons-fa
+pip install tkinter-icons-fa
 ```
 
 ---
@@ -20,7 +20,7 @@ pip install ttkbootstrap-icons-fa
 
 ```python
 import tkinter as tk
-from ttkbootstrap_icons_fa import FAIcon
+from tkinter_icons_fa import FAIcon
 
 root = tk.Tk()
 
@@ -52,7 +52,7 @@ root.mainloop()
 Browse available icons with the built-in browser. From your terminal run:
 
 ```bash
-ttkbootstrap-icons
+tkinter-icons
 ```
 
 Use **Copy Name** in the browser to copy the icon name and style directly for use in your code.

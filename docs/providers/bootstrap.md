@@ -1,13 +1,13 @@
-﻿# Bootstrap Icons
+# Bootstrap Icons
 
-Bootstrap Icons is a separate provider package for ttkbootstrap-icons.
+Bootstrap Icons is a separate provider package for tkinter-icons.
 
 ---
 
 ## Install
 
 ```bash
-pip install ttkbootstrap-icons-bs
+pip install tkinter-icons-bs
 ```
 
 ---
@@ -16,7 +16,7 @@ pip install ttkbootstrap-icons-bs
 
 ```python
 import tkinter as tk
-from ttkbootstrap_icons import BootstrapIcon
+from tkinter_icons import BootstrapIcon
 
 root = tk.Tk()
 
@@ -45,7 +45,7 @@ root.mainloop()
 Browse available icons with the built-in browser. From your terminal run:
 
 ```bash
-ttkbootstrap-icons
+tkinter-icons
 ```
 
 Use "Copy Name" in the browser to copy the icon name and style directly for use in your code.

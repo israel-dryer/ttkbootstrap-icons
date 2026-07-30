@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
-from ttkbootstrap_icons_gmi import GMatIcon
+from tkinter_icons_gmi import GMatIcon
 
 
 def main():

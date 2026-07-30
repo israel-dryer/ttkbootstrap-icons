@@ -1,9 +1,9 @@
-﻿# ttkbootstrap-icons-remix
+# tkinter-icons-remix
 
-An icon provider for the `ttkbootstrap-icons` library.  
+An icon provider for the `tkinter-icons` library.  
 Remix Icon offers modern, consistent line and filled variants.
 
-[![PyPI](https://img.shields.io/pypi/v/ttkbootstrap-icons-remix.svg)](https://pypi.org/project/ttkbootstrap-icons-remix/)
+[![PyPI](https://img.shields.io/pypi/v/tkinter-icons-remix.svg)](https://pypi.org/project/tkinter-icons-remix/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
 
 ---
@@ -11,7 +11,7 @@ Remix Icon offers modern, consistent line and filled variants.
 ## Install
 
 ```bash
-pip install ttkbootstrap-icons-remix
+pip install tkinter-icons-remix
 ```
 
 ---
@@ -20,7 +20,7 @@ pip install ttkbootstrap-icons-remix
 
 ```python
 import tkinter as tk
-from ttkbootstrap_icons_remix import RemixIcon
+from tkinter_icons_remix import RemixIcon
 
 root = tk.Tk()
 
@@ -46,7 +46,7 @@ root.mainloop()
 Browse available icons with the built-in browser. From your terminal run:
 
 ```bash
-ttkbootstrap-icons
+tkinter-icons
 ```
 
 Use **Copy Name** in the browser to copy the icon name and style directly for use in your code.

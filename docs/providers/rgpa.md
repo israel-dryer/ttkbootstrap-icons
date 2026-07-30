@@ -1,9 +1,9 @@
-﻿# ttkbootstrap-icons-rpga
+# tkinter-icons-rpga
 
-An icon provider for the `ttkbootstrap-icons` library.  
+An icon provider for the `tkinter-icons` library.  
 RPG Awesome is a fantasy-themed set of glyphs based on Font Awesome.
 
-[![PyPI](https://img.shields.io/pypi/v/ttkbootstrap-icons-rpga.svg)](https://pypi.org/project/ttkbootstrap-icons-rpga/)
+[![PyPI](https://img.shields.io/pypi/v/tkinter-icons-rpga.svg)](https://pypi.org/project/tkinter-icons-rpga/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
 
 ---
@@ -11,7 +11,7 @@ RPG Awesome is a fantasy-themed set of glyphs based on Font Awesome.
 ## Install
 
 ```bash
-pip install ttkbootstrap-icons-rpga
+pip install tkinter-icons-rpga
 ```
 
 ---
@@ -20,7 +20,7 @@ pip install ttkbootstrap-icons-rpga
 
 ```python
 import tkinter as tk
-from ttkbootstrap_icons_rpga import RPGAIcon
+from tkinter_icons_rpga import RPGAIcon
 
 root = tk.Tk()
 
@@ -43,7 +43,7 @@ This provider uses a single font without separate style variants.
 Browse available icons with the built-in browser. From your terminal run:
 
 ```bash
-ttkbootstrap-icons
+tkinter-icons
 ```
 
 Use **Copy Name** in the browser to copy the icon name and style directly for use in your code.

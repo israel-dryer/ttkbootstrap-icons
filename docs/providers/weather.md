@@ -1,9 +1,9 @@
-﻿# ttkbootstrap-icons-weather
+# tkinter-icons-weather
 
-An icon provider for the `ttkbootstrap-icons` library.  
+An icon provider for the `tkinter-icons` library.  
 Weather Icons is a classic set of weather-related glyphs.
 
-[![PyPI](https://img.shields.io/pypi/v/ttkbootstrap-icons-weather.svg)](https://pypi.org/project/ttkbootstrap-icons-weather/)
+[![PyPI](https://img.shields.io/pypi/v/tkinter-icons-weather.svg)](https://pypi.org/project/tkinter-icons-weather/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
 
 ---
@@ -11,7 +11,7 @@ Weather Icons is a classic set of weather-related glyphs.
 ## Install
 
 ```bash
-pip install ttkbootstrap-icons-weather
+pip install tkinter-icons-weather
 ```
 
 ---
@@ -20,7 +20,7 @@ pip install ttkbootstrap-icons-weather
 
 ```python
 import tkinter as tk
-from ttkbootstrap_icons_weather import WeatherIcon
+from tkinter_icons_weather import WeatherIcon
 
 root = tk.Tk()
 
@@ -43,7 +43,7 @@ This provider uses a single font without separate style variants.
 Browse available icons with the built-in browser. From your terminal run:
 
 ```bash
-ttkbootstrap-icons
+tkinter-icons
 ```
 
 Use **Copy Name** in the browser to copy the icon name and style directly for use in your code.

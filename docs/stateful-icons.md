@@ -26,7 +26,7 @@ hovering over a button, clicking it, etc.), the icon automatically updates to re
 
 ## How It Works
 
-The `StatefulIconMixin` is included with all icon classes in ttkbootstrap-icons. It works by:
+The `StatefulIconMixin` is included with all icon classes in tkinter-icons. It works by:
 
 1. **Reading widget states**: Detects ttk widget states like `hover`, `pressed`, `disabled`, `selected`, etc.
 2. **Mapping states to icons**: Associates each state with an icon appearance (color and/or name)
@@ -52,7 +52,7 @@ The simplest approach: icons automatically inherit the parent style's foreground
 
 ```python
 import ttkbootstrap as tb
-from ttkbootstrap_icons_bs import BootstrapIcon
+from tkinter_icons_bs import BootstrapIcon
 
 root = tb.Window(themename="darkly")
 
@@ -87,7 +87,7 @@ In this example, the icon will:
 You can explicitly set icon colors for specific states:
 
 ```python
-from ttkbootstrap_icons_bs import BootstrapIcon
+from tkinter_icons_bs import BootstrapIcon
 
 icon = BootstrapIcon("star", size=24)
 
@@ -109,7 +109,7 @@ icon.map(
 Display entirely different icons for different states:
 
 ```python
-from ttkbootstrap_icons_bs import BootstrapIcon
+from tkinter_icons_bs import BootstrapIcon
 
 sound = BootstrapIcon("mic-mute-fill", 64)
 
@@ -183,25 +183,25 @@ Stateful icons work with **all** icon providers:
 
 ```python
 # Font Awesome
-from ttkbootstrap_icons_fa import FAIcon
+from tkinter_icons_fa import FAIcon
 
 icon = FAIcon("heart", size=24, style="solid")
 icon.map(button, statespec=[("hover", "#e74c3c")])
 
 # Remix Icons
-from ttkbootstrap_icons_remix import RemixIcon
+from tkinter_icons_remix import RemixIcon
 
 icon = RemixIcon("star-line", size=24)
 icon.map(button, statespec=[("hover", {"name": "star-fill"})])
 
 # Material Icons
-from ttkbootstrap_icons_mat import MatIcon
+from tkinter_icons_mat import MatIcon
 
 icon = MatIcon("favorite", size=24, style="outlined")
 icon.map(button, statespec=[("hover", {"name": "favorite", "color": "#f44336"})])
 
 # Bootstrap Icons
-from ttkbootstrap_icons_bs import BootstrapIcon
+from tkinter_icons_bs import BootstrapIcon
 
 icon = BootstrapIcon("heart", size=24)
 icon.map(button, statespec=[("hover", "#dc3545")])

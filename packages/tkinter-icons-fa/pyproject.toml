@@ -1,0 +1,38 @@
+[project]
+name = "tkinter-icons-fa"
+version = "1.1.0"
+description = "Font Awesome Free (font-based) provider for tkinter-icons"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Israel Dryer" }]
+dependencies = ["Pillow>=9.1", "tkinter-icons>=5.0.0"]
+
+# Font Awesome Free licensing:
+# - Fonts: SIL OFL 1.1
+# - Code (CSS/JS): MIT
+# - Icon designs: CC BY 4.0
+license = "MIT"
+
+[project.urls]
+Homepage = "https://github.com/israel-dryer/tkinter-icons"
+
+# Auto-discovery hook for your base registry
+[project.entry-points."tkinter_icons.providers"]
+fa = "tkinter_icons_fa.provider:FontAwesomeFontProvider"
+
+[project.scripts]
+tkicons-fa-build = "tkinter_icons_fa.tools.generate_assets:main"
+tkicons-fa-quick = "tkinter_icons_fa.tools.generate_assets:default_main"
+
+[tool.setuptools.package-data]
+"tkinter_icons_fa" = ["fonts/*.ttf", "glyphmap*.json", "metrics*.json", "LICENSES/*"]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+include-package-data = true
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+

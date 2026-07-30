@@ -1,5 +1,5 @@
-﻿# Icon (Core)
+# Icon (Core)
 
-::: ttkbootstrap_icons.icon.Icon
+::: tkinter_icons.icon.Icon
 
-::: ttkbootstrap_icons.icon.create_transparent_icon
+::: tkinter_icons.icon.create_transparent_icon
