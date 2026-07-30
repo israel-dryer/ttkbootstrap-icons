@@ -137,7 +137,7 @@ class SimpleIconGrid:
         self.provider = provider
         self.all_icon_names = list(icon_names)
         self.filtered = list(icon_names)
-        Icon._cache.clear()
+        Icon.clear_cache()
         for items, _ in list(self.visible_items.values()):
             for it in items:
                 self.canvas.delete(it)
@@ -162,7 +162,7 @@ class SimpleIconGrid:
     def update_icon_settings(self, size, color):
         self.icon_size = size
         self.icon_color = color
-        Icon._cache.clear()
+        Icon.clear_cache()
         for items, _ in list(self.visible_items.values()):
             for it in items:
                 self.canvas.delete(it)
@@ -171,7 +171,7 @@ class SimpleIconGrid:
 
     def update_style(self, style):
         self.icon_style = style
-        Icon._cache.clear()
+        Icon.clear_cache()
         for items, _ in list(self.visible_items.values()):
             for it in items:
                 self.canvas.delete(it)
@@ -396,15 +396,11 @@ class IconPreviewerApp:
             self.icon_name_label.config(text=icon_name)
 
             try:
-                Icon.initialize_with_provider(provider, style=self.current_style)
+                icon_set = Icon.initialize_with_provider(provider, style=self.current_style)
                 resolved_name = provider.resolve_icon_name(icon_name, style=self.current_style)
-                glyph_val = Icon._icon_map.get(resolved_name)
-                if glyph_val is not None:
-                    if isinstance(glyph_val, int):
-                        code_hex = f"U+{glyph_val:04X}"
-                    else:
-                        code_hex = f"U+{ord(glyph_val):04X}"
-                    self.icon_code_label.config(text=code_hex)
+                glyph = icon_set.glyph(resolved_name)
+                if glyph is not None:
+                    self.icon_code_label.config(text=f"U+{ord(glyph):04X}")
                 else:
                     self.icon_code_label.config(text="N/A")
             except Exception:

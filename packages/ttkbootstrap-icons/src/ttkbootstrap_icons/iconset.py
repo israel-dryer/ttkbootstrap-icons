@@ -1,0 +1,178 @@
+"""Immutable per-(provider, style) icon data, built once and shared.
+
+An `IconSet` is everything the renderer needs to draw any glyph in one style of
+one provider: the font bytes, the name-to-character map, the ink metrics, and
+the render options. It replaces the mutable class-level state that used to live
+on `Icon`, where whichever provider initialized last owned the glyph map and
+using two providers at once meant reading around the globals.
+
+Icon sets are cached by id, so building the same one twice is free and two
+providers can be live at the same time without interfering.
+"""
+
+from __future__ import annotations
+
+import json
+from dataclasses import dataclass, field
+from typing import Any, Mapping, Optional, TYPE_CHECKING
+
+from .render import InkBounds, RenderOptions
+
+if TYPE_CHECKING:
+    from .providers import BaseFontProvider
+
+
+@dataclass(frozen=True)
+class IconSet:
+    """One provider's glyphs in one style, ready to render.
+
+    Attributes:
+        id: Stable identity, `"<provider>:<style>"`. Used as the cache key and
+            as part of every rendered-image cache key.
+        font_bytes: The raw font file backing this style.
+        glyphs: Icon name to the single character that draws it.
+        metrics: Icon name to normalized ink bounds, from the provider's
+            `metrics.json`. Empty when the provider ships none, in which case
+            the renderer measures at draw time.
+        options: The provider's default render options for this style.
+    """
+
+    id: str
+    font_bytes: bytes
+    glyphs: Mapping[str, str]
+    metrics: Mapping[str, InkBounds] = field(default_factory=dict)
+    options: RenderOptions = RenderOptions()
+
+    @property
+    def font_key(self) -> str:
+        """Cache key identifying this set's font file."""
+        return self.id
+
+    def glyph(self, name: str) -> Optional[str]:
+        """Return the character for `name`, or `None` if it is not in this set."""
+        return self.glyphs.get(name)
+
+    def ink(self, name: str) -> Optional[InkBounds]:
+        """Return precomputed ink bounds for `name`, or `None` to measure live."""
+        return self.metrics.get(name)
+
+    def __contains__(self, name: object) -> bool:
+        return name in self.glyphs
+
+    def __len__(self) -> int:
+        return len(self.glyphs)
+
+
+_icon_sets: dict[str, IconSet] = {}
+
+
+def icon_set_id(provider: "BaseFontProvider", style: Optional[str] = None) -> str:
+    """Return the cache id for a provider/style pair."""
+    return f"{provider.name}:{style or 'default'}"
+
+
+def get_icon_set(provider: "BaseFontProvider", style: Optional[str] = None) -> IconSet:
+    """Build (or return the cached) `IconSet` for a provider and style.
+
+    Args:
+        provider: The provider to load assets from.
+        style: Style name, or `None` for the provider's default.
+
+    Returns:
+        The shared `IconSet`. Repeat calls return the same object.
+    """
+    set_id = icon_set_id(provider, style)
+    cached = _icon_sets.get(set_id)
+    if cached is not None:
+        return cached
+
+    font_bytes, glyphmap_json = provider.load_assets(style=style)
+    icon_set = IconSet(
+        id=set_id,
+        font_bytes=font_bytes,
+        glyphs=parse_glyphmap(json.loads(glyphmap_json)),
+        metrics=provider.load_metrics(style=style),
+        options=provider.render_options,
+    )
+    _icon_sets[set_id] = icon_set
+    return icon_set
+
+
+def registered_icon_sets() -> Mapping[str, IconSet]:
+    """Return every icon set built so far, keyed by id."""
+    return dict(_icon_sets)
+
+
+def clear_icon_sets() -> None:
+    """Drop every cached icon set, forcing the next use to rebuild."""
+    _icon_sets.clear()
+
+
+def parse_glyphmap(data: Any) -> dict[str, str]:
+    """Normalize any supported glyphmap shape into `{name: character}`.
+
+    Three layouts are in the wild across the provider packages:
+
+    - a flat map of name to codepoint, `{"house": "EA01"}`
+    - a map of name to detail object, `{"house": {"unicode": "EA01"}}`
+    - a list of detail objects, `[{"name": "house", "unicode": "EA01"}]`
+
+    Codepoints may be hex strings or integers. Entries that are malformed or
+    missing a codepoint are skipped rather than failing the whole map — one bad
+    row in a generated asset should not take down every icon in the package.
+
+    Args:
+        data: Parsed JSON from a provider's glyphmap file.
+
+    Returns:
+        Icon name to the character that draws it.
+
+    Raises:
+        TypeError: If `data` is neither a list nor a dict.
+    """
+    if isinstance(data, list):
+        return _parse_entries(
+            (entry.get("name"), entry.get("unicode"))
+            for entry in data
+            if isinstance(entry, dict)
+        )
+
+    if isinstance(data, dict):
+        try:
+            sample = next(iter(data.values()))
+        except StopIteration:
+            return {}
+
+        if isinstance(sample, dict):
+            return _parse_entries(
+                (name, detail.get("unicode"))
+                for name, detail in data.items()
+                if isinstance(detail, dict)
+            )
+        return _parse_entries(data.items())
+
+    raise TypeError(f"glyphmap must be a list or dict, got {type(data).__name__}")
+
+
+def _parse_entries(pairs) -> dict[str, str]:
+    """Build the name-to-character map from (name, codepoint) pairs."""
+    mapping: dict[str, str] = {}
+    for name, codepoint in pairs:
+        if not name or codepoint is None:
+            continue
+        try:
+            value = int(codepoint, 16) if isinstance(codepoint, str) else int(codepoint)
+            mapping[str(name).strip()] = chr(value)
+        except (TypeError, ValueError):
+            continue
+    return mapping
+
+
+__all__ = [
+    "IconSet",
+    "clear_icon_sets",
+    "get_icon_set",
+    "icon_set_id",
+    "parse_glyphmap",
+    "registered_icon_sets",
+]

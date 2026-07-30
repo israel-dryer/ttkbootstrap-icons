@@ -35,7 +35,10 @@ class BootstrapFontProvider(BaseFontProvider):
             license_url="https://github.com/twbs/icons/blob/main/LICENSE",
             icon_version="1.13.1",
             default_style="outline",
-            y_bias=0.02,
+            # No y_bias: the small downward nudge this used to carry was
+            # compensating for getbbox under-reporting glyph ink. Centering now
+            # works from the measured ink in metrics.json, which lands the glyph
+            # dead center on its own — the old bias visibly pushes it low.
             styles={
                 "fill": {"filename": "bootstrap.ttf", "predicate": BootstrapFontProvider._is_fill_style},
                 "outline": {"filename": "bootstrap.ttf", "predicate": BootstrapFontProvider._is_outline_style},

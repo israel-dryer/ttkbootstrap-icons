@@ -8,6 +8,8 @@ from importlib.resources import files
 from types import MappingProxyType
 from typing import ClassVar, Mapping, Optional
 
+from .render import InkBounds, RenderOptions
+
 try:  # Prefer stdlib typing (Py 3.11+) and fall back to typing_extensions
     from typing import NotRequired, TypedDict, Unpack  # type: ignore[attr-defined]
 except Exception:  # pragma: no cover
@@ -28,6 +30,10 @@ class FontProviderOptions(TypedDict):
     pad_factor: NotRequired[float]
     y_bias: NotRequired[float]
     scale_to_fit: NotRequired[bool]
+    oversample: NotRequired[int]
+    align: NotRequired[bool]
+    sharpen: NotRequired[bool]
+    snap_even: NotRequired[bool]
 
 
 class BaseFontProvider(ABC):
@@ -36,13 +42,14 @@ class BaseFontProvider(ABC):
     __slots__ = (
         "_name", "_package", "_display_name", "_filename", "_homepage",
         "_license_url", "_default_style", "_styles", "_styles_view",
-        "_name_lookup", "_pad_factor", "_y_bias", "_scale_to_fit", "_icon_version"
+        "_name_lookup", "_render_options", "_icon_version"
     )
 
     # Global caches shared per provider class
     _glyphmap_cache_global: ClassVar[dict[tuple[type, str], dict]] = {}
     _font_bytes_cache_global: ClassVar[dict[tuple[type, str], bytes]] = {}
     _name_lookup_global: ClassVar[dict[type, dict[str, dict[str, str]]]] = {}
+    _metrics_cache_global: ClassVar[dict[tuple[type, str], dict[str, InkBounds]]] = {}
 
     _name: str
     _package: str
@@ -55,9 +62,7 @@ class BaseFontProvider(ABC):
     _styles: Mapping[str, Mapping[str, str | Callable[[str], bool]]]
     _styles_view: Mapping[str, Mapping[str, str | Callable[[str], bool]]]
     _name_lookup: dict[str, dict[str, str]]
-    _pad_factor: float
-    _y_bias: float
-    _scale_to_fit: bool
+    _render_options: RenderOptions
 
     def __init__(self, **kwargs: Unpack[FontProviderOptions]):
         self._name = kwargs.get('name')  # required
@@ -72,9 +77,15 @@ class BaseFontProvider(ABC):
         self._styles = deepcopy(kwargs.get("styles", {}))
         self._styles_view = MappingProxyType(self._styles)
 
-        self._pad_factor = kwargs.get('pad_factor', 0.10)
-        self._y_bias = kwargs.get('y_bias', 0.0)
-        self._scale_to_fit = kwargs.get('scale_to_fit', True)
+        self._render_options = RenderOptions().merge(
+            pad_factor=kwargs.get('pad_factor'),
+            y_bias=kwargs.get('y_bias'),
+            scale_to_fit=kwargs.get('scale_to_fit'),
+            oversample=kwargs.get('oversample'),
+            align=kwargs.get('align'),
+            sharpen=kwargs.get('sharpen'),
+            snap_even=kwargs.get('snap_even'),
+        )
 
         if self.has_styles and (not self._default_style or self._default_style not in self._styles):
             self._default_style = next(iter(self._styles.keys()))
@@ -142,19 +153,27 @@ class BaseFontProvider(ABC):
         return len(style_files) == 1
 
     @property
+    def render_options(self) -> RenderOptions:
+        """Default drawing options for this provider's glyphs.
+
+        Overridable per call — see `ttkbootstrap_icons.render.RenderOptions`.
+        """
+        return self._render_options
+
+    @property
     def pad_factor(self) -> float:
         """Padding factor for icon rendering (0.0-1.0)."""
-        return self._pad_factor
+        return self._render_options.pad_factor
 
     @property
     def y_bias(self) -> float:
         """Vertical bias adjustment for icon rendering."""
-        return self._y_bias
+        return self._render_options.y_bias
 
     @property
     def scale_to_fit(self) -> bool:
         """Whether to scale down glyphs that exceed the available space."""
-        return self._scale_to_fit
+        return self._render_options.scale_to_fit
 
     # -----------------------------
     # Asset Loading
@@ -215,6 +234,61 @@ class BaseFontProvider(ABC):
 
         glyphmap_json = pkg.joinpath(glyphmap_filename).read_text(encoding="utf-8")
         return font_bytes, glyphmap_json
+
+    def asset_suffix(self, style: Optional[str] = None) -> str:
+        """Return the filename suffix for this provider's per-style assets.
+
+        Providers backed by one font file name their assets `glyphmap.json` and
+        `metrics.json`; providers with a font per style append the style, as in
+        `glyphmap-solid.json`.
+
+        Args:
+            style: Style name, or `None` for the provider's default.
+
+        Returns:
+            The empty string for single-file providers, otherwise `"-<style>"`.
+        """
+        if self.uses_single_file:
+            return ""
+        style_key = style or self._default_style
+        if not style_key:
+            raise ValueError(f"No style specified and no default_style configured for provider '{self._name}'.")
+        return f"-{style_key}"
+
+    def load_metrics(self, style: Optional[str] = None) -> dict[str, InkBounds]:
+        """Load precomputed ink bounds for this provider's glyphs.
+
+        The metrics file is what lets the renderer center on a glyph's true ink
+        instead of Pillow's `getbbox`, which under-reports it. Generate it with
+        `ttkicons-metrics <package>`.
+
+        A missing or unreadable file is not an error: providers published
+        before metrics existed simply have none, and the renderer falls back to
+        measuring at draw time.
+
+        Args:
+            style: Style name, or `None` for the provider's default.
+
+        Returns:
+            Icon name to `[left, top, width, height]` as font-size fractions.
+            Empty when the provider ships no metrics for this style.
+        """
+        suffix = self.asset_suffix(style)
+        mkey = (type(self), suffix)
+        cached = self._metrics_cache_global.get(mkey)
+        if cached is not None:
+            return cached
+
+        try:
+            text = files(self.package).joinpath(f"metrics{suffix}.json").read_text(encoding="utf-8")
+            metrics = json.loads(text)
+            if not isinstance(metrics, dict):
+                metrics = {}
+        except (OSError, ValueError, ModuleNotFoundError):
+            metrics = {}
+
+        self._metrics_cache_global[mkey] = metrics
+        return metrics
 
     # -----------------------------
     # Name Handling
