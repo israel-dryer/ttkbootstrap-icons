@@ -330,6 +330,47 @@ def check_dependencies(package: Package, by_dist: dict[str, Package], report: Re
             )
 
 
+def check_tools_are_not_shipped(package: Package, report: Report) -> None:
+    """Maintainer tooling stays out of the wheel, and stays out reliably.
+
+    ``tools`` regenerates assets and metrics into a source tree, so it does
+    nothing from an installed wheel — and once published, ``<package>.tools``
+    is an import path we owe compatibility on.
+
+    Excluding it from ``packages.find`` is not enough, and fails *silently*.
+    Every package sets ``include-package-data``, which also pulls in whatever
+    an existing ``.egg-info/SOURCES.txt`` lists — and the sdist rightly
+    contains ``tools``, so it is listed. The release workflow editable-installs
+    each pack before building, so the egg-info is there when it counts. Only
+    ``exclude-package-data`` actually keeps the files out.
+
+    Checked statically because the failure is invisible: a build in a tree with
+    no egg-info produces a clean wheel from a broken config.
+    """
+    source_root = package.directory / "src"
+    tool_dirs = list(source_root.glob("*/tools")) if source_root.is_dir() else []
+    if not tool_dirs:
+        return
+
+    setuptools_config = package.pyproject.get("tool", {}).get("setuptools", {})
+    excluded = setuptools_config.get("exclude-package-data", {})
+    covered = {
+        module
+        for module, patterns in excluded.items()
+        if any(pattern.startswith("tools/") or pattern == "tools" for pattern in patterns)
+    }
+
+    for tool_dir in tool_dirs:
+        module = tool_dir.parent.name
+        if module not in covered and "*" not in covered:
+            report.error(
+                package.dist,
+                f"{module}/tools would ship: declare it under "
+                f"[tool.setuptools.exclude-package-data] - a packages.find "
+                f"exclude alone is silently bypassed by include-package-data",
+            )
+
+
 def check_extras_cover_every_pack(base: Package, by_dist: dict[str, Package], report: Report) -> None:
     """Sixteen packs, sixteen extras, and deliberately no ``[all]``.
 
@@ -472,6 +513,7 @@ def main() -> int:
         check_package_data(package, report)
         check_licenses(package, report)
         check_metrics(package, report)
+        check_tools_are_not_shipped(package, report)
         check_dependencies(package, by_dist, report)
         if tagged_version is not None:
             check_release_tag(package, tagged_version, report)

@@ -246,12 +246,23 @@ Each of these looks like a defect in isolation. They aren't.
   import. `tkinter_icons.tooling` moved under `tools/` for the same reason —
   it is developer-only by its own docstring, and a module cannot be dropped from
   a wheel while it sits at the package root.
-- **The base needs `exclude-package-data`, the packs do not.** Excluding `tools`
-  from `packages.find` is enough for a pack, but the base takes its version from
-  setuptools-scm, whose git file-finder plus `include-package-data` pulls every
-  tracked file under `src/tkinter_icons/` into the wheel as package data —
-  including `.py` files of a package deliberately not declared. Verify a change
-  here by building and listing the wheel, not by reading the config.
+- **`exclude-package-data` is what keeps `tools` out of all seventeen wheels —
+  `packages.find` alone does not.** Every package sets
+  `include-package-data = true`, and that makes setuptools treat files it learns
+  about from *outside* the package list as package data, past any
+  `packages.find` exclude. Two different sources feed it, which is why this
+  looks like two unrelated bugs:
+  - The **packs** get it from `.egg-info/SOURCES.txt`, which legitimately lists
+    the `tools` files because the sdist includes them — as it should; an sdist
+    is meant to be complete. The release workflow editable-installs every pack
+    before `python -m build`, so that file is present exactly when it matters.
+  - The **base** gets it from setuptools-scm's git file-finder, which sweeps in
+    every tracked file under `src/tkinter_icons/`.
+
+  **Verify by building and listing the wheel, never by reading the config**, and
+  build a pack that is *installed*. A pack with no `.egg-info` produces a clean
+  wheel with a broken config and reports a false pass — that mistake was made
+  once already, and it would have shipped `tools` in fourteen wheels.
 - **The root exports the consumer API only.** `BaseFontProvider`,
   `ProviderRegistry`, and `load_external_providers` define an icon set rather
   than use one, and are reached from `tkinter_icons.providers` / `.registry` —

@@ -32,6 +32,14 @@ where = ["src"]
 # The maintainer workflow runs against an editable checkout, where it is on disk.
 exclude = ["*.tools", "*.tools.*"]
 
+# Excluding `tools` from `packages.find` is not enough on its own. With
+# `include-package-data`, setuptools reads an existing `.egg-info/SOURCES.txt`
+# and pulls what it lists in as package data - and the release workflow
+# editable-installs every pack before building, so that file is present and
+# lists these very files. This is what actually keeps them out of the wheel.
+[tool.setuptools.exclude-package-data]
+"tkinter_icons_mat" = ["tools/*"]
+
 [build-system]
 requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
