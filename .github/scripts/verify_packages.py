@@ -25,11 +25,15 @@ Usage::
     python verify_packages.py --strict           # warnings are failures
     python verify_packages.py --imports          # also import each entry point
     python verify_packages.py tkinter-icons-fa   # one distribution
+
+    # what the release workflow runs, for one tag
+    python verify_packages.py --strict --imports --tag tkinter-icons-fa-v1.1.0
 """
 from __future__ import annotations
 
 import argparse
 import importlib
+import importlib.metadata
 import re
 import sys
 from pathlib import Path
@@ -65,6 +69,7 @@ class Report:
     def __init__(self) -> None:
         self.errors: list[str] = []
         self.warnings: list[str] = []
+        self.skipped: list[str] = []
 
     def error(self, dist: str, message: str) -> None:
         self.errors.append(f"{dist}: {message}")
@@ -282,7 +287,19 @@ def check_release_tag(package: Package, version: str, report: Report) -> None:
 
 
 def check_entry_points(package: Package, report: Report) -> None:
-    """Each declared provider actually imports. Requires the package installed."""
+    """Each declared provider actually imports.
+
+    A pack that is not installed is skipped rather than failed. Nobody keeps all
+    sixteen installed while working on one, and reporting the other fifteen as
+    broken would train everyone to ignore the output. CI installs every pack, so
+    coverage there is complete.
+    """
+    try:
+        importlib.metadata.distribution(package.dist)
+    except importlib.metadata.PackageNotFoundError:
+        report.skipped.append(f"{package.dist}: not installed, entry points unchecked")
+        return
+
     entry_points = package.pyproject.get("project", {}).get("entry-points", {})
     for group in PROVIDER_ENTRY_POINT_GROUPS:
         for name, target in entry_points.get(group, {}).items():
@@ -343,6 +360,8 @@ def main() -> int:
             check_entry_points(package, report)
 
     print(f"checked {len(selected)} distribution(s)")
+    for skipped in report.skipped:
+        print(f"  skipped  {skipped}")
     for warning in report.warnings:
         print(f"  warning  {warning}")
     for error in report.errors:

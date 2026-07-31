@@ -1,3 +1,13 @@
+# Builds one package and uploads it to TestPyPI.
+#
+# This used to publish to PyPI as well. It no longer does: releases go through
+# `.github/workflows/release.yml`, triggered by a tag, authenticated by PyPI
+# Trusted Publishing rather than by a token sitting in an environment variable.
+# That workflow also runs a preflight this script never did. See RELEASE.md.
+#
+# What is left is the genuinely useful part - trying a package out on TestPyPI
+# before its version is real and permanent.
+
 Param( [Parameter(Mandatory = $true, Position = 0)] [string]$Package, [Parameter(Mandatory = $false)] [switch]$Dev, [Parameter(Mandatory = $false)] [string]$Version )
 
 Set-StrictMode -Version Latest
@@ -62,16 +72,13 @@ Push-Location $pkgDir
     if ($Version) { $env:SETUPTOOLS_SCM_PRETEND_VERSION = $Version }; python -m build; if ($Version) { Remove-Item Env:SETUPTOOLS_SCM_PRETEND_VERSION -ErrorAction SilentlyContinue }
     Pop-Location
 
-    $repo = if ($Dev) { 'testpypi' } else { 'pypi' }
+    # TestPyPI only. `-Dev` used to select it and is now the sole behaviour; it
+    # is still accepted so existing muscle memory keeps working.
     $distGlob = Join-Path $pkgDir 'dist\*'
-    Write-Host "> Uploading $distGlob to $repo ..." -ForegroundColor Cyan
-    if ($repo -eq 'pypi') {
-        twine upload $distGlob --non-interactive
-    } else {
-        twine upload -r $repo $distGlob --non-interactive
-    }
+    Write-Host "> Uploading $distGlob to testpypi ..." -ForegroundColor Cyan
+    twine upload -r testpypi $distGlob --non-interactive
 
-    Write-Host "Done." -ForegroundColor Green
+    Write-Host "Done. To publish for real, push a tag - see RELEASE.md." -ForegroundColor Green
 } catch {
     Write-Error $_
     exit 1
