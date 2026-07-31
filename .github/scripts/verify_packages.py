@@ -36,6 +36,7 @@ import importlib
 import importlib.metadata
 import re
 import sys
+from fnmatch import fnmatch
 from pathlib import Path
 
 from packages import BASE_DIST, Package, load_all, parse_tag
@@ -337,12 +338,19 @@ def check_tools_are_not_shipped(package: Package, report: Report) -> None:
     nothing from an installed wheel — and once published, ``<package>.tools``
     is an import path we owe compatibility on.
 
-    Excluding it from ``packages.find`` is not enough, and fails *silently*.
-    Every package sets ``include-package-data``, which also pulls in whatever
-    an existing ``.egg-info/SOURCES.txt`` lists — and the sdist rightly
-    contains ``tools``, so it is listed. The release workflow editable-installs
-    each pack before building, so the egg-info is there when it counts. Only
-    ``exclude-package-data`` actually keeps the files out.
+    It takes *both* exclusions, and each one alone fails silently.
+
+    ``packages.find`` stops ``tools`` being declared as a package. On its own
+    that is bypassed by ``include-package-data``, which pulls in whatever an
+    existing ``.egg-info/SOURCES.txt`` lists — and the sdist rightly contains
+    ``tools``, so it is listed. The release workflow editable-installs each
+    pack before building, so the egg-info is there when it counts.
+
+    ``exclude-package-data`` filters *data files*, not declared modules. On its
+    own it leaves ``tools`` a package setuptools was told to ship, and the
+    wheel gets it. So a seventeenth pack copied from a sibling with one stanza
+    dropped ships maintainer tooling with a green preflight — which is the
+    failure this function exists to prevent.
 
     Checked statically because the failure is invisible: a build in a tree with
     no egg-info produces a clean wheel from a broken config.
@@ -354,20 +362,36 @@ def check_tools_are_not_shipped(package: Package, report: Report) -> None:
 
     setuptools_config = package.pyproject.get("tool", {}).get("setuptools", {})
     excluded = setuptools_config.get("exclude-package-data", {})
-    covered = {
+    data_covered = {
         module
         for module, patterns in excluded.items()
         if any(pattern.startswith("tools/") or pattern == "tools" for pattern in patterns)
     }
+    find_excludes = setuptools_config.get("packages", {}).get("find", {}).get("exclude", [])
 
     for tool_dir in tool_dirs:
         module = tool_dir.parent.name
-        if module not in covered and "*" not in covered:
+        if module not in data_covered and "*" not in data_covered:
             report.error(
                 package.dist,
-                f"{module}/tools would ship: declare it under "
+                f"{module}/tools would ship as package data: declare it under "
                 f"[tool.setuptools.exclude-package-data] - a packages.find "
                 f"exclude alone is silently bypassed by include-package-data",
+            )
+
+        # Every name the tools package is discoverable under, so a pattern that
+        # covers only the nested form is not mistaken for covering the package.
+        names = [f"{module}.tools"]
+        names += [f"{module}.tools.{sub.name}" for sub in tool_dir.iterdir() if sub.is_dir()]
+        uncovered = [
+            name for name in names if not any(fnmatch(name, pattern) for pattern in find_excludes)
+        ]
+        if uncovered:
+            report.error(
+                package.dist,
+                f"{module}/tools would ship as a package: {', '.join(uncovered)} is not "
+                f"matched by [tool.setuptools.packages.find] exclude - "
+                f"exclude-package-data filters data files, not declared modules",
             )
 
 

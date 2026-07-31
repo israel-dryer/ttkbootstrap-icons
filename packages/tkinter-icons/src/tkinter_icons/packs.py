@@ -186,7 +186,10 @@ def no_packs_message() -> str:
         "tkinter-icons is the renderer; the glyphs come from packs you add as extras:",
     ]
     commands = [(pack.install_command, pack.label) for pack in suggestions if pack]
-    width = max(len(command) for command, _ in commands)
+    # `default` matters: this runs from Icon.__init__'s error path, so an empty
+    # list - which is what renaming one of those three extras would produce -
+    # must not replace the guidance with a ValueError from max().
+    width = max((len(command) for command, _ in commands), default=0)
     lines += [f"  {command:<{width}}  # {label}" for command, label in commands]
     lines += ["", f"Choosing among all {len(KNOWN_PACKS)} packs: {PACKS_DOC_URL}"]
     return "\n".join(lines)
