@@ -70,7 +70,7 @@ packs installed, and it must happen before release.
 | `main` | 4.0.0, untouched, still publishable |
 | `5.0` | integration branch — all 5.0 work lands here, then one PR to `main` |
 
-Milestone **5.0.0** (issues #67–#71, #75):
+Milestone **5.0.0** (issues #67–#71, #75, #79):
 
 | Issue | State |
 |---|---|
@@ -79,20 +79,35 @@ Milestone **5.0.0** (issues #67–#71, #75):
 | #69 packs as extras | merged (#74) |
 | #75 rename to tkinter-icons | merged (#76) |
 | #70 changelog + release automation | merged (#78) |
+| #79 trim the published surface | merged (#81) |
 | #71 Sphinx docs + reframing | **not started — the only issue left** |
-| #79 trim the published surface | in review on `refactor/trim-published-surface` — reviewed, fixes committed, not yet merged to `5.0` |
 
 Also merged: #77, fixing three cloud-review findings plus a pre-existing
 pack-asset-runner bug.
 
-**Every one of those issues is still OPEN on GitHub, and that is correct.** A PR
-merged into `5.0` does not close the issue it names — GitHub only honours
-`Closes #n` on a merge into the default branch. They all close at once when the
-single `5.0` → `main` PR lands. Do not close them by hand; an issue closed early
-loses its link to the merge that actually shipped it.
+**#79 shipped as #81, not #80.** #80 was merged into `5.0` prematurely — without
+permission and before review — and `5.0` was reset to drop it. The rollback was
+a reset rather than a revert, so `5.0`'s history is clean and there is no
+reverted-content trap for later merges; verified after #81 landed. **Do not
+merge a PR in this repository unless asked to merge that specific PR.** A
+passing CI run, a `MERGEABLE` state, and the `gh pr merge` line under
+"Conventions" are mechanics, not authorization. `5.0` exists so each piece is
+reviewed before it accumulates.
 
-`5.0` is code-complete. #71 is all that is left before release — plus the two
-blockers below, which are work rather than decisions.
+**Most of these issues are still OPEN on GitHub, and that is correct** — a PR
+merged into `5.0` does not close the issue it names, because GitHub only honours
+`Closes #n` on a merge into the default branch. They are meant to close together
+when the single `5.0` → `main` PR lands, so an issue closed early loses its link
+to the merge that actually shipped it.
+
+**#70 and #75 are nonetheless already CLOSED** (checked 2026-07-31); #67, #68,
+#69, #71, #79 are open. Whatever closed those two, the link is already lost and
+reopening them would not restore it — so leave them and do not close any more by
+hand.
+
+`5.0` is code-complete, and that now includes #79. #71 is all that is left
+before release — plus the two blockers below, which are work rather than
+decisions.
 
 **Two things block a `--strict` release**, both surfaced by the preflight:
 
@@ -110,6 +125,44 @@ blockers below, which are work rather than decisions.
 Release mechanics live in `RELEASE.md`, and are real now: tag-driven, Trusted
 Publishing, no token anywhere. The tag scheme is `v<version>` for the base
 package and `<distribution>-v<version>` for the other seventeen.
+
+---
+
+## Next session — start here
+
+Everything through #79 is on `5.0`. Four things remain before 5.0.0 ships, and
+only the first is design work; the plan for it is settled and written up under
+"What #71 picks up" — read that before opening a docs file, because the decision
+that costs the most to reverse (delete the 42 MkDocs pages rather than port
+them) is already made and reasoned.
+
+1. **#71 — Sphinx docs.** The only open issue that is real work. Branch
+   `feat/docs-sphinx` off `5.0`, PR back to `5.0` with `Closes #71`. The one
+   hard external constraint: **the packs page must build to `packs.html`**,
+   because `packs.py:29` already links there from the two messages a user with
+   no pack installed sees first. Noted on #71 as well.
+
+2. **Generate the fourteen missing metrics.** Mechanical, but needs an
+   environment with *all sixteen* packs installed — this tree has only `bs` and
+   `fa`. `python -m tkinter_icons.tools.generate_metrics --all`, then commit.
+   Pass the *provider* name, never the entry-point key: `fa` registers
+   `fontawesome`, and the CLI rejects the key. Re-run the preflight afterwards,
+   which checks the files are reachable by each pack's package-data globs, not
+   merely that they exist.
+
+3. **Resolve the three license gaps** — `bs`, `meteocons`, `typicons`. This is
+   the one item that is *not* yours to decide: it needs a human call on the
+   exact upstream license and copyright line. Ask rather than guess.
+   `KNOWN_LICENSE_GAPS` in `verify_packages.py` must end up empty.
+
+4. **Then release.** `verify_packages.py --strict` must pass, which items 2 and
+   3 are exactly what gates. Publish order is load-bearing — see Conventions.
+
+Verified green on `5.0` as of 2026-07-31: `pytest` 237 passed / 1 skipped;
+`verify_packages.py` zero errors, 20 warnings, all of them items 2 and 3.
+
+**Working style, learned the hard way this milestone:** push and open the PR,
+then stop. Do not merge, and do not close milestone issues by hand.
 
 ---
 
