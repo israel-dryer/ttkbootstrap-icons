@@ -37,8 +37,6 @@ from tkinter_icons.packs import (
     installed_packs,
     missing_pack_message,
 )
-from tkinter_icons.providers import BaseFontProvider
-from tkinter_icons.registry import ProviderRegistry, load_external_providers
 from tkinter_icons.render import RenderOptions, measure_ink_bounds, render_glyph
 
 if TYPE_CHECKING:
@@ -77,20 +75,23 @@ if TYPE_CHECKING:
     from tkinter_icons_weather import WeatherIcon as WeatherIcon
 
 
+# What an application building a UI needs. The machinery for *defining* an icon
+# set - `BaseFontProvider`, `ProviderRegistry`, `load_external_providers` - is
+# deliberately absent: it is a developer API, and the sixteen packs already
+# reach it the way anyone else would, `from tkinter_icons.providers import
+# BaseFontProvider`. Re-exporting it here put it beside `MaterialIcon` as though
+# the two were the same kind of thing.
 _CORE = [
-    "BaseFontProvider",
     "Icon",
     "IconSet",
     "KNOWN_PACKS",
     "Pack",
-    "ProviderRegistry",
     "RenderOptions",
     "create_transparent_icon",
     "find_pack",
     "get_hook_dirs",
     "get_icon_set",
     "installed_packs",
-    "load_external_providers",
     "measure_ink_bounds",
     "render_glyph",
 ]

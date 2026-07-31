@@ -27,7 +27,8 @@ pip install "tkinter-icons[rpg-awesome]"
   which under-reports it on icon fonts. Without this file the pack still
   renders, by falling back to `getbbox`; with it, full-bleed icons keep their
   padding and everything else sits centered. Regenerate with
-  `tkicons-metrics rpga` whenever the font or glyph map changes. (#67)
+  `python -m tkinter_icons.tools.generate_metrics rpga` whenever the font or
+  glyph map changes. (#67)
 
 ### Changed
 
@@ -38,6 +39,15 @@ pip install "tkinter-icons[rpg-awesome]"
 - **The entry point moved to the `tkinter_icons.providers` group.** The base
   package scans the old group as well, so a mixed set of old and new packs stays
   discoverable. (#75)
+
+### Removed
+
+- **The `tkicons-rpga-build` and `tkicons-rpga-quick` commands, and the
+  `tools` module behind them.** They regenerate this pack's assets from
+  upstream sources, so they only work against a source checkout — from an
+  installed wheel they did nothing but occupy two names on every user's PATH.
+  Nothing imports them at runtime. Maintainers run them from the repository.
+  (#79)
 
 ## [1.0.0] — one provider API
 

@@ -8,9 +8,9 @@ reference size and stored as fractions of the em.
 
 Run this whenever a provider's font or glyphmap changes::
 
-    tkicons-metrics --all              # every installed provider
-    tkicons-metrics fa mat             # named providers
-    tkicons-metrics bootstrap --check  # verify without writing
+    python -m tkinter_icons.tools.generate_metrics --all              # every installed provider
+    python -m tkinter_icons.tools.generate_metrics fa mat             # named providers
+    python -m tkinter_icons.tools.generate_metrics bootstrap --check  # verify without writing
 
 Output goes next to the provider's glyphmap: `metrics.json` for single-font
 providers, `metrics-<style>.json` for providers with a font per style.
@@ -120,7 +120,7 @@ def generate_for_provider(
                 print(f"  ok       {label}: {len(metrics)} glyphs")
             else:
                 state = "missing" if current is None else "stale"
-                print(f"  {state.upper():8s} {label}: run tkicons-metrics {provider.name}")
+                print(f"  {state.upper():8s} {label}: run generate_metrics {provider.name}")
                 ok = False
             continue
 

@@ -36,6 +36,7 @@ import importlib
 import importlib.metadata
 import re
 import sys
+from fnmatch import fnmatch
 from pathlib import Path
 
 from packages import BASE_DIST, Package, load_all, parse_tag
@@ -250,16 +251,19 @@ def check_metrics(package: Package, report: Report) -> None:
     A pack without them still renders — the renderer falls back to
     ``font.getbbox()`` — but that fallback is the very miscentering 5.0.0 was
     built to fix, so shipping without metrics quietly undoes the release.
-    Generate with ``tkicons-metrics --all``; verify with ``tkicons-metrics
-    --all --check``, which needs the packs installed and so runs in CI rather
-    than here.
+    Generate with ``python -m tkinter_icons.tools.generate_metrics --all``; add
+    ``--check`` to verify instead of write, which needs the packs installed and
+    so runs in CI rather than here.
     """
     if package.dist == BASE_DIST or not package.directory.name.startswith("tkinter-icons-"):
         return
 
     found = metrics_files(package)
     if not found:
-        report.warn(package.dist, "no metrics*.json - run 'tkicons-metrics --all' before release")
+        report.warn(
+            package.dist,
+            "no metrics*.json - run 'python -m tkinter_icons.tools.generate_metrics --all' before release",
+        )
         return
 
     # On disk is not the same as in the wheel, and this is the failure that
@@ -327,19 +331,85 @@ def check_dependencies(package: Package, by_dist: dict[str, Package], report: Re
             )
 
 
+def check_tools_are_not_shipped(package: Package, report: Report) -> None:
+    """Maintainer tooling stays out of the wheel, and stays out reliably.
+
+    ``tools`` regenerates assets and metrics into a source tree, so it does
+    nothing from an installed wheel — and once published, ``<package>.tools``
+    is an import path we owe compatibility on.
+
+    It takes *both* exclusions, and each one alone fails silently.
+
+    ``packages.find`` stops ``tools`` being declared as a package. On its own
+    that is bypassed by ``include-package-data``, which pulls in whatever an
+    existing ``.egg-info/SOURCES.txt`` lists — and the sdist rightly contains
+    ``tools``, so it is listed. The release workflow editable-installs each
+    pack before building, so the egg-info is there when it counts.
+
+    ``exclude-package-data`` filters *data files*, not declared modules. On its
+    own it leaves ``tools`` a package setuptools was told to ship, and the
+    wheel gets it. So a seventeenth pack copied from a sibling with one stanza
+    dropped ships maintainer tooling with a green preflight — which is the
+    failure this function exists to prevent.
+
+    Checked statically because the failure is invisible: a build in a tree with
+    no egg-info produces a clean wheel from a broken config.
+    """
+    source_root = package.directory / "src"
+    tool_dirs = list(source_root.glob("*/tools")) if source_root.is_dir() else []
+    if not tool_dirs:
+        return
+
+    setuptools_config = package.pyproject.get("tool", {}).get("setuptools", {})
+    excluded = setuptools_config.get("exclude-package-data", {})
+    data_covered = {
+        module
+        for module, patterns in excluded.items()
+        if any(pattern.startswith("tools/") or pattern == "tools" for pattern in patterns)
+    }
+    find_excludes = setuptools_config.get("packages", {}).get("find", {}).get("exclude", [])
+
+    for tool_dir in tool_dirs:
+        module = tool_dir.parent.name
+        if module not in data_covered and "*" not in data_covered:
+            report.error(
+                package.dist,
+                f"{module}/tools would ship as package data: declare it under "
+                f"[tool.setuptools.exclude-package-data] - a packages.find "
+                f"exclude alone is silently bypassed by include-package-data",
+            )
+
+        # Every name the tools package is discoverable under, so a pattern that
+        # covers only the nested form is not mistaken for covering the package.
+        names = [f"{module}.tools"]
+        names += [f"{module}.tools.{sub.name}" for sub in tool_dir.iterdir() if sub.is_dir()]
+        uncovered = [
+            name for name in names if not any(fnmatch(name, pattern) for pattern in find_excludes)
+        ]
+        if uncovered:
+            report.error(
+                package.dist,
+                f"{module}/tools would ship as a package: {', '.join(uncovered)} is not "
+                f"matched by [tool.setuptools.packages.find] exclude - "
+                f"exclude-package-data filters data files, not declared modules",
+            )
+
+
 def check_extras_cover_every_pack(base: Package, by_dist: dict[str, Package], report: Report) -> None:
-    """Sixteen packs, sixteen extras, and ``[all]`` reaching all of them.
+    """Sixteen packs, sixteen extras, and deliberately no ``[all]``.
 
     The packs are separate distributions only because each ships a font; a user
     should only ever meet them as extras. A pack with no extra is a pack nobody
     can install the documented way.
+
+    Coverage is checked against the pack directories themselves rather than
+    through an aggregate extra, so a pack added without an extra is caught by
+    the same rule whether or not anything else references it.
     """
     extras = base.pyproject.get("project", {}).get("optional-dependencies", {})
 
     covered = set()
-    for name, requirements in extras.items():
-        if name == "all":
-            continue
+    for requirements in extras.values():
         for requirement in requirements:
             match = REQUIREMENT_RE.match(requirement)
             if match and match.group("name") in by_dist:
@@ -352,14 +422,15 @@ def check_extras_cover_every_pack(base: Package, by_dist: dict[str, Package], re
     for missing in sorted(packs - covered):
         report.error(base.dist, f"{missing} has no extra - it can only be installed by name")
 
-    # `all` is written as nested self-references, e.g. "tkinter-icons[bootstrap,...]".
-    reachable = set()
-    for requirement in extras.get("all", []):
-        inner = re.search(r"\[([^\]]*)\]", requirement)
-        if inner:
-            reachable.update(part.strip() for part in inner.group(1).split(","))
-    for missing in sorted(set(extras) - {"all"} - reachable):
-        report.error(base.dist, f"extra '{missing}' is not included in [all]")
+    # `all` was removed before 5.0.0 and must not come back: the sixteen sets
+    # serve disjoint purposes, so installing every one costs ~17 MB to get
+    # fifteen icon sets nobody opens - the bundling extras exist to avoid.
+    if "all" in extras:
+        report.error(
+            base.dist,
+            "the 'all' extra is back - packs are meant to be installed one or two "
+            "at a time, and [all] reintroduces the bundling extras replaced",
+        )
 
 
 def check_release_tag(package: Package, version: str, report: Report) -> None:
@@ -466,6 +537,7 @@ def main() -> int:
         check_package_data(package, report)
         check_licenses(package, report)
         check_metrics(package, report)
+        check_tools_are_not_shipped(package, report)
         check_dependencies(package, by_dist, report)
         if tagged_version is not None:
             check_release_tag(package, tagged_version, report)

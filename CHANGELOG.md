@@ -35,8 +35,9 @@ from tkinter_icons import MaterialIcon
 - **Sixteen icon packs are now extras of one library.** Each pack is still its
   own distribution — it has to be, since each ships a font — but you no longer
   install them by name. `pip install "tkinter-icons[material]"` pulls in the
-  right one, and `[all]` pulls in every one. Asking for a pack that is not
-  installed raises with the exact install command for it. (#69)
+  right one, and two are named together as `tkinter-icons[material,simple]`.
+  Asking for a pack that is not installed raises with the exact install command
+  for it. (#69)
 
 - **`Icon.render_pil()`, a headless entry point.** It returns a PIL image and
   touches no Tk, so icons can be rendered in a test suite, a build step, or any
@@ -49,9 +50,10 @@ from tkinter_icons import MaterialIcon
 - **`IconSet`, one immutable object per provider and style,** holding the font
   bytes, the glyph map, the ink metrics, and the default options. (#67)
 
-- **`tkicons-metrics`, a CLI that measures and verifies glyph ink bounds.**
-  `--all` regenerates every installed pack, `--check` verifies without writing,
-  which is what CI runs to catch drift in the committed metrics. (#67)
+- **`python -m tkinter_icons.tools.generate_metrics`, which measures and
+  verifies glyph ink bounds.** `--all` regenerates every installed pack,
+  `--check` verifies without writing, which is what CI runs to catch drift in
+  the committed metrics. (#67)
 
 ### Changed
 
@@ -91,9 +93,38 @@ from tkinter_icons import MaterialIcon
   kept the widget, its images, and its theme-change binding alive after the
   widget was gone. (#68)
 
-- **`tkicons-build-all` no longer stops on a pack with nothing to build.** `bs`
-  has no `tools/generate_assets` — its assets were vendored, not generated — and
-  the runner treated that as a failure rather than a skip. (#77)
+- **The pack asset runner no longer stops on a pack with nothing to build.**
+  `bs` has no `tools/generate_assets` — its assets were vendored, not
+  generated — and the runner treated that as a failure rather than a skip.
+  (#77)
+
+### Removed
+
+- **Only the icon browser is published as a command.** The base package
+  installed `tkicons-build-all` and `tkicons-metrics`, and each pack installed
+  its own `tkicons-<pack>-build` and `tkicons-<pack>-quick` — twenty-eight
+  commands across fourteen packs. They regenerate assets and metrics into a
+  source tree, so they do nothing useful from an installed wheel, and
+  `generate_metrics` would have written into site-packages. Maintainers run them
+  with `python -m`. `tkinter-icons` remains. (#79)
+
+- **The `tools` modules no longer ship in any wheel.** Auto-discovery had been
+  sweeping `tkinter_icons_<pack>.tools` into all sixteen pack wheels, and
+  `tkinter_icons.tooling` into the base — upstream-scraping asset generators
+  that no user can run and that nothing imports at runtime. `tooling` moved
+  under `tkinter_icons.tools` with the rest. (#79)
+
+- **The `[all]` extra.** The sixteen sets serve disjoint purposes — brand
+  marks, developer logos, fantasy glyphs, weather symbols — so no application
+  draws from all of them, and installing every one cost about 17 MB of fonts
+  and JSON to get fifteen icon sets nobody opens. That is the bundling extras
+  exist to avoid. Name the one or two you need. (#79)
+
+- **`BaseFontProvider`, `ProviderRegistry`, and `load_external_providers` are no
+  longer re-exported from the package root.** They define an icon set rather
+  than use one, and sat beside `MaterialIcon` as though the two were the same
+  kind of thing. Import them from `tkinter_icons.providers` and
+  `tkinter_icons.registry` — which is how all sixteen packs already do. (#79)
 
 ## [4.0.0] — the base package no longer ships icons
 

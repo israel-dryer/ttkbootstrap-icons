@@ -38,7 +38,11 @@ dependencies = [
 # Icon packs are separate distributions because each ships its own fonts, but
 # they are presented as extras so users install one library:
 #     pip install tkinter-icons[material]
-#     pip install tkinter-icons[all]
+# There is deliberately no `all` extra. The sixteen sets serve disjoint purposes
+# - brand marks, developer logos, fantasy glyphs, weather symbols - so no
+# application draws from all of them, and installing every one costs ~17 MB of
+# fonts and JSON to get fifteen icon sets nobody opens. That is the bundling
+# extras exist to avoid. Users who need two name two: tkinter-icons[a,b].
 # Publish the pack releases BEFORE the base release that references them,
 # otherwise these floors point at versions PyPI does not have yet.
 [project.optional-dependencies]
@@ -58,16 +62,13 @@ rpg-awesome = ["tkinter-icons-rpga>=1.1.0"]
 simple = ["tkinter-icons-simple>=1.1.0"]
 typicons = ["tkinter-icons-typicons>=1.1.0"]
 weather = ["tkinter-icons-weather>=1.1.0"]
-all = [
-    "tkinter-icons[bootstrap,devicon,eva,fluent,fluent-regular,fontawesome]",
-    "tkinter-icons[google-material,ionicons,lucide,material,meteocons,remix]",
-    "tkinter-icons[rpg-awesome,simple,typicons,weather]",
-]
 
+# Only the browser is published. `tkinter_icons.tools` holds maintainer tools -
+# they regenerate assets and metrics into a source tree, so they are meaningless
+# from an installed wheel, and `generate_metrics` would write into site-packages.
+# Maintainers run them with `python -m tkinter_icons.tools.<name>`.
 [project.scripts]
 tkinter-icons = "tkinter_icons.browser:main"
-tkicons-build-all = "tkinter_icons.tools.build_all:main"
-tkicons-metrics = "tkinter_icons.tools.generate_metrics:main"
 
 [project.urls]
 Homepage = "https://github.com/israel-dryer/tkinter-icons"
@@ -78,12 +79,24 @@ include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["src"]
+# `tools` is maintainer-only and must not ship: once a wheel is on PyPI,
+# `tkinter_icons.tools` is a public import path we would owe compatibility on.
+exclude = ["*.tools", "*.tools.*"]
 
 [tool.setuptools.package-data]
 tkinter_icons = [
     "assets/**/*",
     "_pyinstaller/*.py"
 ]
+
+# Excluding `tools` from `packages.find` is not enough here. This package takes
+# its version from setuptools-scm, whose git file-finder combined with
+# `include-package-data` pulls every tracked file under `src/tkinter_icons/`
+# into the wheel as package data - including the .py files of a package that
+# was deliberately not declared. The packs need the same stanza for a different
+# reason: `include-package-data` also honours an existing `.egg-info/SOURCES.txt`.
+[tool.setuptools.exclude-package-data]
+tkinter_icons = ["tools/*"]
 
 # The repository holds eighteen distributions, and only this one takes its
 # version from a tag. The base package is tagged `v<version>`; every pack and

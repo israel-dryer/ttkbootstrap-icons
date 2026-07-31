@@ -17,12 +17,18 @@ import importlib
 import sys
 import warnings
 
+# Every extra named here must exist. pip does not fail on an unknown extra - it
+# prints a warning and installs the base package - so a stale name in this
+# message would walk the user into the no-glyphs state the message itself is
+# warning them about. There is deliberately no `[all]` extra to fall back on.
 warnings.warn(
     "ttkbootstrap-icons has been renamed to tkinter-icons. This package now "
     "forwards to it and receives no further updates.\n"
-    '  pip uninstall ttkbootstrap-icons && pip install "tkinter-icons[all]"\n'
+    "  pip uninstall ttkbootstrap-icons\n"
+    '  pip install "tkinter-icons[bootstrap]"\n'
     "Then replace `ttkbootstrap_icons` with `tkinter_icons` in your imports.\n"
-    "Icon packs are now extras: pip install \"tkinter-icons[material]\"",
+    "Icon packs are now extras, one per set, and there is no [all] - name the "
+    'ones you use: pip install "tkinter-icons[bootstrap,material]"',
     FutureWarning,
     stacklevel=2,
 )
@@ -50,7 +56,19 @@ for _name in _SUBMODULES:
     except ImportError:  # pragma: no cover - a module dropped in a later release
         pass
 
-__all__ = list(getattr(_target, "__all__", ()))
+#: Names 4.0.0 published at the root of this package that `tkinter_icons` does
+#: not re-export. Its root is deliberately the application-facing API, so the
+#: provider-definition machinery now lives only in its own module — but 4.0.0's
+#: `__all__` was exactly `Icon`, `get_hook_dirs`, `ProviderRegistry`,
+#: `load_external_providers`, and forwarding three of four is not a shim. The
+#: submodule aliases above only cover `from ttkbootstrap_icons.registry import
+#: ProviderRegistry`; these cover the root spelling 4.0.0 actually shipped.
+_RELOCATED = {
+    "ProviderRegistry": "tkinter_icons.registry",
+    "load_external_providers": "tkinter_icons.registry",
+}
+
+__all__ = [*getattr(_target, "__all__", ()), *_RELOCATED]
 __version__ = getattr(_target, "__version__", "")
 
 
@@ -61,8 +79,14 @@ def __getattr__(name: str):
     anything added to `tkinter_icons` later — including the pack icon classes,
     which resolve on demand — stays reachable through the old name.
     """
-    return getattr(_target, name)
+    try:
+        return getattr(_target, name)
+    except AttributeError:
+        module = _RELOCATED.get(name)
+        if module is None:
+            raise
+        return getattr(importlib.import_module(module), name)
 
 
 def __dir__() -> list[str]:
-    return dir(_target)
+    return sorted({*dir(_target), *_RELOCATED})

@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from tkinter_icons.tooling import (
+from tkinter_icons.tools.tooling import (
     download_to,
     load_json,
     glyphmap_from_metadata,
@@ -157,7 +157,8 @@ def main(argv=None):
                 f"Last error: {last_err}\n"
                 f"Attempted:{attempted}\n"
                 "Please download the font zip from the official releases page and re-run with --font-file, e.g.:\n"
-                "  tkicons-fluent-build --font-file C:\\path\\to\\FluentSystemIcons-Regular.ttf"
+                "  python -m tkinter_icons_fluent.tools.generate_assets "
+                "--font-file C:\\path\\to\\FluentSystemIcons-Regular.ttf"
             )
     else:
         raise SystemExit("--font-url or --font-file is required")

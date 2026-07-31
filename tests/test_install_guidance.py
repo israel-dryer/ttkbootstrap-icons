@@ -42,6 +42,41 @@ class TestExtrasFormEverywhere:
         assert "pip install tkinter-icons-" not in source, "raw distribution install command in browser"
 
 
+class TestShimMigrationMessageIsInstallable:
+    """The rename warning is an install instruction, and pip will not check it.
+
+    An unknown extra does not fail: pip prints `does not provide the extra` and
+    installs the base package, which has no glyphs. So a stale extra here walks
+    the user into exactly the state the rest of the same message warns about.
+    It named `[all]`, which was removed when the aggregate extra was dropped.
+    """
+
+    @staticmethod
+    def _extras_named_in_the_warning() -> list[str]:
+        import pathlib
+        import re
+
+        import ttkbootstrap_icons
+
+        source = pathlib.Path(ttkbootstrap_icons.__file__).read_text(encoding="utf-8-sig")
+        warning = source.split("warnings.warn(", 1)[1].split("FutureWarning", 1)[0]
+        return [
+            extra.strip()
+            for group in re.findall(r"tkinter-icons\[([^\]]+)\]", warning)
+            for extra in group.split(",")
+        ]
+
+    def test_the_warning_names_at_least_one_extra(self):
+        pytest.importorskip("ttkbootstrap_icons")
+        assert self._extras_named_in_the_warning()
+
+    def test_every_extra_it_names_exists(self):
+        pytest.importorskip("ttkbootstrap_icons")
+        known = {pack.extra for pack in KNOWN_PACKS}
+        unknown = [extra for extra in self._extras_named_in_the_warning() if extra not in known]
+        assert not unknown, f"migration warning tells users to install extras that do not exist: {unknown}"
+
+
 class TestProviderDiscoveryIsConsistent:
     """Every discovery site must scan both entry-point groups.
 

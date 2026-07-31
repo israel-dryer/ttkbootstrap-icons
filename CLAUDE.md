@@ -38,7 +38,7 @@ every package inside is renamed; only the containing directory lags. Don't
 .venv/Scripts/python.exe -m pip install --no-deps \
     -e packages/tkinter-icons-bs -e packages/tkinter-icons-fa \
     -e packages/ttkbootstrap-icons-shim
-.venv/Scripts/python.exe -m pytest -q          # 226 passing
+.venv/Scripts/python.exe -m pytest -q          # 237 passed, 1 skipped
 ```
 
 **Everything but the base package needs `--no-deps`** in a working tree. Each
@@ -57,7 +57,8 @@ build. That setting is gone as of #78; the pretend-version variable above is now
 the only way to build this package without git. See "Deliberate decisions".
 
 Only `bs` and `fa` are installed here. **The other 14 packs have no generated
-metrics yet** — that's one `tkicons-metrics --all` in an environment with all
+metrics yet** — that's one `python -m tkinter_icons.tools.generate_metrics --all` in an
+environment with all
 packs installed, and it must happen before release.
 
 ---
@@ -79,9 +80,10 @@ Milestone **5.0.0** (issues #67–#71, #75):
 | #75 rename to tkinter-icons | merged (#76) |
 | #70 changelog + release automation | merged (#78) |
 | #71 Sphinx docs + reframing | **not started — the only issue left** |
+| #79 trim the published surface | in review on `refactor/trim-published-surface` — reviewed, fixes committed, not yet merged to `5.0` |
 
 Also merged: #77, fixing three cloud-review findings plus a pre-existing
-`tkicons-build-all` bug.
+pack-asset-runner bug.
 
 **Every one of those issues is still OPEN on GitHub, and that is correct.** A PR
 merged into `5.0` does not close the issue it names — GitHub only honours
@@ -94,7 +96,8 @@ blockers below, which are work rather than decisions.
 
 **Two things block a `--strict` release**, both surfaced by the preflight:
 
-1. **Fourteen packs have no generated metrics.** One `tkicons-metrics --all` in
+1. **Fourteen packs have no generated metrics.** One `python -m
+   tkinter_icons.tools.generate_metrics --all` in
    an environment with every pack installed, then commit. Note the preflight now
    also checks that each generated file is *reachable by that pack's
    package-data globs* — thirteen packs declare `metrics*.json` at the module
@@ -118,34 +121,87 @@ pages written at build time by `scripts/gen_providers_docs.py` via the
 **gen-files** plugin. #71 moves all of it to Sphinx, for consistency with
 `ttkbootstrap` and `bootstack`.
 
-Four things the tree does not show:
+**The old docs are not being ported — they are being replaced.** Decided
+deliberately: the rename is the moment to write what this library actually needs
+rather than carry the structure of a set of pages that predates the extras
+model. Delete `mkdocs.yml`, `scripts/gen_providers_docs.py`, and the 42 pages
+under `docs/`; nothing there is a source for the new set.
 
-- **The naming is already clean.** Zero `ttkbootstrap_icons` or
-  `ttkbootstrap-icons` references survive in `docs/`, `README.md`, or
-  `mkdocs.yml` — #75 got them all. So #71 is a *positioning* rewrite, not a
-  rename. The audience is people on raw tkinter, or people who want a set other
-  than Bootstrap; see the identity note at the top of this file, and never show
-  a bare install line.
+That call was not aesthetic. The old pages are **pre-#69 in substance**, not just
+in tone: `pip install tkinter-icons tkinter-icons-bs` and
+`from tkinter_icons_bs import BootstrapIcon` appear across `index.md`,
+`getting-started.md`, `stateful-icons.md`, `icon-browser.md`, and `README.md` —
+a bare install line and the raw distribution names, both of which the library now
+contradicts. Only `docs/providers/bootstrap.md` used the single import root, so
+the old set disagreed with itself.
 
-- **`docs/providers/*.md` exist on disk *and* are generated.**
-  `gen_providers_docs.py` writes those same sixteen filenames into the build
-  through `mkdocs_gen_files`, so the committed copies are not necessarily what
-  the site serves. Settle which is authoritative *before* porting: Sphinx has no
-  gen-files equivalent, so this becomes an `autosummary` template, a `conf.py`
-  hook, or sixteen committed pages — and guessing wrong drops them silently.
+The settled structure, 14 pages:
 
-- **Nothing declares the docs dependencies.** No `requirements-docs.txt`, no
-  extra, no lockfile — `mkdocs`, `mkdocs-material`, `mkdocstrings`,
-  `mkdocs-video` and `mkdocs-gen-files` live only in the author's environment.
-  The Sphinx set needs to go somewhere a workflow can install from, and *not*
-  into an extra of the base package: `check_extras_cover_every_pack` errors on
-  any extra that is not also reachable from `[all]`, which a docs extra should
-  not be.
+> **Home** → **Getting started** (install · quickstart · choosing a pack ·
+> migrating from ttkbootstrap-icons) → **User guide** (icons & names · sizing and
+> render quality · stateful icons · headless rendering · icon browser ·
+> packaging) → **Integrations** (tkinter & ttk · ttkbootstrap) → **Icon packs**
+> (one page) → **API reference** → **Contributing** → **About** (release notes ·
+> license)
+
+Decisions behind it, each of which cost a discussion:
+
+- **One packs page, not sixteen.** Every pack's icon class is an `Icon` subclass
+  whose whole surface is `__init__(name, size, color, style)`; seven packs do not
+  even take `style`. What differs between packs is *data* — class name, extra,
+  styles, upstream version, glyph count — which is a table. Sixteen pages of
+  60-line boilerplate is why the install idiom went stale in all of them at once.
+  The same reasoning applies to the API reference: sixteen identical autodoc
+  pages earn nothing.
+
+- **No "bring your own font" guide.** The mechanism cannot be made private —
+  sixteen wheels subclass `BaseFontProvider` across a distribution boundary — but
+  building an icon font is a separate toolchain, and documenting it as a
+  supported path commits to a public API for a rare case. It belongs in
+  Contributing, as how a *pack* is built, not in the user guide as an invitation.
+
+- **Split consumer from developer.** `tkinter_icons` root is the consumer API and
+  is what the user guide and API reference cover; `tkinter_icons.providers`,
+  `.registry`, `.packs`, and the tools are the developer API and live in
+  Contributing. #79 made the code agree with this.
+
+- **The user guide is framework-neutral; framework idioms live in Integrations.**
+  A 5.1 PySimpleGUI 6 integration (lazy factory functions, since PSG does not
+  guarantee a window up front) then costs one page instead of a pass over every
+  example. It fits the existing model: `Icon.__init__` never touches Tk and
+  rendering defers to first `.image` access, so describe an `Icon` as a
+  description that renders on demand — not as a rendered image.
+
+- **Use `.. versionadded::` from the start,** so 5.1 additions are marked rather
+  than silently appearing.
+
+- **Release notes include the root `CHANGELOG.md` only,** via a myst `include`
+  with `:start-after: <!-- release-notes-start -->` — the marker `release_notes.py`
+  already slices on, so one marker serves both. Needs
+  `suppress_warnings = ["myst.header"]`. The seventeen other changelogs stay
+  release artifacts, linked from the packs table; they are near-identical to each
+  other and tell the same story sixteen times.
+
+- **Docs dependencies go in `docs/requirements.txt`,** matching bootstack, and
+  not into an extra of the base package. (The `[all]` reachability rule that used
+  to force this is gone with #79, but the family pattern stands.)
 
 - **There is no docs workflow.** `.github/workflows/` holds `ci.yml` and
   `release.yml` only; the `gh-pages` branch came from a manual `mkdocs
   gh-deploy`. A build-and-deploy job is part of #71. The site URL is
   `israel-dryer.github.io/tkinter-icons/`; the old one is dead on purpose.
+
+- **The one packs page must land at `packs.html` — the code already links
+  there.** #79 pointed `PACKS_DOC_URL` (`packs.py:29`) at
+  `{DOCS_URL}/packs.html` and used it to replace `REPO_URL` in the two places a
+  user with *no pack installed* meets first: `no_packs_message()`, raised from
+  `Icon.__init__`, and the browser's welcome screen. It 404s until #71 ships, so
+  a Sphinx structure that names that page anything else leaves a dead link as
+  the only pointer to the catalogue, for exactly the users least able to find it
+  another way. Reverting to `REPO_URL` in the meantime was considered and
+  declined — it is a second thing to remember to undo, and a silent revert if
+  forgotten. Noted on #71. A preflight assertion that the path exists in the
+  built docs would close it for good.
 
 ---
 
@@ -165,7 +221,7 @@ everything behind mutable class state on `Icon`.
 
 **Centering works from measured ink.** `font.getbbox()` under-reports icon-font
 glyph ink, which left full-bleed icons with no padding. Each glyph's true ink is
-measured once at 512px by `tkicons-metrics` and shipped as em-fraction bounds in
+measured once at 512px by `generate_metrics` and shipped as em-fraction bounds in
 each pack's `metrics.json`. Packs without metrics fall back to `getbbox`.
 
 **Caches are scoped to the Tk interpreter** and dropped on root `<Destroy>`. A
@@ -182,6 +238,72 @@ Each of these looks like a defect in isolation. They aren't.
   renderer that draws nothing until a pack is added. Chosen over re-bundling
   Bootstrap (which 4.0.0 deliberately removed) and over a default pack. Docs must
   never show a bare install — every install line carries an extra.
+- **There is no `[all]` extra, and it must not come back.** The sixteen sets
+  serve disjoint purposes — brand marks, developer logos, fantasy glyphs,
+  weather symbols — so no application draws from all of them; installing every
+  one costs ~17 MB to get fifteen icon sets nobody opens, which is the bundling
+  extras exist to avoid. Users needing two name two: `tkinter-icons[a,b]`.
+  Enforced twice: `test_there_is_no_all_extra`, and an error in
+  `check_extras_cover_every_pack`. Pack-to-extra coverage is now checked against
+  the pack directories rather than through `[all]`, which is a better check —
+  it catches a pack with no extra whether or not anything else references it.
+- **`tkinter-icons` is the only console script, and `tools` ships in no wheel.**
+  The base had `tkicons-build-all` and `tkicons-metrics`; each of fourteen packs
+  had `tkicons-<pack>-build` and `-quick` — twenty-eight commands on users'
+  PATH. All of them regenerate assets into a *source tree*, so they do nothing
+  from an installed wheel, and `generate_metrics` resolves its output through
+  `files(provider.package)` — under a normal install that is site-packages.
+  Removing the scripts and shipping `tools` are one change, not two: excluding
+  the module while leaving the entry points would install commands that crash on
+  import. `tkinter_icons.tooling` moved under `tools/` for the same reason —
+  it is developer-only by its own docstring, and a module cannot be dropped from
+  a wheel while it sits at the package root.
+- **`exclude-package-data` is what keeps `tools` out of all seventeen wheels —
+  `packages.find` alone does not.** Every package sets
+  `include-package-data = true`, and that makes setuptools treat files it learns
+  about from *outside* the package list as package data, past any
+  `packages.find` exclude. Two different sources feed it, which is why this
+  looks like two unrelated bugs:
+  - The **packs** get it from `.egg-info/SOURCES.txt`, which legitimately lists
+    the `tools` files because the sdist includes them — as it should; an sdist
+    is meant to be complete. The release workflow editable-installs every pack
+    before `python -m build`, so that file is present exactly when it matters.
+  - The **base** gets it from setuptools-scm's git file-finder, which sweeps in
+    every tracked file under `src/tkinter_icons/`.
+
+  **Verify by building and listing the wheel, never by reading the config**, and
+  build a pack that is *installed*. A pack with no `.egg-info` produces a clean
+  wheel with a broken config and reports a false pass — that mistake was made
+  once already, and it would have shipped `tools` in fourteen wheels.
+
+  **Both stanzas are required, and `check_tools_are_not_shipped` now enforces
+  both.** They stop different things: `packages.find` stops `tools` being
+  *declared* a package, `exclude-package-data` stops its files arriving as
+  *data*. Either alone ships the directory, so the check reads both and names
+  which one is missing — it originally read only `exclude-package-data`, which
+  meant a seventeenth pack copied from a sibling with the `packages.find` stanza
+  dropped would ship `tools` with a green preflight.
+- **The root exports the consumer API only, and the shim absorbs the
+  difference.** `BaseFontProvider`, `ProviderRegistry`, and
+  `load_external_providers` define an icon set rather than use one, and are
+  reached from `tkinter_icons.providers` / `.registry` — which is how all
+  sixteen packs already import them.
+
+  `ProviderRegistry` and `load_external_providers` *did* ship at the root in
+  4.0.0 — its `__all__` was exactly `Icon`, `get_hook_dirs`, `ProviderRegistry`,
+  `load_external_providers` — so this is a real removal. **Submodule aliasing
+  does not cover it**, and believing otherwise is the trap: the aliases rescue
+  `from ttkbootstrap_icons.registry import ProviderRegistry`, but 4.0.0 users
+  wrote `from ttkbootstrap_icons import ProviderRegistry`, which the shim
+  resolves through `getattr(tkinter_icons, name)` and which therefore began
+  raising an `AttributeError` naming a module the caller never imported.
+
+  The shim now carries the two relocated names itself, in `_RELOCATED`, tried
+  only after `getattr(_target, name)` raises `AttributeError` — so a pack's
+  `ImportError` still propagates untouched. `TestShimForwardsTheWholeOldSurface`
+  pins all four 4.0.0 names. **Anything else leaving the root has to be added
+  there too**; the base package's root is free to shrink precisely because the
+  shim is the compatibility layer, not the module paths.
 - **Odd sizes snap up to even.** `size=15` renders 16px. Removes half-pixel
   LANCZOS blur at fractional display scaling. `icon.rendered_size` reports the
   real size, and it is part of the cache key.
@@ -195,8 +317,18 @@ Each of these looks like a defect in isolation. They aren't.
 - **One base shim, published once.** `ttkbootstrap-icons` 5.0.0 forwards to
   `tkinter-icons`. Uses **`FutureWarning`, not `DeprecationWarning`** — Python
   hides the latter unless it fires in `__main__`. Aliases submodules into
-  `sys.modules` so `from ttkbootstrap_icons.icon import Icon` still works. Pinned
-  `>=5.0.0` with no ceiling, so it never needs another release.
+  `sys.modules` so `from ttkbootstrap_icons.icon import Icon` still works, and
+  carries the root names `tkinter_icons` dropped (above). Pinned `>=5.0.0` with
+  no ceiling, so it never needs another release.
+
+  **Its migration warning is an install instruction, and nothing downstream
+  checks it.** pip does not fail on an unknown extra — it prints `does not
+  provide the extra` and installs the base package, which has no glyphs — so a
+  stale extra in that text walks the user into the state the rest of the same
+  message is warning about. It named `[all]` until #79's review caught it.
+  `TestShimMigrationMessageIsInstallable` parses the extras back out of the
+  warning source and checks each against `KNOWN_PACKS`; keep that true of any
+  install line added to it.
 - **`registry.py` scans both entry-point groups.** Drop the legacy group and
   anyone upgrading with an old pack installed silently loses every icon set.
 - **The base package's setuptools-scm config is load-bearing in two ways.**
@@ -220,7 +352,7 @@ Each of these looks like a defect in isolation. They aren't.
   every other key matches its provider name, including `gmi` (which registers
   `gmi`, not `google-material`) and the `bs` directory (whose key is already
   `bootstrap`). One divergence in sixteen is what makes reading the key look
-  safe. Anything passing a name to `tkicons-metrics` has to import the provider
+  safe. Anything passing a name to `generate_metrics` has to import the provider
   to get it — reading the key gives an argument the CLI rejects.
 
 - **The old docs URL is dead and that was accepted.** GitHub redirects repo URLs
@@ -292,7 +424,7 @@ thread-safe."
 - **`--check` your assumptions about pack layout.** Packs differ: `bs` keeps
   assets in an `assets/` subpackage, others at the module root. `bs` has no
   `tools/generate_assets` at all (its assets were vendored, not generated), so
-  `tkicons-build-all` correctly skips it.
+  the pack asset runner correctly skips it.
 
 ---
 

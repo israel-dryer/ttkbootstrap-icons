@@ -96,7 +96,7 @@ jobs:
       # checked — one pack's stale metrics should not block another's release.
       - name: Check this pack's glyph metrics are current
         if: steps.resolve.outputs.providers != ''
-        run: tkicons-metrics ${{ steps.resolve.outputs.providers }} --check
+        run: python -m tkinter_icons.tools.generate_metrics ${{ steps.resolve.outputs.providers }} --check
 
       - name: Build sdist and wheel
         run: python -m build --outdir dist "${{ steps.resolve.outputs.directory }}"

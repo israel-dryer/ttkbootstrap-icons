@@ -17,16 +17,28 @@ Homepage = "https://github.com/israel-dryer/tkinter-icons"
 [project.entry-points."tkinter_icons.providers"]
 ion = "tkinter_icons_ion.provider:IonFontProvider"
 
-[project.scripts]
-tkicons-ion-build = "tkinter_icons_ion.tools.generate_assets:main"
-tkicons-ion-quick = "tkinter_icons_ion.tools.generate_assets:default_main"
-
 [tool.setuptools.package-data]
 "tkinter_icons_ion" = ["fonts/*.ttf", "glyphmap*.json", "metrics*.json", "LICENSES/*"]
 
 [tool.setuptools]
 package-dir = { "" = "src" }
 include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+# `tools` regenerates this pack's assets from upstream sources and is useless
+# from an installed wheel. Excluding it keeps `tkinter_icons_*.tools` from
+# becoming a public import path we would owe compatibility on after 5.0.0.
+# The maintainer workflow runs against an editable checkout, where it is on disk.
+exclude = ["*.tools", "*.tools.*"]
+
+# Excluding `tools` from `packages.find` is not enough on its own. With
+# `include-package-data`, setuptools reads an existing `.egg-info/SOURCES.txt`
+# and pulls what it lists in as package data - and the release workflow
+# editable-installs every pack before building, so that file is present and
+# lists these very files. This is what actually keeps them out of the wheel.
+[tool.setuptools.exclude-package-data]
+"tkinter_icons_ion" = ["tools/*"]
 
 [build-system]
 requires = ["setuptools>=77", "wheel"]

@@ -126,8 +126,8 @@ that existed were the built distribution?*
 - a `license-files` entry that matches no files, or none declared
 - a changelog missing, or disagreeing with `pyproject.toml`
 - a dependency floor above what the named package actually declares
-- a pack with no corresponding extra on the base package, or an extra missing
-  from `[all]`
+- a pack with no corresponding extra on the base package, or an `all` extra
+  reappearing on it
 - an entry point that does not import (with `--imports`)
 - with `--tag`: a tag whose version does not match the pyproject and changelog
 
@@ -146,8 +146,8 @@ from the font that produced them.
 Both are warnings today, and both will stop a `--strict` release:
 
 - **Fourteen packs have no generated metrics.** Only `bs` and `fa` do. Fixing it
-  is one `tkicons-metrics --all` in an environment with every pack installed,
-  then a commit.
+  is one `python -m tkinter_icons.tools.generate_metrics --all` in an
+  environment with every pack installed, then a commit.
 - **Three packs ship no upstream license file** — `bs`, `meteocons`, and
   `typicons`, while the other thirteen do. `bs` redistributes Bootstrap Icons.
   This needs the actual upstream license text and copyright line, which is a

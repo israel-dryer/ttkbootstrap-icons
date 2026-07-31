@@ -102,6 +102,42 @@ class TestDiscovery:
         assert list(reg.names()) == []
 
 
+class TestShimForwardsTheWholeOldSurface:
+    """4.0.0's root published four names, and the shim owes all four.
+
+    `tkinter_icons` deliberately keeps the provider-definition machinery out of
+    its root — that is a developer API, not something to sit beside
+    `MaterialIcon`. But `from ttkbootstrap_icons import ProviderRegistry` is
+    code people wrote against 4.0.0, and forwarding it to a root that no longer
+    has it raises an AttributeError naming a module they never imported.
+    Aliasing the submodules only rescues `from ttkbootstrap_icons.registry
+    import ProviderRegistry`, which is not the spelling 4.0.0 shipped.
+    """
+
+    #: 4.0.0's `ttkbootstrap_icons.__all__`, verbatim.
+    OLD_ROOT_NAMES = ("Icon", "get_hook_dirs", "ProviderRegistry", "load_external_providers")
+
+    @pytest.fixture()
+    def shim(self):
+        return pytest.importorskip("ttkbootstrap_icons")
+
+    @pytest.mark.parametrize("name", OLD_ROOT_NAMES)
+    def test_every_4_0_0_root_name_still_resolves(self, shim, name):
+        assert getattr(shim, name) is not None
+
+    @pytest.mark.parametrize("name", OLD_ROOT_NAMES)
+    def test_every_4_0_0_root_name_is_in_all(self, shim, name):
+        assert name in shim.__all__
+
+    def test_relocated_names_are_the_real_objects(self, shim):
+        assert shim.ProviderRegistry is ProviderRegistry
+        assert shim.load_external_providers is load_external_providers
+
+    def test_an_unknown_name_still_raises_attribute_error(self, shim):
+        with pytest.raises(AttributeError):
+            shim.definitely_not_a_real_name
+
+
 class TestCatalogueUsesNewNames:
     def test_packs_reference_the_renamed_distributions(self):
         from tkinter_icons.packs import KNOWN_PACKS
