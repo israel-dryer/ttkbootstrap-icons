@@ -15,9 +15,17 @@ neither is this one: `docs/assets/` holds documentation screenshots, and
 | `icon-small.svg` | same mark redrawn for small sizes — fuller bleed, chunkier star, so it survives 16px |
 | `logo-compact-{light,dark}.svg` | two stacked squares |
 | `logo-full-{light,dark}.svg` | three stacked squares |
-| `png/icon-{16,32,48,64,128,180,256,512}.png` | rasterised mark, transparent background |
-| `png/wordmark-{light,dark}.png` | mark + wordmark, 948×228 |
+| `wordmark-{light,dark}.svg` | mark + wordmark, teal accent on the hyphen |
+| `wordmark-mono-{light,dark}.svg` | same, single ink — no teal accent |
+| `png/icon-{16,32,48,64,128,180,256,512}.png` | rasterised mark |
+| `png/wordmark-{light,dark}.png` | rasterised wordmark, 852×192 |
 | `png/github-social-1280x640.png` | the repository social card |
+
+The wordmark SVGs carry **outlined text, not `<text>`**. Keep it that way. The
+letterforms are JetBrains Mono, and an SVG used as a logo is loaded as its own
+image document — it cannot see `@font-face` rules from the page embedding it, so
+live text falls back to whatever local monospace the reader happens to have.
+Outlines also keep a font binary out of the repository.
 
 `light` and `dark` name the **background the asset is drawn for**, not the ink:
 `wordmark-light` is dark ink on white, `wordmark-dark` is light ink on navy.
@@ -59,14 +67,16 @@ references. Update here first, then the copy.
 | Package READMEs | absolute `raw.githubusercontent.com` URL | PyPI resolves no relative paths |
 | GitHub social card | uploaded under Settings → General | never a file in the tree |
 
-## Backgrounds are baked into the wordmarks
+## Everything is transparent except the social card
 
-The icon PNGs are transparent. **The wordmark PNGs and the social card are
-not** — they carry an opaque `#FFFFFF` or `#111827` field.
+Only `github-social-1280x640.png` carries an opaque field, which is correct — it
+is a standalone card, not a mark placed on someone else's background.
 
-That is right for a README, where an opaque banner reads as deliberate on any
-page. It is wrong for a docs navbar, where anything but an exact background
-match shows as a visible rectangle. A navbar logo wants a transparent SVG.
+The marks and wordmarks are all transparent, so `light` and `dark` select ink to
+suit the page rather than dragging a background along. That is what a docs
+navbar needs, and it is what makes the `<picture>` pattern below work: each
+variant sits on the reader's actual background instead of a baked slab that only
+matches one of them.
 
 ## Using a wordmark in a README
 
