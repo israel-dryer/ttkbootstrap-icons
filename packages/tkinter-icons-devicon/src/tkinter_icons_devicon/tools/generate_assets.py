@@ -7,7 +7,7 @@ from pathlib import Path
 # the local repo's tooling module directly by path to avoid importing the
 # tkinter_icons package __init__ (which pulls PIL).
 try:
-    from tkinter_icons.tooling import (  # type: ignore
+    from tkinter_icons.tools.tooling import (  # type: ignore
         download_to,
         load_text,
         load_json,
@@ -20,7 +20,7 @@ except Exception:  # pragma: no cover - fallback path loader
     import importlib.util as _ilu
     import sys as _sys
     REPO_ROOT = Path(__file__).resolve().parents[5]
-    TOOLING_PATH = REPO_ROOT / "packages" / "tkinter-icons" / "src" / "tkinter_icons" / "tooling.py"
+    TOOLING_PATH = REPO_ROOT / "packages" / "tkinter-icons" / "src" / "tkinter_icons" / "tools" / "tooling.py"
     spec = _ilu.spec_from_file_location("_ttkicons_tooling", TOOLING_PATH)
     if spec and spec.loader:
         mod = _ilu.module_from_spec(spec)
@@ -33,7 +33,7 @@ except Exception:  # pragma: no cover - fallback path loader
         write_glyphmap = mod.write_glyphmap
         ensure_dir = mod.ensure_dir
     else:
-        raise RuntimeError("Unable to load tkinter_icons.tooling module")
+        raise RuntimeError("Unable to load tkinter_icons.tools.tooling module")
 
 
 PRESETS = {

@@ -27,7 +27,8 @@ pip install "tkinter-icons[bootstrap]"
   which under-reports it on icon fonts. Without this file the pack still
   renders, by falling back to `getbbox`; with it, full-bleed icons keep their
   padding and everything else sits centered. Regenerate with
-  `tkicons-metrics bootstrap` whenever the font or glyph map changes. (#67)
+  `python -m tkinter_icons.tools.generate_metrics bootstrap` whenever the font
+  or glyph map changes. (#67)
 
 ### Changed
 

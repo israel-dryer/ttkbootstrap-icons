@@ -250,16 +250,19 @@ def check_metrics(package: Package, report: Report) -> None:
     A pack without them still renders — the renderer falls back to
     ``font.getbbox()`` — but that fallback is the very miscentering 5.0.0 was
     built to fix, so shipping without metrics quietly undoes the release.
-    Generate with ``tkicons-metrics --all``; verify with ``tkicons-metrics
-    --all --check``, which needs the packs installed and so runs in CI rather
-    than here.
+    Generate with ``python -m tkinter_icons.tools.generate_metrics --all``; add
+    ``--check`` to verify instead of write, which needs the packs installed and
+    so runs in CI rather than here.
     """
     if package.dist == BASE_DIST or not package.directory.name.startswith("tkinter-icons-"):
         return
 
     found = metrics_files(package)
     if not found:
-        report.warn(package.dist, "no metrics*.json - run 'tkicons-metrics --all' before release")
+        report.warn(
+            package.dist,
+            "no metrics*.json - run 'python -m tkinter_icons.tools.generate_metrics --all' before release",
+        )
         return
 
     # On disk is not the same as in the wheel, and this is the failure that
@@ -328,18 +331,20 @@ def check_dependencies(package: Package, by_dist: dict[str, Package], report: Re
 
 
 def check_extras_cover_every_pack(base: Package, by_dist: dict[str, Package], report: Report) -> None:
-    """Sixteen packs, sixteen extras, and ``[all]`` reaching all of them.
+    """Sixteen packs, sixteen extras, and deliberately no ``[all]``.
 
     The packs are separate distributions only because each ships a font; a user
     should only ever meet them as extras. A pack with no extra is a pack nobody
     can install the documented way.
+
+    Coverage is checked against the pack directories themselves rather than
+    through an aggregate extra, so a pack added without an extra is caught by
+    the same rule whether or not anything else references it.
     """
     extras = base.pyproject.get("project", {}).get("optional-dependencies", {})
 
     covered = set()
-    for name, requirements in extras.items():
-        if name == "all":
-            continue
+    for requirements in extras.values():
         for requirement in requirements:
             match = REQUIREMENT_RE.match(requirement)
             if match and match.group("name") in by_dist:
@@ -352,14 +357,15 @@ def check_extras_cover_every_pack(base: Package, by_dist: dict[str, Package], re
     for missing in sorted(packs - covered):
         report.error(base.dist, f"{missing} has no extra - it can only be installed by name")
 
-    # `all` is written as nested self-references, e.g. "tkinter-icons[bootstrap,...]".
-    reachable = set()
-    for requirement in extras.get("all", []):
-        inner = re.search(r"\[([^\]]*)\]", requirement)
-        if inner:
-            reachable.update(part.strip() for part in inner.group(1).split(","))
-    for missing in sorted(set(extras) - {"all"} - reachable):
-        report.error(base.dist, f"extra '{missing}' is not included in [all]")
+    # `all` was removed before 5.0.0 and must not come back: the sixteen sets
+    # serve disjoint purposes, so installing every one costs ~17 MB to get
+    # fifteen icon sets nobody opens - the bundling extras exist to avoid.
+    if "all" in extras:
+        report.error(
+            base.dist,
+            "the 'all' extra is back - packs are meant to be installed one or two "
+            "at a time, and [all] reintroduces the bundling extras replaced",
+        )
 
 
 def check_release_tag(package: Package, version: str, report: Report) -> None:

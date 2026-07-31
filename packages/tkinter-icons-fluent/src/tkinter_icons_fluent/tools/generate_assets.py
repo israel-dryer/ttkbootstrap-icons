@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from tkinter_icons.tooling import (
+from tkinter_icons.tools.tooling import (
     download_to,
     load_json,
     glyphmap_from_metadata,

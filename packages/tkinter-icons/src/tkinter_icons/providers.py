@@ -260,7 +260,7 @@ class BaseFontProvider(ABC):
 
         The metrics file is what lets the renderer center on a glyph's true ink
         instead of Pillow's `getbbox`, which under-reports it. Generate it with
-        `tkicons-metrics <package>`.
+        `python -m tkinter_icons.tools.generate_metrics <package>`.
 
         A missing or unreadable file is not an error: providers published
         before metrics existed simply have none, and the renderer falls back to

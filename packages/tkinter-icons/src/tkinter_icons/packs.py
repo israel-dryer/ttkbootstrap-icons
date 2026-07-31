@@ -21,6 +21,12 @@ from dataclasses import dataclass
 from typing import Iterator, Optional
 
 REPO_URL = "https://github.com/israel-dryer/tkinter-icons"
+DOCS_URL = "https://israel-dryer.github.io/tkinter-icons"
+
+#: Where someone with no pack installed is sent to pick one. The sixteen sets
+#: serve disjoint purposes, so the useful answer is a comparison rather than a
+#: list of install commands - which is why this points at the docs and not here.
+PACKS_DOC_URL = f"{DOCS_URL}/packs.html"
 
 
 @dataclass(frozen=True)
@@ -33,7 +39,7 @@ class Pack:
         module: The importable module it provides.
         icon_class: The icon class as named in `module`.
         provider: The provider name it registers under, used by the registry
-            and the `tkicons-metrics` tool.
+            and the `generate_metrics` tool.
         label: Human-readable name of the upstream icon set.
         alias: The name this class is exported as from `tkinter_icons`.
             The packs grew inconsistent short names (`MatIcon`, `FAIcon`,
@@ -180,10 +186,9 @@ def no_packs_message() -> str:
         "tkinter-icons is the renderer; the glyphs come from packs you add as extras:",
     ]
     commands = [(pack.install_command, pack.label) for pack in suggestions if pack]
-    commands.append(('pip install "tkinter-icons[all]"', "every pack"))
     width = max(len(command) for command, _ in commands)
     lines += [f"  {command:<{width}}  # {label}" for command, label in commands]
-    lines += ["", f"All {len(KNOWN_PACKS)} packs: {REPO_URL}"]
+    lines += ["", f"Choosing among all {len(KNOWN_PACKS)} packs: {PACKS_DOC_URL}"]
     return "\n".join(lines)
 
 
@@ -217,7 +222,9 @@ def missing_pack_message(key: str) -> str:
 
 
 __all__ = [
+    "DOCS_URL",
     "KNOWN_PACKS",
+    "PACKS_DOC_URL",
     "REPO_URL",
     "Pack",
     "find_pack",

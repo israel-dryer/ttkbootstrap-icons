@@ -17,16 +17,20 @@ Homepage = "https://github.com/israel-dryer/tkinter-icons"
 [project.entry-points."tkinter_icons.providers"]
 typicons = "tkinter_icons_typicons.provider:TypiconsFontProvider"
 
-[project.scripts]
-tkicons-typicons-build = "tkinter_icons_typicons.tools.generate_assets:main"
-tkicons-typicons-quick = "tkinter_icons_typicons.tools.generate_assets:default_main"
-
 [tool.setuptools.package-data]
 "tkinter_icons_typicons" = ["fonts/*.ttf", "glyphmap*.json", "metrics*.json", "LICENSES/*"]
 
 [tool.setuptools]
 package-dir = { "" = "src" }
 include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+# `tools` regenerates this pack's assets from upstream sources and is useless
+# from an installed wheel. Excluding it keeps `tkinter_icons_*.tools` from
+# becoming a public import path we would owe compatibility on after 5.0.0.
+# The maintainer workflow runs against an editable checkout, where it is on disk.
+exclude = ["*.tools", "*.tools.*"]
 
 [build-system]
 requires = ["setuptools>=77", "wheel"]

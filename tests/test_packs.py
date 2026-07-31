@@ -25,6 +25,7 @@ import tkinter_icons
 from tkinter_icons.packs import (
     KNOWN_PACKS,
     PACK_BY_EXPORT,
+    PACKS_DOC_URL,
     find_pack,
     installed_packs,
     missing_pack_message,
@@ -111,12 +112,15 @@ class TestCatalogueMatchesRepo:
         assert pack.extra in extras, f"no [{pack.extra}] extra in the base pyproject"
         assert any(pack.distribution in dep for dep in extras[pack.extra])
 
-    def test_all_extra_covers_every_pack(self):
+    def test_there_is_no_all_extra(self):
+        # Removed before 5.0.0 and meant to stay removed. The sixteen sets serve
+        # disjoint purposes - brand marks, developer logos, fantasy glyphs,
+        # weather symbols - so installing every one costs ~17 MB of fonts and
+        # JSON to get fifteen icon sets nobody opens. Users who need two name
+        # two: tkinter-icons[a,b].
         base = PACKAGES / "tkinter-icons" / "pyproject.toml"
         extras = tomllib.loads(base.read_text(encoding="utf-8-sig"))["project"]["optional-dependencies"]
-        combined = " ".join(extras["all"])
-        missing = [p.extra for p in KNOWN_PACKS if p.extra not in combined]
-        assert not missing, f"[all] omits: {missing}"
+        assert "all" not in extras
 
 
 class TestMessages:
@@ -124,7 +128,10 @@ class TestMessages:
         text = no_packs_message()
         assert "renderer" in text
         assert 'pip install "tkinter-icons[bootstrap]"' in text
-        assert '[all]' in text
+        # Someone with nothing installed needs to choose, not to install
+        # everything - so the message sends them to the comparison.
+        assert '[all]' not in text
+        assert PACKS_DOC_URL in text
 
     def test_missing_pack_message_names_the_extra(self):
         text = missing_pack_message("material")
