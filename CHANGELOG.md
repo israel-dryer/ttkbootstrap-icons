@@ -1,0 +1,239 @@
+# Changelog
+
+All notable changes to the `tkinter-icons` base package are documented in this
+file. Each icon pack keeps its own changelog under `packages/<pack>/CHANGELOG.md`.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+The project was published as `ttkbootstrap-icons` through 4.0.0 and renamed to
+`tkinter-icons` in 5.0.0. Entries before 5.0.0 were reconstructed from git
+history after the fact and are summaries rather than contemporaneous notes.
+
+<!-- release-notes-start -->
+
+## [5.0.0] — renamed to tkinter-icons, rebuilt around measured glyph ink
+
+`ttkbootstrap-icons` is now **`tkinter-icons`**. Bootstrap icons were built
+directly into both ttkbootstrap and bootstack, so this library is no longer the
+way to get icons for ttkbootstrap — it is for people on raw tkinter, and for
+people who want an icon set other than Bootstrap. The name now says that.
+
+Installing `ttkbootstrap-icons` still works. It becomes a forwarding shim that
+depends on `tkinter-icons` and re-exports everything, including submodules, so
+`from ttkbootstrap_icons.icon import Icon` keeps working. It warns once on
+import and will not be updated again.
+
+```python
+pip install "tkinter-icons[material]"
+
+from tkinter_icons import MaterialIcon
+```
+
+### Added
+
+- **Sixteen icon packs are now extras of one library.** Each pack is still its
+  own distribution — it has to be, since each ships a font — but you no longer
+  install them by name. `pip install "tkinter-icons[material]"` pulls in the
+  right one, and `[all]` pulls in every one. Asking for a pack that is not
+  installed raises with the exact install command for it. (#69)
+
+- **`Icon.render_pil()`, a headless entry point.** It returns a PIL image and
+  touches no Tk, so icons can be rendered in a test suite, a build step, or any
+  process without a display. (#67)
+
+- **`RenderOptions`, carrying every drawing knob as one immutable value.** Size,
+  color, padding, rotation, flip, and oversampling travel together instead of
+  living as mutable class state on `Icon`. (#67)
+
+- **`IconSet`, one immutable object per provider and style,** holding the font
+  bytes, the glyph map, the ink metrics, and the default options. (#67)
+
+- **`tkicons-metrics`, a CLI that measures and verifies glyph ink bounds.**
+  `--all` regenerates every installed pack, `--check` verifies without writing,
+  which is what CI runs to catch drift in the committed metrics. (#67)
+
+### Changed
+
+- **Glyphs are centered on measured ink, not on `font.getbbox()`.** Pillow's
+  `getbbox()` under-reports ink on icon fonts, which left full-bleed icons with
+  no padding at all and nudged everything else off center. Each glyph's true ink
+  is now measured once at 512px and shipped with its pack as em-fraction bounds
+  in `metrics.json`. A pack without metrics falls back to `getbbox`, so old
+  packs still render. (#67)
+
+- **The Bootstrap `y_bias` fudge was removed.** It existed to cancel the
+  `getbbox` skew; against real ink metrics it visibly pushes glyphs low. (#67)
+
+- **An odd size snaps up to the next even one.** `size=15` renders at 16px.
+  Half-pixel geometry is what produced the soft LANCZOS edges at fractional
+  display scaling. `icon.rendered_size` reports what was actually drawn, and it
+  is part of the cache key. (#67)
+
+- **The drawing internals are public.** `render.py` is pure PIL and imports no
+  Tkinter; `icon.py` is the only Tk-facing layer. Subclassing `Icon` to change
+  how something draws is no longer the only way in. (#67)
+
+- **Entry-point discovery scans both provider groups.** A pack published against
+  either `ttkbootstrap_icons.providers` or `tkinter_icons.providers` is found, so
+  upgrading the base package with old packs installed does not silently lose
+  every icon set. (#75)
+
+### Fixed
+
+- **Image caches are scoped to the Tk interpreter and dropped when its root is
+  destroyed.** A `PhotoImage` belongs to the interpreter that created it, so a
+  process-wide cache handed out dead handles as soon as a root was replaced —
+  which is what happened in test suites and in any app that tears a window down
+  and builds another. (#68)
+
+- **A stateful icon releases its widget bindings.** Icons bound to widget state
+  kept the widget, its images, and its theme-change binding alive after the
+  widget was gone. (#68)
+
+- **`tkicons-build-all` no longer stops on a pack with nothing to build.** `bs`
+  has no `tools/generate_assets` — its assets were vendored, not generated — and
+  the runner treated that as a failure rather than a skip. (#77)
+
+## [4.0.0] — the base package no longer ships icons
+
+### Changed
+
+- **Bootstrap icons moved out of the base package** into their own
+  `ttkbootstrap-icons-bs` distribution, making the base package fully
+  provider-agnostic. This is breaking: an install that relied on Bootstrap
+  being built in needs the pack added.
+
+- **Asking for a provider that is not installed says how to install it,**
+  rather than failing on an empty registry.
+
+### Added
+
+- **`ttkbootstrap-icons-fluent-reg`,** packaging the regular weight of Fluent
+  System Icons separately from the filled set.
+
+### Fixed
+
+- **Package data and license references** that resolved on a working tree but
+  not in a built wheel.
+
+## [3.3.0] — sharper icons at small sizes
+
+### Changed
+
+- **Icons are oversampled and downscaled,** which is what fixed alignment and
+  softness at small sizes.
+
+- **Package licenses use the PEP 621 form** (`license = "MIT"` with
+  `license-files`) instead of the deprecated classifier and table.
+
+### Fixed
+
+- **A missing icon names itself in the error,** quoted, instead of being
+  reported as an unspecified lookup failure.
+
+- **Multi-font providers ship all their glyph maps.** The package-data glob
+  matched only `glyphmap.json`, so a provider with a file per style shipped one
+  of them. (#61)
+
+## [3.2.0] — cache keys
+
+### Changed
+
+- **The image cache key is a hash** rather than a concatenation of subclass
+  names, which could collide.
+
+## [3.1.2] — Python 3.10
+
+### Fixed
+
+- **`typing-extensions` is a dependency,** so Python 3.10 installs work.
+
+## [3.1.1] — theme changes
+
+### Fixed
+
+- **Stateful icons follow a theme change** instead of keeping the colors of the
+  theme they were created under. (#54)
+
+## [3.1.0] — stateful icons
+
+### Added
+
+- **`StatefulIconMixin`,** which maps an icon to a widget's ttk state so it
+  recolors on hover, press, and disable along with the widget.
+
+### Fixed
+
+- **Multi-state ttk foreground maps parse correctly,** including compound states
+  such as `pressed !disabled`.
+
+- **A widget with no existing image map** no longer raises when an icon is
+  attached to it.
+
+- **The fallback state color** is the normal foreground rather than black.
+
+## [3.0.1] — provider asset fixes
+
+### Fixed
+
+- **Invalid icon references** in several providers. (#46)
+
+- **Font Awesome's generated glyph map** covers the brands and regular styles,
+  not just solid. (#48)
+
+## [3.0.0] — one provider API
+
+### Changed
+
+- **Every provider was rewritten against a single API.** Names, styles, and
+  display names resolve the same way everywhere, whether the style is passed as
+  an argument or carried in the name. (#31)
+
+- **Font scaling and padding are standard parameters** across all providers.
+
+### Added
+
+- **Typicons** and **Meteocons** packs. (#12, #19)
+
+- **Documentation site and per-provider metadata,** with a visual test per pack.
+  (#32, #34)
+
+## [2.1.0] — more packs, typed styles
+
+### Added
+
+- **Eva Icons**, **RPG Awesome**, and **Devicon** packs. (#10, #15, #17)
+
+- **Type hints for style arguments.** (#21)
+
+### Fixed
+
+- **Fluent style naming.** (#23)
+
+## [2.0.0] — packs became separate distributions
+
+### Changed
+
+- **The project was restructured so each icon set is its own installable
+  package,** discovered through entry points, instead of everything living in
+  one distribution.
+
+### Added
+
+- **Font Awesome**, **Material Design Icons**, **Remix**, **Ionicons**,
+  **Fluent System Icons**, **Simple Icons**, **Weather Icons**, **Lucide**, and
+  **Google Material Icons** packs. (#1–#9)
+
+- **Multi-style icon support**, for fonts shipping more than one weight.
+
+- **PyInstaller hooks** for the pack subpackages.
+
+### Fixed
+
+- **Icons are no longer clipped** at their bounding box.
+
+## [1.0.0] — initial release
+
+Font-based Bootstrap icons for Tkinter and ttkbootstrap, rendered to
+Tk-compatible images.

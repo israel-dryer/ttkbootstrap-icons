@@ -11,6 +11,7 @@ description = "Renamed to tkinter-icons. This package forwards to it and receive
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
+license-files = ["LICENSE"]
 authors = [{ name = "Israel Dryer", email = "israel.dryer@gmail.com" }]
 classifiers = [
     "Development Status :: 7 - Inactive",
@@ -29,5 +30,5 @@ package-dir = { "" = "src" }
 where = ["src"]
 
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
