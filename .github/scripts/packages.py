@@ -21,6 +21,9 @@ Tag scheme::
 The base package keeps the bare ``v`` form it has used since 1.0.0, and its
 setuptools-scm config matches only that form, so a pack tag can never become the
 base package's version.
+
+Needs Python 3.11 or newer for ``tomllib``. That is no constraint on the library,
+which supports 3.10 — this and its sibling scripts only ever run in CI, on 3.12.
 """
 from __future__ import annotations
 

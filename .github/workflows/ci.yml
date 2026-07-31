@@ -49,7 +49,9 @@ jobs:
           python -m pip install -e packages/tkinter-icons
           python -m pip install --no-deps $(printf -- '-e %s ' packages/tkinter-icons-*/)
           python -m pip install --no-deps -e packages/ttkbootstrap-icons-shim
-          python -m pip install pytest
+          # tomli is tomllib's backport; the pack tests read pyproject.toml and
+          # 3.10 has no tomllib in the stdlib.
+          python -m pip install pytest 'tomli; python_version < "3.11"'
         shell: bash
 
       - name: Run tests

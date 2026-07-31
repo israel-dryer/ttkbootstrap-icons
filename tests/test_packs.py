@@ -9,8 +9,12 @@ from __future__ import annotations
 
 import importlib
 import sys
-import tomllib
 from pathlib import Path
+
+if sys.version_info >= (3, 11):
+    import tomllib
+else:  # 3.10 has no tomllib; tomli is the same API under the old name
+    import tomli as tomllib
 
 import pytest
 
