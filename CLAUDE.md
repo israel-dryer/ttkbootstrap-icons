@@ -53,7 +53,8 @@ you want resolution to work normally.
 
 Before #70 this only bit the shim, because setuptools-scm was misconfigured and
 silently returned `fallback_version` — which happened to be 5.0.0 — for every
-build. See "Deliberate decisions".
+build. That setting is gone as of #78; the pretend-version variable above is now
+the only way to build this package without git. See "Deliberate decisions".
 
 Only `bs` and `fa` are installed here. **The other 14 packs have no generated
 metrics yet** — that's one `tkicons-metrics --all` in an environment with all
@@ -76,25 +77,75 @@ Milestone **5.0.0** (issues #67–#71, #75):
 | #68 stateful icon lifecycle | merged (#73) |
 | #69 packs as extras | merged (#74) |
 | #75 rename to tkinter-icons | merged (#76) |
-| #70 changelog + release automation | done, on `feat/release-automation` |
-| #71 Sphinx docs + reframing | **not started** |
+| #70 changelog + release automation | merged (#78) |
+| #71 Sphinx docs + reframing | **not started — the only issue left** |
 
 Also merged: #77, fixing three cloud-review findings plus a pre-existing
 `tkicons-build-all` bug.
 
+**Every one of those issues is still OPEN on GitHub, and that is correct.** A PR
+merged into `5.0` does not close the issue it names — GitHub only honours
+`Closes #n` on a merge into the default branch. They all close at once when the
+single `5.0` → `main` PR lands. Do not close them by hand; an issue closed early
+loses its link to the merge that actually shipped it.
+
 `5.0` is code-complete. #71 is all that is left before release — plus the two
 blockers below, which are work rather than decisions.
 
-**Two things block a `--strict` release**, both surfaced by the new preflight:
+**Two things block a `--strict` release**, both surfaced by the preflight:
 
 1. **Fourteen packs have no generated metrics.** One `tkicons-metrics --all` in
-   an environment with every pack installed, then commit.
+   an environment with every pack installed, then commit. Note the preflight now
+   also checks that each generated file is *reachable by that pack's
+   package-data globs* — thirteen packs declare `metrics*.json` at the module
+   root and `bs` relies on `assets/*.json`, so if the generator writes anywhere
+   else, `--strict` fails rather than shipping a wheel without metrics.
 2. **Three packs ship no upstream license file** — `bs`, `meteocons`,
    `typicons`. Needs a human decision on the exact license text; see gotchas.
+   `KNOWN_LICENSE_GAPS` in `verify_packages.py` must end up empty.
 
 Release mechanics live in `RELEASE.md`, and are real now: tag-driven, Trusted
 Publishing, no token anywhere. The tag scheme is `v<version>` for the base
 package and `<distribution>-v<version>` for the other seventeen.
+
+---
+
+## What #71 picks up
+
+The docs today are **MkDocs Material, not Sphinx**: `mkdocs.yml` at the root, 42
+markdown pages under `docs/`, API pages through **mkdocstrings**, and provider
+pages written at build time by `scripts/gen_providers_docs.py` via the
+**gen-files** plugin. #71 moves all of it to Sphinx, for consistency with
+`ttkbootstrap` and `bootstack`.
+
+Four things the tree does not show:
+
+- **The naming is already clean.** Zero `ttkbootstrap_icons` or
+  `ttkbootstrap-icons` references survive in `docs/`, `README.md`, or
+  `mkdocs.yml` — #75 got them all. So #71 is a *positioning* rewrite, not a
+  rename. The audience is people on raw tkinter, or people who want a set other
+  than Bootstrap; see the identity note at the top of this file, and never show
+  a bare install line.
+
+- **`docs/providers/*.md` exist on disk *and* are generated.**
+  `gen_providers_docs.py` writes those same sixteen filenames into the build
+  through `mkdocs_gen_files`, so the committed copies are not necessarily what
+  the site serves. Settle which is authoritative *before* porting: Sphinx has no
+  gen-files equivalent, so this becomes an `autosummary` template, a `conf.py`
+  hook, or sixteen committed pages — and guessing wrong drops them silently.
+
+- **Nothing declares the docs dependencies.** No `requirements-docs.txt`, no
+  extra, no lockfile — `mkdocs`, `mkdocs-material`, `mkdocstrings`,
+  `mkdocs-video` and `mkdocs-gen-files` live only in the author's environment.
+  The Sphinx set needs to go somewhere a workflow can install from, and *not*
+  into an extra of the base package: `check_extras_cover_every_pack` errors on
+  any extra that is not also reachable from `[all]`, which a docs extra should
+  not be.
+
+- **There is no docs workflow.** `.github/workflows/` holds `ci.yml` and
+  `release.yml` only; the `gh-pages` branch came from a manual `mkdocs
+  gh-deploy`. A build-and-deploy job is part of #71. The site URL is
+  `israel-dryer.github.io/tkinter-icons/`; the old one is dead on purpose.
 
 ---
 
@@ -182,7 +233,10 @@ Each of these looks like a defect in isolation. They aren't.
 
 - **Branches:** `refactor/*`, `fix/*`, `feat/*` off `5.0`. PRs target `5.0`.
   Stack dependent PRs on each other; GitHub retargets on merge.
-- **Every PR closes an issue** on the 5.0.0 milestone.
+- **Every PR names an issue** on the 5.0.0 milestone with `Closes #n` — which
+  takes effect only when `5.0` reaches `main`, so the issues stay open in the
+  meantime. Merge with a merge commit (`gh pr merge <n> --merge --delete-branch`),
+  matching #72–#78.
 - **Changelog:** root `CHANGELOG.md` for the base package, plus one per pack.
   Format follows bootstack: `## [<version>] — <descriptive title>`, which drives
   the GitHub Release title and body via `release_notes.py`.
