@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68", "setuptools-scm>=8"]
+requires = ["setuptools>=77", "setuptools-scm>=10"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -9,6 +9,7 @@ description = "Base package for font-based icons in Tkinter/ttkbootstrap with in
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.10"
 license = "MIT"
+license-files = ["LICENSE"]
 authors = [
     { name = "Israel Dryer", email = "israel.dryer@gmail.com" }
 ]
@@ -74,7 +75,6 @@ Homepage = "https://github.com/israel-dryer/tkinter-icons"
 [tool.setuptools]
 package-dir = { "" = "src" }
 include-package-data = true
-license-files = ["LICENSE", "LICENSE.*"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -85,6 +85,43 @@ tkinter_icons = [
     "_pyinstaller/*.py"
 ]
 
+# The repository holds eighteen distributions, and only this one takes its
+# version from a tag. The base package is tagged `v<version>`; every pack and
+# the shim are tagged `<distribution>-v<version>`.
+#
+# Both settings below exist to keep a pack tag from becoming the base package's
+# version. setuptools-scm's default tag_regex strips a leading prefix, so it
+# reads `tkinter-icons-fa-v1.1.0` as version 1.1.0 quite happily — and since
+# pack tags are pushed *before* the base tag in a release, the most recent tag
+# at base-build time is almost always a pack's. Without the `--match`, building
+# `tkinter-icons` during a 5.0.0 release would produce a wheel numbered 1.1.0.
+#
+# `root` is the repository, not this directory. Without it setuptools-scm looks
+# for a git repo at `packages/tkinter-icons`, does not find one, and silently
+# falls back — so every build produced 5.0.0 whatever the tag said, and a 5.0.1
+# tag would have shipped a wheel numbered 5.0.0.
+#
+# **There is deliberately no `fallback_version`.** There used to be, set to
+# 5.0.0, and while `root` was missing it was what every single build actually
+# used — which is why the misconfiguration above went unnoticed for so long. It
+# is not needed now, and it is worse than not needed. Measured, building the
+# base package four ways:
+#
+#   sdist -> wheel, no git    correct version either way; it comes from PKG-INFO
+#   source tree, no git       WITH a fallback: a wheel silently numbered 5.0.0
+#                             WITHOUT: a hard error naming the two real fixes
+#
+# So the only thing a fallback buys is a wheel that lies about its version, in
+# the one case where nothing else can tell the truth. CI and the release
+# workflow both check out with `fetch-depth: 0`, so neither can reach that path.
+# Anyone who genuinely needs to build without git history sets
+# `SETUPTOOLS_SCM_PRETEND_VERSION_FOR_TKINTER_ICONS`, which says what it is doing.
 [tool.setuptools_scm]
+root = "../.."
 version_file = "src/tkinter_icons/_version.py"
-fallback_version = "5.0.0"
+
+[tool.setuptools_scm.tag]
+regex = "^v(?P<version>\\d+\\.\\d+\\.\\d+.*)$"
+
+[tool.setuptools_scm.scm.git]
+describe_command = ["git", "describe", "--dirty", "--tags", "--long", "--match", "v[0-9]*"]

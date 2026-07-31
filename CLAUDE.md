@@ -34,16 +34,26 @@ every package inside is renamed; only the containing directory lags. Don't
 `.venv` works: Python 3.13.7, Tk 8.6. Install editable before running anything:
 
 ```bash
-.venv/Scripts/python.exe -m pip install -e packages/tkinter-icons \
-    -e packages/tkinter-icons-bs -e packages/tkinter-icons-fa
-.venv/Scripts/python.exe -m pip install --no-deps -e packages/ttkbootstrap-icons-shim
+.venv/Scripts/python.exe -m pip install -e packages/tkinter-icons
+.venv/Scripts/python.exe -m pip install --no-deps \
+    -e packages/tkinter-icons-bs -e packages/tkinter-icons-fa \
+    -e packages/ttkbootstrap-icons-shim
 .venv/Scripts/python.exe -m pytest -q          # 226 passing
 ```
 
-The shim **needs `--no-deps`** in a working tree: it requires `tkinter-icons>=5.0.0`,
-and setuptools-scm derives the local version from git tags. Until a `v5.0.0` tag
-exists, the local version comes from `fallback_version` and pip can't resolve it
-from an index.
+**Everything but the base package needs `--no-deps`** in a working tree. Each
+pack and the shim require `tkinter-icons>=5.0.0`, and setuptools-scm now really
+does read git — so until a `v5.0.0` tag exists the local base package reports
+`4.0.1.dev<n>+g<sha>`, which is *below* the floor, and pip goes to PyPI looking
+for one that satisfies it. Their only other dependency is Pillow, which the base
+install brings in.
+
+`SETUPTOOLS_SCM_PRETEND_VERSION_FOR_TKINTER_ICONS=5.0.0` is the alternative if
+you want resolution to work normally.
+
+Before #70 this only bit the shim, because setuptools-scm was misconfigured and
+silently returned `fallback_version` — which happened to be 5.0.0 — for every
+build. See "Deliberate decisions".
 
 Only `bs` and `fa` are installed here. **The other 14 packs have no generated
 metrics yet** — that's one `tkicons-metrics --all` in an environment with all
@@ -66,13 +76,25 @@ Milestone **5.0.0** (issues #67–#71, #75):
 | #68 stateful icon lifecycle | merged (#73) |
 | #69 packs as extras | merged (#74) |
 | #75 rename to tkinter-icons | merged (#76) |
-| #70 changelog + release automation | **not started** |
+| #70 changelog + release automation | done, on `feat/release-automation` |
 | #71 Sphinx docs + reframing | **not started** |
 
 Also merged: #77, fixing three cloud-review findings plus a pre-existing
 `tkicons-build-all` bug.
 
-`5.0` is code-complete. Everything left is release tooling and docs.
+`5.0` is code-complete. #71 is all that is left before release — plus the two
+blockers below, which are work rather than decisions.
+
+**Two things block a `--strict` release**, both surfaced by the new preflight:
+
+1. **Fourteen packs have no generated metrics.** One `tkicons-metrics --all` in
+   an environment with every pack installed, then commit.
+2. **Three packs ship no upstream license file** — `bs`, `meteocons`,
+   `typicons`. Needs a human decision on the exact license text; see gotchas.
+
+Release mechanics live in `RELEASE.md`, and are real now: tag-driven, Trusted
+Publishing, no token anywhere. The tag scheme is `v<version>` for the base
+package and `<distribution>-v<version>` for the other seventeen.
 
 ---
 
@@ -126,6 +148,30 @@ Each of these looks like a defect in isolation. They aren't.
   `>=5.0.0` with no ceiling, so it never needs another release.
 - **`registry.py` scans both entry-point groups.** Drop the legacy group and
   anyone upgrading with an old pack installed silently loses every icon set.
+- **The base package's setuptools-scm config is load-bearing in two ways.**
+  `root = "../.."` points at the repository — without it setuptools-scm looked
+  for a repo at `packages/tkinter-icons`, found none, and silently used
+  `fallback_version`, so the tag was decorative and a `v5.0.1` tag would have
+  shipped a wheel numbered 5.0.0. `fallback_version` has since been **removed**:
+  with `root` correct it is unreachable from CI and from a release (both check
+  out at `fetch-depth: 0`) and unnecessary for an sdist (the version comes from
+  PKG-INFO), so all it could still do is silently number a git-less source build
+  5.0.0 forever. Without it that build fails loudly instead, and
+  `SETUPTOOLS_SCM_PRETEND_VERSION_FOR_TKINTER_ICONS` is the honest escape hatch.
+  And `describe_command` matches only
+  `v[0-9]*`, because the default tag regex reads `tkinter-icons-fa-v1.1.0` as
+  version 1.1.0 — and pack tags are pushed *first* in a release, so without it
+  the base build takes a pack's number.
+
+- **A pack's provider name is not guaranteed to be its entry-point key.**
+  `registry.py` registers under `provider_instance.name`, and the entry point
+  `fa` registers `fontawesome`. That is the *only* pack where the two differ —
+  every other key matches its provider name, including `gmi` (which registers
+  `gmi`, not `google-material`) and the `bs` directory (whose key is already
+  `bootstrap`). One divergence in sixteen is what makes reading the key look
+  safe. Anything passing a name to `tkicons-metrics` has to import the provider
+  to get it — reading the key gives an argument the CLI rejects.
+
 - **The old docs URL is dead and that was accepted.** GitHub redirects repo URLs
   but not project Pages. `israel-dryer.github.io/ttkbootstrap-icons/` 404s;
   a custom domain was considered and declined.
@@ -155,13 +201,11 @@ Each of these looks like a defect in isolation. They aren't.
 
 ## Open decisions
 
-**Should `metrics.json` stay committed?** ~24,000 lines of generated coordinate
-data live in source. They're fully reproducible from font + glyphmap, which is
-why `tkicons-metrics --check` exists — to catch the drift committed generated
-data invites. They also blew past the code-review size limit. Generating at build
-time removes the whole category, at the cost of slower builds and Pillow being
-required to build from sdist. **Decide before #70's release workflow hardens
-around the current choice.**
+**`metrics.json` stays committed — decided.** The release workflow re-measures
+the released pack and compares against what is committed, so the drift that
+committed generated data invites is caught at the only moment it matters. Build
+time generation was the alternative; it was declined because it makes Pillow a
+build requirement for every sdist.
 
 **Thread safety is undesigned.** `_font_cache`, `_icon_sets`, and `Icon._caches`
 are plain dicts with read-modify-write patterns. Tkinter is effectively

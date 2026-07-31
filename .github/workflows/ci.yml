@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "5.0"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test ${{ matrix.os }} / py${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        include:
+          - os: windows-latest
+            python-version: "3.13"
+          - os: macos-latest
+            python-version: "3.13"
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # setuptools-scm reads the tag history to version the base package.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # Most of the suite renders through `Icon.render_pil`, which is pure PIL
+      # and needs no display. The handful of Tk-level tests are marked `gui` and
+      # skip themselves where there is no display — so this is what makes them
+      # actually run on Linux rather than silently skip.
+      - name: Install Tk and a virtual display
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y python3-tk xvfb
+
+      - name: Install the base package and every pack
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e packages/tkinter-icons
+          python -m pip install --no-deps $(printf -- '-e %s ' packages/tkinter-icons-*/)
+          python -m pip install --no-deps -e packages/ttkbootstrap-icons-shim
+          # tomli is tomllib's backport; the pack tests read pyproject.toml and
+          # 3.10 has no tomllib in the stdlib.
+          python -m pip install pytest 'tomli; python_version < "3.11"'
+        shell: bash
+
+      - name: Run tests
+        run: ${{ runner.os == 'Linux' && 'xvfb-run -a' || '' }} python -m pytest -q
+        shell: bash
+
+  packaging:
+    name: Packaging preflight
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install the base package and every pack
+        run: |
+          python -m pip install --upgrade pip build twine
+          python -m pip install -e packages/tkinter-icons
+          python -m pip install --no-deps $(printf -- '-e %s ' packages/tkinter-icons-*/)
+          python -m pip install --no-deps -e packages/ttkbootstrap-icons-shim
+
+      # Not --strict here. The known warnings (packs without generated metrics,
+      # three packs missing an upstream license file) are release blockers, not
+      # reasons to fail every pull request. The release workflow runs --strict.
+      - name: Verify every distribution
+        run: python .github/scripts/verify_packages.py --imports
+
+      - name: Build all eighteen distributions
+        run: |
+          for package in packages/*/; do
+            python -m build --outdir dist "$package"
+          done
+
+      - name: Check the built metadata
+        run: python -m twine check dist/*

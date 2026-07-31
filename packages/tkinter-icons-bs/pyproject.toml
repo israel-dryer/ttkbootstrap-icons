@@ -10,6 +10,7 @@ dependencies = ["Pillow>=9.1", "tkinter-icons>=5.0.0"]
 # Bootstrap Icons licensing:
 # - MIT License
 license = "MIT"
+license-files = ["LICENSE"]
 
 [project.urls]
 Homepage = "https://github.com/israel-dryer/tkinter-icons"
@@ -26,5 +27,5 @@ package-dir = { "" = "src" }
 include-package-data = true
 
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
