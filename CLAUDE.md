@@ -152,16 +152,25 @@ Each of these looks like a defect in isolation. They aren't.
   `root = "../.."` points at the repository — without it setuptools-scm looked
   for a repo at `packages/tkinter-icons`, found none, and silently used
   `fallback_version`, so the tag was decorative and a `v5.0.1` tag would have
-  shipped a wheel numbered 5.0.0. And `describe_command` matches only
+  shipped a wheel numbered 5.0.0. `fallback_version` has since been **removed**:
+  with `root` correct it is unreachable from CI and from a release (both check
+  out at `fetch-depth: 0`) and unnecessary for an sdist (the version comes from
+  PKG-INFO), so all it could still do is silently number a git-less source build
+  5.0.0 forever. Without it that build fails loudly instead, and
+  `SETUPTOOLS_SCM_PRETEND_VERSION_FOR_TKINTER_ICONS` is the honest escape hatch.
+  And `describe_command` matches only
   `v[0-9]*`, because the default tag regex reads `tkinter-icons-fa-v1.1.0` as
   version 1.1.0 — and pack tags are pushed *first* in a release, so without it
   the base build takes a pack's number.
 
-- **A pack's provider name is not its entry-point key.** `registry.py` registers
-  under `provider_instance.name`, so the entry point `fa` registers
-  `fontawesome`, `gmi` registers `google-material`, and `bs` registers
-  `bootstrap`. Anything passing a name to `tkicons-metrics` has to import the
-  provider to get it — reading the key gives an argument the CLI rejects.
+- **A pack's provider name is not guaranteed to be its entry-point key.**
+  `registry.py` registers under `provider_instance.name`, and the entry point
+  `fa` registers `fontawesome`. That is the *only* pack where the two differ —
+  every other key matches its provider name, including `gmi` (which registers
+  `gmi`, not `google-material`) and the `bs` directory (whose key is already
+  `bootstrap`). One divergence in sixteen is what makes reading the key look
+  safe. Anything passing a name to `tkicons-metrics` has to import the provider
+  to get it — reading the key gives an argument the CLI rejects.
 
 - **The old docs URL is dead and that was accepted.** GitHub redirects repo URLs
   but not project Pages. `israel-dryer.github.io/ttkbootstrap-icons/` 404s;

@@ -11,12 +11,15 @@ import importlib
 import sys
 from pathlib import Path
 
+import pytest
+
 if sys.version_info >= (3, 11):
     import tomllib
-else:  # 3.10 has no tomllib; tomli is the same API under the old name
-    import tomli as tomllib
-
-import pytest
+else:  # 3.10 has no tomllib; tomli is the same API under the old name.
+    # Skipped rather than imported outright: `tomli` is a CI-only dependency,
+    # so on 3.10 without it a bare import fails collection for the whole module
+    # instead of skipping the handful of tests that read a pyproject.
+    tomllib = pytest.importorskip("tomli", reason="3.10 needs tomli to read pyproject.toml")
 
 import tkinter_icons
 from tkinter_icons.packs import (

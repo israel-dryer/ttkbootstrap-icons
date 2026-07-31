@@ -60,7 +60,19 @@ KNOWN_LICENSE_GAPS = {
 }
 
 VERSION_RE = re.compile(r"^## \[(\d+\.\d+\.\d+[^\]]*)\]")
-REQUIREMENT_RE = re.compile(r"^\s*([A-Za-z0-9._-]+)\s*(?:\[[^\]]*\])?\s*(?:>=\s*([0-9][^,;\s]*))?")
+
+# A requirement splits into a name, optional extras, and everything up to the
+# environment marker. The specifier set is then read separately, because a floor
+# can be written several ways and only reading `>=` lets the others through
+# unchecked — an `==5.1.0` that resolves to nothing would pass preflight and
+# fail after the tag is pushed.
+REQUIREMENT_RE = re.compile(
+    r"^\s*(?P<name>[A-Za-z0-9._-]+)\s*(?:\[[^\]]*\])?\s*(?P<specifiers>[^;]*)"
+)
+SPECIFIER_RE = re.compile(r"(?P<operator>[=!<>~]=|===|[<>])\s*(?P<version>[0-9][^,;\s]*)")
+FLOOR_OPERATORS = ("==", "===", ">=", "~=", ">")
+
+RELEASE_RE = re.compile(r"^v?(?P<release>\d+(?:\.\d+)*)(?P<suffix>.*)$")
 
 
 class Report:
@@ -78,9 +90,39 @@ class Report:
         self.warnings.append(f"{dist}: {message}")
 
 
-def parse_version(text: str) -> tuple[int, ...]:
-    """Numeric release segment only; enough to compare floors."""
-    return tuple(int(part) for part in re.findall(r"\d+", text)[:3])
+def parse_version(text: str) -> tuple[tuple[int, ...], int]:
+    """Sortable ``(release, is_final)``; enough to compare floors.
+
+    Not a PEP 440 parser. It knows one thing beyond the release numbers, which
+    is that a pre-release sorts *below* the release it precedes — without that,
+    ``1.1.0rc1`` compares equal to ``1.1.0`` and a floor of ``>=1.1.0`` looks
+    satisfied by a package that has only reached the release candidate.
+    """
+    match = RELEASE_RE.match(text.strip())
+    if not match:
+        return ((0,), 0)
+    release = tuple(int(part) for part in match.group("release").split("."))
+    suffix = match.group("suffix").lstrip(".-_").lower()
+    is_prerelease = suffix.startswith(("a", "b", "c", "rc", "dev"))
+    return ((release + (0, 0, 0))[:3], 0 if is_prerelease else 1)
+
+
+def requirement_floor(specifiers: str) -> tuple[str, str] | None:
+    """The lowest version a specifier set can resolve to, as ``(operator, version)``.
+
+    ``None`` when nothing in the set constrains the bottom end. ``>`` is kept
+    distinct from ``>=`` because ``>5.0.0`` against an available 5.0.0 resolves
+    to nothing at all, while ``>=5.0.0`` is satisfied exactly.
+    """
+    floor = None
+    for match in SPECIFIER_RE.finditer(specifiers):
+        operator, version = match.group("operator"), match.group("version")
+        if operator not in FLOOR_OPERATORS:
+            continue
+        version = version.rstrip("*").rstrip(".")  # `==1.1.*` floors at 1.1
+        if floor is None or parse_version(version) > parse_version(floor[1]):
+            floor = (operator, version)
+    return floor
 
 
 def changelog_versions(package: Package) -> list[str]:
@@ -117,6 +159,31 @@ def check_changelog(package: Package, report: Report) -> None:
         )
 
 
+def metrics_files(package: Package) -> list[Path]:
+    """Every ``metrics*.json`` the pack has on disk, wherever it keeps it.
+
+    Packs differ: `bs` keeps its assets in an ``assets/`` subpackage, the rest at
+    the module root.
+    """
+    return sorted((package.directory / "src").glob("*/**/metrics*.json"))
+
+
+def shipped_files(package: Package) -> set[Path]:
+    """Every file the package-data globs actually reach.
+
+    This is the wheel's contents as far as data files go, and it is the only
+    thing that matters: a file on disk that no glob names does not get built in.
+    """
+    src = package.directory / "src"
+    patterns = package.pyproject.get("tool", {}).get("setuptools", {}).get("package-data", {})
+    shipped: set[Path] = set()
+    for module, globs in patterns.items():
+        module_dir = src / Path(*module.split("."))
+        for pattern in globs:
+            shipped.update(module_dir.glob(pattern))
+    return shipped
+
+
 def check_package_data(package: Package, report: Report) -> None:
     """Every package-data glob matches at least one file that actually exists.
 
@@ -140,8 +207,12 @@ def check_package_data(package: Package, report: Report) -> None:
             message = f"package-data glob '{pattern}' under {module} matches no files"
             if "LICENSE" in pattern.upper() and package.dist in KNOWN_LICENSE_GAPS:
                 report.warn(package.dist, f"{message} (known upstream license gap)")
-            elif pattern.startswith("metrics"):
-                pass  # check_metrics reports this once, as a warning
+            elif pattern.startswith("metrics") and not metrics_files(package):
+                # Nothing generated yet, anywhere. check_metrics reports that
+                # once, as a warning. The `and` is load-bearing: a pack whose
+                # metrics sit somewhere this glob does not reach has a file on
+                # disk and none in the wheel, which is #61 exactly.
+                pass
             else:
                 report.error(package.dist, message)
 
@@ -186,8 +257,24 @@ def check_metrics(package: Package, report: Report) -> None:
     if package.dist == BASE_DIST or not package.directory.name.startswith("tkinter-icons-"):
         return
 
-    if not any((package.directory / "src").glob("*/**/metrics*.json")):
+    found = metrics_files(package)
+    if not found:
         report.warn(package.dist, "no metrics*.json - run 'tkicons-metrics --all' before release")
+        return
+
+    # On disk is not the same as in the wheel, and this is the failure that
+    # motivated the whole script: the file is right there next to the code, so
+    # nothing in a working tree looks wrong, and the pack installs elsewhere
+    # falling back to `getbbox` with nothing anywhere saying so.
+    shipped = shipped_files(package)
+    src = package.directory / "src"
+    for path in found:
+        if path not in shipped:
+            report.error(
+                package.dist,
+                f"{path.relative_to(src).as_posix()} exists but no package-data glob "
+                f"reaches it - the wheel would ship without metrics",
+            )
 
 
 def check_dependencies(package: Package, by_dist: dict[str, Package], report: Report) -> None:
@@ -206,18 +293,36 @@ def check_dependencies(package: Package, by_dist: dict[str, Package], report: Re
         match = REQUIREMENT_RE.match(requirement)
         if not match:
             continue
-        name, floor = match.group(1), match.group(2)
-        if name == package.dist or name not in by_dist or floor is None:
-            continue  # third-party, self-referential extra, or unpinned
+        name = match.group("name")
+        if name == package.dist or name not in by_dist:
+            continue  # third-party, or the base package's self-referential `all`
 
         target = by_dist[name]
         available = target.declared_version or (changelog_versions(target) or [None])[0]
         if available is None:
             continue
-        if parse_version(floor) > parse_version(available):
+
+        floor = requirement_floor(match.group("specifiers"))
+        if floor is None:
+            report.warn(
+                package.dist,
+                f"requires {name} with no lower bound - publish order stops being "
+                f"enforced, and an old {name} would satisfy this",
+            )
+            continue
+
+        operator, version = floor
+        # `>` needs the available version to be strictly above it; every other
+        # floor is satisfied by an exact match.
+        cannot_resolve = (
+            parse_version(version) >= parse_version(available)
+            if operator == ">"
+            else parse_version(version) > parse_version(available)
+        )
+        if cannot_resolve:
             report.error(
                 package.dist,
-                f"requires {name}>={floor} but {name} is at {available} - "
+                f"requires {name}{operator}{version} but {name} is at {available} - "
                 f"that floor cannot resolve",
             )
 
@@ -237,8 +342,8 @@ def check_extras_cover_every_pack(base: Package, by_dist: dict[str, Package], re
             continue
         for requirement in requirements:
             match = REQUIREMENT_RE.match(requirement)
-            if match and match.group(1) in by_dist:
-                covered.add(match.group(1))
+            if match and match.group("name") in by_dist:
+                covered.add(match.group("name"))
 
     packs = {
         dist for dist, package in by_dist.items()
@@ -330,6 +435,16 @@ def main() -> int:
 
     tagged_version = None
     if args.tag:
+        if args.distributions:
+            # A tag names exactly one package. Silently ignoring the positional
+            # arguments would report a clean release for something nobody asked
+            # about.
+            print(
+                f"--tag {args.tag} already selects a package; drop the "
+                f"distribution argument(s): {', '.join(args.distributions)}",
+                file=sys.stderr,
+            )
+            return 2
         try:
             tagged, tagged_version = parse_tag(args.tag)
         except (ValueError, KeyError) as exc:

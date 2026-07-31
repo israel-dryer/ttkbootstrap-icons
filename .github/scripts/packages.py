@@ -87,12 +87,13 @@ class Package:
     def provider_names(self) -> list[str]:
         """The names this pack's providers are registered under.
 
-        These are what ``tkicons-metrics`` takes as arguments, and they are
-        emphatically *not* the entry-point keys: ``registry.py`` registers each
-        provider under ``provider_instance.name``, so the pack whose entry point
-        reads ``fa`` registers ``fontawesome``, and ``gmi`` registers
-        ``google-material``. Reading the key would send ``tkicons-metrics`` an
-        argument it rejects.
+        These are what ``tkicons-metrics`` takes as arguments, and they are not
+        guaranteed to be the entry-point keys: ``registry.py`` registers each
+        provider under ``provider_instance.name``, and the pack whose entry
+        point reads ``fa`` registers ``fontawesome``. Reading the key would send
+        ``tkicons-metrics`` an argument it rejects. ``fa`` is the only pack the
+        two disagree on today, which is exactly why reading the key looks safe
+        and is not.
 
         Getting the real name means instantiating the provider, so this needs
         the pack installed. Where it is not, the entry-point key is returned as

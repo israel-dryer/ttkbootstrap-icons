@@ -27,7 +27,7 @@ pip install "tkinter-icons[fontawesome]"
   which under-reports it on icon fonts. Without this file the pack still
   renders, by falling back to `getbbox`; with it, full-bleed icons keep their
   padding and everything else sits centered. Regenerate with
-  `tkicons-metrics fa` whenever the font or glyph map changes. (#67)
+  `tkicons-metrics fontawesome` whenever the font or glyph map changes. (#67)
 
 ### Changed
 
