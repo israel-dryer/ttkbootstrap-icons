@@ -25,10 +25,27 @@ on:
       - "v*"
       - "*-v*"
 
+  # Dry run. Everything up to publishing, and nothing after it: the `publish`
+  # and `release` jobs below are gated on this being a tag push. Use it to
+  # exercise the whole path before creating a tag, because the first real run of
+  # this workflow ends in an upload that PyPI will not let you take back.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to build as, e.g. tkinter-icons-fa-v1.1.0"
+        required: true
+      ref:
+        description: "Ref to build from (default: the branch selected above)"
+        required: false
+
 jobs:
   build:
     name: Verify and build
     runs-on: ubuntu-latest
+    env:
+      # On a tag push this is the tag. On a dry run it is whatever tag was
+      # named, which need not exist yet.
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
     outputs:
       dist: ${{ steps.resolve.outputs.dist }}
       version: ${{ steps.resolve.outputs.version }}
@@ -40,6 +57,7 @@ jobs:
           # The base package's version comes from the tag through
           # setuptools-scm, which needs the whole tag history to find it.
           fetch-depth: 0
+          ref: ${{ inputs.ref || github.ref }}
 
       - uses: actions/setup-python@v6
         with:
@@ -64,14 +82,14 @@ jobs:
       # importing the pack.
       - name: Resolve the tag to a package
         id: resolve
-        run: python .github/scripts/packages.py "$GITHUB_REF_NAME" "$GITHUB_OUTPUT"
+        run: python .github/scripts/packages.py "$RELEASE_TAG" "$GITHUB_OUTPUT"
 
       # --strict, unlike CI. Everything CI tolerates as a warning is a release
       # blocker: a pack shipped without generated metrics silently falls back to
       # the miscentering 5.0.0 exists to fix, and a pack shipped without its
       # upstream license file is a compliance problem.
       - name: Preflight
-        run: python .github/scripts/verify_packages.py --strict --imports --tag "$GITHUB_REF_NAME"
+        run: python .github/scripts/verify_packages.py --strict --imports --tag "$RELEASE_TAG"
 
       # Metrics are committed, so they can drift from the font that produced
       # them. This re-measures and compares. Only the pack being released is
@@ -90,14 +108,25 @@ jobs:
       # misconfiguration there produces a correctly-named tag on a wrongly
       # numbered wheel. Catch that here rather than on PyPI, where the version
       # cannot be reused.
+      #
+      # On a dry run this is a warning rather than a failure. A dry run is
+      # checked out at a branch, not at the tag, so the base package's
+      # setuptools-scm version legitimately will not match a tag that does not
+      # exist yet. Nothing is lost: for the seventeen packages with a static
+      # version, the preflight above already compares the tag against
+      # pyproject.toml, and it is a hard error there.
       - name: Confirm the built version matches the tag
         run: |
           expected="${{ steps.resolve.outputs.version }}"
           for file in dist/*.whl; do
             built=$(basename "$file" | cut -d- -f2)
             if [ "$built" != "$expected" ]; then
-              echo "::error::tag names $expected but the wheel is $built ($file)"
-              exit 1
+              if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+                echo "::warning::built $built, tag names $expected. Expected on a dry run unless $RELEASE_TAG exists at the ref being built."
+              else
+                echo "::error::tag names $expected but the wheel is $built ($file)"
+                exit 1
+              fi
             fi
           done
           echo "built $expected, as tagged"
@@ -126,6 +155,9 @@ jobs:
   publish:
     name: Publish ${{ needs.build.outputs.dist }} to PyPI
     needs: build
+    # A tag push only. This is what makes workflow_dispatch a dry run, so it is
+    # the one condition in this file that must not be relaxed.
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     # Trusted Publishing: PyPI verifies this workflow's OIDC token instead of an
     # API token, so nothing has to be stored here. Each of the eighteen PyPI
@@ -146,6 +178,7 @@ jobs:
   release:
     name: Create the GitHub Release
     needs: [build, publish]
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: write
