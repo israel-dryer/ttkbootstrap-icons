@@ -38,7 +38,7 @@ every package inside is renamed; only the containing directory lags. Don't
 .venv/Scripts/python.exe -m pip install --no-deps \
     -e packages/tkinter-icons-bs -e packages/tkinter-icons-fa \
     -e packages/ttkbootstrap-icons-shim
-.venv/Scripts/python.exe -m pytest -q          # 226 passing
+.venv/Scripts/python.exe -m pytest -q          # 237 passed, 1 skipped
 ```
 
 **Everything but the base package needs `--no-deps`** in a working tree. Each
@@ -80,7 +80,7 @@ Milestone **5.0.0** (issues #67–#71, #75):
 | #75 rename to tkinter-icons | merged (#76) |
 | #70 changelog + release automation | merged (#78) |
 | #71 Sphinx docs + reframing | **not started — the only issue left** |
-| #79 trim the published surface | in review |
+| #79 trim the published surface | in review on `refactor/trim-published-surface` — reviewed, fixes committed, not yet merged to `5.0` |
 
 Also merged: #77, fixing three cloud-review findings plus a pre-existing
 pack-asset-runner bug.
@@ -191,6 +191,18 @@ Decisions behind it, each of which cost a discussion:
   gh-deploy`. A build-and-deploy job is part of #71. The site URL is
   `israel-dryer.github.io/tkinter-icons/`; the old one is dead on purpose.
 
+- **The one packs page must land at `packs.html` — the code already links
+  there.** #79 pointed `PACKS_DOC_URL` (`packs.py:29`) at
+  `{DOCS_URL}/packs.html` and used it to replace `REPO_URL` in the two places a
+  user with *no pack installed* meets first: `no_packs_message()`, raised from
+  `Icon.__init__`, and the browser's welcome screen. It 404s until #71 ships, so
+  a Sphinx structure that names that page anything else leaves a dead link as
+  the only pointer to the catalogue, for exactly the users least able to find it
+  another way. Reverting to `REPO_URL` in the meantime was considered and
+  declined — it is a second thing to remember to undo, and a silent revert if
+  forgotten. Noted on #71. A preflight assertion that the path exists in the
+  built docs would close it for good.
+
 ---
 
 ## Architecture
@@ -263,14 +275,35 @@ Each of these looks like a defect in isolation. They aren't.
   build a pack that is *installed*. A pack with no `.egg-info` produces a clean
   wheel with a broken config and reports a false pass — that mistake was made
   once already, and it would have shipped `tools` in fourteen wheels.
-- **The root exports the consumer API only.** `BaseFontProvider`,
-  `ProviderRegistry`, and `load_external_providers` define an icon set rather
-  than use one, and are reached from `tkinter_icons.providers` / `.registry` —
-  which is how all sixteen packs already import them. `ProviderRegistry` and
-  `load_external_providers` *did* ship at the root in 4.0.0, so this is a real
-  removal; what makes it safe is that the module paths survive and the shim
-  aliases submodules, so `from ttkbootstrap_icons.registry import
-  ProviderRegistry` still works. Only the root re-export is gone.
+
+  **Both stanzas are required, and `check_tools_are_not_shipped` now enforces
+  both.** They stop different things: `packages.find` stops `tools` being
+  *declared* a package, `exclude-package-data` stops its files arriving as
+  *data*. Either alone ships the directory, so the check reads both and names
+  which one is missing — it originally read only `exclude-package-data`, which
+  meant a seventeenth pack copied from a sibling with the `packages.find` stanza
+  dropped would ship `tools` with a green preflight.
+- **The root exports the consumer API only, and the shim absorbs the
+  difference.** `BaseFontProvider`, `ProviderRegistry`, and
+  `load_external_providers` define an icon set rather than use one, and are
+  reached from `tkinter_icons.providers` / `.registry` — which is how all
+  sixteen packs already import them.
+
+  `ProviderRegistry` and `load_external_providers` *did* ship at the root in
+  4.0.0 — its `__all__` was exactly `Icon`, `get_hook_dirs`, `ProviderRegistry`,
+  `load_external_providers` — so this is a real removal. **Submodule aliasing
+  does not cover it**, and believing otherwise is the trap: the aliases rescue
+  `from ttkbootstrap_icons.registry import ProviderRegistry`, but 4.0.0 users
+  wrote `from ttkbootstrap_icons import ProviderRegistry`, which the shim
+  resolves through `getattr(tkinter_icons, name)` and which therefore began
+  raising an `AttributeError` naming a module the caller never imported.
+
+  The shim now carries the two relocated names itself, in `_RELOCATED`, tried
+  only after `getattr(_target, name)` raises `AttributeError` — so a pack's
+  `ImportError` still propagates untouched. `TestShimForwardsTheWholeOldSurface`
+  pins all four 4.0.0 names. **Anything else leaving the root has to be added
+  there too**; the base package's root is free to shrink precisely because the
+  shim is the compatibility layer, not the module paths.
 - **Odd sizes snap up to even.** `size=15` renders 16px. Removes half-pixel
   LANCZOS blur at fractional display scaling. `icon.rendered_size` reports the
   real size, and it is part of the cache key.
@@ -284,8 +317,18 @@ Each of these looks like a defect in isolation. They aren't.
 - **One base shim, published once.** `ttkbootstrap-icons` 5.0.0 forwards to
   `tkinter-icons`. Uses **`FutureWarning`, not `DeprecationWarning`** — Python
   hides the latter unless it fires in `__main__`. Aliases submodules into
-  `sys.modules` so `from ttkbootstrap_icons.icon import Icon` still works. Pinned
-  `>=5.0.0` with no ceiling, so it never needs another release.
+  `sys.modules` so `from ttkbootstrap_icons.icon import Icon` still works, and
+  carries the root names `tkinter_icons` dropped (above). Pinned `>=5.0.0` with
+  no ceiling, so it never needs another release.
+
+  **Its migration warning is an install instruction, and nothing downstream
+  checks it.** pip does not fail on an unknown extra — it prints `does not
+  provide the extra` and installs the base package, which has no glyphs — so a
+  stale extra in that text walks the user into the state the rest of the same
+  message is warning about. It named `[all]` until #79's review caught it.
+  `TestShimMigrationMessageIsInstallable` parses the extras back out of the
+  warning source and checks each against `KNOWN_PACKS`; keep that true of any
+  install line added to it.
 - **`registry.py` scans both entry-point groups.** Drop the legacy group and
   anyone upgrading with an old pack installed silently loses every icon set.
 - **The base package's setuptools-scm config is load-bearing in two ways.**
