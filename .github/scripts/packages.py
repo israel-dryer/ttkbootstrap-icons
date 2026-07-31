@@ -24,6 +24,7 @@ base package's version.
 """
 from __future__ import annotations
 
+import importlib
 import re
 import sys
 import tomllib
@@ -68,6 +69,41 @@ class Package:
         the git tag through setuptools-scm.
         """
         return self.pyproject.get("project", {}).get("version")
+
+    @property
+    def entry_point_targets(self) -> dict[str, str]:
+        """This package's provider entry points, as ``{key: "module:attr"}``."""
+        groups = self.pyproject.get("project", {}).get("entry-points", {})
+        targets: dict[str, str] = {}
+        for group in ("tkinter_icons.providers", "ttkbootstrap_icons.providers"):
+            for key, target in groups.get(group, {}).items():
+                targets.setdefault(key, target)
+        return targets
+
+    @property
+    def provider_names(self) -> list[str]:
+        """The names this pack's providers are registered under.
+
+        These are what ``tkicons-metrics`` takes as arguments, and they are
+        emphatically *not* the entry-point keys: ``registry.py`` registers each
+        provider under ``provider_instance.name``, so the pack whose entry point
+        reads ``fa`` registers ``fontawesome``, and ``gmi`` registers
+        ``google-material``. Reading the key would send ``tkicons-metrics`` an
+        argument it rejects.
+
+        Getting the real name means instantiating the provider, so this needs
+        the pack installed. Where it is not, the entry-point key is returned as
+        a best guess — callers that must be right about it should import first.
+        """
+        names: list[str] = []
+        for key, target in self.entry_point_targets.items():
+            module_name, _, attribute = target.partition(":")
+            try:
+                module = importlib.import_module(module_name)
+                names.append(getattr(module, attribute)().name)
+            except Exception:
+                names.append(key)
+        return names
 
     def tag_for(self, version: str) -> str:
         return f"v{version}" if self.is_base else f"{self.dist}-v{version}"
@@ -148,6 +184,7 @@ def main() -> None:
         "version": version,
         "changelog": package.changelog.relative_to(REPO_ROOT).as_posix(),
         "is_base": "true" if package.is_base else "false",
+        "providers": " ".join(package.provider_names),
     }
 
     for key, value in outputs.items():

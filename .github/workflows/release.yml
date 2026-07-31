@@ -1,0 +1,167 @@
+name: Release
+
+# One workflow releases all eighteen distributions, selected by the tag:
+#
+#   v5.0.0                     -> packages/tkinter-icons        (the base package)
+#   tkinter-icons-fa-v1.1.0    -> packages/tkinter-icons-fa     (an icon pack)
+#   ttkbootstrap-icons-v5.0.0  -> packages/ttkbootstrap-icons-shim
+#
+# The last line is why the tag is resolved in Python rather than by string
+# surgery here: the shim's directory is not named after the distribution it
+# builds. `.github/scripts/packages.py` reads every pyproject.toml and maps
+# distribution name to directory, so it cannot drift from the tree.
+#
+# Publish order for a coordinated release is load-bearing, because the base
+# package's extras pin `>=1.1.0` against the packs:
+#
+#   1. the sixteen packs      2. tkinter-icons      3. ttkbootstrap-icons
+#
+# Push the tags in that order and let each run finish; a tag pushed early names
+# a version PyPI does not have yet. See RELEASE.md.
+
+on:
+  push:
+    tags:
+      - "v*"
+      - "*-v*"
+
+jobs:
+  build:
+    name: Verify and build
+    runs-on: ubuntu-latest
+    outputs:
+      dist: ${{ steps.resolve.outputs.dist }}
+      version: ${{ steps.resolve.outputs.version }}
+      changelog: ${{ steps.resolve.outputs.changelog }}
+      title: ${{ steps.notes.outputs.title }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # The base package's version comes from the tag through
+          # setuptools-scm, which needs the whole tag history to find it.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      # --no-deps for the packs, deliberately. Each pins `tkinter-icons>=5.0.0`,
+      # and the editable base installed just above reports whatever the tag
+      # history says — during a pack release that is the *previous* base
+      # version, below the floor, so pip would go to PyPI for a base package
+      # that is already here. Their only other dependency is Pillow, which the
+      # base install brings in. `verify_packages.py` checks the floors
+      # statically, so skipping them here loses no coverage.
+      - name: Install the base package and every pack
+        run: |
+          python -m pip install --upgrade pip build twine
+          python -m pip install -e packages/tkinter-icons
+          python -m pip install --no-deps $(printf -- '-e %s ' packages/tkinter-icons-*/)
+          python -m pip install --no-deps -e packages/ttkbootstrap-icons-shim
+
+      # After the install, not before: a pack's provider name is a property of
+      # the provider instance, not of its entry-point key, so resolving it means
+      # importing the pack.
+      - name: Resolve the tag to a package
+        id: resolve
+        run: python .github/scripts/packages.py "$GITHUB_REF_NAME" "$GITHUB_OUTPUT"
+
+      # --strict, unlike CI. Everything CI tolerates as a warning is a release
+      # blocker: a pack shipped without generated metrics silently falls back to
+      # the miscentering 5.0.0 exists to fix, and a pack shipped without its
+      # upstream license file is a compliance problem.
+      - name: Preflight
+        run: python .github/scripts/verify_packages.py --strict --imports --tag "$GITHUB_REF_NAME"
+
+      # Metrics are committed, so they can drift from the font that produced
+      # them. This re-measures and compares. Only the pack being released is
+      # checked — one pack's stale metrics should not block another's release.
+      - name: Check this pack's glyph metrics are current
+        if: steps.resolve.outputs.providers != ''
+        run: tkicons-metrics ${{ steps.resolve.outputs.providers }} --check
+
+      - name: Build sdist and wheel
+        run: python -m build --outdir dist "${{ steps.resolve.outputs.directory }}"
+
+      - name: Check the built metadata
+        run: python -m twine check dist/*
+
+      # The tag drives the base package's version through setuptools-scm, so a
+      # misconfiguration there produces a correctly-named tag on a wrongly
+      # numbered wheel. Catch that here rather than on PyPI, where the version
+      # cannot be reused.
+      - name: Confirm the built version matches the tag
+        run: |
+          expected="${{ steps.resolve.outputs.version }}"
+          for file in dist/*.whl; do
+            built=$(basename "$file" | cut -d- -f2)
+            if [ "$built" != "$expected" ]; then
+              echo "::error::tag names $expected but the wheel is $built ($file)"
+              exit 1
+            fi
+          done
+          echo "built $expected, as tagged"
+
+      - name: Extract the release title and notes from the changelog
+        id: notes
+        run: |
+          python .github/scripts/release_notes.py \
+            "${{ steps.resolve.outputs.changelog }}" \
+            "${{ steps.resolve.outputs.version }}" \
+            RELEASE_NOTES.md "$GITHUB_OUTPUT" \
+            "${{ steps.resolve.outputs.dist }}"
+          if [ -s RELEASE_NOTES.md ]; then
+            echo "Using curated notes ($(wc -l < RELEASE_NOTES.md) lines)."
+          else
+            echo "No changelog section; falling back to auto-generated notes."
+          fi
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: |
+            dist/
+            RELEASE_NOTES.md
+
+  publish:
+    name: Publish ${{ needs.build.outputs.dist }} to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    # Trusted Publishing: PyPI verifies this workflow's OIDC token instead of an
+    # API token, so nothing has to be stored here. Each of the eighteen PyPI
+    # projects needs a publisher configured for this repository, this workflow
+    # file, and this environment name — see RELEASE.md.
+    environment:
+      name: pypi
+      url: https://pypi.org/p/${{ needs.build.outputs.dist }}
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
+
+  release:
+    name: Create the GitHub Release
+    needs: [build, publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+
+      # The title comes from the changelog heading, so the releases page reads
+      # as eighteen distinct packages rather than eighteen bare version numbers.
+      # The body is that section minus its heading; GitHub appends its own
+      # "What's Changed" and the full-changelog link underneath.
+      - uses: softprops/action-gh-release@v3
+        with:
+          name: ${{ needs.build.outputs.title }}
+          body_path: RELEASE_NOTES.md
+          generate_release_notes: true
+          prerelease: ${{ contains(needs.build.outputs.version, 'a') || contains(needs.build.outputs.version, 'b') || contains(needs.build.outputs.version, 'rc') }}
+          files: dist/*

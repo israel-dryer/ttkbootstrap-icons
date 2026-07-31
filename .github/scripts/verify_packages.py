@@ -34,7 +34,7 @@ import re
 import sys
 from pathlib import Path
 
-from packages import BASE_DIST, Package, load_all
+from packages import BASE_DIST, Package, load_all, parse_tag
 
 PROVIDER_ENTRY_POINT_GROUPS = (
     "tkinter_icons.providers",
@@ -108,7 +108,7 @@ def check_changelog(package: Package, report: Report) -> None:
         report.error(
             package.dist,
             f"pyproject version is {declared} but the newest changelog entry is "
-            f"{versions[0]} — one of them is wrong",
+            f"{versions[0]} - one of them is wrong",
         )
 
 
@@ -212,7 +212,7 @@ def check_dependencies(package: Package, by_dist: dict[str, Package], report: Re
         if parse_version(floor) > parse_version(available):
             report.error(
                 package.dist,
-                f"requires {name}>={floor} but {name} is at {available} — "
+                f"requires {name}>={floor} but {name} is at {available} - "
                 f"that floor cannot resolve",
             )
 
@@ -240,7 +240,7 @@ def check_extras_cover_every_pack(base: Package, by_dist: dict[str, Package], re
         if package.directory.name.startswith("tkinter-icons-")
     }
     for missing in sorted(packs - covered):
-        report.error(base.dist, f"{missing} has no extra — it can only be installed by name")
+        report.error(base.dist, f"{missing} has no extra - it can only be installed by name")
 
     # `all` is written as nested self-references, e.g. "tkinter-icons[bootstrap,...]".
     reachable = set()
@@ -250,6 +250,35 @@ def check_extras_cover_every_pack(base: Package, by_dist: dict[str, Package], re
             reachable.update(part.strip() for part in inner.group(1).split(","))
     for missing in sorted(set(extras) - {"all"} - reachable):
         report.error(base.dist, f"extra '{missing}' is not included in [all]")
+
+
+def check_release_tag(package: Package, version: str, report: Report) -> None:
+    """The tag being released agrees with the package and with its changelog.
+
+    A tag is the only thing the release workflow is given, so a tag that says
+    1.2.0 against a pyproject that says 1.1.0 would publish 1.1.0 twice — the
+    second upload rejected by PyPI, after the tag is already pushed.
+    """
+    declared = package.declared_version
+    if declared is not None and declared != version:
+        report.error(
+            package.dist,
+            f"tag names version {version} but pyproject declares {declared}",
+        )
+
+    versions = changelog_versions(package)
+    if version not in versions:
+        report.error(
+            package.dist,
+            f"no '## [{version}]' section in {package.changelog.name} - "
+            f"the release would have empty notes",
+        )
+    elif versions[0] != version:
+        report.error(
+            package.dist,
+            f"changelog's newest entry is {versions[0]}, not the {version} being "
+            f"released - entries are newest-first",
+        )
 
 
 def check_entry_points(package: Package, report: Report) -> None:
@@ -272,12 +301,25 @@ def main() -> int:
     parser.add_argument("distributions", nargs="*", help="limit to these distribution names")
     parser.add_argument("--strict", action="store_true", help="treat warnings as failures")
     parser.add_argument("--imports", action="store_true", help="also import every entry point")
+    parser.add_argument(
+        "--tag",
+        help="release tag; checks only the package it names, and that the version "
+             "it names agrees with that package's pyproject and changelog",
+    )
     args = parser.parse_args()
 
     all_packages = load_all()
     by_dist = {package.dist: package for package in all_packages}
 
-    if args.distributions:
+    tagged_version = None
+    if args.tag:
+        try:
+            tagged, tagged_version = parse_tag(args.tag)
+        except (ValueError, KeyError) as exc:
+            print(f"cannot release from tag {args.tag!r}: {exc}", file=sys.stderr)
+            return 2
+        selected = [tagged]
+    elif args.distributions:
         unknown = set(args.distributions) - set(by_dist)
         if unknown:
             print(f"unknown distribution(s): {', '.join(sorted(unknown))}", file=sys.stderr)
@@ -293,6 +335,8 @@ def main() -> int:
         check_licenses(package, report)
         check_metrics(package, report)
         check_dependencies(package, by_dist, report)
+        if tagged_version is not None:
+            check_release_tag(package, tagged_version, report)
         if package.is_base:
             check_extras_cover_every_pack(package, by_dist, report)
         if args.imports:
