@@ -27,8 +27,10 @@ image document — it cannot see `@font-face` rules from the page embedding it, 
 live text falls back to whatever local monospace the reader happens to have.
 Outlines also keep a font binary out of the repository.
 
-`light` and `dark` name the **background the asset is drawn for**, not the ink:
-`wordmark-light` is dark ink on white, `wordmark-dark` is light ink on navy.
+`light` and `dark` name the **background the asset is drawn for**, not the ink it
+uses. `wordmark-light` is dark ink for a light page; `wordmark-dark` is light ink
+for a dark one. Both are transparent, so picking the wrong one does not show a
+mismatched box — it shows almost nothing.
 
 ## Palette
 
@@ -81,7 +83,8 @@ matches one of them.
 ## Using a wordmark in a README
 
 A README is rendered twice — by GitHub, which has a dark mode, and by PyPI,
-which does not. One opaque image cannot serve both. `<picture>` can:
+which does not. Each wordmark reads on only one of those backgrounds, so no
+single file serves both. `<picture>` does:
 
 ```html
 <picture>
