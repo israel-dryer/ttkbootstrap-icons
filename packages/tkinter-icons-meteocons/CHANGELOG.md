@@ -30,11 +30,21 @@ pip install "tkinter-icons[meteocons]"
   `python -m tkinter_icons.tools.generate_metrics meteocons` whenever the font
   or glyph map changes. (#67)
 
-- **Meteocons' MIT license, at `LICENSES/MIT.txt`.** This pack redistributes an upstream icon font and did not carry its license text, which every other pack does. The file is upstream's own, copied unedited from [basmilius/weather-icons](https://github.com/basmilius/weather-icons/blob/dev/LICENSE), and it ships in the wheel.
+- **Meteocons' actual license, at `LICENSES/METEOCONS-LICENSE.txt`.** This pack redistributes an upstream icon font and did not carry its license text, which every other pack does. The terms are the author's own, reproduced verbatim from the license field embedded in the font.
 
 - **The icon class takes `options`.** `RenderOptions` carries every drawing knob — padding, oversampling, sharpening, even-snapping — and was reachable only through `Icon.render_pil` or the base `Icon`, not through the class you actually construct. `MeteoIcon("name", size=32, options=RenderOptions(pad_factor=0.0))` now works. Keyword-only, so it cannot be confused with `style`.
 
 - **`render_pil` works on this class without a warm-up.** It read an icon set shared by every subclass, so `MeteoIcon.render_pil(...)` drew this pack's glyphs only if something had already constructed one of its icons — and raised in a fresh process. The class names its own provider now, and resolves friendly names the way the constructor does.
+
+- **Every icon has a name.** The pack shipped 47 icons called `a` through `z`, `zero` through `nine`, and eleven punctuation names, because the glyph map was generated from the font's character map rather than from upstream's own naming. Meteocons is an old-style icon font where you type a letter to get a symbol, so `MeteoIcon("sunny")` was impossible and you had to guess `"b"`. The names are upstream's, from the meteocons.css project, and each was checked against the glyph it actually draws.
+
+  ```python
+  MeteoIcon("sun")          # was: MeteoIcon("b")
+  MeteoIcon("cloud-rain")   # was: MeteoIcon("q")
+  MeteoIcon("celsius")      # was: MeteoIcon("asterisk")
+  ```
+
+  The letters remain as aliases, so existing code keeps working. Both names resolve to the same glyph.
 
 ### Changed
 
@@ -54,6 +64,10 @@ pip install "tkinter-icons[meteocons]"
   installed wheel they did nothing but occupy two names on every user's PATH.
   Nothing imports them at runtime. Maintainers run them from the repository.
   (#79)
+
+### Fixed
+
+- **The pack credited the wrong project.** `homepage` and `license_url` pointed at basmilius/weather-icons — a different icon set, by a different author, in a different format — so the icon browser's "License" link opened terms that do not cover these glyphs, and 1.1.0 briefly vendored that project's MIT text. The font's own embedded name records identify it: **Meteocons, by Alessio Atzeni**. The metadata, the license file, and the third-party notices now say so. `icon_version` is `1.0`, which is what the font reports, rather than the `2.0.0` carried over from the other project.
 
 ## [1.0.0] — one provider API
 

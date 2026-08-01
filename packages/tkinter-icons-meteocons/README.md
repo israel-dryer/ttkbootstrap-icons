@@ -1,7 +1,7 @@
 # tkinter-icons-meteocons
 
 An icon provider for the `tkinter-icons` library.  
-Meteocons is a compact weather-themed icon font.
+Meteocons is a compact weather-themed icon font by [Alessio Atzeni](https://www.alessioatzeni.com/meteocons/).
 
 [![PyPI](https://img.shields.io/pypi/v/tkinter-icons-meteocons.svg)](https://pypi.org/project/tkinter-icons-meteocons/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
@@ -24,7 +24,7 @@ from tkinter_icons_meteocons import MeteoIcon
 
 root = tk.Tk()
 
-icon = MeteoIcon("a", size=24, color="#0077ff")
+icon = MeteoIcon("sun", size=24, color="#0077ff")
 tk.Button(root, image=icon.image, text="Meteocons", compound="left").pack()
 
 root.mainloop()

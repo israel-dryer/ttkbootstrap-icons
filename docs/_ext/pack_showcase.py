@@ -70,9 +70,7 @@ SHOWCASE: dict[str, list[str]] = {
     "ionicons": ["home", "search", "settings", "heart", "star", "download", "trash", "person"],
     "lucide": ["house", "search", "settings", "user", "heart", "star", "download", "trash"],
     "material": ["home", "magnify", "cog", "account", "heart", "star", "download", "calendar"],
-    # Meteocons ships no semantic names - its glyph map is the font's character
-    # map, so every icon is a letter. See the pack's page, which says so.
-    "meteocons": ["a", "b", "c", "d", "e", "f", "g", "h"],
+    "meteocons": ["sun", "moon", "cloud", "cloud-sun", "rain", "snow", "thunderstorm", "fog"],
     "remix": ["home", "search", "settings", "user", "heart", "star", "download", "delete-bin"],
     "rpg-awesome": [
         "broadsword", "crossed-swords", "shield", "potion",
