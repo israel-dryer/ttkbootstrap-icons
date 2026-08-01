@@ -1,0 +1,141 @@
+Icons and names
+===============
+
+An icon is a description, not a picture
+---------------------------------------
+
+Creating an icon costs almost nothing. The constructor resolves the name, records the size and color, and stops — it does not open Tk, allocate an image, or touch a display:
+
+.. code-block:: python
+
+   from tkinter_icons import MaterialIcon
+
+   home = MaterialIcon("home", size=24, color="#0d6efd")   # nothing drawn yet
+   home.image                                              # drawn here
+
+That is why icons can be built before there is a root window, kept in a module-level table, or passed around as configuration. It is also why the same icon costs nothing twice: two icons with the same set, name, size, color, and options share one rendered image.
+
+.. code-block:: python
+
+   MaterialIcon("home", 24, "black").image is MaterialIcon("home", 24, "black").image
+   # True - one image, cached per Tk interpreter
+
+Naming
+------
+
+Names are the upstream project's own, lowercase and hyphenated:
+
+.. code-block:: python
+
+   MaterialIcon("account-circle")
+   LucideIcon("chevron-right")
+   BootstrapIcon("file-earmark-text")
+
+If you are guessing, don't — run ``tkinter-icons`` and search. See :doc:`icon-browser`.
+
+Styles
+------
+
+Some packs draw the same icon several ways. Bootstrap has ``outline`` and ``fill``; Font Awesome has ``solid``, ``regular``, and ``brands``; Google Material has four. A pack with styles takes a ``style`` argument, and you can also carry the style in the name:
+
+.. code-block:: python
+
+   from tkinter_icons import BootstrapIcon
+
+   BootstrapIcon("house", style="fill")
+   BootstrapIcon("house-fill")             # equivalent
+
+When both are given and they disagree, that is an error rather than a silent preference:
+
+.. code-block:: python
+
+   BootstrapIcon("house-fill", style="outline")
+   # ValueError: 'house-fill' is not valid for style 'outline' in bootstrap.
+   #             Try style 'fill' or use an unsuffixed name.
+
+Omit ``style`` and the pack uses its default — ``outline`` for Bootstrap, ``solid`` for Font Awesome. The Styles column on :doc:`../packs` lists what each pack accepts; several packs have none and take no ``style`` argument at all.
+
+When a name is wrong
+--------------------
+
+Two different things can go wrong, and they fail in two different places.
+
+**A name that does not resolve** raises immediately, from the pack's constructor:
+
+.. code-block:: python
+
+   MaterialIcon("hoome")
+   # ValueError: hoome not found in lookup for mat in fill style.
+
+Names are the upstream project's, which is not always the word you would have picked — Material Design Icons calls the gear ``cog``, not ``settings``. The browser is the fastest way to find the one you want.
+
+**A name that resolves but is missing from the glyph map** is handled by a policy instead, because it means the pack's data is inconsistent rather than that you made a typo. By default such an icon draws as a transparent square, so one bad name cannot take down a window full of good ones:
+
+.. code-block:: python
+
+   from tkinter_icons import Icon
+
+   Icon.on_missing = "raise"     # or "warn", or the default "transparent"
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 80
+
+   * - Value
+     - Behaviour
+   * - ``"transparent"``
+     - Draw an empty square of the right size. The default.
+   * - ``"warn"``
+     - Draw the empty square and emit a :class:`UserWarning`.
+   * - ``"raise"``
+     - Raise :class:`KeyError`.
+
+``"warn"`` suits a test suite: nothing breaks, but nothing passes silently either.
+
+Asking for a pack you have not installed
+----------------------------------------
+
+The import root knows all sixteen packs whether or not they are installed, so this fails with instructions rather than a bare :class:`ImportError` about a module you never named:
+
+.. code-block:: python
+
+   from tkinter_icons import WeatherIcon
+   # ImportError: The Weather Icons pack is not installed.
+   #
+   #   pip install "tkinter-icons[weather]"
+   #
+   # Then: from tkinter_icons import WeatherIcon
+   #
+   # Currently installed: material, simple
+
+Inspecting what you have
+------------------------
+
+The pack catalogue is importable, which is useful in a diagnostics screen or a test that asserts what an environment carries:
+
+.. code-block:: python
+
+   from tkinter_icons import installed_packs, find_pack
+
+   for pack in installed_packs():
+       print(pack.extra, pack.label, pack.import_statement)
+
+   find_pack("mat")                  # by provider name, extra, module, or distribution
+   find_pack("tkinter-icons-mat")
+
+What an icon knows about itself
+-------------------------------
+
+.. code-block:: python
+
+   icon = MaterialIcon("home", size=15)
+
+   icon.name             # 'home' - the resolved glyph name
+   icon.size             # 15 - what you asked for
+   icon.rendered_size    # 16 - what was drawn; odd sizes snap up
+   icon.icon_set         # the IconSet it draws from
+   icon.icon_set.id      # 'mat:default'
+   len(icon.icon_set)    # how many glyphs that set has
+   "home" in icon.icon_set
+
+:attr:`~tkinter_icons.Icon.rendered_size` is worth knowing if you are laying out around an icon — see :doc:`sizing-and-quality`.

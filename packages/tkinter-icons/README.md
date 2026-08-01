@@ -5,85 +5,62 @@
 [![Downloads](https://static.pepy.tech/badge/tkinter-icons)](https://pepy.tech/project/tkinter-icons)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](../../LICENSE)
 
-Base package for font-based icons in Tkinter and ttkbootstrap. Provides the provider framework and Icon Browser. Install icon provider packages separately (Bootstrap Icons, Font Awesome, Material, Remix, Fluent, Simple, Weather, Lucide, Eva, Typicons, and more).
-
----
-
-## Highlights
-
-- Built-in Bootstrap Icons provider
-- Install-and-use provider packages (auto-discovered)
-- Simple Python API for size, color, and style
-- Fast Icon Browser to preview and copy names
-- Pure-Python rendering with Pillow
-
----
-
-## Documentation
-
-Full documentation, provider list, API reference, and usage guides:
-
-https://israel-dryer.github.io/tkinter-icons/
+Font-based icons for Tkinter — sixteen icon sets, one import root, no image files to manage.
 
 ## Install
 
+Icons come from packs, installed as extras. Pick one:
+
 ```bash
-pip install tkinter-icons
+pip install "tkinter-icons[material]"
 ```
-
----
-
-## Quick start
 
 ```python
 import tkinter as tk
-from tkinter_icons import BootstrapIcon
+from tkinter import ttk
+
+from tkinter_icons import MaterialIcon
 
 root = tk.Tk()
-icon = BootstrapIcon("house", size=24, color="#0d6efd", style="fill")
-tk.Label(root, image=icon.image, text=" Home", compound="left").pack(padx=10, pady=10)
+
+home = MaterialIcon("home", size=24, color="#0d6efd")
+ttk.Button(root, text="Home", image=home.image, compound="left").pack(padx=20, pady=20)
+
 root.mainloop()
 ```
 
----
+The quotes matter — most shells treat unquoted brackets as a glob. Name two packs together as `"tkinter-icons[material,simple]"`.
 
-## Stateful Icons (v3.1.0+)
+> **This package on its own draws nothing.** It is the renderer; the glyphs live in the packs. A bare `pip install tkinter-icons` gets you a working renderer with no icons, and asking for an icon class then raises with the exact command you wanted.
 
-Icons can automatically change appearance based on widget states (hover, pressed, disabled, selected):
+## The sixteen packs
 
-```python
-import ttkbootstrap as tb
-from tkinter_icons import BootstrapIcon
+`bootstrap` · `devicon` · `eva` · `fluent` · `fluent-regular` · `fontawesome` · `google-material` · `ionicons` · `lucide` · `material` · `meteocons` · `remix` · `rpg-awesome` · `simple` · `typicons` · `weather`
 
-app = tb.Window()
-icon = BootstrapIcon("mic-mute-fill", size=64)
-toggle = tb.Checkbutton(app, compound="image", bootstyle="toolbutton")
-toggle.pack(padx=20, pady=20)
+Sizes, styles, and glyph counts for each: **[the packs page](https://israel-dryer.github.io/tkinter-icons/packs.html)**.
 
-# Icon automatically switches to mic-fill when selected
-icon.map(toggle, statespec=[("selected", {"name": "mic-fill"})])
+There is deliberately no `[all]` extra — the sets serve disjoint purposes, so installing every one would cost about 17 MB to supply fifteen sets you never open.
 
-app.mainloop()
-```
+## What you get
 
-See the [Stateful Icons documentation](https://israel-dryer.github.io/tkinter-icons/stateful-icons/) for automatic color mapping, custom state specifications, and advanced examples.
+- **One API across every pack.** Each pack's class takes the same `(name, size, color, style)`, so switching sets is a one-line change.
+- **Sharp at any size.** Glyphs are centered on measured ink rather than the font's own bounding box, which under-reports it. Odd sizes snap even; small sizes oversample and downscale.
+- **Renders without a display.** `Icon.render_pil()` returns a Pillow image and touches no Tk — usable in tests, build steps, and server processes.
+- **Follows your ttk theme.** `icon.map(widget)` tints the icon per widget state and re-renders it when the theme changes.
+- **An icon browser.** Run `tkinter-icons` to search every installed set and copy the name you need.
 
----
+## Documentation
 
-## Icon Browser
+- [Getting started](https://israel-dryer.github.io/tkinter-icons/getting-started.html)
+- [Icon packs](https://israel-dryer.github.io/tkinter-icons/packs.html)
+- [Stateful icons](https://israel-dryer.github.io/tkinter-icons/guide/stateful-icons.html)
+- [API reference](https://israel-dryer.github.io/tkinter-icons/api.html)
+- [Repository](https://github.com/israel-dryer/tkinter-icons)
 
-Search and preview icons across all installed providers, then copy names for use in code.
+## Upgrading from ttkbootstrap-icons
 
-```bash
-tkinter-icons
-# or
-python -m tkinter_icons.browser
-```
+This package was published as `ttkbootstrap-icons` through 4.0.0. Installing that name still works — it is now a forwarding shim — and [the migration notes](https://israel-dryer.github.io/tkinter-icons/getting-started.html#migrating) cover the two things that genuinely changed.
 
----
+## License
 
-## Links
-
-- Documentation: https://israel-dryer.github.io/tkinter-icons/
-- Repository: https://github.com/israel-dryer/tkinter-icons
-
+MIT for the library. Each pack redistributes an upstream icon font under that project's own license, shipped inside the pack; see [THIRD-PARTY-NOTICES.md](https://github.com/israel-dryer/tkinter-icons/blob/main/THIRD-PARTY-NOTICES.md).

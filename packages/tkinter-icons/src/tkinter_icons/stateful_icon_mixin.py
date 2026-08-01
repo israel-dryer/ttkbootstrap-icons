@@ -337,14 +337,11 @@ class StatefulIconMixin:
                 with `name` and/or `color`. If `color` is omitted, the icon
                 color follows the parent's `foreground` for that state.
             mode: Merge strategy for the child style's `image` map.
-                * `"merge"` (default): Read the existing `image` map for the
-                  same child style, overwrite incoming states, preserve order of
-                  existing entries, and append new states.
-                * `"replace"`: Ignore any existing map and apply only the
-                  provided states (plus the fallback).
-
-        Returns:
-            None
+                `"merge"`, the default, reads the existing map for the same
+                child style, overwrites incoming states, preserves the order of
+                existing entries, and appends new ones. `"replace"` ignores any
+                existing map and applies only the states given, plus the
+                fallback.
         """
         style = Style()
         parent_style = self._parent_style_for(widget)
