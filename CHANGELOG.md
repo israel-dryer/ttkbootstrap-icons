@@ -98,6 +98,8 @@ from tkinter_icons import MaterialIcon
   generated — and the runner treated that as a failure rather than a skip.
   (#77)
 
+- **PyInstaller finds the bundled hooks by itself.** The package shipped hooks but never registered them, so PyInstaller had no reason to look in `_pyinstaller/` and every frozen application needed an explicit `hookspath`. A `pyinstaller40` entry point now points at `get_hook_dirs`, which is what the documentation had always described. Two packs also had no hook file at all — `bs` and `fluent-reg` — so a frozen application using Bootstrap or Fluent (Regular) icons shipped without their fonts. All three failures were silent by construction: a glyph with no font renders transparent, so the application started normally and drew nothing.
+
 ### Removed
 
 - **Only the icon browser is published as a command.** The base package
