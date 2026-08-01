@@ -30,6 +30,8 @@ pip install "tkinter-icons[bootstrap]"
   `python -m tkinter_icons.tools.generate_metrics bootstrap` whenever the font
   or glyph map changes. (#67)
 
+- **Bootstrap Icons' MIT license, at `assets/LICENSES/MIT.txt`.** This pack redistributes an upstream icon font and did not carry its license text, which every other pack does. The file is upstream's own, copied unedited from [twbs/icons](https://github.com/twbs/icons/blob/main/LICENSE), and it ships in the wheel.
+
 ### Changed
 
 - **Renamed from `ttkbootstrap-icons-bs`.** The old distribution is frozen at
