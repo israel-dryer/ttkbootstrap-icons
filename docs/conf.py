@@ -104,6 +104,11 @@ nitpick_ignore_regex = [
     (r"py:.*", r"tkinter\..*"),
     (r"py:.*", r"PIL\..*"),
     (r"py:.*", r"(?:.*\.)?_[A-Za-z]\w*$"),
+    # `Icon` inherits from `StatefulIconMixin`, so `:show-inheritance:` emits a
+    # reference to it. The mixin itself is not part of the consumer API - the
+    # methods it contributes, `map` and `unmap`, are documented on `Icon` via
+    # `:inherited-members:`, which is where a reader looks for them.
+    (r"py:class", r"tkinter_icons\.stateful_icon_mixin\..*"),
 ]
 
 # ---------------------------------------------------------------------------

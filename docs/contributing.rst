@@ -62,9 +62,11 @@ Building the docs
 
 .. code-block:: bash
 
-   python -m sphinx docs docs/_build/html -b html -W
+   python -m sphinx docs docs/_build/html -b html -W -n
 
-The packs page reads each pack's styles, upstream version, and glyph count from the installed provider rather than from a table someone has to remember to update, so a build without the packs installed leaves those columns blank and warns. ``-W`` turns that into a failure, which is what the docs workflow uses — a published table with holes in it would be worse than none.
+The packs page reads each pack's styles, upstream version, and glyph count from the installed provider rather than from a table someone has to remember to update, so a build without the packs installed leaves those columns blank and warns. ``-W`` turns that into a failure, which is what the docs workflow uses — a published table with holes in it would be worse than none. ``-n`` does the same for unresolved cross-references, so a renamed API leaves a failing build rather than a dead link.
+
+Deploying needs the repository's Pages source set to **GitHub Actions** rather than to a branch. The site was published by hand with ``mkdocs gh-deploy`` before this, which left a ``gh-pages`` branch; while Pages is still pointed at that branch, the deploy job fails.
 
 The developer API
 -----------------

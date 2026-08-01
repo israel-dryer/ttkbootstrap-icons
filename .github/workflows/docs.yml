@@ -49,9 +49,11 @@ jobs:
 
       # `-W` is what makes the pack-table warning a failure: a build that could
       # not read a pack warns, and publishing that silently would put an
-      # authoritative-looking table of blanks on the site.
+      # authoritative-looking table of blanks on the site. `-n` adds unresolved
+      # cross-references to the same treatment, which is what keeps a renamed
+      # or deleted API from leaving dead links in the reference pages.
       - name: Build docs
-        run: python -m sphinx docs docs/_build/html -b html -W --keep-going
+        run: python -m sphinx docs docs/_build/html -b html -W --keep-going -n
 
       # `packs.py` sends anyone with no pack installed to `<docs>/packs.html` -
       # from the ImportError raised by `Icon.__init__` and from the browser's

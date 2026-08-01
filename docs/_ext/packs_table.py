@@ -48,8 +48,23 @@ def _glyph_count(provider) -> int:
     return sum(len(names) for names in index["names_by_style"].values())
 
 
+#: Built once per build. Both directives on the packs page need the same data,
+#: and gathering it means instantiating sixteen providers and building sixteen
+#: name lookups — worth doing once. Without the cache the "not installed"
+#: warning also fired once per directive, so a missing pack was reported twice.
+_ROWS_CACHE: list | None = None
+
+
 def _pack_rows():
-    """Yield one row of table data per known pack, in catalogue order."""
+    """Return one row of table data per known pack, in catalogue order."""
+    global _ROWS_CACHE
+    if _ROWS_CACHE is None:
+        _ROWS_CACHE = list(_build_pack_rows())
+    return _ROWS_CACHE
+
+
+def _build_pack_rows():
+    """Yield the rows, reading each pack's provider once."""
     from tkinter_icons.packs import KNOWN_PACKS
 
     missing = []
