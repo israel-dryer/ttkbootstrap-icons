@@ -79,41 +79,19 @@ Is this the right library?
 
    This project was published as ``ttkbootstrap-icons`` through 4.0.0. It was renamed in 5.0.0 because the old name described a relationship that no longer exists. Your existing code keeps working — see :ref:`migrating`.
 
+.. Each entry here becomes a top-level item in the header nav, so the sections
+   are represented by their landing pages rather than by all fifteen documents.
+   Listing every page flat overflowed the navbar and wrapped it onto a second
+   row.
+
 .. toctree::
    :hidden:
-   :caption: Getting started
 
    getting-started
    packs
-
-.. toctree::
-   :hidden:
-   :caption: User guide
-
-   guide/icons-and-names
-   guide/sizing-and-quality
-   guide/stateful-icons
-   guide/headless-rendering
-   guide/icon-browser
-   guide/packaging
-
-.. toctree::
-   :hidden:
-   :caption: Integrations
-
-   integrations/tkinter-ttk
-   integrations/ttkbootstrap
-
-.. toctree::
-   :hidden:
-   :caption: Reference
-
+   guide/index
+   integrations/index
    api
    contributing
-
-.. toctree::
-   :hidden:
-   :caption: About
-
    release-notes
    license

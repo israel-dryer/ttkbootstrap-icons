@@ -22,7 +22,9 @@
     white-space: nowrap;
 }
 
-img[alt] {
+/* Scoped to article content: an unscoped `img` rule also catches the navbar
+   logo and icon links, which the theme sizes itself. */
+.bd-article img {
     max-width: 100%;
     height: auto;
 }

@@ -112,12 +112,13 @@ nitpick_ignore_regex = [
 
 html_theme = "pydata_sphinx_theme"
 
+# Deliberately minimal. The navbar_start/center/end slots are left at the
+# theme's defaults: overriding them dropped `search-button-field` from
+# `navbar_end`, and the search field then rendered on a second row underneath
+# the nav links instead of beside them. The defaults already lay out as
+# logo | nav | search + icons + theme toggle on one row.
 html_theme_options = {
     "github_url": "https://github.com/israel-dryer/tkinter-icons",
-    "navbar_start": ["navbar-logo"],
-    "navbar_center": ["navbar-nav"],
-    "navbar_end": ["navbar-icon-links", "theme-switcher"],
-    "secondary_sidebar_items": ["page-toc"],
     "navigation_with_keys": True,
     "show_nav_level": 1,
     "icon_links": [
