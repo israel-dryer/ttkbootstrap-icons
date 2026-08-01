@@ -117,13 +117,27 @@ nitpick_ignore_regex = [
 
 html_theme = "pydata_sphinx_theme"
 
-# Deliberately minimal. The navbar_start/center/end slots are left at the
-# theme's defaults: overriding them dropped `search-button-field` from
-# `navbar_end`, and the search field then rendered on a second row underneath
-# the nav links instead of beside them. The defaults already lay out as
-# logo | nav | search + icons + theme toggle on one row.
 html_theme_options = {
     "github_url": "https://github.com/israel-dryer/tkinter-icons",
+    # The project wordmark, copied from `assets/` - which is the source of truth
+    # for every mark, and says so. `light`/`dark` name the **background** the
+    # asset is drawn for, not its ink, so `wordmark-light` is dark ink for a
+    # light page. Copies rather than references because `html_static_path` does
+    # not reach outside the docs tree; update `assets/` first, then this copy.
+    #
+    # No `text` alongside them: these wordmarks already contain the lettering,
+    # outlined to paths rather than live `<text>`, because an SVG used as a logo
+    # loads as its own document and cannot see the page's `@font-face` rules.
+    "logo": {
+        "image_light": "_static/wordmark-light.svg",
+        "image_dark": "_static/wordmark-dark.svg",
+        "alt_text": "tkinter-icons",
+    },
+    "navbar_start": ["navbar-logo"],
+    "navbar_center": ["navbar-nav"],
+    "navbar_end": ["theme-switcher", "navbar-icon-links"],
+    "navbar_persistent": ["search-button"],
+    "secondary_sidebar_items": ["page-toc"],
     "navigation_with_keys": True,
     "show_nav_level": 1,
     "icon_links": [
@@ -138,6 +152,7 @@ html_theme_options = {
 html_static_path = ["_static"]
 templates_path = ["_templates"]
 html_css_files = ["custom.css"]
+html_favicon = "_static/favicon.png"
 html_title = "tkinter-icons"
 html_short_title = "tkinter-icons"
 html_show_sourcelink = False

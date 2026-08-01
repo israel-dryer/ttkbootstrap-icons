@@ -70,7 +70,7 @@ Some packs draw the same icon more than one way — outline and fill, solid and 
    BootstrapIcon("house", style="fill")
    BootstrapIcon("house-fill")            # same thing, style carried in the name
 
-Seven of the sixteen have no styles at all and take no ``style`` argument. The Styles column above lists what each pack accepts, and :doc:`guide/icons-and-names` covers how a name resolves against a style.
+Seven of the sixteen have no styles at all and take no ``style`` argument. The Styles column above lists what each pack accepts, and :doc:`user-guide/icons-and-names` covers how a name resolves against a style.
 
 Upstream sources
 ----------------

@@ -1,3 +1,30 @@
+/* Brand palette, from assets/README.md — teal on a Tailwind neutral ramp, and
+   deliberately not bootstack's Bootstrap blue: the two projects share tooling
+   and conventions, not an identity.
+
+   These are the link/primary values, NOT the mark's `#0F9488`. That colour is
+   3.74:1 on white and 4.12:1 on the dark background — under WCAG AA in both
+   modes, which is fine for a logotype (exempt under 1.4.3) and wrong for a
+   link. The two below are the same hue one step out in each direction, at
+   5.47:1 and 8.29:1. */
+:root {
+    --pst-color-primary: #0F766E;
+    --pst-color-link: #0F766E;
+    --pst-color-link-hover: #0F9488;
+}
+
+html[data-theme="dark"] {
+    --pst-color-primary: #2DD4BF;
+    --pst-color-link: #2DD4BF;
+    --pst-color-link-hover: #5EEAD4;
+}
+
+/* Navbar wordmark: cap the logo height so it sits comfortably in the header.
+   Same 48px as ttkbootstrap and bootstack, so the three sites' headers line up. */
+.navbar-brand.logo {
+    max-height: 48px !important;
+}
+
 /* Landing-page call-to-action row. */
 .hero-ctas {
     display: flex;

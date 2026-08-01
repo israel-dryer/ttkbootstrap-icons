@@ -41,7 +41,7 @@ Most are permissive — MIT, Apache 2.0, ISC, SIL OFL, CC0 — and drawing the g
 * **Share-alike.** Typicons' artwork is CC BY-SA 4.0. That binds *adaptations of the artwork* — redrawing the icons — not an application that draws them.
 * **Fonts under the SIL OFL** may be bundled and redistributed freely, but not sold on their own.
 
-`THIRD-PARTY-NOTICES.md <https://github.com/israel-dryer/tkinter-icons/blob/main/THIRD-PARTY-NOTICES.md>`_ lists every pack with its upstream source, license, and the files it ships. :doc:`packs` links each pack's upstream license directly, and the icon browser shows a License link for whichever set you are looking at.
+`THIRD-PARTY-NOTICES.md <https://github.com/israel-dryer/tkinter-icons/blob/main/THIRD-PARTY-NOTICES.md>`_ lists every pack with its upstream source, license, and the files it ships. :doc:`../packs` links each pack's upstream license directly, and the icon browser shows a License link for whichever set you are looking at.
 
 .. note::
 

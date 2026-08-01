@@ -16,7 +16,7 @@ An icon is a glyph from an icon font, rendered to a Tk image at the size and col
 
 .. container:: hero-ctas
 
-   .. button-ref:: getting-started
+   .. button-ref:: getting-started/index
       :ref-type: doc
       :color: primary
       :class: sd-px-4 sd-fs-5
@@ -79,19 +79,18 @@ Is this the right library?
 
    This project was published as ``ttkbootstrap-icons`` through 4.0.0. It was renamed in 5.0.0 because the old name described a relationship that no longer exists. Your existing code keeps working — see :ref:`migrating`.
 
-.. Each entry here becomes a top-level item in the header nav, so the sections
-   are represented by their landing pages rather than by all fifteen documents.
-   Listing every page flat overflowed the navbar and wrapped it onto a second
-   row.
+.. Every entry here becomes a top-level item in the header nav, so this list is
+   deliberately four long. Anything past the fifth is folded into a "More"
+   dropdown, and enough of them overflow the bar entirely — which is what
+   listing all fifteen pages, and then all eight sections, each did in turn.
+   Depth belongs in the sidebar, not across the top.
 
 .. toctree::
    :hidden:
+   :maxdepth: 2
 
-   getting-started
+   getting-started/index
    packs
-   guide/index
-   integrations/index
+   user-guide/index
    api
-   contributing
-   release-notes
-   license
+   about/index

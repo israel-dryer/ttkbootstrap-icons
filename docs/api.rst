@@ -1,7 +1,7 @@
 API reference
 =============
 
-Everything an application needs is importable from ``tkinter_icons``. The machinery for *defining* an icon set — providers and the registry — is a developer API and lives in :doc:`contributing`.
+Everything an application needs is importable from ``tkinter_icons``. The machinery for *defining* an icon set — providers and the registry — is a developer API and lives in :doc:`about/contributing`.
 
 .. currentmodule:: tkinter_icons
 

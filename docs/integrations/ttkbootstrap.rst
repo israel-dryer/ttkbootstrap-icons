@@ -54,7 +54,7 @@ The icon now follows the button through hover, pressed, and disabled — and re-
 
    app.style.theme_use("flatly")     # icons recolor themselves
 
-See :doc:`../guide/stateful-icons` for per-state colors and per-state icon names.
+See :doc:`../user-guide/stateful-icons` for per-state colors and per-state icon names.
 
 Bootstyle colors
 ----------------

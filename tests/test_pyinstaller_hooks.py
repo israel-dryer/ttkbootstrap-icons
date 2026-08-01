@@ -32,6 +32,10 @@ BASE_PYPROJECT = REPO / "packages" / "tkinter-icons" / "pyproject.toml"
 #: The group PyInstaller scans for third-party hook directories.
 HOOK_GROUP = "pyinstaller40"
 
+#: This package's entry-point target. The *name* within the group is
+#: conventionally `hook-dirs` for everyone, so the value is what identifies us.
+TARGET = "tkinter_icons._pyinstaller:get_hook_dirs"
+
 
 def hook_dir() -> Path:
     return Path(get_hook_dirs()[0])
@@ -60,14 +64,22 @@ class TestPyInstallerCanFindTheHooks:
     def test_pyproject_declares_the_entry_point(self):
         pyproject = tomllib.loads(BASE_PYPROJECT.read_text(encoding="utf-8"))
         group = pyproject["project"]["entry-points"][HOOK_GROUP]
-        assert group["hook-dirs"] == "tkinter_icons._pyinstaller:get_hook_dirs"
+        assert group["hook-dirs"] == TARGET
 
     def test_the_entry_point_is_installed_and_resolves(self):
-        found = [ep for ep in entry_points(group=HOOK_GROUP) if ep.name == "hook-dirs"]
-        if not found:
+        """Selected by value, not by name.
+
+        `hook-dirs` is the conventional name in this group, so every package
+        that ships hooks uses it — install PyInstaller itself and
+        `_pyinstaller_hooks_contrib` registers a `hook-dirs` of its own. Taking
+        the first match by name therefore resolves whichever package happens to
+        sort first, which is a test that passes or fails on what else is in the
+        environment rather than on anything this package does.
+        """
+        ours = [ep for ep in entry_points(group=HOOK_GROUP) if ep.value == TARGET]
+        if not ours:
             pytest.skip("package installed before the entry point was added; reinstall to test")
-        resolved = found[0].load()
-        assert [Path(p) for p in resolved()] == [Path(p) for p in get_hook_dirs()]
+        assert [Path(p) for p in ours[0].load()()] == [Path(p) for p in get_hook_dirs()]
 
 
 class TestEveryPackHasAHook:
