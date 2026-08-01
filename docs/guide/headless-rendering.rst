@@ -20,9 +20,10 @@ Rendering to a Pillow image
 
 The return is a square RGBA :class:`PIL.Image.Image`. A name that is not in the set comes back fully transparent rather than raising, subject to the ``on_missing`` policy described in :doc:`icons-and-names`.
 
-.. warning::
+Called on a pack's class it draws that pack's glyphs and takes the same friendly names the constructor takes, so nothing has to be set up first. Called on :class:`~tkinter_icons.Icon` itself there is no pack to draw from, and you have to say which set to use — see :ref:`explicit-icon-sets` below.
 
-   ``render_pil`` renders from the *active* icon set, which is whichever pack was initialized most recently. Constructing any icon from a pack initializes it, which is why the example above imports ``MaterialIcon`` and calls the classmethod on it. To be explicit — or to render from two packs in one process — pass ``icon_set`` (below).
+.. versionchanged:: 5.0.0
+   ``render_pil`` used to read whichever icon set was initialized most recently, so it drew the right glyphs only if something had already constructed an icon from that pack — and raised in a fresh process. It also took an already-resolved glyph name, which meant a friendly name like ``"house-fill"`` rendered transparent.
 
 If you already have an icon, :meth:`~tkinter_icons.Icon.to_pil` renders that exact icon:
 
@@ -49,6 +50,8 @@ Exporting a set of icons
            image.save(out / f"{name}-{size}.png")
 
 No root window is created anywhere in that loop, so it runs under ``xvfb``-less CI, in a container, or from a build script.
+
+.. _explicit-icon-sets:
 
 Being explicit about the icon set
 ---------------------------------
