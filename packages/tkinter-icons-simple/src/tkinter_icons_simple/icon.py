@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from tkinter_icons.icon import Icon
+from tkinter_icons.render import RenderOptions
 from tkinter_icons_simple.provider import SimpleFontProvider
 
 
@@ -14,11 +17,14 @@ class SimpleIcon(Icon):
         ValueError: If the name cannot be resolved for the requested style.
     """
 
-    def __init__(self, name: str, size: int = 24, color: str = "black", **kwargs):
+    provider_class = SimpleFontProvider
+
+    def __init__(self, name: str, size: int = 24, color: str = "black",
+                 *, options: RenderOptions | None = None, **kwargs):
         prov = SimpleFontProvider()
         SimpleIcon.initialize_with_provider(prov)
         resolved = prov.resolve_icon_name(name, **kwargs)
-        super().__init__(resolved, size, color)
+        super().__init__(resolved, size, color, options=options)
 
 
 

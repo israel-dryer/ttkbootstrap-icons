@@ -32,6 +32,10 @@ pip install "tkinter-icons[bootstrap]"
 
 - **Bootstrap Icons' MIT license, at `assets/LICENSES/MIT.txt`.** This pack redistributes an upstream icon font and did not carry its license text, which every other pack does. The file is upstream's own, copied unedited from [twbs/icons](https://github.com/twbs/icons/blob/main/LICENSE), and it ships in the wheel.
 
+- **The icon class takes `options`.** `RenderOptions` carries every drawing knob — padding, oversampling, sharpening, even-snapping — and was reachable only through `Icon.render_pil` or the base `Icon`, not through the class you actually construct. `BootstrapIcon("name", size=32, options=RenderOptions(pad_factor=0.0))` now works. Keyword-only, so it cannot be confused with `style`.
+
+- **`render_pil` works on this class without a warm-up.** It read an icon set shared by every subclass, so `BootstrapIcon.render_pil(...)` drew this pack's glyphs only if something had already constructed one of its icons — and raised in a fresh process. The class names its own provider now, and resolves friendly names the way the constructor does.
+
 ### Changed
 
 - **Renamed from `ttkbootstrap-icons-bs`.** The old distribution is frozen at

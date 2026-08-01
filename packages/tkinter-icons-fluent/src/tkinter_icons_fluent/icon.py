@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 from typing import Literal
 
 from tkinter_icons.icon import Icon
+from tkinter_icons.render import RenderOptions
 from tkinter_icons_fluent.provider import FluentSystemFontProvider
 
 FluentStyles = Literal['regular', 'filled', 'light']
@@ -25,12 +28,15 @@ class FluentIcon(Icon):
         ValueError: If the name cannot be resolved for the requested style.
     """
 
-    def __init__(self, name: str, size: int = 24, color: str = "black", style: FluentStyles | None = None):
+    provider_class = FluentSystemFontProvider
+
+    def __init__(self, name: str, size: int = 24, color: str = "black", style: FluentStyles | None = None,
+                 *, options: RenderOptions | None = None):
         prov = FluentSystemFontProvider()
         resolved_style = prov.resolve_icon_style(name, style)
         FluentIcon.initialize_with_provider(prov, resolved_style)
         resolved = prov.resolve_icon_name(name, style)
-        super().__init__(resolved, size, color)
+        super().__init__(resolved, size, color, options=options)
 
 
 

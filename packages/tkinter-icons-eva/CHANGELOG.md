@@ -30,6 +30,10 @@ pip install "tkinter-icons[eva]"
   `python -m tkinter_icons.tools.generate_metrics eva` whenever the font or
   glyph map changes. (#67)
 
+- **The icon class takes `options`.** `RenderOptions` carries every drawing knob — padding, oversampling, sharpening, even-snapping — and was reachable only through `Icon.render_pil` or the base `Icon`, not through the class you actually construct. `EvaIcon("name", size=32, options=RenderOptions(pad_factor=0.0))` now works. Keyword-only, so it cannot be confused with `style`.
+
+- **`render_pil` works on this class without a warm-up.** It read an icon set shared by every subclass, so `EvaIcon.render_pil(...)` drew this pack's glyphs only if something had already constructed one of its icons — and raised in a fresh process. The class names its own provider now, and resolves friendly names the way the constructor does.
+
 ### Changed
 
 - **Renamed from `ttkbootstrap-icons-eva`.** The old distribution is frozen at
