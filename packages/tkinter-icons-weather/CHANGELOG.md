@@ -49,6 +49,10 @@ pip install "tkinter-icons[weather]"
   Nothing imports them at runtime. Maintainers run them from the repository.
   (#79)
 
+### Fixed
+
+- **The provider's `license_url` pointed at the Typicons license.** A copy-paste, and one the icon browser turned into a "License" link that opened a different project's terms. It now points at [upstream's own licensing section](https://github.com/erikflowers/weather-icons#licensing) — a README anchor rather than a file, because Weather Icons ships no `LICENSE` file of its own.
+
 ## [1.0.0] — one provider API
 
 ### Changed

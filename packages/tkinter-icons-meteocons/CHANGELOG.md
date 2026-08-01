@@ -30,6 +30,8 @@ pip install "tkinter-icons[meteocons]"
   `python -m tkinter_icons.tools.generate_metrics meteocons` whenever the font
   or glyph map changes. (#67)
 
+- **Meteocons' MIT license, at `LICENSES/MIT.txt`.** This pack redistributes an upstream icon font and did not carry its license text, which every other pack does. The file is upstream's own, copied unedited from [basmilius/weather-icons](https://github.com/basmilius/weather-icons/blob/dev/LICENSE), and it ships in the wheel.
+
 ### Changed
 
 - **Renamed from `ttkbootstrap-icons-meteocons`.** The old distribution is frozen at

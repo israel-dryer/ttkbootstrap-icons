@@ -46,19 +46,19 @@ PROVIDER_ENTRY_POINT_GROUPS = (
     "ttkbootstrap_icons.providers",  # legacy group, still scanned by registry.py
 )
 
-# Three packs redistribute an upstream icon font without carrying its license
-# file. `bs` redistributes Bootstrap Icons; `meteocons` and `typicons` likewise.
-# The other thirteen packs ship theirs under `LICENSES/`. This is a real
-# compliance gap, not a checker bug — resolving it needs the actual upstream
-# license text and copyright line, which is a human decision rather than
-# something to guess at. Listing them here keeps `--strict` from being green by
-# accident: the release workflow runs with `--strict` and will refuse to publish
-# until this set is empty.
-KNOWN_LICENSE_GAPS = {
-    "tkinter-icons-bs",
-    "tkinter-icons-meteocons",
-    "tkinter-icons-typicons",
-}
+# Packs that redistribute an upstream icon font without carrying its license
+# file. **This set is empty, and that is the point** — `bs`, `meteocons`, and
+# `typicons` were in it until their upstream texts were vendored, and every one
+# of the sixteen packs now ships its own under `LICENSES/`.
+#
+# Emptying it is not cosmetic: a listed pack downgrades the missing-license
+# finding from an error to a warning, so with nothing listed, a seventeenth pack
+# added without its upstream license fails the preflight outright rather than
+# passing as a known exception. Do not add a name here to get a build through.
+# The only reason to re-populate it is a genuinely unresolved question about
+# which upstream text applies, and it has to empty again before a release: the
+# release workflow runs `--strict`, where these warnings are failures.
+KNOWN_LICENSE_GAPS: set[str] = set()
 
 VERSION_RE = re.compile(r"^## \[(\d+\.\d+\.\d+[^\]]*)\]")
 

@@ -30,6 +30,8 @@ pip install "tkinter-icons[typicons]"
   `python -m tkinter_icons.tools.generate_metrics typicons` whenever the font or
   glyph map changes. (#67)
 
+- **Typicons' licenses, at `LICENSES/OFL-1.1.txt` and `LICENSES/CC-BY-SA-4.0.txt`.** This pack redistributes an upstream icon font and did not carry its license text, which every other pack does. Upstream licenses the font under the SIL Open Font License 1.1 and the artwork under CC BY-SA 4.0, and states both in one file; the two are copied unedited from [stephenhutchings/typicons.font](https://github.com/stephenhutchings/typicons.font/blob/master/LICENCE.md), split at upstream's own section break. The CC BY-SA term is share-alike, so adapting the *artwork* carries obligations that drawing the glyphs does not.
+
 ### Changed
 
 - **Renamed from `ttkbootstrap-icons-typicons`.** The old distribution is frozen at
