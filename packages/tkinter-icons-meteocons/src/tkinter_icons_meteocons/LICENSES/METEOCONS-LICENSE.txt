@@ -1,0 +1,25 @@
+Meteocons
+Copyright (c) Alessio Atzeni
+https://www.alessioatzeni.com/meteocons/
+
+The following terms are the author's own, reproduced verbatim from the license
+field embedded in meteocons.ttf (name record 13):
+
+    Meteocons are free for use in both personal and commercial projects. No
+    attribution or backlinks are required, but any form of spreading the word
+    is always appreciated! You must not resell any icons or distribute them in
+    any other way. The icons as such are the property of the author.
+    Intellectual property rights are not transferred with the download of the
+    icons.
+
+Note on redistribution
+----------------------
+
+This package redistributes the Meteocons font so that it can be installed with
+`pip install "tkinter-icons[meteocons]"`. The terms above ask that the icons not
+be resold or distributed separately; they are bundled here only as the data an
+icon renderer draws from, are not sold, and are not offered as a download of the
+icon set itself.
+
+Attribution is not required by the author, and is given anyway: the icons in
+this package are the work of Alessio Atzeni.
