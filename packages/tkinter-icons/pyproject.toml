@@ -70,6 +70,19 @@ weather = ["tkinter-icons-weather>=1.1.0"]
 [project.scripts]
 tkinter-icons = "tkinter_icons.browser:main"
 
+# How PyInstaller finds the hooks this package ships. Without it the hooks are
+# inert: they sit in `_pyinstaller/`, PyInstaller never looks there, and a frozen
+# application starts with no fonts and draws no icons - silently, because a
+# missing glyph renders transparent by default. The hooks existed from the start;
+# only this registration was missing, so every frozen app needed an explicit
+# `hookspath` and the documentation claiming auto-detection was wrong.
+#
+# `get_hook_dirs` returns a list of directories, which is the signature
+# PyInstaller expects. One directory covers every pack, since all sixteen hooks
+# live in the base package.
+[project.entry-points.pyinstaller40]
+hook-dirs = "tkinter_icons._pyinstaller:get_hook_dirs"
+
 [project.urls]
 Homepage = "https://github.com/israel-dryer/tkinter-icons"
 
