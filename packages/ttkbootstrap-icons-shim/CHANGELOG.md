@@ -12,8 +12,8 @@ shim and nothing else.
 ## [5.0.0] — forwards to tkinter-icons
 
 `ttkbootstrap-icons` was renamed to **`tkinter-icons`**. Bootstrap icons are
-built directly into ttkbootstrap and bootstack now, so the old name described
-the wrong thing.
+built directly into ttkbootstrap now, so the old name described the wrong
+thing.
 
 This release exists so that installs of the old name keep working. It is
 published **once** and will not be updated again — it depends on

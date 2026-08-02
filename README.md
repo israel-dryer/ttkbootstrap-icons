@@ -87,7 +87,7 @@ Each pack is its own distribution because each ships a font, but you install the
 
 ## Upgrading from ttkbootstrap-icons
 
-This project was `ttkbootstrap-icons` through 4.0.0, and was renamed in 5.0.0 because the old name described a relationship that no longer exists — Bootstrap icons are now built directly into ttkbootstrap and bootstack.
+This project was `ttkbootstrap-icons` through 4.0.0, and was renamed in 5.0.0 because the old name described a relationship that no longer exists — Bootstrap icons are now built directly into ttkbootstrap.
 
 Existing code keeps working: `ttkbootstrap-icons` 5.0.0 is a forwarding shim that re-exports everything, submodules included. See [the migration notes](https://tkinter-icons.readthedocs.io/en/latest/getting-started/migrating.html).
 

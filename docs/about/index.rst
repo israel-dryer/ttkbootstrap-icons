@@ -25,7 +25,7 @@ About
 The project
 -----------
 
-``tkinter-icons`` renders glyphs from icon fonts to Tk images. It was published as ``ttkbootstrap-icons`` through 4.0.0 and renamed in 5.0.0, because Bootstrap icons had by then been built directly into both `ttkbootstrap <https://github.com/israel-dryer/ttkbootstrap>`_ and `bootstack <https://github.com/israel-dryer/bootstack>`_ — so "the icons for ttkbootstrap" had stopped describing anything. What it is now is icons for people on raw tkinter, and for people who want a set other than Bootstrap.
+``tkinter-icons`` renders glyphs from icon fonts to Tk images. It was published as ``ttkbootstrap-icons`` through 4.0.0 and renamed in 5.0.0, because Bootstrap icons had by then been built directly into `ttkbootstrap <https://github.com/israel-dryer/ttkbootstrap>`_ — so "the icons for ttkbootstrap" had stopped describing anything. What it is now is icons for people on raw tkinter, and for people who want a set other than Bootstrap.
 
 Issues and pull requests are welcome on `GitHub <https://github.com/israel-dryer/tkinter-icons>`_.
 

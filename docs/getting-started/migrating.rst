@@ -3,7 +3,7 @@
 Migrating from ttkbootstrap-icons
 =================================
 
-This project was published as ``ttkbootstrap-icons`` through 4.0.0. The name promised a relationship with ttkbootstrap that no longer holds — Bootstrap icons are now built directly into both `ttkbootstrap <https://github.com/israel-dryer/ttkbootstrap>`_ and `bootstack <https://github.com/israel-dryer/bootstack>`_ — so 5.0.0 renamed it to ``tkinter-icons``.
+This project was published as ``ttkbootstrap-icons`` through 4.0.0. The name promised a relationship with ttkbootstrap that no longer holds — Bootstrap icons are now built directly into `ttkbootstrap <https://github.com/israel-dryer/ttkbootstrap>`_ itself — so 5.0.0 renamed it to ``tkinter-icons``.
 
 **Your existing code keeps working.** ``ttkbootstrap-icons`` 5.0.0 is a forwarding shim: it depends on ``tkinter-icons`` and re-exports everything, submodules included, so ``from ttkbootstrap_icons.icon import Icon`` still resolves. It warns once on import and will not be updated again.
 

@@ -3,7 +3,7 @@ Bootstrap Icons
 
 Bootstrap's own set, drawn by the framework's maintainers and shaped by the same conventions: moderate stroke weight, rounded corners, and an outline and a fill for most of the vocabulary. If you have built anything for the web in the last decade, the names are already in your head.
 
-Reach for it when you are on plain ``tkinter``/``ttk`` and want the Bootstrap look, or when you want a matched outline/fill pair without stepping up to one of the very large sets. If you are already using `ttkbootstrap <https://github.com/israel-dryer/ttkbootstrap>`__ or `bootstack <https://github.com/israel-dryer/bootstack>`__, note that both build these glyphs in — see :doc:`../integrations/ttkbootstrap` before installing this pack alongside one of them.
+Reach for it when you are on plain ``tkinter``/``ttk`` and want the Bootstrap look, or when you want a matched outline/fill pair without stepping up to one of the very large sets. If you are already using `ttkbootstrap <https://github.com/israel-dryer/ttkbootstrap>`__, note that it builds these glyphs in — see :doc:`../integrations/ttkbootstrap` before installing this pack alongside it.
 
 .. pack-preview:: bootstrap
 

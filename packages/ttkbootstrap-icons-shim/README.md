@@ -4,7 +4,7 @@
 
 The old name implied a coupling to ttkbootstrap that was never really true — the
 library works with plain tkinter, and Bootstrap icons are now built directly into
-ttkbootstrap and bootstack.
+ttkbootstrap itself.
 
 This package now contains no code. It depends on `tkinter-icons` and forwards to
 it, so existing installs keep working, and it will not receive further updates.
