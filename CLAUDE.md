@@ -97,10 +97,11 @@ Also merged: #77, three cloud-review findings plus a pack-asset-runner bug; #82
 | #93 | `pack_showcase` declared parallel-read safe; CI's docs job builds with `-j auto` |
 | #94 | records that Read the Docs is live |
 | #97 | one tag releases the repository; the eighteen-tag scheme is retired |
+| #95 | the release procedure itself — legacy packs before the tag, the dry run after the merge to `main`, what that merge does and does not close, and the Meteocons decision recorded as settled |
 
 Closed unmerged: #96, superseded by #97.
 
-**In flight:** #95 — notes only, ready, awaiting a review before merge.
+**Nothing is in flight.** Every PR for 5.0.0 is merged into `5.0`, and what remains is the release itself — the numbered list under "Next session".
 
 `origin` also carries two branches that are **not** stale and must not be
 deleted with the rest:
@@ -208,19 +209,17 @@ bumped every time and an existing one means the tag is wrong.
 
 **Nothing is blocking. What remains is a release, done in an order that matters.**
 
-1. **Merge #95.** Notes only, and it describes the release process the rest of this list assumes.
+1. **Publish the sixteen legacy packs, before the tag.** `release/ttkbootstrap-icons-packs-final`, built and verified but not uploaded. `RELEASE.md` has the procedure and the reasoning; the short version is that their `<5` caps have to land before the shim exists, and the automated run publishes the shim, so there is no longer a gap to slot them into. Manual `twine` upload with a token — that branch is cut from `v4.0.0` and has no `.github` at all.
 
-2. **Publish the sixteen legacy packs, before the tag.** `release/ttkbootstrap-icons-packs-final`, built and verified but not uploaded. `RELEASE.md` has the procedure and the reasoning; the short version is that their `<5` caps have to land before the shim exists, and the automated run publishes the shim, so there is no longer a gap to slot them into. Manual `twine` upload with a token — that branch is cut from `v4.0.0` and has no `.github` at all.
+2. **Merge `5.0` → `main` as one PR.** What it closes, and what it does not, is below — the PR body has to carry `Closes #89` itself. This step also has to come before the dry run, which is not an ordering preference: `workflow_dispatch` offers a *Run workflow* button only for workflows present on the **default branch**, and `main` has no `.github/` directory at all today. `gh workflow list --all` confirms it — `CI` and `pages-build-deployment`, no `Release`. There is nothing to dispatch until this merge lands.
 
-3. **Merge `5.0` → `main` as one PR.** What it closes, and what it does not, is below — the PR body has to carry `Closes #89` itself. This step also has to come before the dry run, which is not an ordering preference: `workflow_dispatch` offers a *Run workflow* button only for workflows present on the **default branch**, and `main` has no `.github/` directory at all today. `gh workflow list --all` confirms it — `CI` and `pages-build-deployment`, no `Release`. There is nothing to dispatch until this merge lands.
+3. **Dry-run the release workflow, still before the tag.** Actions → Release → *Run workflow*, naming `v5.0.0` and now `main`. `release.yml` was rewritten wholesale by #97 and **has never executed in any form**. The dry run builds and verifies all eighteen and publishes nothing — the `publish` and `release` jobs are gated on `github.event_name == 'push'`. Do not skip this. The alternative to finding a problem here is finding it during an irreversible upload.
 
-4. **Dry-run the release workflow, still before the tag.** Actions → Release → *Run workflow*, naming `v5.0.0` and now `main`. `release.yml` was rewritten wholesale by #97 and **has never executed in any form**. The dry run builds and verifies all eighteen and publishes nothing — the `publish` and `release` jobs are gated on `github.event_name == 'push'`. Do not skip this. The alternative to finding a problem here is finding it during an irreversible upload.
+4. **Tag `v5.0.0`.** One tag releases everything.
 
-5. **Tag `v5.0.0`.** One tag releases everything.
+5. **Afterwards:** point RTD's Default branch back at `main`, delete `gh-pages`, and delete the merged remote branches. Leave `release/ttkbootstrap-icons-packs-final` alone.
 
-6. **Afterwards:** point RTD's Default branch back at `main`, delete `gh-pages`, and delete the merged remote branches. Leave `release/ttkbootstrap-icons-packs-final` alone.
-
-**What step 3 actually closes — checked 2026-08-02.** #67, #68, #70 and #75 are already closed. Of the rest, the commit bodies on `5.0` carry `Closes #69`, `Closes #71` and `Closes #79`, and those three close on the push to `main`. **#89 does not close, and expecting it to is the trap**: no commit body mentions it, its `Closes #89` lives only in PR #92's body, and a PR merged to a non-default base does not close its linked issues — nor does GitHub re-evaluate the link when that branch later reaches `main`. So put `Closes #89` in the `5.0` → `main` PR body, along with #69, #71 and #79 for belt and braces. #67's only reference anywhere is `Refs #67`, which is not a closing keyword; it is already closed, so nothing needs doing, but do not read its presence in a commit as a link that will fire.
+**What step 2 actually closes — checked 2026-08-02.** #67, #68, #70 and #75 are already closed. Of the rest, the commit bodies on `5.0` carry `Closes #69`, `Closes #71` and `Closes #79`, and those three close on the push to `main`. **#89 does not close, and expecting it to is the trap**: no commit body mentions it, its `Closes #89` lives only in PR #92's body, and a PR merged to a non-default base does not close its linked issues — nor does GitHub re-evaluate the link when that branch later reaches `main`. So put `Closes #89` in the `5.0` → `main` PR body, along with #69, #71 and #79 for belt and braces. #67's only reference anywhere is `Refs #67`, which is not a closing keyword; it is already closed, so nothing needs doing, but do not read its presence in a commit as a link that will fire.
 
 ### Not blocking, and worth doing next
 
