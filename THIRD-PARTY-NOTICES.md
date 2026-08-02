@@ -24,7 +24,7 @@ Your use of the glyphs is governed by the upstream license listed below. The wra
 | `ionicons` | `tkinter-icons-ion` | [Ionicons v2](https://github.com/ionic-team/ionicons) | MIT | `MIT.txt` |
 | `lucide` | `tkinter-icons-lucide` | [Lucide](https://lucide.dev/icons/) | ISC | `ISC.txt` |
 | `material` | `tkinter-icons-mat` | [Material Design Icons](https://pictogrammers.com/library/mdi/) | Apache 2.0 | `Apache-2.0.txt` |
-| `meteocons` | `tkinter-icons-meteocons` | [Meteocons](https://bas.dev/work/meteocons) | MIT | `MIT.txt` |
+| `meteocons` | `tkinter-icons-meteocons` | [Meteocons](https://www.alessioatzeni.com/meteocons/) by Alessio Atzeni | Free for personal and commercial use; see the file | `METEOCONS-LICENSE.txt` |
 | `remix` | `tkinter-icons-remix` | [Remix Icon](https://remixicon.com/) | Apache 2.0 | `Apache-2.0.txt` |
 | `rpg-awesome` | `tkinter-icons-rpga` | [RPG Awesome](https://nagoshiashumari.github.io/Rpg-Awesome/) | MIT | `RPGA-LICENSE.txt` |
 | `simple` | `tkinter-icons-simple` | [Simple Icons](https://simpleicons.org/) | CC0 1.0 (icon set), MIT (font project) | `CC0-1.0.txt`, `MIT.txt` |
@@ -36,6 +36,8 @@ Two of these carry more than one license because upstream splits them that way. 
 ## Attribution
 
 Some upstream licenses require attribution in software that redistributes the glyphs — CC BY 4.0 (Font Awesome icons), CC BY 3.0 (Weather Icons documentation), and CC BY-SA 4.0 (Typicons artwork) all do. Shipping the pack satisfies this for the copies of the license text, but an application that displays a credits or about screen should name the icon set it draws from.
+
+**Meteocons is drawn by [Alessio Atzeni](https://www.alessioatzeni.com/meteocons/).** His terms ask for no attribution at all; it is given here because the pack previously credited the wrong project, and because an icon set worth shipping is worth naming its author. Those terms also ask that the icons not be resold or distributed separately — this package bundles the font as the data a renderer draws from, does not sell it, and does not offer it as a download of the icon set.
 
 ## Known gap
 

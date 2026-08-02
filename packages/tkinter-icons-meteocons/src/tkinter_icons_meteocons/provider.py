@@ -2,7 +2,14 @@ from tkinter_icons.providers import BaseFontProvider
 
 
 class MeteoconsFontProvider(BaseFontProvider):
-    """Initialize the provider"""
+    """Provider for Meteocons, a compact weather set by Alessio Atzeni.
+
+    The metadata here pointed at basmilius/weather-icons until 1.1.0, which is a
+    different project entirely - an SVG set, not this 47-glyph font. The font's
+    own embedded name records identify the author, and they are what these
+    values now follow. There is no license *file* upstream: the terms live on
+    the author's page and inside the font, so `license_url` is that page.
+    """
 
     def __init__(self):
         super().__init__(
@@ -10,8 +17,8 @@ class MeteoconsFontProvider(BaseFontProvider):
             display_name="Meteocons",
             package="tkinter_icons_meteocons",
             filename="fonts/meteocons.ttf",
-            homepage="https://bas.dev/work/meteocons",
-            license_url="https://github.com/basmilius/weather-icons/blob/dev/LICENSE",
-            icon_version="2.0.0",
+            homepage="https://www.alessioatzeni.com/meteocons/",
+            license_url="https://www.alessioatzeni.com/meteocons/",
+            icon_version="1.0",
             scale_to_fit=True,
         )
