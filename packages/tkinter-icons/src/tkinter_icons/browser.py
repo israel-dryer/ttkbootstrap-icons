@@ -650,19 +650,31 @@ def _set_app_icon(root):
     a zipped install, and base64 rather than Pillow because Tk 8.6 decodes PNG
     itself. Both sizes are handed to `iconphoto`, which picks per use — 32 for
     the title bar, 64 for the taskbar and Alt-Tab.
+
+    The whole thing is guarded because a window icon is decoration, and
+    decoration must not be able to stop the browser opening. If the images are
+    somehow absent — a stripped install, a packaging tool that dropped package
+    data — the window falls back to Tk's default icon and the application runs.
+    That is not a licence to let them go missing quietly: `test_browser_assets`
+    asserts they are packaged and readable, so a real regression fails in CI
+    rather than degrading in the field.
     """
     from base64 import b64encode
     from importlib.resources import files
 
-    images = []
-    for size in (64, 32):
-        raw = files("tkinter_icons.assets").joinpath(f"icon-{size}.png").read_bytes()
-        images.append(tk.PhotoImage(data=b64encode(raw)))
+    try:
+        images = []
+        for size in (64, 32):
+            raw = files("tkinter_icons.assets").joinpath(f"icon-{size}.png").read_bytes()
+            images.append(tk.PhotoImage(data=b64encode(raw)))
 
-    root.iconphoto(True, *images)
-    # `iconphoto` does not take a reference, and a collected PhotoImage leaves
-    # the window with no icon — the same rule the docs give users about widgets.
-    root._app_icons = images
+        root.iconphoto(True, *images)
+        # `iconphoto` does not take a reference, and a collected PhotoImage
+        # leaves the window with no icon — the same rule the docs give users
+        # about widgets.
+        root._app_icons = images
+    except (OSError, ModuleNotFoundError, tk.TclError):
+        pass
 
 
 def main():
