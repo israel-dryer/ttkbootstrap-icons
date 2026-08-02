@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 from typing import Literal
 
 from tkinter_icons.icon import Icon
+from tkinter_icons.render import RenderOptions
 from tkinter_icons_gmi.provider import GoogleMaterialIconFontProvider
 
 GMatStyles = Literal['baseline', 'outlined', 'round', 'sharp']
@@ -24,10 +27,13 @@ class GMatIcon(Icon):
         ValueError: If the name cannot be resolved for the requested style.
     """
 
-    def __init__(self, name: str, size: int = 24, color: str = "black", style: GMatStyles | None = None):
+    provider_class = GoogleMaterialIconFontProvider
+
+    def __init__(self, name: str, size: int = 24, color: str = "black", style: GMatStyles | None = None,
+                 *, options: RenderOptions | None = None):
         prov = GoogleMaterialIconFontProvider()
         # Resolve the style from the name if not explicitly provided
         resolved_style = prov.resolve_icon_style(name, style)
         GMatIcon.initialize_with_provider(prov, resolved_style)
         resolved = prov.resolve_icon_name(name, style)
-        super().__init__(resolved, size, color)
+        super().__init__(resolved, size, color, options=options)

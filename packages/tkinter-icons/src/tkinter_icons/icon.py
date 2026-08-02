@@ -117,6 +117,13 @@ class Icon(StatefulIconMixin, ABC):
 
     on_missing: ClassVar[MissingPolicy] = "transparent"
 
+    #: The provider a pack's icon class draws from, set by that class. It is
+    #: what lets `render_pil` work as a classmethod on a pack: without it,
+    #: `MaterialIcon.render_pil("home")` depends on some *other* call having
+    #: initialized a provider first, and raises in a fresh process. `None` on
+    #: `Icon` itself, which has no pack of its own.
+    provider_class: ClassVar[Optional[type[BaseFontProvider]]] = None
+
     _icon_set_current: ClassVar[Optional[IconSet]] = None
     _caches: ClassVar[dict[int, _InterpreterCache]] = {}
 
@@ -206,19 +213,41 @@ class Icon(StatefulIconMixin, ABC):
         The way in for anything that wants pixels rather than a widget image —
         exporting a PNG, compositing, or testing the renderer headlessly.
 
+        Called on a pack's icon class this needs nothing set up first — the
+        pack supplies its own provider, so `MaterialIcon.render_pil("home")`
+        draws a Material icon in a fresh process and takes the same friendly
+        names the constructor does. Called on `Icon` itself, or with an
+        explicit `icon_set`, `name` must already be a glyph name.
+
         Args:
-            name: Resolved glyph name.
+            name: Icon name. Resolved through the pack's provider when called
+                on a pack class with no explicit `icon_set`; otherwise taken as
+                an already-resolved glyph name.
             size: Pixel size.
             color: Foreground color.
-            icon_set: Which set to draw from. Defaults to the active one.
+            icon_set: Which set to draw from. Defaults to the pack's own, then
+                to the active one.
             options: Overrides of the set's render options.
 
         Returns:
             A square RGBA image; fully transparent if `name` is not in the set.
 
         Raises:
-            RuntimeError: If no icon set is given and none is initialized.
+            RuntimeError: If no icon set is given, the class has no provider,
+                and none is initialized.
         """
+        if icon_set is None and cls.provider_class is not None:
+            provider = cls.provider_class()
+            icon_set = get_icon_set(provider, provider.resolve_icon_style(name))
+            try:
+                name = provider.resolve_icon_name(name)
+            except ValueError:
+                # Leave the name as given and let the missing-glyph path below
+                # apply `on_missing`, which is the documented behaviour for a
+                # name this set does not have. Letting resolution raise here
+                # would make that policy unreachable from `render_pil`.
+                pass
+
         icon_set = icon_set or cls._icon_set_current
         if icon_set is None:
             raise RuntimeError("No icon set available. Initialize a provider first.")

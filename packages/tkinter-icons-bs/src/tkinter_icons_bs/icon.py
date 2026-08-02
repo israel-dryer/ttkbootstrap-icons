@@ -23,6 +23,7 @@ Example:
 from typing import Literal
 
 from tkinter_icons.icon import Icon
+from tkinter_icons.render import RenderOptions
 from tkinter_icons_bs.provider import BootstrapFontProvider
 
 BootstrapStyles = Literal['outline', 'fill']
@@ -48,8 +49,11 @@ class BootstrapIcon(Icon):
         ValueError: If the name cannot be resolved for the requested style.
     """
 
-    def __init__(self, name: str, size: int = 24, color: str = "black", style: BootstrapStyles | None = None):
+    provider_class = BootstrapFontProvider
+
+    def __init__(self, name: str, size: int = 24, color: str = "black", style: BootstrapStyles | None = None,
+                 *, options: RenderOptions | None = None):
         prov = BootstrapFontProvider()
         BootstrapIcon.initialize_with_provider(prov)
         resolved = prov.resolve_icon_name(name, style)
-        super().__init__(resolved, size, color)
+        super().__init__(resolved, size, color, options=options)

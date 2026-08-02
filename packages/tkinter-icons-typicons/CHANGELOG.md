@@ -32,6 +32,10 @@ pip install "tkinter-icons[typicons]"
 
 - **Typicons' licenses, at `LICENSES/OFL-1.1.txt` and `LICENSES/CC-BY-SA-4.0.txt`.** This pack redistributes an upstream icon font and did not carry its license text, which every other pack does. Upstream licenses the font under the SIL Open Font License 1.1 and the artwork under CC BY-SA 4.0, and states both in one file; the two are copied unedited from [stephenhutchings/typicons.font](https://github.com/stephenhutchings/typicons.font/blob/master/LICENCE.md), split at upstream's own section break. The CC BY-SA term is share-alike, so adapting the *artwork* carries obligations that drawing the glyphs does not.
 
+- **The icon class takes `options`.** `RenderOptions` carries every drawing knob — padding, oversampling, sharpening, even-snapping — and was reachable only through `Icon.render_pil` or the base `Icon`, not through the class you actually construct. `TypiconsIcon("name", size=32, options=RenderOptions(pad_factor=0.0))` now works. Keyword-only, so it cannot be confused with `style`.
+
+- **`render_pil` works on this class without a warm-up.** It read an icon set shared by every subclass, so `TypiconsIcon.render_pil(...)` drew this pack's glyphs only if something had already constructed one of its icons — and raised in a fresh process. The class names its own provider now, and resolves friendly names the way the constructor does.
+
 ### Changed
 
 - **Renamed from `ttkbootstrap-icons-typicons`.** The old distribution is frozen at

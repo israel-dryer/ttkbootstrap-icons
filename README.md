@@ -1,4 +1,10 @@
-# tkinter-icons
+<picture>
+  <source media="(prefers-color-scheme: dark)"
+          srcset="https://raw.githubusercontent.com/israel-dryer/tkinter-icons/main/assets/png/wordmark-dark.png">
+  <img alt="tkinter-icons"
+       src="https://raw.githubusercontent.com/israel-dryer/tkinter-icons/main/assets/png/wordmark-light.png"
+       width="420">
+</picture>
 
 [![PyPI](https://img.shields.io/pypi/v/tkinter-icons.svg)](https://pypi.org/project/tkinter-icons/)
 [![Python Versions](https://img.shields.io/pypi/pyversions/tkinter-icons.svg)](https://pypi.org/project/tkinter-icons/)
@@ -7,7 +13,7 @@
 
 Font-based icons for Tkinter — sixteen icon sets, one import root, no image files to manage.
 
-**[Documentation](https://israel-dryer.github.io/tkinter-icons/)** · **[Icon packs](https://israel-dryer.github.io/tkinter-icons/packs.html)** · **[Getting started](https://israel-dryer.github.io/tkinter-icons/getting-started.html)**
+**[Documentation](https://israel-dryer.github.io/tkinter-icons/)** · **[Icon packs](https://israel-dryer.github.io/tkinter-icons/packs.html)** · **[Getting started](https://israel-dryer.github.io/tkinter-icons/getting-started/index.html)**
 
 ## Install
 
@@ -88,18 +94,18 @@ icon.map(button)
 
 ![Stateful icons](docs/assets/stateful_icons_demo.gif)
 
-Per-state colors and per-state icon names are covered in [the guide](https://israel-dryer.github.io/tkinter-icons/guide/stateful-icons.html).
+Per-state colors and per-state icon names are covered in [the guide](https://israel-dryer.github.io/tkinter-icons/user-guide/stateful-icons.html).
 
 ## Upgrading from ttkbootstrap-icons
 
 This project was `ttkbootstrap-icons` through 4.0.0, and was renamed in 5.0.0 because the old name described a relationship that no longer exists — Bootstrap icons are now built directly into ttkbootstrap and bootstack.
 
-Existing code keeps working: `ttkbootstrap-icons` 5.0.0 is a forwarding shim that re-exports everything, submodules included. See [the migration notes](https://israel-dryer.github.io/tkinter-icons/getting-started.html#migrating).
+Existing code keeps working: `ttkbootstrap-icons` 5.0.0 is a forwarding shim that re-exports everything, submodules included. See [the migration notes](https://israel-dryer.github.io/tkinter-icons/getting-started/migrating.html).
 
 ## Contributing
 
-The repository holds eighteen distributions — the base package, sixteen packs, and the shim. [The contributing guide](https://israel-dryer.github.io/tkinter-icons/contributing.html) covers the layout, the developer API, and how a pack is built. Issues and pull requests welcome.
+The repository holds eighteen distributions — the base package, sixteen packs, and the shim. [The contributing guide](https://israel-dryer.github.io/tkinter-icons/about/contributing.html) covers the layout, the developer API, and how a pack is built. Issues and pull requests welcome.
 
 ## License
 
-MIT for everything in this repository. The icons are not ours: each pack redistributes an upstream font under that project's own license and ships the text inside the package. See [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md), and [the license page](https://israel-dryer.github.io/tkinter-icons/license.html) for the few sets with attribution terms.
+MIT for everything in this repository. The icons are not ours: each pack redistributes an upstream font under that project's own license and ships the text inside the package. See [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md), and [the license page](https://israel-dryer.github.io/tkinter-icons/about/license.html) for the few sets with attribution terms.

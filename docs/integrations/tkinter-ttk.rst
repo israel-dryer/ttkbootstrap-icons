@@ -127,4 +127,4 @@ Icon size is in pixels, font size usually in points, so they do not line up by d
 Following a theme
 -----------------
 
-Everything above pins a color. For icons that recolor themselves as the widget changes state — and again when the theme changes — see :doc:`../guide/stateful-icons`.
+Everything above pins a color. For icons that recolor themselves as the widget changes state — and again when the theme changes — see :doc:`../user-guide/stateful-icons`.

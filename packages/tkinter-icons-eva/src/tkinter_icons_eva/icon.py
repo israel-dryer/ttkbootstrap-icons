@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 from typing import Literal
 
 from tkinter_icons.icon import Icon
+from tkinter_icons.render import RenderOptions
 from tkinter_icons_eva.provider import EvaFontProvider
 
 EvaStyles = Literal['fill', 'outline']
@@ -25,11 +28,14 @@ class EvaIcon(Icon):
         ValueError: If the name cannot be resolved for the requested style.
     """
 
-    def __init__(self, name: str, size: int = 24, color: str = "black", style: EvaStyles | None = None):
+    provider_class = EvaFontProvider
+
+    def __init__(self, name: str, size: int = 24, color: str = "black", style: EvaStyles | None = None,
+                 *, options: RenderOptions | None = None):
         prov = EvaFontProvider()
         EvaIcon.initialize_with_provider(prov)
         resolved = prov.resolve_icon_name(name, style)
-        super().__init__(resolved, size, color)
+        super().__init__(resolved, size, color, options=options)
 
 
 

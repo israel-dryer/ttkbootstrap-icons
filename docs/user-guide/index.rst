@@ -1,7 +1,7 @@
 User guide
 ==========
 
-How the library works, independent of which GUI framework you have wrapped around Tk. Framework-specific idioms live in :doc:`../integrations/index`.
+How the library works, independent of which GUI framework you have wrapped around Tk. Framework-specific idioms live under Integrations, below.
 
 .. grid:: 1 2 2 2
    :gutter: 3
@@ -42,6 +42,24 @@ How the library works, independent of which GUI framework you have wrapped aroun
 
       Shipping an application whose icons still work once frozen.
 
+Integrations
+------------
+
+.. grid:: 1 2 2 2
+   :gutter: 3
+
+   .. grid-item-card:: tkinter and ttk
+      :link: ../integrations/tkinter-ttk
+      :link-type: doc
+
+      Buttons, menus, trees, notebooks, canvases, and the window icon — plus the reference-keeping rule that catches everyone once.
+
+   .. grid-item-card:: ttkbootstrap
+      :link: ../integrations/ttkbootstrap
+      :link-type: doc
+
+      Using another icon set inside ttkbootstrap, and letting the theme choose the color.
+
 .. toctree::
    :hidden:
 
@@ -51,3 +69,10 @@ How the library works, independent of which GUI framework you have wrapped aroun
    headless-rendering
    icon-browser
    packaging
+
+.. toctree::
+   :hidden:
+   :caption: Integrations
+
+   ../integrations/tkinter-ttk
+   ../integrations/ttkbootstrap

@@ -1,4 +1,10 @@
-# tkinter-icons
+<picture>
+  <source media="(prefers-color-scheme: dark)"
+          srcset="https://raw.githubusercontent.com/israel-dryer/tkinter-icons/main/assets/png/wordmark-dark.png">
+  <img alt="tkinter-icons"
+       src="https://raw.githubusercontent.com/israel-dryer/tkinter-icons/main/assets/png/wordmark-light.png"
+       width="420">
+</picture>
 
 [![PyPI](https://img.shields.io/pypi/v/tkinter-icons.svg)](https://pypi.org/project/tkinter-icons/)
 [![Python Versions](https://img.shields.io/pypi/pyversions/tkinter-icons.svg)](https://pypi.org/project/tkinter-icons/)
@@ -51,15 +57,15 @@ There is deliberately no `[all]` extra — the sets serve disjoint purposes, so 
 
 ## Documentation
 
-- [Getting started](https://israel-dryer.github.io/tkinter-icons/getting-started.html)
+- [Getting started](https://israel-dryer.github.io/tkinter-icons/getting-started/index.html)
 - [Icon packs](https://israel-dryer.github.io/tkinter-icons/packs.html)
-- [Stateful icons](https://israel-dryer.github.io/tkinter-icons/guide/stateful-icons.html)
+- [Stateful icons](https://israel-dryer.github.io/tkinter-icons/user-guide/stateful-icons.html)
 - [API reference](https://israel-dryer.github.io/tkinter-icons/api.html)
 - [Repository](https://github.com/israel-dryer/tkinter-icons)
 
 ## Upgrading from ttkbootstrap-icons
 
-This package was published as `ttkbootstrap-icons` through 4.0.0. Installing that name still works — it is now a forwarding shim — and [the migration notes](https://israel-dryer.github.io/tkinter-icons/getting-started.html#migrating) cover the two things that genuinely changed.
+This package was published as `ttkbootstrap-icons` through 4.0.0. Installing that name still works — it is now a forwarding shim — and [the migration notes](https://israel-dryer.github.io/tkinter-icons/getting-started/migrating.html) cover the two things that genuinely changed.
 
 ## License
 
