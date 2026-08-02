@@ -1,7 +1,11 @@
 Headless rendering
 ==================
 
-The drawing core is pure Pillow. It has no Tkinter import anywhere in it, so anything that wants pixels rather than a widget image can skip Tk entirely — a test suite on a CI runner with no display, a build step that bakes PNGs, a server process generating thumbnails.
+The drawing core is pure Pillow. It has no Tkinter import anywhere in it, so anything that wants pixels rather than a widget image needs no display, no root window, and no event loop — a test suite on a CI runner with no ``$DISPLAY``, a build step that bakes PNGs, a server process generating thumbnails.
+
+.. note::
+
+   ``tkinter`` itself must still be importable, even though nothing here uses it: ``import tkinter_icons`` reaches the Tk-facing layer on the way to the renderer. On Linux that means the ``python3-tk`` package — see :doc:`../getting-started/installation`. Dropping that requirement is tracked in `issue #91 <https://github.com/israel-dryer/tkinter-icons/issues/91>`__.
 
 .. versionadded:: 5.0.0
    :meth:`Icon.render_pil <tkinter_icons.Icon.render_pil>` and the pure-Pillow :func:`~tkinter_icons.render_glyph`, as the supported way in without a display.
