@@ -40,7 +40,7 @@ every package inside is renamed; only the containing directory lags. Don't
 .venv-home/Scripts/python.exe -m pip install --no-deps $(printf -- '-e %s ' packages/tkinter-icons-*/)
 .venv-home/Scripts/python.exe -m pip install --no-deps -e packages/ttkbootstrap-icons-shim
 .venv-home/Scripts/python.exe -m pip install -r docs/requirements.txt pytest
-.venv-home/Scripts/python.exe -m pytest -q          # 311 passed, 1 skipped
+.venv-home/Scripts/python.exe -m pytest -q          # 364 passed, 1 skipped
 ```
 
 Having every pack installed is worth keeping. The docs build reads each pack's live provider for the packs table and the previews, `generate_metrics --all` needs them, and `verify_packages.py --imports` exercises every entry point.
@@ -81,31 +81,40 @@ Milestone **5.0.0** (issues #67–#71, #75, #79):
 | #75 rename to tkinter-icons | merged (#76) |
 | #70 changelog + release automation | merged (#78) |
 | #79 trim the published surface | merged (#81) |
-| #71 Sphinx docs + reframing | **built, in review — PR #85, stacked** |
+| #71 Sphinx docs + reframing | merged (#85) |
 
-Also merged: #77, fixing three cloud-review findings plus a pre-existing
-pack-asset-runner bug. Merged since: #82 (metrics for fourteen packs) and #83
-(upstream license files).
+Also merged: #77, three cloud-review findings plus a pack-asset-runner bug; #82
+(metrics for fourteen packs); #83 (upstream license files); #84 (the
+`pyinstaller40` entry point and the missing `bs`/`fluent-reg` hooks); #86
+(`options=` and a working `render_pil` on all sixteen pack classes); #88
+(semantic glyph names and correct attribution for Meteocons).
 
-**All four merged into `5.0` on 2026-08-02**, in order, each as a merge commit:
+**Merged 2026-08-02, later the same day:**
 
 | PR | What |
 |---|---|
-| #84 | registers the `pyinstaller40` entry point; adds the missing hooks for `bs` and `fluent-reg` |
-| #85 | `Closes #71` — the Sphinx site replacing 42 MkDocs pages |
-| #86 | `options=` and a working `render_pil` on all sixteen pack classes |
-| #88 | semantic glyph names and correct attribution for Meteocons |
+| #92 | `Closes #89` — sixteen per-pack docs pages, nav consolidation, landing-page rework, the five retaken assets, the browser's own app icon, and the move to Read the Docs |
+| #93 | `pack_showcase` declared parallel-read safe; CI's docs job builds with `-j auto` |
+| #94 | records that Read the Docs is live |
+| #97 | one tag releases the repository; the eighteen-tag scheme is retired |
 
-Every branch is deleted; `origin` holds `main`, `5.0`, and `gh-pages` only.
+Closed unmerged: #96, superseded by #97.
+
+**In flight:** #95 — notes only, ready, awaiting a review before merge.
+
+`origin` also carries two branches that are **not** stale and must not be
+deleted with the rest:
+
+- `release/ttkbootstrap-icons-packs-final` — the terminal release of the sixteen
+  `ttkbootstrap-icons-*` packs, cut from `v4.0.0`. Merges nowhere. See
+  `RELEASE.md`.
+- `gh-pages` — dead, and *can* now go; it served the old MkDocs site and Read
+  the Docs replaced it.
 
 **The docs moved to Read the Docs, and GitHub Pages is out of the picture.**
 Decided 2026-08-02, matching `ttkbootstrap`, for versioned docs and PR previews
 — both of which matter here because most of the site is generated. `docs.yml` is
 deleted and `.readthedocs.yaml` replaces it.
-
-`gh-pages` still holds the old `mkdocs gh-deploy` output and still serves the
-dead Pages site. Delete the branch once Read the Docs has built once; nothing
-depends on it any more.
 
 **No `apt_packages: [python3-tk]` is needed on Read the Docs, and adding one is
 cargo cult.** The worry is real-sounding — `icon.py` imports `tkinter` at module
@@ -124,8 +133,12 @@ the base branch back at its old SHA, reopening, then retargeting. When merging a
 stack, retarget the child to `5.0` *first*, merge the parent without
 `--delete-branch`, and delete branches at the end.
 
-Open follow-ups that are **not** release blockers: #87 (screenshots and the
-browser's app icon are pre-5.0) and #89 (per-pack docs pages, plus a prose pass).
+Open follow-ups, none of them release blockers: **#87** — the screenshots and
+the browser's app icon are done, the *generated* renderer figures are not;
+**#90** — sixteen pack READMEs still teach the pre-#69 install idiom on PyPI;
+**#91** — reaching the pure-Pillow renderer should not require `tkinter`
+installed. #89 is closed by #92 apart from its prose pass, which is folded
+into the list under "Next session".
 
 **#79 shipped as #81, not #80.** #80 was merged into `5.0` prematurely — without
 permission and before review — and `5.0` was reset to drop it. The rollback was
@@ -195,62 +208,26 @@ bumped every time and an existing one means the tag is wrong.
 
 ## Next session — start here
 
-`5.0` now carries everything for the release. Verified on the merged branch,
-2026-08-02: `pytest` 311 passed / 1 skipped; `verify_packages.py --strict` **all
-clear**; `generate_metrics --all --check` clean; `sphinx-build -W -n` clean with
-`packs.html` present.
+`5.0` carries everything for the release. Verified on the merged branch, 2026-08-02: `pytest` 364 passed / 1 skipped; `verify_packages.py --strict --imports --tag v5.0.0` **all clear across all eighteen**; `generate_metrics --all --check` clean; `sphinx-build -W --keep-going -n -j auto` clean with `packs.html` present.
 
-Four things stand between here and 5.0.0, and only one of them is code.
+**Nothing is blocking. What remains is a release, done in an order that matters.**
 
-1. **Meteocons — settled, ships.** No permission answer came; the owner decided
-   on 2026-08-02 to ship and revert on complaint, noting the font has been
-   distributed in `ttkbootstrap-icons-meteocons` since the 4.x line. See
-   "Current state" for the revert path. This is no longer a release blocker and
-   should not be raised as one again.
+1. **Merge #95.** Notes only, and it describes the release process the rest of this list assumes.
 
-2. **Read the Docs is live and green — done 2026-08-02.**
-   `https://tkinter-icons.readthedocs.io/en/latest/` serves the site, and
-   `packs.html`, the sixteen pack pages, and the user guide all resolve. Verified
-   against the published HTML: sixteen table rows with numeric icon counts (not
-   em dashes, so every pack really installed), thirty-two card thumbnails, the
-   hero band, and the generated statistics reading correctly.
+2. **Dry-run the release workflow.** Actions → Release → *Run workflow*, naming `v5.0.0` and the `5.0` branch. `release.yml` was rewritten wholesale by #97 and **has never executed in any form**. The dry run builds and verifies all eighteen and publishes nothing — the `publish` and `release` jobs are gated on a tag push. Do not skip this. The alternative to finding a problem here is finding it during an irreversible upload.
 
-   Two things still to do there. **RTD's `latest` is pointed at `5.0`** via
-   Admin → Settings → Default branch; set it back to `main` once `5.0` lands, or
-   the published docs freeze at the integration branch. And **`gh-pages` can now
-   be deleted** — it still serves the dead MkDocs site at the old Pages URL, and
-   removing it turns a wrong site into a clean 404.
+3. **Publish the sixteen legacy packs, before the tag.** `release/ttkbootstrap-icons-packs-final`, built and verified but not uploaded. `RELEASE.md` has the procedure and the reasoning; the short version is that their `<5` caps have to land before the shim exists, and the automated run publishes the shim, so there is no longer a gap to slot them into. Manual `twine` upload with a token — that branch is cut from `v4.0.0` and has no `.github` at all.
 
-   Two traps this cost, both worth not repeating. The first build failed with
-   *"Config file not found at default path"*, which reads like the file is
-   missing and is not — RTD was still building `main`, which has no
-   `.readthedocs.yaml`. The second failed under `-W` on *"the pack_showcase
-   extension is not safe for parallel reading"*, because RTD builds with
-   `-j auto`. **That one cannot be reproduced on Windows**: Sphinx's parallel
-   mode needs `os.fork`, so `parallel_available` is False and `-j auto`
-   silently degrades to a serial read that never warns. CI's `docs` job now
-   passes `-j auto` for exactly this reason — keep it.
+4. **Merge `5.0` → `main` as one PR, then tag `v5.0.0`.** That merge is what closes #67, #68, #69, #71, #79 and #89 — see below. Then one tag releases everything.
 
-3. **#89 and #87, the docs content and visuals.** Neither is a release blocker;
-   together they are the last thing that would embarrass the release.
+5. **Afterwards:** point RTD's Default branch back at `main`, delete `gh-pages`, and delete the merged remote branches. Leave `release/ttkbootstrap-icons-packs-final` alone.
 
-   #89 is sixteen per-pack pages plus a re-read of the prose — the pages were
-   written in one pass against a structure that changed twice underneath them, so
-   they repeat themselves in places and the Getting started / user guide boundary
-   is fuzzy. The generating machinery is already on `5.0`; `conf.py` does not yet
-   register `pack_showcase`.
+### Not blocking, and worth doing next
 
-   #87 is the visuals, and it is larger than "retake the screenshots". **Twelve
-   of the fifteen pages carry no image at all**, which for a library about how
-   things look is the weakest part of the docs. It splits in two: the pages that
-   illustrate the *renderer* — sizing and render quality above all, where every
-   claim is currently unfalsifiable by the reader — should be **generated at
-   build time** by the library, the way the pack previews already are, so they
-   never need retaking; the pages that show real widgets need actual captures.
-   The five existing assets all predate 5.0 and show the old centering.
-
-4. **Then release.** The preflight already passes. Publish order is load-bearing
-   — see Conventions.
+- **#87's other half.** The five screenshots are retaken and the browser has its own icon, but the *generated* figures are not built: `user-guide/sizing-and-quality` still describes measured ink, padding, oversampling and even-snapping entirely in prose, where every claim is unfalsifiable by the reader and every one of them is a side-by-side render the library could draw at build time. Same for outline-vs-fill on `icons-and-names` and the multi-pack comparison on `choosing-a-pack`. `pack_showcase.py` already does exactly this for the pack previews — the pattern, the light/dark handling and the `-W` safety net all exist.
+- **#89's prose pass.** The pages shipped; the re-read did not. Repetition across pages, and `#0d6efd` — Bootstrap blue — still in the examples on `index.rst` and `icons-and-names.rst`, on a site whose palette is teal. The landing page and both READMEs were fixed; these two were left because changing one of three would have been worse than leaving all three.
+- **#90.** Sixteen pack READMEs still teach `pip install tkinter-icons-weather` and `from tkinter_icons_weather import WeatherIcon` on their PyPI pages. The chosen approach is recorded on the issue: screenshot the rendered docs pack page in light mode, generate the factual blocks, keep a hand-written intro.
+- **#91.** `import tkinter_icons` requires `tkinter` even for `render_pil`, which the headless guide had to be softened to admit. Making the Tk imports lazy is a small, contained change and restores the stronger claim.
 
 **The milestone issues stay open until `5.0` reaches `main`.** #67, #68, #69,
 #71, and #79 are all shipped, and closing them by hand loses the link to the
@@ -326,13 +303,18 @@ Decisions behind it, each of which cost a discussion:
   why the install idiom went stale in all of them at once.
 
   That reasoning was about **hand-written** boilerplate, and it no longer binds.
-  Per-pack pages are coming back under #89 because three things changed: Icon
-  packs is a top-level section now, so it can carry children; the comparison table
-  was doing comparison and reference and navigation at once; and nothing anywhere
-  showed what a set *looks like*, which is what you actually choose on. The
-  staleness risk is answered by generating every fact — `docs/_ext/pack_showcase.py`
-  reads `KNOWN_PACKS` and each live provider, and renders preview strips with the
-  library itself, so a curated name that stops resolving fails the build.
+  Per-pack pages came back in #92 because three things changed: Icon packs is a
+  top-level section now, so it can carry children; the comparison table was doing
+  comparison and reference and navigation at once; and nothing anywhere showed
+  what a set *looks like*, which is what you actually choose on. The staleness
+  risk is answered by generating every fact — `docs/_ext/pack_showcase.py` reads
+  `KNOWN_PACKS` and each live provider, and renders previews with the library
+  itself, so a curated name that stops resolving fails the build.
+
+  **The pages are hand-written only where a table cannot go**: a characterisation
+  of the set and one runnable example. Everything else is a directive. If you are
+  tempted to type a fact onto one of those pages, that is the signal a directive
+  is missing, not that this rule has an exception.
 
   The API reference stays at one page: sixteen identical autodoc pages still earn
   nothing, because there is nothing to *show* there.
