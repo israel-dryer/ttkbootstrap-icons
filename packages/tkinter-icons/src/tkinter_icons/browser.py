@@ -638,14 +638,36 @@ class IconPreviewerApp:
             self._on_icon_select(names[0])
 
 
+def _set_app_icon(root):
+    """Give the window the project's own mark.
+
+    This used to borrow `BootstrapIcon("grid-3x3-gap-fill")`, which meant the
+    browser had no icon at all on a default install — the base package ships no
+    glyphs, so the borrow only worked if `[bootstrap]` happened to be there, and
+    the `except ImportError` made that silent.
+
+    The images are read as bytes rather than by path so this keeps working from
+    a zipped install, and base64 rather than Pillow because Tk 8.6 decodes PNG
+    itself. Both sizes are handed to `iconphoto`, which picks per use — 32 for
+    the title bar, 64 for the taskbar and Alt-Tab.
+    """
+    from base64 import b64encode
+    from importlib.resources import files
+
+    images = []
+    for size in (64, 32):
+        raw = files("tkinter_icons.assets").joinpath(f"icon-{size}.png").read_bytes()
+        images.append(tk.PhotoImage(data=b64encode(raw)))
+
+    root.iconphoto(True, *images)
+    # `iconphoto` does not take a reference, and a collected PhotoImage leaves
+    # the window with no icon — the same rule the docs give users about widgets.
+    root._app_icons = images
+
+
 def main():
     root = tk.Tk()
-    try:
-        from tkinter_icons_bs import BootstrapIcon
-        app_icon = BootstrapIcon("grid-3x3-gap-fill", color="#2F6FED")
-        root.iconphoto(True, app_icon.image)
-    except ImportError:
-        pass
+    _set_app_icon(root)
     IconPreviewerApp(root)
     root.mainloop()
 
