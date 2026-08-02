@@ -35,6 +35,18 @@ Out of order, the base points at pack versions PyPI does not have yet and `pip i
 
 The shim depends on `tkinter-icons>=5.0.0` with no upper bound, so it forwards to every future version without another release — which is why `skip-existing` is the normal outcome for it rather than a fallback.
 
+### The legacy packs are published by hand, before the tag
+
+The sixteen `ttkbootstrap-icons-*` packs get one final release — READMEs rewritten as signposts, base pin capped below the shim, a `FutureWarning` on import. They are not part of the run above and never will be: they live on `release/ttkbootstrap-icons-packs-final`, cut from `v4.0.0`, which is the only tree where those sixteen still exist since on `5.0` they were renamed into `tkinter-icons-*`. That branch merges nowhere.
+
+`v4.0.0` predates the release automation entirely — no `.github` directory at all — so nothing there is tag-driven. Check the branch out, run `git clean -xdf packages/` first (switching to it leaves the `5.0` build artifacts behind, because git will not remove ignored files, and a stray `.egg-info` changes what lands in a wheel), build `packages/ttkbootstrap-icons-*/`, and upload with a token. Trusted Publishing is workflow-scoped, so it does not apply.
+
+**Do this before pushing the `v5.0.0` tag.** Every legacy pack pins `ttkbootstrap-icons` with no upper bound, so the moment the shim publishes, a fresh install of any of them resolves its base to a forwarding package onto a different library. Their final release adds `<5`. Land the caps first and that window never opens.
+
+That inverts the advice this file carried while releases were eighteen separate tag pushes, where the legacy packs slotted between the base and the shim. There is no longer a gap between those two — the `publish` job does all three in one run — so the only choice is before the tag or after the whole thing, and before is right.
+
+The cost of going first is cosmetic and brief: those READMEs tell the reader to run `pip install "tkinter-icons[<extra>]"`, which does not work until the `v5.0.0` run finishes. Text briefly ahead of reality beats a dependency silently resolving somewhere new. Note also that `pypi.org/project/<name>/` returns 200 for any name at all, so it is useless as an existence check — `pypi.org/pypi/<name>/json` is the one that 404s honestly.
+
 ## Before the first release: PyPI Trusted Publishing
 
 Each of the eighteen PyPI projects needs a trusted publisher configured once, at

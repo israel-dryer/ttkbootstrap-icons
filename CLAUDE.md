@@ -154,13 +154,24 @@ texts, and `KNOWN_LICENSE_GAPS` is now an empty set — which is load-bearing, s
 a *listed* pack downgrades the missing-license finding from an error to a
 warning.
 
-**One release blocker remains, and it is not code.** Meteocons is licensed
-"free for use in both personal and commercial projects… **You must not resell any
-icons or distribute them in any other way**", which is the author's own text,
-embedded in the font. Bundling it in a wheel is arguably that. The owner is
-asking Alessio Atzeni for permission and told me to proceed assuming it is
-granted. **If he declines, `[meteocons]` cannot ship in 5.0.0 and #88 has to be
-reverted along with the pack's extra.**
+**Meteocons: decided 2026-08-02 — ships, and the question is closed.** The font
+is licensed "free for use in both personal and commercial projects… **You must
+not resell any icons or distribute them in any other way**", which is the
+author's own text, embedded in the font, and bundling it in a wheel is arguably
+that. Alessio Atzeni was asked and did not answer. The owner's call is to ship
+and revert if anyone complains.
+
+Two facts that make that a smaller call than it reads. **The font is already
+distributed**: `ttkbootstrap-icons-meteocons` 1.0.0 has been on PyPI since the
+4.x line, so 5.0.0 continues a distribution rather than starting one. And
+**there is no true undo on PyPI** — a release can be yanked (existing pins keep
+resolving) or deleted (the version number is then burned forever), but anything
+that already mirrored the wheel keeps it. So "revert" means yank
+`tkinter-icons-meteocons`, release a `tkinter-icons` that drops the `[meteocons]`
+extra, and revert #88 — not erasure.
+
+Do not reopen this as an open question. If a complaint arrives, the path above
+is the plan.
 
 Release mechanics live in `RELEASE.md`, and are real now: tag-driven, Trusted
 Publishing, no token anywhere. **One tag, `v<version>`, releases the whole
@@ -191,10 +202,11 @@ clear**; `generate_metrics --all --check` clean; `sphinx-build -W -n` clean with
 
 Four things stand between here and 5.0.0, and only one of them is code.
 
-1. **The Meteocons permission answer.** The owner is asking Alessio Atzeni. See
-   "Current state" — everything is written assuming yes. If the answer is no,
-   revert #88, drop the `meteocons` extra from the base package, and remove the
-   pack from the catalogue, the notices, and the docs.
+1. **Meteocons — settled, ships.** No permission answer came; the owner decided
+   on 2026-08-02 to ship and revert on complaint, noting the font has been
+   distributed in `ttkbootstrap-icons-meteocons` since the 4.x line. See
+   "Current state" for the revert path. This is no longer a release blocker and
+   should not be raised as one again.
 
 2. **Read the Docs is live and green — done 2026-08-02.**
    `https://tkinter-icons.readthedocs.io/en/latest/` serves the site, and
