@@ -35,6 +35,24 @@ Out of order, the base points at pack versions PyPI does not have yet and `pip i
 
 The shim depends on `tkinter-icons>=5.0.0` with no upper bound, so it forwards to every future version without another release — which is why `skip-existing` is the normal outcome for it rather than a fallback.
 
+### The legacy packs are published by hand, before the tag
+
+The sixteen `ttkbootstrap-icons-*` packs get one final release — READMEs rewritten as signposts, base pin capped below the shim, a `FutureWarning` on import. They are not part of the run above and never will be: they live on `release/ttkbootstrap-icons-packs-final`, cut from `v4.0.0`, which is the only tree where those sixteen still exist since on `5.0` they were renamed into `tkinter-icons-*`. That branch merges nowhere.
+
+`v4.0.0` predates the release automation entirely — no `.github` directory at all — so nothing there is tag-driven. Check the branch out, run `git clean -xdf packages/` first (switching to it leaves the `5.0` build artifacts behind, because git will not remove ignored files, and a stray `.egg-info` changes what lands in a wheel), build `packages/ttkbootstrap-icons-*/`, and upload with a token. Trusted Publishing is workflow-scoped, so it does not apply.
+
+**That `clean` cuts both ways — restore the editable installs before you trust any later wheel.** `-x` removes ignored files, which is the point, but it also deletes every `*.egg-info/` under `packages/`, and on `5.0` those are load-bearing: a pack's `exclude-package-data` is fed from `.egg-info/SOURCES.txt`, so a pack with no `.egg-info` builds a *clean-looking* wheel from a broken config and reports a false pass. That mistake has been made here once already, and it would have shipped `tools` in fourteen wheels. Coming back from the legacy branch, re-run the editable installs before inspecting anything:
+
+```bash
+python -m pip install --no-deps $(printf -- '-e %s ' packages/tkinter-icons-*/)
+```
+
+**Do this before pushing the `v5.0.0` tag.** Every legacy pack pins `ttkbootstrap-icons` with no upper bound, so the moment the shim publishes, a fresh install of any of them resolves its base to a forwarding package onto a different library. Their final release adds `<5`. Land the caps first and that window never opens.
+
+That inverts the advice this file carried while releases were eighteen separate tag pushes, where the legacy packs slotted between the base and the shim. There is no longer a gap between those two — the `publish` job does all three in one run — so the only choice is before the tag or after the whole thing, and before is right.
+
+The cost of going first is cosmetic and brief: those READMEs tell the reader to run `pip install "tkinter-icons[<extra>]"`, which does not work until the `v5.0.0` run finishes. Text briefly ahead of reality beats a dependency silently resolving somewhere new. Note also that `pypi.org/project/<name>/` returns 200 for any name at all, so it is useless as an existence check — `pypi.org/pypi/<name>/json` is the one that 404s honestly.
+
 ## Before the first release: PyPI Trusted Publishing
 
 Each of the eighteen PyPI projects needs a trusted publisher configured once, at
@@ -74,16 +92,18 @@ between a mistyped tag and an immutable upload.
    python .github/scripts/verify_packages.py --strict --imports --tag v5.0.1
    ```
 
-4. **Do a dry run.** Actions → Release → *Run workflow*, naming the tag and the branch. It builds and verifies everything and publishes nothing — the `publish` and `release` jobs are gated on a tag push. Worth doing at least once before a release that matters, since the real run ends in uploads PyPI will not let you take back.
+4. **Merge to `main`.** This comes before the dry run, not after. GitHub only shows a *Run workflow* button for a workflow that exists on the **default branch**, so `release.yml` has to have reached `main` before it can be dispatched at all — which for the 5.0.0 release means the merge, since `main` is still at 4.0.0 and has no `.github` directory. Merging first also means the dry run verifies the tree you are about to tag rather than a near-miss of it.
 
-5. **Merge to `main`**, then tag the merge commit and push:
+5. **Do a dry run.** Actions → Release → *Run workflow*, naming the tag and `main`. It builds and verifies everything and publishes nothing — the `publish` and `release` jobs are gated on `github.event_name == 'push'`. Worth doing at least once before a release that matters, since the real run ends in uploads PyPI will not let you take back.
+
+6. **Tag the merge commit and push:**
 
    ```bash
    git tag v5.0.1
    git push origin v5.0.1
    ```
 
-6. **Watch the run.** If the `pypi` environment has reviewers, it waits for approval before uploading.
+7. **Watch the run.** If the `pypi` environment has reviewers, it waits for approval before uploading.
 
 If something fails before the publish step, delete the tag, fix, and re-tag:
 
@@ -128,19 +148,13 @@ The release workflow additionally re-measures the released pack's glyph metrics
 and compares them against what is committed, so committed metrics cannot drift
 from the font that produced them.
 
-### Two known blockers
+### Both former blockers are closed
 
-Both are warnings today, and both will stop a `--strict` release:
+Two warnings used to stand between this preflight and a `--strict` release. Neither does now: #82 generated metrics for the fourteen packs that lacked them, and #83 vendored upstream license files for `bs`, `meteocons` and `typicons`. All sixteen packs carry both today, and `verify_packages.py --strict --imports --tag v5.0.0` reports all clear across all eighteen distributions.
 
-- **Fourteen packs have no generated metrics.** Only `bs` and `fa` do. Fixing it
-  is one `python -m tkinter_icons.tools.generate_metrics --all` in an
-  environment with every pack installed, then a commit.
-- **Three packs ship no upstream license file** — `bs`, `meteocons`, and
-  `typicons`, while the other thirteen do. `bs` redistributes Bootstrap Icons.
-  This needs the actual upstream license text and copyright line, which is a
-  decision rather than something to generate. They are listed in
-  `KNOWN_LICENSE_GAPS` in `verify_packages.py`; delete each from that set as it
-  is resolved.
+**`KNOWN_LICENSE_GAPS` is now an empty set, and keeping it empty is load-bearing.** A *listed* pack downgrades the missing-license finding from an error to a warning, so with nothing listed, a seventeenth pack added without its upstream license fails the preflight outright instead of passing as a known exception. Do not add a name there to get a build through.
+
+What remains is not a preflight failure and does not block a release: the check asks whether a license file exists, not whether it is the right text. Eight packs ship a summary or the wrong copyright line — `gmi`, `mat` and `remix` (Apache 2.0), `simple` (CC0) and `lucide` (ISC) link to the canonical text rather than reproducing it, and `devicon`, `eva` and `rpga` carry the MIT body under a generic copyright line rather than upstream's own. Apache 2.0 in particular requires giving recipients a copy, which a link does not satisfy. `THIRD-PARTY-NOTICES.md` records it under "Known gap"; that is the place to update when it is fixed.
 
 ## Version numbering
 
