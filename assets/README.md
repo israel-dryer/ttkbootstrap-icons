@@ -44,8 +44,8 @@ mismatched box — it shows almost nothing.
 Teal primary on a Tailwind neutral ramp. This is deliberately **not** bootstack's
 palette, which is Bootstrap blue (`#0d6efd`) primary with teal only as an accent,
 on Bootstrap grays. The two projects share tooling and conventions, not an
-identity — Bootstrap icons are built into ttkbootstrap and bootstack, and this
-library is for people who are not using either.
+identity, and never shared a lineage — Bootstrap icons are built into
+ttkbootstrap, and this library is for people who are not using it.
 
 | Role | Light | Dark |
 |---|---|---|

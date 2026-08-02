@@ -6,12 +6,9 @@ Font-based icons for Tkinter and ttkbootstrap. The library renders glyphs from
 icon fonts to Tk-compatible images; the icon sets themselves ship as separate
 distributions installed via extras.
 
-**The identity shifted, and this matters for every docs decision.** This started
-as `ttkbootstrap-icons`, intended to be folded into ttkbootstrap or bootstack.
-Instead, Bootstrap icons were built *directly* into both of those. So this
-project's audience is now **people on raw tkinter, or people who want an icon set
-other than Bootstrap** — not "the way to get icons for ttkbootstrap." Renamed to
-`tkinter-icons` in 5.0.0 to match.
+**The identity shifted, and this matters for every docs decision.** This started as `ttkbootstrap-icons`, intended to be folded into ttkbootstrap. Instead, Bootstrap icons were built *directly* into ttkbootstrap. So this project's audience is now **people on raw tkinter, or people who want an icon set other than Bootstrap** — not "the way to get icons for ttkbootstrap." Renamed to `tkinter-icons` in 5.0.0 to match.
+
+**bootstack was never connected to this project, and no user-facing text may imply otherwise.** Stated by the owner 2026-08-02. Eight places named it alongside ttkbootstrap in the rename rationale — the two READMEs, both changelogs, and four docs pages — which read as though bootstack were part of why the rename happened. All eight were corrected. bootstack is still a legitimate reference for *conventions* — its `docs/conf.py`, its changelog format, its `release_notes.py` — and those mentions below are fine. The line is between "we copied a pattern from a sibling project" and "this project was ever coupled to it."
 
 **Positioning:** one library, sixteen installable icon packs. The packs are
 separate PyPI distributions only because each ships its own font; users should

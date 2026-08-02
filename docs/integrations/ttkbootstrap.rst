@@ -5,10 +5,6 @@ ttkbootstrap
 
 You do need it when you want **a different icon set** — Material, Lucide, Font Awesome, brand marks — inside a ttkbootstrap application. Everything works, because a ttkbootstrap ``Window`` is a ``tkinter.Tk`` and its widgets are ttk widgets.
 
-.. note::
-
-   The same applies to `bootstack <https://github.com/israel-dryer/bootstack>`_, which also has Bootstrap icons built in.
-
 The basics
 ----------
 

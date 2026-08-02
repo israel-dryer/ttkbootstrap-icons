@@ -15,9 +15,9 @@ history after the fact and are summaries rather than contemporaneous notes.
 ## [5.0.0] — renamed to tkinter-icons, rebuilt around measured glyph ink
 
 `ttkbootstrap-icons` is now **`tkinter-icons`**. Bootstrap icons were built
-directly into both ttkbootstrap and bootstack, so this library is no longer the
-way to get icons for ttkbootstrap — it is for people on raw tkinter, and for
-people who want an icon set other than Bootstrap. The name now says that.
+directly into ttkbootstrap, so this library is no longer the way to get icons
+for ttkbootstrap — it is for people on raw tkinter, and for people who want an
+icon set other than Bootstrap. The name now says that.
 
 Installing `ttkbootstrap-icons` still works. It becomes a forwarding shim that
 depends on `tkinter-icons` and re-exports everything, including submodules, so
