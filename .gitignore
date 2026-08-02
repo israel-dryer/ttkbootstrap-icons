@@ -33,3 +33,6 @@ Thumbs.db
 .pypirc
 /site/
 /dev-features/
+
+# Sphinx build output
+docs/_build/

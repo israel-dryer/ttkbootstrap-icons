@@ -312,12 +312,27 @@ class BaseFontProvider(ABC):
     def resolve_icon_name(self, name: str, style: Optional[str] = None) -> str:
         """Resolve a user-supplied icon name to the actual glyph name.
 
-        Rules:
-        - If *style* is explicitly provided, we resolve within that style only. If the *name*
-          clearly encodes a conflicting style suffix (e.g., "-fill" vs requested "outline"),
-          a ValueError is raised.
-        - If *style* is not provided, infer the style from a "-<style>" suffix when present;
-          otherwise use the provider's default style (or "base" when no styles).
+        A name may carry its own style as a suffix, so the two arguments can
+        disagree; the rules settle which one wins.
+
+        - With an explicit `style`, resolution happens within that style only.
+          A `name` encoding a conflicting style - `"-fill"` against a requested
+          `"outline"` - raises rather than silently preferring one of them.
+        - Without one, the style is inferred from a `"-<style>"` suffix when the
+          name has one, and otherwise falls back to the provider's default
+          style (or `"base"` for a provider with no styles).
+
+        Args:
+            name: The name as the caller wrote it, with or without a style
+                suffix.
+            style: Style to resolve within, or `None` to infer.
+
+        Returns:
+            The glyph name as it appears in this provider's glyph map.
+
+        Raises:
+            ValueError: If the name does not resolve, or if it encodes a style
+                that contradicts `style`.
         """
         if name == "none":
             return "none"

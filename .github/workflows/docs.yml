@@ -1,0 +1,95 @@
+name: Deploy docs
+
+# The site is built from `main`, so it describes the released library rather
+# than whatever is in flight on an integration branch. `workflow_dispatch` is
+# there for republishing after a docs-only fix without waiting for a release.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # setuptools-scm reads the tag history to version the base package,
+          # and conf.py reads that version back out of the installed metadata.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install Tk
+        run: sudo apt-get update && sudo apt-get install -y python3-tk
+
+      # Every pack, not just a couple. The packs page reads each set's styles,
+      # upstream version, and glyph count from the installed provider, so a
+      # partial install publishes a table with holes in it. `--no-deps` because
+      # each pack floors on `tkinter-icons>=5.0.0` and the local build reports a
+      # dev version below that until the release tag exists.
+      - name: Install the base package and every pack
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e packages/tkinter-icons
+          python -m pip install --no-deps $(printf -- '-e %s ' packages/tkinter-icons-*/)
+          python -m pip install -r docs/requirements.txt
+
+      # `-W` is what makes the pack-table warning a failure: a build that could
+      # not read a pack warns, and publishing that silently would put an
+      # authoritative-looking table of blanks on the site. `-n` adds unresolved
+      # cross-references to the same treatment, which is what keeps a renamed
+      # or deleted API from leaving dead links in the reference pages.
+      - name: Build docs
+        run: python -m sphinx docs docs/_build/html -b html -W --keep-going -n
+
+      # `packs.py` sends anyone with no pack installed to `<docs>/packs.html` -
+      # from the ImportError raised by `Icon.__init__` and from the browser's
+      # welcome screen. Those are the two places a user who cannot yet draw an
+      # icon lands, so that page 404ing is the worst version of this link
+      # breaking. Renaming the page is allowed; renaming it without updating
+      # `PACKS_DOC_URL` is not, and this is what says so.
+      - name: The page the library links to must exist
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from urllib.parse import urlparse
+
+          from tkinter_icons.packs import PACKS_DOC_URL
+
+          page = Path(urlparse(PACKS_DOC_URL).path).name
+          built = Path("docs/_build/html") / page
+          if not built.is_file():
+              raise SystemExit(
+                  f"PACKS_DOC_URL points at {page!r}, which the docs build did not produce.\n"
+                  f"Either restore that page or update PACKS_DOC_URL in packs.py - it is the "
+                  f"only pointer to the catalogue that a user with no pack installed is given."
+              )
+          print(f"ok: {PACKS_DOC_URL} -> {built}")
+          PY
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: docs/_build/html
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
