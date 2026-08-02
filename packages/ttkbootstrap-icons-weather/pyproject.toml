@@ -1,16 +1,19 @@
 [project]
 name = "ttkbootstrap-icons-weather"
-version = "1.0.0"
-description = "Weather Icons (font-based) provider for ttkbootstrap-icons"
+version = "1.0.1"
+description = "Weather Icons for ttkbootstrap-icons (superseded - use tkinter-icons[weather])"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [{ name = "Israel Dryer" }]
-dependencies = ["Pillow>=9.1", "ttkbootstrap-icons>=3.0.0"]
+dependencies = ["Pillow>=9.1", "ttkbootstrap-icons>=3.0.0,<5"]
 
 license = "MIT"
+classifiers = ["Development Status :: 7 - Inactive"]
 
 [project.urls]
-Homepage = "https://github.com/israel-dryer/ttkbootstrap-icons"
+Homepage = "https://github.com/israel-dryer/tkinter-icons"
+Documentation = "https://tkinter-icons.readthedocs.io/en/latest/packs/weather.html"
+"Replacement package" = "https://pypi.org/project/tkinter-icons/"
 
 # Auto-discovery hook for your base registry
 [project.entry-points."ttkbootstrap_icons.providers"]

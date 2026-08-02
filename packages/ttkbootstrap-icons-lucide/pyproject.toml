@@ -1,16 +1,19 @@
 [project]
 name = "ttkbootstrap-icons-lucide"
-version = "1.0.0"
-description = "Lucide Icons provider for ttkbootstrap-icons"
+version = "1.0.1"
+description = "Lucide Icons for ttkbootstrap-icons (superseded - use tkinter-icons[lucide])"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [{ name = "Israel Dryer" }]
-dependencies = ["Pillow>=9.1", "ttkbootstrap-icons>=3.0.0"]
+dependencies = ["Pillow>=9.1", "ttkbootstrap-icons>=3.0.0,<5"]
 
 license = "MIT"
+classifiers = ["Development Status :: 7 - Inactive"]
 
 [project.urls]
-Homepage = "https://github.com/israel-dryer/ttkbootstrap-icons"
+Homepage = "https://github.com/israel-dryer/tkinter-icons"
+Documentation = "https://tkinter-icons.readthedocs.io/en/latest/packs/lucide.html"
+"Replacement package" = "https://pypi.org/project/tkinter-icons/"
 
 # Auto-discovery hook for the base registry
 [project.entry-points."ttkbootstrap_icons.providers"]

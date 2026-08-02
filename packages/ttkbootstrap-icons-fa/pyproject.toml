@@ -1,20 +1,23 @@
 [project]
 name = "ttkbootstrap-icons-fa"
-version = "1.0.2"
-description = "Font Awesome Free (font-based) provider for ttkbootstrap-icons"
+version = "1.0.3"
+description = "Font Awesome 6 (Free) for ttkbootstrap-icons (superseded - use tkinter-icons[fontawesome])"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [{ name = "Israel Dryer" }]
-dependencies = ["Pillow>=9.1", "ttkbootstrap-icons>=3.0.0"]
+dependencies = ["Pillow>=9.1", "ttkbootstrap-icons>=3.0.0,<5"]
 
 # Font Awesome Free licensing:
 # - Fonts: SIL OFL 1.1
 # - Code (CSS/JS): MIT
 # - Icon designs: CC BY 4.0
 license = "MIT"
+classifiers = ["Development Status :: 7 - Inactive"]
 
 [project.urls]
-Homepage = "https://github.com/israel-dryer/ttkbootstrap-icons"
+Homepage = "https://github.com/israel-dryer/tkinter-icons"
+Documentation = "https://tkinter-icons.readthedocs.io/en/latest/packs/fontawesome.html"
+"Replacement package" = "https://pypi.org/project/tkinter-icons/"
 
 # Auto-discovery hook for your base registry
 [project.entry-points."ttkbootstrap_icons.providers"]

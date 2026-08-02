@@ -1,50 +1,53 @@
 # ttkbootstrap-icons-bs
 
-Bootstrap Icons provider for ttkbootstrap-icons.
+> ### This package has moved
+>
+> Bootstrap Icons now ship as an extra of **[tkinter-icons](https://pypi.org/project/tkinter-icons/)**:
+>
+> ```bash
+> pip install "tkinter-icons[bootstrap]"
+> ```
+>
+> ```python
+> from tkinter_icons import BootstrapIcon
+> ```
+>
+> **[Bootstrap Icons pack documentation](https://tkinter-icons.readthedocs.io/en/latest/packs/bootstrap.html)**
 
-## Installation
+`ttkbootstrap-icons` was renamed to `tkinter-icons` in 5.0.0. The old name promised a relationship with [ttkbootstrap](https://github.com/israel-dryer/ttkbootstrap) that no longer holds — Bootstrap icons are built into ttkbootstrap itself now — and the sixteen icon sets moved from separate distributions you install by name to extras of one library.
 
-```bash
-pip install ttkbootstrap-icons-bs
-```
+## What changes for you
 
-## Usage
+| | Before | Now |
+|---|---|---|
+| Install | `pip install ttkbootstrap-icons-bs` | `pip install "tkinter-icons[bootstrap]"` |
+| Import | `from ttkbootstrap_icons_bs import BootstrapIcon` | `from tkinter_icons import BootstrapIcon` |
 
-```python
-from ttkbootstrap_icons_bs import BootstrapIcon
+**The class is the same.** `BootstrapIcon` is still exported from `tkinter_icons`, so the only edit is the import line. Everything else — `(name, size, color, style)` — is unchanged.
 
-# Create an icon
-icon = BootstrapIcon("house", size=24, color="black", style="outline")
+The replacement pack tracks Bootstrap Icons v1.13.1 and carries 2,078 names across the `fill` and `outline` styles.
 
-# Use in a tkinter widget
-import tkinter as tk
-from tkinter import ttk
+Not ready to move? Your existing code keeps working: `ttkbootstrap-icons` 5.0.0 is a forwarding shim that re-exports the old import root. See the [migration notes](https://tkinter-icons.readthedocs.io/en/latest/getting-started/migrating.html).
 
-root = tk.Tk()
-label = ttk.Label(root, text="Home", image=icon.image, compound="left")
-label.pack()
-root.mainloop()
-```
+## About this release
 
-## Styles
+**1.0.1 is the final release of `ttkbootstrap-icons-bs`.** It ships the same font and the same glyph data as 1.0.0, and draws the same icons. Three things changed:
 
-Bootstrap Icons supports two styles:
-- `outline` (default)
-- `fill`
+- this page, which pointed at a layout that no longer exists
+- the base pin, now `ttkbootstrap-icons>=4.0.0,<5`, so installing this package keeps resolving the pre-5.0 base it was built against rather than the 5.0 forwarding shim
+- importing it now emits a `FutureWarning` naming the replacement
 
-You can specify the style either as a parameter or as part of the icon name:
+Nothing further will be published under this name.
 
-```python
-# Using style parameter
-icon1 = BootstrapIcon("house", style="fill")
+## Icon set
 
-# Using style in name
-icon2 = BootstrapIcon("house-fill")
-```
+**Bootstrap Icons** — [browse the set](https://icons.getbootstrap.com/) · [upstream license](https://github.com/twbs/icons/blob/main/LICENSE)
 
-## License
+The icons are not ours: this package redistributes the upstream font under that project's own license. MIT for the wrapper itself. The upstream license text is not bundled in this release; follow the link above. The replacement pack ships it.
 
-MIT License
+## Links
 
-Bootstrap Icons are licensed under the MIT License.
-See https://github.com/twbs/icons/blob/main/LICENSE
+- [Bootstrap Icons in the new documentation](https://tkinter-icons.readthedocs.io/en/latest/packs/bootstrap.html)
+- [All sixteen icon packs](https://tkinter-icons.readthedocs.io/en/latest/packs.html)
+- [Migrating from ttkbootstrap-icons](https://tkinter-icons.readthedocs.io/en/latest/getting-started/migrating.html)
+- [Repository](https://github.com/israel-dryer/tkinter-icons)

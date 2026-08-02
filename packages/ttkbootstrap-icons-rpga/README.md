@@ -1,59 +1,53 @@
 # ttkbootstrap-icons-rpga
 
-An icon provider for the `ttkbootstrap-icons` library.  
-RPG Awesome is a fantasy-themed set of glyphs based on Font Awesome.
+> ### This package has moved
+>
+> RPG Awesome now ship as an extra of **[tkinter-icons](https://pypi.org/project/tkinter-icons/)**:
+>
+> ```bash
+> pip install "tkinter-icons[rpg-awesome]"
+> ```
+>
+> ```python
+> from tkinter_icons import RpgAwesomeIcon
+> ```
+>
+> **[RPG Awesome pack documentation](https://tkinter-icons.readthedocs.io/en/latest/packs/rpg-awesome.html)**
 
-[![PyPI](https://img.shields.io/pypi/v/ttkbootstrap-icons-rpga.svg)](https://pypi.org/project/ttkbootstrap-icons-rpga/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
+`ttkbootstrap-icons` was renamed to `tkinter-icons` in 5.0.0. The old name promised a relationship with [ttkbootstrap](https://github.com/israel-dryer/ttkbootstrap) that no longer holds — Bootstrap icons are built into ttkbootstrap itself now — and the sixteen icon sets moved from separate distributions you install by name to extras of one library.
 
----
+## What changes for you
 
-## Install
+| | Before | Now |
+|---|---|---|
+| Install | `pip install ttkbootstrap-icons-rpga` | `pip install "tkinter-icons[rpg-awesome]"` |
+| Import | `from ttkbootstrap_icons_rpga import RPGAIcon` | `from tkinter_icons import RpgAwesomeIcon` |
 
-```bash
-pip install ttkbootstrap-icons-rpga
-```
+**The class is the same.** `RPGAIcon` is still exported from `tkinter_icons` (alongside the spelled-out `RpgAwesomeIcon`), so the only edit is the import line. Everything else — `(name, size, color)` — is unchanged.
 
----
+The replacement pack tracks RPG Awesome v1.0.0 and carries 990 names.
 
-## Quick start
+Not ready to move? Your existing code keeps working: `ttkbootstrap-icons` 5.0.0 is a forwarding shim that re-exports the old import root. See the [migration notes](https://tkinter-icons.readthedocs.io/en/latest/getting-started/migrating.html).
 
-```python
-import tkinter as tk
-from ttkbootstrap_icons_rpga import RPGAIcon
+## About this release
 
-root = tk.Tk()
+**1.0.1 is the final release of `ttkbootstrap-icons-rpga`.** It ships the same font and the same glyph data as 1.0.0, and draws the same icons. Three things changed:
 
-icon = RPGAIcon("bat-sword", size=24, color="#6f42c1")
-tk.Button(root, image=icon.image, text="Sword", compound="left").pack()
+- this page, which pointed at a layout that no longer exists
+- the base pin, now `ttkbootstrap-icons>=3.0.0,<5`, so installing this package keeps resolving the pre-5.0 base it was built against rather than the 5.0 forwarding shim
+- importing it now emits a `FutureWarning` naming the replacement
 
-root.mainloop()
-```
+Nothing further will be published under this name.
 
----
+## Icon set
 
-## Styles
+**RPG Awesome** — [browse the set](https://nagoshiashumari.github.io/Rpg-Awesome/) · [upstream license](https://github.com/nagoshiashumari/Rpg-Awesome/blob/master/LICENSE.md)
 
-This provider uses a single font without separate style variants.
+The icons are not ours: this package redistributes the upstream font under that project's own license. MIT for the wrapper itself. The upstream license text is bundled in the installed package.
 
----
+## Links
 
-## Icon Browser
-
-Browse available icons with the built-in browser. From your terminal run:
-
-```bash
-ttkbootstrap-icons
-```
-
-Use **Copy Name** in the browser to copy the icon name and style directly for use in your code.
-
-![Icon Browser](https://raw.githubusercontent.com/israel-dryer/ttkbootstrap-icons/main/packages/ttkbootstrap-icons-rpga/browser.png)
-
----
-
-## License and Attribution
-
-- **Upstream license:** RPG Awesome — https://nagoshiashumari.github.io/Rpg-Awesome/
-- **Wrapper license:** MIT © Israel Dryer
-
+- [RPG Awesome in the new documentation](https://tkinter-icons.readthedocs.io/en/latest/packs/rpg-awesome.html)
+- [All sixteen icon packs](https://tkinter-icons.readthedocs.io/en/latest/packs.html)
+- [Migrating from ttkbootstrap-icons](https://tkinter-icons.readthedocs.io/en/latest/getting-started/migrating.html)
+- [Repository](https://github.com/israel-dryer/tkinter-icons)
