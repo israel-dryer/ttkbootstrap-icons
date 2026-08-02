@@ -191,10 +191,19 @@ jobs:
       # as eighteen distinct packages rather than eighteen bare version numbers.
       # The body is that section minus its heading; GitHub appends its own
       # "What's Changed" and the full-changelog link underneath.
+      # Only the base package is ever "Latest". Without this, GitHub marks each
+      # new release latest as it is created, so the badge lands on whatever tag
+      # was pushed last — and the documented publish order ends with the shim.
+      # A visitor to the repository would have been shown
+      # `ttkbootstrap-icons 5.0.0`, the deprecated forwarding package, as the
+      # latest release of a project whose whole point is that it was renamed
+      # away from that name. The same applies to any pack released on its own
+      # afterwards: a font bump to one of sixteen packs is not the headline.
       - uses: softprops/action-gh-release@v3
         with:
           name: ${{ needs.build.outputs.title }}
           body_path: RELEASE_NOTES.md
           generate_release_notes: true
+          make_latest: ${{ needs.build.outputs.dist == 'tkinter-icons' }}
           prerelease: ${{ contains(needs.build.outputs.version, 'a') || contains(needs.build.outputs.version, 'b') || contains(needs.build.outputs.version, 'rc') }}
           files: dist/*
