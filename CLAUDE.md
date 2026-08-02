@@ -182,24 +182,28 @@ Four things stand between here and 5.0.0, and only one of them is code.
    revert #88, drop the `meteocons` extra from the base package, and remove the
    pack from the catalogue, the notices, and the docs.
 
-2. **Get Read the Docs building green — this gates the release, it does not
-   follow it.** `DOCS_URL` in `packs.py` is
-   `https://tkinter-icons.readthedocs.io/en/latest`, compiled into the library
-   and printed by `no_packs_message()` to every user with no pack installed. Ship
-   5.0.0 before that URL resolves and the worst link in the library is dead at
-   the worst moment. The project slug must be `tkinter-icons` to match.
+2. **Read the Docs is live and green — done 2026-08-02.**
+   `https://tkinter-icons.readthedocs.io/en/latest/` serves the site, and
+   `packs.html`, the sixteen pack pages, and the user guide all resolve. Verified
+   against the published HTML: sixteen table rows with numeric icon counts (not
+   em dashes, so every pack really installed), thirty-two card thumbnails, the
+   hero band, and the generated statistics reading correctly.
 
-   **`latest` tracks the repository's default branch, which is `main`** — and
-   `main` is still 4.0.0 with no `.readthedocs.yaml` and the old MkDocs layout,
-   so a fresh project builds nothing useful. Until `5.0` merges, point `latest`
-   at `5.0` in the RTD Versions settings and flip it back afterwards. Turn on PR
-   builds while you are there; previewing generated docs pages before merge is
-   most of why RTD won over Pages.
+   Two things still to do there. **RTD's `latest` is pointed at `5.0`** via
+   Admin → Settings → Default branch; set it back to `main` once `5.0` lands, or
+   the published docs freeze at the integration branch. And **`gh-pages` can now
+   be deleted** — it still serves the dead MkDocs site at the old Pages URL, and
+   removing it turns a wrong site into a clean 404.
 
-   Watch the first build for two things: that all sixteen packs install in
-   `post_install` (a partial install publishes a table with holes, which
-   `fail_on_warning` should catch), and that `post_checkout` gave setuptools-scm
-   the tags it needs. Delete `gh-pages` afterwards.
+   Two traps this cost, both worth not repeating. The first build failed with
+   *"Config file not found at default path"*, which reads like the file is
+   missing and is not — RTD was still building `main`, which has no
+   `.readthedocs.yaml`. The second failed under `-W` on *"the pack_showcase
+   extension is not safe for parallel reading"*, because RTD builds with
+   `-j auto`. **That one cannot be reproduced on Windows**: Sphinx's parallel
+   mode needs `os.fork`, so `parallel_available` is False and `-j auto`
+   silently degrades to a serial read that never warns. CI's `docs` job now
+   passes `-j auto` for exactly this reason — keep it.
 
 3. **#89 and #87, the docs content and visuals.** Neither is a release blocker;
    together they are the last thing that would embarrass the release.
