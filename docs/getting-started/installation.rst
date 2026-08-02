@@ -28,7 +28,9 @@ The split exists because each pack ships its own font. Bundling all sixteen woul
 
 .. warning::
 
-   There is no ``[all]`` extra, and there will not be one. The sixteen sets serve unrelated purposes — brand marks, developer logos, fantasy glyphs, weather symbols — so no application draws from all of them. Name the ones you use.
+   There is no ``[all]`` extra, and asking for one fails quietly. pip does not treat an unknown extra as an error, so ``pip install "tkinter-icons[all]"`` reports success and installs the base package — leaving you exactly where the note above says you do not want to be, with no indication that anything was ignored. Name the sets you use.
+
+:doc:`../packs` covers why there is no ``[all]`` and never will be.
 
 Requirements
 ------------
@@ -53,7 +55,7 @@ On Linux, Tk usually comes from your distribution rather than from pip:
    sudo apt install python3-tk        # Debian, Ubuntu
    sudo dnf install python3-tkinter   # Fedora
 
-You do **not** need a display to render icons — :doc:`../user-guide/headless-rendering` covers using the library with no Tk at all.
+You do **not** need a display to render icons. Tk still has to be installed, but nothing has to be shown — :doc:`../user-guide/headless-rendering` covers rendering with no display, no root window, and no event loop.
 
 Checking what you have
 ----------------------

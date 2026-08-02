@@ -1,7 +1,14 @@
 # Brand assets
 
 Source of truth for the project's marks: the docs site, the GitHub repository,
-and the package READMEs. Not used at runtime — nothing here ships in a wheel.
+and the package READMEs.
+
+One pair is **copied** into a wheel: `png/icon-32.png` and `png/icon-64.png` are
+duplicated at `packages/tkinter-icons/src/tkinter_icons/assets/` and used as the
+icon browser's window icon. Copies rather than references, because package data
+cannot reach outside its own package — the same arrangement as the wordmarks in
+`docs/_static/`. Update here first, then the copy. Nothing else here is used at
+runtime.
 
 Note there are two other directories called `assets` in this repository, and
 neither is this one: `docs/assets/` holds documentation screenshots, and

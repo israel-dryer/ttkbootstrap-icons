@@ -1,7 +1,42 @@
 User guide
 ==========
 
-How the library works, independent of which GUI framework you have wrapped around Tk. Framework-specific idioms live under Integrations, below.
+Everything from installing a pack to freezing an application. The library itself is framework-neutral, so the guides below describe it independently of whatever you have wrapped around Tk; framework-specific idioms live under Integrations, at the end.
+
+Getting started
+---------------
+
+Four short pages: install a pack, draw an icon, work out which set you want, and — if you are arriving from ``ttkbootstrap-icons`` — move your existing code over.
+
+.. grid:: 1 2 2 2
+   :gutter: 3
+
+   .. grid-item-card:: Installation
+      :link: ../getting-started/installation
+      :link-type: doc
+
+      Installing a pack as an extra, what the quotes are for, and what the base package does not give you.
+
+   .. grid-item-card:: Quickstart
+      :link: ../getting-started/quickstart
+      :link-type: doc
+
+      An icon on a button in ten lines, and the three things about it that matter later.
+
+   .. grid-item-card:: Choosing a pack
+      :link: ../getting-started/choosing-a-pack
+      :link-type: doc
+
+      Sixteen sets, and how to pick without reading all of them.
+
+   .. grid-item-card:: Migrating
+      :link: ../getting-started/migrating
+      :link-type: doc
+
+      Coming from ``ttkbootstrap-icons`` 4.0.0. Your code keeps working; two things genuinely changed.
+
+Feature guides
+--------------
 
 .. grid:: 1 2 2 2
    :gutter: 3
@@ -60,8 +95,24 @@ Integrations
 
       Using another icon set inside ttkbootstrap, and letting the theme choose the color.
 
+.. Three captioned toctrees rather than one flat list: the sidebar groups match
+   the three headings above, so the page and the sidebar agree. The pages
+   themselves stay in `getting-started/` — nav structure is a toctree question
+   in Sphinx, not a directory one, and moving the files would break every
+   cross-reference and every URL to buy nothing.
+
 .. toctree::
    :hidden:
+   :caption: Getting started
+
+   ../getting-started/installation
+   ../getting-started/quickstart
+   ../getting-started/choosing-a-pack
+   ../getting-started/migrating
+
+.. toctree::
+   :hidden:
+   :caption: Feature guides
 
    icons-and-names
    sizing-and-quality

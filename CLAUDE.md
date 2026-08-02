@@ -98,11 +98,24 @@ pack-asset-runner bug. Merged since: #82 (metrics for fourteen packs) and #83
 
 Every branch is deleted; `origin` holds `main`, `5.0`, and `gh-pages` only.
 
-**`gh-pages` is kept on purpose.** It is the old `mkdocs gh-deploy` output and is
-what currently serves the live site. Deleting it before the repository's Pages
-source is switched to **GitHub Actions** would take the documentation offline —
-the new `docs.yml` workflow cannot publish until that setting changes, and it has
-never run. Switch the setting, let one deploy succeed, *then* delete the branch.
+**The docs moved to Read the Docs, and GitHub Pages is out of the picture.**
+Decided 2026-08-02, matching `ttkbootstrap`, for versioned docs and PR previews
+— both of which matter here because most of the site is generated. `docs.yml` is
+deleted and `.readthedocs.yaml` replaces it.
+
+`gh-pages` still holds the old `mkdocs gh-deploy` output and still serves the
+dead Pages site. Delete the branch once Read the Docs has built once; nothing
+depends on it any more.
+
+**No `apt_packages: [python3-tk]` is needed on Read the Docs, and adding one is
+cargo cult.** The worry is real-sounding — `icon.py` imports `tkinter` at module
+scope, so `import tkinter_icons` needs `_tkinter` — but `ttkbootstrap` imports
+`tkinter`, `tkinter.font`, and `tkinter.ttk` at module scope, mocks nothing,
+lists no apt packages, and publishes to Read the Docs today. Their image has it.
+
+**Read the Docs clones shallow and without tags**, and `fallback_version` was
+removed on purpose, so setuptools-scm would fail the build. `post_checkout`
+unshallows and fetches tags; do not remove it.
 
 **A `--delete-branch` merge closes any PR that targets the deleted branch.**
 Merging #84 that way closed #85 outright, and a closed PR cannot be reopened
@@ -169,12 +182,24 @@ Four things stand between here and 5.0.0, and only one of them is code.
    revert #88, drop the `meteocons` extra from the base package, and remove the
    pack from the catalogue, the notices, and the docs.
 
-2. **Switch GitHub Pages to the Actions source, and let `docs.yml` deploy.** The
-   workflow exists and has never run; the site is still whatever `mkdocs
-   gh-deploy` last pushed to `gh-pages`. Nothing verifies the published site
-   matches the repository until this happens, and `packs.html` — which the
-   library links to from `Icon.__init__` — is only correct once it does. Delete
-   `gh-pages` after the first successful deploy.
+2. **Get Read the Docs building green — this gates the release, it does not
+   follow it.** `DOCS_URL` in `packs.py` is
+   `https://tkinter-icons.readthedocs.io/en/latest`, compiled into the library
+   and printed by `no_packs_message()` to every user with no pack installed. Ship
+   5.0.0 before that URL resolves and the worst link in the library is dead at
+   the worst moment. The project slug must be `tkinter-icons` to match.
+
+   **`latest` tracks the repository's default branch, which is `main`** — and
+   `main` is still 4.0.0 with no `.readthedocs.yaml` and the old MkDocs layout,
+   so a fresh project builds nothing useful. Until `5.0` merges, point `latest`
+   at `5.0` in the RTD Versions settings and flip it back afterwards. Turn on PR
+   builds while you are there; previewing generated docs pages before merge is
+   most of why RTD won over Pages.
+
+   Watch the first build for two things: that all sixteen packs install in
+   `post_install` (a partial install publishes a table with holes, which
+   `fail_on_warning` should catch), and that `post_checkout` gave setuptools-scm
+   the tags it needs. Delete `gh-pages` afterwards.
 
 3. **#89 and #87, the docs content and visuals.** Neither is a release blocker;
    together they are the last thing that would embarrass the release.
@@ -314,10 +339,16 @@ Decisions behind it, each of which cost a discussion:
   not into an extra of the base package. (The `[all]` reachability rule that used
   to force this is gone with #79, but the family pattern stands.)
 
-- **There is no docs workflow.** `.github/workflows/` holds `ci.yml` and
-  `release.yml` only; the `gh-pages` branch came from a manual `mkdocs
-  gh-deploy`. A build-and-deploy job is part of #71. The site URL is
-  `israel-dryer.github.io/tkinter-icons/`; the old one is dead on purpose.
+- **There is no docs workflow, and that is now deliberate.** `.github/workflows/`
+  holds `ci.yml` and `release.yml`; Read the Docs builds the site from
+  `.readthedocs.yaml`, so there is nothing for a workflow to do. `docs.yml`
+  existed briefly for GitHub Pages and was deleted when the host changed.
+
+  Its one irreplaceable step moved rather than died: the assertion that the page
+  `PACKS_DOC_URL` points at actually exists is now a step in `ci.yml`'s packaging
+  job. It checks `docs/packs.rst` in the source tree instead of the built file,
+  because CI no longer builds the site. Do not drop it — that URL is the only
+  pointer to the catalogue a user with no pack installed is ever given.
 
 - **The one packs page must land at `packs.html` — the code already links
   there.** #79 pointed `PACKS_DOC_URL` (`packs.py:29`) at
@@ -450,8 +481,12 @@ Each of these looks like a defect in isolation. They aren't.
   no ceiling, so it never needs another release.
 
   **Its migration warning is an install instruction, and nothing downstream
-  checks it.** pip does not fail on an unknown extra — it prints `does not
-  provide the extra` and installs the base package, which has no glyphs — so a
+  checks it.** pip does not fail on an unknown extra, and as of pip 25.3 it does
+  not even mention one: measured 2026-08-02, `pip install "pillow[nonexistent]"`
+  reports plain success, and a local `[all]` install of this package prints
+  nothing but `Would install tkinter-icons`. Older pip printed `does not provide
+  the extra`; do not rely on that warning existing. The base package installs,
+  it has no glyphs, and nothing tells the user their extra was dropped — so a
   stale extra in that text walks the user into the state the rest of the same
   message is warning about. It named `[all]` until #79's review caught it.
   `TestShimMigrationMessageIsInstallable` parses the extras back out of the
@@ -483,9 +518,11 @@ Each of these looks like a defect in isolation. They aren't.
   safe. Anything passing a name to `generate_metrics` has to import the provider
   to get it — reading the key gives an argument the CLI rejects.
 
-- **The old docs URL is dead and that was accepted.** GitHub redirects repo URLs
-  but not project Pages. `israel-dryer.github.io/ttkbootstrap-icons/` 404s;
-  a custom domain was considered and declined.
+- **Both old docs URLs are dead and that was accepted.** GitHub redirects repo
+  URLs but not project Pages, so `israel-dryer.github.io/ttkbootstrap-icons/`
+  404s — and since the move to Read the Docs,
+  `israel-dryer.github.io/tkinter-icons/` will too. A custom domain was
+  considered and declined. `migrating.rst` tells readers where the docs went.
 
 ---
 

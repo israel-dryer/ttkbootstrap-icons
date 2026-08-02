@@ -123,6 +123,54 @@ class TestCatalogueMatchesRepo:
         assert "all" not in extras
 
 
+class TestEveryPackIsDocumented:
+    """A pack that ships without a page is invisible to the people choosing one.
+
+    The docs build catches most of this itself - `docs/_ext/pack_showcase.py`
+    warns when a pack has no showcase glyphs or no description, and `-W` turns
+    that into a failure. What it cannot catch is a page file that was never
+    written or never linked, because a document nobody references is simply a
+    document Sphinx does not read. That is exactly the state a seventeenth pack
+    starts in, so it is checked here instead.
+    """
+
+    DOCS = REPO / "docs"
+
+    @pytest.mark.parametrize("pack", KNOWN_PACKS, ids=lambda p: p.extra)
+    def test_pack_has_a_page(self, pack):
+        page = self.DOCS / "packs" / f"{pack.extra}.rst"
+        if not self.DOCS.is_dir():
+            pytest.skip("docs not present in this checkout")
+        assert page.exists(), f"write docs/packs/{pack.extra}.rst"
+
+    @pytest.mark.parametrize("pack", KNOWN_PACKS, ids=lambda p: p.extra)
+    def test_pack_page_is_in_the_toctree(self, pack):
+        """Matched as a whole entry, because one extra is a prefix of another.
+
+        A substring test passes for `fluent` on the strength of the
+        `packs/fluent-regular` line, so deleting the `fluent` entry would leave
+        an orphaned page that nothing here notices.
+        """
+        index = self.DOCS / "packs.rst"
+        if not index.exists():
+            pytest.skip("docs not present in this checkout")
+        entries = [
+            line.strip()
+            for line in index.read_text(encoding="utf-8-sig").splitlines()
+        ]
+        assert f"packs/{pack.extra}" in entries
+
+    @pytest.mark.parametrize("pack", KNOWN_PACKS, ids=lambda p: p.extra)
+    def test_pack_page_renders_its_facts_and_preview(self, pack):
+        """Both directives, so no page falls back to prose that can go stale."""
+        page = self.DOCS / "packs" / f"{pack.extra}.rst"
+        if not page.exists():
+            pytest.skip("docs not present in this checkout")
+        text = page.read_text(encoding="utf-8-sig")
+        assert f".. pack-facts:: {pack.extra}" in text
+        assert f".. pack-preview:: {pack.extra}" in text
+
+
 class TestMessages:
     def test_no_packs_message_explains_the_split(self):
         text = no_packs_message()

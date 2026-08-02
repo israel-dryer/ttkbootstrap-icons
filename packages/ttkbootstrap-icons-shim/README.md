@@ -29,5 +29,5 @@ Icon packs are now extras, so you install and import one name:
 pip install "tkinter-icons[material]"
 ```
 
-See the [documentation](https://israel-dryer.github.io/tkinter-icons/) for the
+See the [documentation](https://tkinter-icons.readthedocs.io/en/latest/) for the
 full list of packs.

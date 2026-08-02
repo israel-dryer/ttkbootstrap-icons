@@ -21,7 +21,13 @@ from dataclasses import dataclass
 from typing import Iterator, Optional
 
 REPO_URL = "https://github.com/israel-dryer/tkinter-icons"
-DOCS_URL = "https://israel-dryer.github.io/tkinter-icons"
+
+#: Read the Docs, matching `ttkbootstrap`. `/en/latest/` rather than
+#: `/en/stable/` for the same reason ttkbootstrap uses it: `latest` resolves
+#: from the first build onward, where `stable` 404s until a release tag has been
+#: built and activated — and this URL is printed by `no_packs_message()`, which
+#: is the one link a user who cannot yet draw an icon is given.
+DOCS_URL = "https://tkinter-icons.readthedocs.io/en/latest"
 
 #: Where someone with no pack installed is sent to pick one. The sixteen sets
 #: serve disjoint purposes, so the useful answer is a comparison rather than a

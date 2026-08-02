@@ -15,14 +15,14 @@ Quickstart
 
    root.mainloop()
 
-Three things are happening there, and each of them matters later.
+That is the shape of every icon in every pack: a name, a size, a color, and ``.image`` where a widget wants a picture. Three things trip people up first, and they are the rest of this page.
 
-The class comes from the pack you installed
--------------------------------------------
+Every pack imports from ``tkinter_icons``
+-----------------------------------------
 
-``MaterialIcon`` is re-exported from ``tkinter_icons`` even though it lives in the ``tkinter-icons-mat`` distribution, so **the name you install is the name you import**. Every pack works this way, and both spellings resolve — ``MaterialIcon`` and ``MatIcon``, ``FontAwesomeIcon`` and ``FAIcon``.
+Whichever pack you installed, its class comes from the same place — ``LucideIcon``, ``FontAwesomeIcon``, ``WeatherIcon``, all from ``tkinter_icons``. Switching sets is a one-line change.
 
-Asking for a class from a pack you have not installed does not fail obscurely:
+Ask for a pack you have not installed and you get instructions rather than a puzzle:
 
 .. code-block:: python
 
@@ -32,20 +32,6 @@ Asking for a class from a pack you have not installed does not fail obscurely:
    #   pip install "tkinter-icons[weather]"
    #
    # Then: from tkinter_icons import WeatherIcon
-
-Constructing an icon draws nothing
-----------------------------------
-
-:class:`~tkinter_icons.Icon` never touches Tk in its constructor. The image is rendered the first time you read :attr:`~tkinter_icons.Icon.image`, so icons can be built at import time, kept in a configuration object, or created before a root window exists.
-
-.. code-block:: python
-
-   ICONS = {                                  # module level, before tk.Tk()
-       "save": MaterialIcon("content-save", size=16),
-       "open": MaterialIcon("folder-open", size=16),
-   }
-
-Identical icons share one image, so building the same icon twice costs nothing.
 
 Keep a reference
 ----------------
@@ -77,6 +63,6 @@ It shows every installed set, searchable, at the size and color you will actuall
 Next
 ----
 
-- :doc:`../user-guide/icons-and-names` — how names resolve, and what styles are
+- :doc:`../user-guide/icons-and-names` — what an icon actually is, how names resolve against styles, and why building one costs nothing
 - :doc:`../user-guide/stateful-icons` — icons that follow a widget's hover and disabled colors
 - :doc:`choosing-a-pack` — if ``[material]`` is not the set you want

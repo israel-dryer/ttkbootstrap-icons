@@ -36,3 +36,8 @@ Thumbs.db
 
 # Sphinx build output
 docs/_build/
+
+# Pack preview strips, drawn into the source tree by docs/_ext/pack_showcase.py
+# on every build. Generated from the installed fonts, so committing them would
+# pin the docs to whatever the machine that last built them had installed.
+docs/_static/previews/

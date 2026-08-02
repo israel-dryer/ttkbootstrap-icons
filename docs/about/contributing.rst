@@ -64,9 +64,11 @@ Building the docs
 
    python -m sphinx docs docs/_build/html -b html -W -n
 
-The packs page reads each pack's styles, upstream version, and glyph count from the installed provider rather than from a table someone has to remember to update, so a build without the packs installed leaves those columns blank and warns. ``-W`` turns that into a failure, which is what the docs workflow uses — a published table with holes in it would be worse than none. ``-n`` does the same for unresolved cross-references, so a renamed API leaves a failing build rather than a dead link.
+The packs page reads each pack's styles, upstream version, and glyph count from the installed provider rather than from a table someone has to remember to update, and each pack's preview is drawn at build time with the real font — so a build without the packs installed leaves those columns blank, renders no previews, and warns. ``-W`` turns that into a failure; a published table with holes in it would be worse than none. ``-n`` does the same for unresolved cross-references, so a renamed API leaves a failing build rather than a dead link.
 
-Deploying needs the repository's Pages source set to **GitHub Actions** rather than to a branch. The site was published by hand with ``mkdocs gh-deploy`` before this, which left a ``gh-pages`` branch; while Pages is still pointed at that branch, the deploy job fails.
+That same command runs as the ``docs`` job in ``ci.yml``, so a pull request that breaks a cross-reference or a curated icon name fails as a status check rather than as a red build somewhere else after merging.
+
+Publishing is **Read the Docs**, configured by ``.readthedocs.yaml`` — there is no deploy workflow to run and no repository setting to flip. It installs all sixteen packs for the same reason the local command needs them, and unshallows the checkout so setuptools-scm can see the tags. The ``gh-pages`` branch is a leftover from the ``mkdocs gh-deploy`` era and serves nothing.
 
 The developer API
 -----------------

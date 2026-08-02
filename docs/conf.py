@@ -30,6 +30,11 @@ extensions = [
     # catalogue and the installed providers, so it cannot go stale. See
     # docs/_ext/packs_table.py.
     "packs_table",
+    # Local: the card grid on packs.rst, and the facts table and preview strips
+    # on each of the sixteen per-pack pages. The previews are drawn at build
+    # time by this library, so the docs cannot claim a rendering the renderer
+    # does not produce. See docs/_ext/pack_showcase.py.
+    "pack_showcase",
 ]
 
 # The Release Notes page supplies its own reStructuredText H1 and includes the
