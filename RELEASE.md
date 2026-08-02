@@ -4,44 +4,36 @@ Releases are made by pushing a tag. GitHub Actions builds, verifies, publishes
 to PyPI, and writes the GitHub Release. Nothing is uploaded from a laptop, and
 no PyPI token is stored anywhere.
 
-## The tag decides what gets released
+## One tag releases the repository
 
-This repository holds eighteen distributions. The tag names which one:
+This is a monorepo, and the tag names the repository's release rather than one package's:
 
-| Tag | Releases | From |
-|---|---|---|
-| `v5.0.0` | `tkinter-icons` | `packages/tkinter-icons` |
-| `tkinter-icons-fa-v1.1.0` | `tkinter-icons-fa` | `packages/tkinter-icons-fa` |
-| `ttkbootstrap-icons-v5.0.0` | `ttkbootstrap-icons` | `packages/ttkbootstrap-icons-shim` |
+```bash
+git tag v5.0.0
+git push origin v5.0.0
+```
 
-The base package keeps the bare `v<version>` form it has used since 1.0.0.
-Everything else is `<distribution>-v<version>`.
+That builds all eighteen distributions, publishes the ones PyPI does not already have, and creates one GitHub Release.
 
-Note the third row: **the shim's directory is not named after the distribution
-it builds**, because the plain name was taken by the package being renamed away
-from it. `.github/scripts/packages.py` resolves the mapping by reading every
-`pyproject.toml`, so it cannot go stale — but any tooling you add must go
-through it rather than assuming `packages/<dist>`.
+The base package is bumped for every release — it carries the change — so the tag is always its version, and always new. The other seventeen ride along on whatever their `pyproject.toml` declares. A pack whose version has not moved is simply skipped at upload, which is what makes a font bump to one pack a normal release rather than a special case: bump that pack, bump the base, tag, and only those two go out.
 
-`tkinter-icons-v5.0.0` is rejected on purpose. It looks like a valid base tag,
-but setuptools-scm is configured to match only the bare `v` form, so building
-from it would quietly produce a version derived from some older tag.
+The base package's version comes *from* the tag through setuptools-scm; every other distribution carries a static version. That is why the tag is the base's and not an arbitrary repository version — there would otherwise be nothing to derive the base's version from.
 
-## Publish order is load-bearing
+**Per-distribution tags are retired.** `tkinter-icons-fa-v1.1.0` and friends are rejected by `packages.py` with an explanation rather than a generic parse failure. They meant eighteen tags and eighteen GitHub Releases for one coordinated release — a notification each, to anyone watching releases — and they left the publish order as a procedure a human had to execute correctly, at the exact moment when getting it wrong is unrecoverable. No such tag was ever pushed, so nothing is orphaned by the change.
 
-The base package's extras pin `>=1.1.0` against the packs, and the shim pins
-`>=5.0.0` against the base. Release in this order, letting each run finish:
+`tkinter-icons-v5.0.0` is rejected too, and separately: it looks like a valid base tag, but setuptools-scm matches only the bare `v` form, so building from it would quietly produce a version derived from some older tag.
 
-1. **the sixteen packs** at `1.1.0`
-2. **`tkinter-icons`** at `5.0.0`
-3. **`ttkbootstrap-icons`** at `5.0.0` — the shim, last
+## Publish order is enforced, not documented
 
-Out of order, a package points at a version PyPI does not have yet, and
-`pip install "tkinter-icons[material]"` fails for everyone who tries it in the
-window between the two uploads.
+The base package's extras pin `>=1.1.0` against the packs, and the shim pins `>=5.0.0` against the base. The `publish` job uploads in three ordered steps:
 
-The shim is published **once**. It depends on `tkinter-icons>=5.0.0` with no
-upper bound, so it forwards to every future version without another release.
+1. **the sixteen packs** — `skip-existing`, since most will be unchanged
+2. **`tkinter-icons`** — no `skip-existing`; a base version already on PyPI means the tag is wrong, and failing is correct
+3. **`ttkbootstrap-icons`** — the shim, `skip-existing`, since it is published once and never again
+
+Out of order, the base points at pack versions PyPI does not have yet and `pip install "tkinter-icons[material]"` fails for everyone who tries it in the window between uploads. That used to be your responsibility across eighteen tag pushes. It is now three steps in one job, in one file, and cannot be done out of order by accident.
+
+The shim depends on `tkinter-icons>=5.0.0` with no upper bound, so it forwards to every future version without another release — which is why `skip-existing` is the normal outcome for it rather than a fallback.
 
 ## Before the first release: PyPI Trusted Publishing
 
@@ -66,46 +58,41 @@ between a mistyped tag and an immutable upload.
 
 ## Making a release
 
-1. **Update the changelog.** Root `CHANGELOG.md` for the base package, or
-   `packages/<package>/CHANGELOG.md` for a pack. Add a section at the top:
+1. **Update the changelogs.** The root `CHANGELOG.md` always, because the base package is always part of a release. Plus `packages/<package>/CHANGELOG.md` for any pack whose version moved. Each gets a section at the top:
 
    ```markdown
-   ## [1.2.0] — a short descriptive title
+   ## [5.0.1] — a short descriptive title
    ```
 
-   That heading is not decoration. `release_notes.py` reads it: the title
-   becomes the GitHub Release title, and everything under it up to the next
-   `## [` becomes the release body.
+   That heading is not decoration. `release_notes.py` reads the root one: the title becomes the GitHub Release title, and everything under it up to the next `## [` becomes the release body.
 
-2. **Set the version.** Packs and the shim carry `version = "1.2.0"` in their
-   `pyproject.toml`. The base package does not — its version comes from the tag
-   through setuptools-scm, so there is nothing to edit.
+2. **Set the versions.** Packs and the shim carry `version = "1.2.0"` in their `pyproject.toml`; bump the ones that changed. The base package does not — its version comes from the tag through setuptools-scm, so there is nothing to edit for it.
 
-3. **Check it locally**, which is the same preflight the workflow runs:
+3. **Check it locally.** Same preflight the workflow runs, over all eighteen:
 
    ```bash
-   python .github/scripts/verify_packages.py --strict --imports --tag tkinter-icons-fa-v1.2.0
+   python .github/scripts/verify_packages.py --strict --imports --tag v5.0.1
    ```
 
-4. **Merge to `main`**, then tag the merge commit and push:
+4. **Do a dry run.** Actions → Release → *Run workflow*, naming the tag and the branch. It builds and verifies everything and publishes nothing — the `publish` and `release` jobs are gated on a tag push. Worth doing at least once before a release that matters, since the real run ends in uploads PyPI will not let you take back.
+
+5. **Merge to `main`**, then tag the merge commit and push:
 
    ```bash
-   git tag tkinter-icons-fa-v1.2.0
-   git push origin tkinter-icons-fa-v1.2.0
+   git tag v5.0.1
+   git push origin v5.0.1
    ```
 
-5. **Watch the run.** If the `pypi` environment has reviewers, it waits for
-   approval before uploading.
+6. **Watch the run.** If the `pypi` environment has reviewers, it waits for approval before uploading.
 
 If something fails before the publish step, delete the tag, fix, and re-tag:
 
 ```bash
-git tag -d tkinter-icons-fa-v1.2.0
-git push origin :refs/tags/tkinter-icons-fa-v1.2.0
+git tag -d v5.0.1
+git push origin :refs/tags/v5.0.1
 ```
 
-Once the publish step has run, that version is gone — PyPI does not allow
-re-uploading a version, even a deleted one. Ship a patch instead.
+Once the publish step has run, that version is gone — PyPI does not allow re-uploading a version, even a deleted one. Ship a patch instead. Note that a partial failure is possible in principle: the packs upload before the base, so a base failure leaves published packs behind. They are harmless on their own — nothing points at them until a base release does — and the next attempt skips them.
 
 ## What the preflight checks
 

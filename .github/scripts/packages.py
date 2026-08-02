@@ -12,15 +12,22 @@ in ``packages/ttkbootstrap-icons-shim/`` but builds the distribution
 renamed away from it. Anything resolving a tag to a directory has to go through
 the distribution name, which is what :func:`find` does.
 
-Tag scheme::
+**One tag releases the repository**, and it is the base package's version::
 
-    v<version>                  the base package, e.g. v5.0.0
-    <distribution>-v<version>   everything else, e.g. tkinter-icons-fa-v1.1.0
-                                                    ttkbootstrap-icons-v5.0.0
+    v5.0.0
 
-The base package keeps the bare ``v`` form it has used since 1.0.0, and its
-setuptools-scm config matches only that form, so a pack tag can never become the
-base package's version.
+This is a monorepo, so the tag names the repository's release rather than one
+package's. The base package is bumped for every release — it carries the change
+— and the other seventeen ride along on whatever versions their pyprojects
+declare, with anything already on PyPI skipped at upload.
+
+There was briefly a ``<distribution>-v<version>`` form, one tag per package.
+:func:`parse_tag` rejects it explicitly rather than merely failing to match,
+because a tag pushed in that shape would otherwise look like an unremarkable
+mistake instead of a scheme that was deliberately dropped. It is gone for three
+reasons: eighteen tags and eighteen GitHub Releases per release, broadcast to
+anyone watching; the publish order left as a human procedure the release notes
+had to warn about in bold; and no such tag was ever actually pushed.
 
 Needs Python 3.11 or newer for ``tomllib``. That is no constraint on the library,
 which supports 3.10 — this and its sibling scripts only ever run in CI, on 3.12.
@@ -110,7 +117,8 @@ class Package:
         return names
 
     def tag_for(self, version: str) -> str:
-        return f"v{version}" if self.is_base else f"{self.dist}-v{version}"
+        """The tag for a release. There is only one, and it is the base's."""
+        return f"v{version}"
 
 
 def load_all() -> list[Package]:
@@ -136,20 +144,18 @@ def find(dist: str) -> Package:
 
 
 def parse_tag(tag: str) -> tuple[Package, str]:
-    """Resolve a release tag to the package it releases and its version.
+    """Resolve a release tag to the base package and the version it names.
 
-    Raises ``ValueError`` on a tag that does not fit the scheme, and on the one
-    ambiguous form: ``tkinter-icons-v<version>``. That tag *looks* like a
-    correct base-package tag, but the base package's setuptools-scm config
-    matches only ``v[0-9]*``, so building from it would silently produce a
-    version derived from some older tag instead. Rejecting it loudly beats
-    publishing a mislabelled wheel.
+    Only ``v<version>`` is valid. A per-distribution tag is rejected with the
+    reason rather than a generic mismatch, because the shape is plausible enough
+    that someone will try it — it was the scheme here until the release was
+    reworked around a single tag.
     """
     match = TAG_RE.match(tag)
     if not match:
         raise ValueError(
-            f"tag {tag!r} does not fit the scheme: 'v<version>' for the base "
-            f"package, '<distribution>-v<version>' for everything else"
+            f"tag {tag!r} does not fit the scheme. One tag releases the "
+            f"repository, and it is the base package's version: 'v<version>'"
         )
 
     dist, version = match.group("dist"), match.group("version")
@@ -164,7 +170,19 @@ def parse_tag(tag: str) -> tuple[Package, str]:
             f"the bare 'v' form, so this tag would build the wrong version."
         )
 
-    return find(dist), version
+    known = {package.dist for package in load_all()}
+    if dist in known:
+        raise ValueError(
+            f"tag {tag!r} uses the retired per-distribution scheme. Packages are "
+            f"no longer tagged individually: one tag, 'v<version>', releases the "
+            f"repository, and {dist} is published from the version its "
+            f"pyproject.toml declares. Tag the base package's version instead."
+        )
+
+    raise ValueError(
+        f"tag {tag!r} names no distribution in this repository, and per-package "
+        f"tags are retired in any case. Use 'v<version>'."
+    )
 
 
 def main() -> None:

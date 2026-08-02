@@ -26,8 +26,8 @@ Usage::
     python verify_packages.py --imports          # also import each entry point
     python verify_packages.py tkinter-icons-fa   # one distribution
 
-    # what the release workflow runs, for one tag
-    python verify_packages.py --strict --imports --tag tkinter-icons-fa-v1.1.0
+    # what the release workflow runs: every distribution, against the tag
+    python verify_packages.py --strict --imports --tag v5.0.0
 """
 from __future__ import annotations
 
@@ -496,8 +496,8 @@ def main() -> int:
     parser.add_argument("--imports", action="store_true", help="also import every entry point")
     parser.add_argument(
         "--tag",
-        help="release tag; checks only the package it names, and that the version "
-             "it names agrees with that package's pyproject and changelog",
+        help="release tag, e.g. v5.0.0; checks every distribution, and that the "
+             "version the tag names agrees with the base package's changelog",
     )
     args = parser.parse_args()
 
@@ -507,21 +507,23 @@ def main() -> int:
     tagged_version = None
     if args.tag:
         if args.distributions:
-            # A tag names exactly one package. Silently ignoring the positional
-            # arguments would report a clean release for something nobody asked
-            # about.
+            # One tag releases the whole repository, so narrowing it to some
+            # named subset is a contradiction rather than a refinement.
             print(
-                f"--tag {args.tag} already selects a package; drop the "
+                f"--tag {args.tag} releases every distribution; drop the "
                 f"distribution argument(s): {', '.join(args.distributions)}",
                 file=sys.stderr,
             )
             return 2
         try:
-            tagged, tagged_version = parse_tag(args.tag)
+            _, tagged_version = parse_tag(args.tag)
         except (ValueError, KeyError) as exc:
             print(f"cannot release from tag {args.tag!r}: {exc}", file=sys.stderr)
             return 2
-        selected = [tagged]
+        # Every distribution, not the one the tag names. A release publishes
+        # whatever is not already on PyPI, so anything unchecked here is
+        # something that could still be uploaded.
+        selected = all_packages
     elif args.distributions:
         unknown = set(args.distributions) - set(by_dist)
         if unknown:
@@ -539,7 +541,11 @@ def main() -> int:
         check_metrics(package, report)
         check_tools_are_not_shipped(package, report)
         check_dependencies(package, by_dist, report)
-        if tagged_version is not None:
+        # The tag names the base package's version and nothing else. Comparing
+        # it against a pack would fail every release, since packs carry their
+        # own versions — their agreement with their own changelog is what
+        # `check_changelog` above is for.
+        if tagged_version is not None and package.is_base:
             check_release_tag(package, tagged_version, report)
         if package.is_base:
             check_extras_cover_every_pack(package, by_dist, report)
