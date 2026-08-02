@@ -704,4 +704,17 @@ def setup(app):
     app.add_directive("pack-cards", PackCardsDirective)
     app.add_directive("icon-hero", IconHeroDirective)
     app.connect("env-before-read-docs", check_showcase)
-    return {"version": "1.0", "parallel_read_safe": False, "parallel_write_safe": True}
+    # Parallel-read safe, and it has to say so. Read the Docs builds with
+    # `-j auto -W`, which turns "the pack_showcase extension is not safe for
+    # parallel reading" into a failed build — the docs themselves being clean
+    # is beside the point once a warning is an error.
+    #
+    # The claim holds because nothing here is shared across workers. The three
+    # tables are read-only constants. Every rendered file's name is derived from
+    # (extra, style, name, theme), and each is written by exactly one document:
+    # a pack's previews only by its own page, the thumbnails only by packs.rst,
+    # the hero band only by index.rst — so no two workers write the same path.
+    # `mkdir(parents=True, exist_ok=True)` tolerates the race on the shared
+    # directory itself, and the completeness check runs on `env-before-read-docs`,
+    # which fires once in the parent.
+    return {"version": "1.0", "parallel_read_safe": True, "parallel_write_safe": True}
