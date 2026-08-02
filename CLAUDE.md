@@ -176,10 +176,23 @@ Four things stand between here and 5.0.0, and only one of them is code.
    library links to from `Icon.__init__` — is only correct once it does. Delete
    `gh-pages` after the first successful deploy.
 
-3. **#89, the docs content pass.** Sixteen per-pack pages plus a re-read of the
-   prose. The generating machinery is already on `5.0`; `conf.py` does not yet
-   register `pack_showcase`. Not a release blocker, but it is the last thing that
-   would embarrass the release.
+3. **#89 and #87, the docs content and visuals.** Neither is a release blocker;
+   together they are the last thing that would embarrass the release.
+
+   #89 is sixteen per-pack pages plus a re-read of the prose — the pages were
+   written in one pass against a structure that changed twice underneath them, so
+   they repeat themselves in places and the Getting started / user guide boundary
+   is fuzzy. The generating machinery is already on `5.0`; `conf.py` does not yet
+   register `pack_showcase`.
+
+   #87 is the visuals, and it is larger than "retake the screenshots". **Twelve
+   of the fifteen pages carry no image at all**, which for a library about how
+   things look is the weakest part of the docs. It splits in two: the pages that
+   illustrate the *renderer* — sizing and render quality above all, where every
+   claim is currently unfalsifiable by the reader — should be **generated at
+   build time** by the library, the way the pack previews already are, so they
+   never need retaking; the pages that show real widgets need actual captures.
+   The five existing assets all predate 5.0 and show the old centering.
 
 4. **Then release.** The preflight already passes. Publish order is load-bearing
    — see Conventions.
