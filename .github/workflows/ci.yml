@@ -162,5 +162,12 @@ jobs:
       # resolves, and the failure only shows up as a red RTD build afterwards.
       # `-W` is what makes a pack that could not be read a failure rather than
       # a table of blanks; `-n` does the same for unresolved references.
+      #
+      # `-j auto` mirrors the command Read the Docs actually runs, and is the
+      # reason this job exists on Linux rather than only in a maintainer's
+      # local build. Sphinx's parallel mode needs `os.fork`, so on Windows it
+      # silently degrades to serial and an extension declaring itself unsafe
+      # for parallel reading never warns - which is exactly how a `-W` failure
+      # reached RTD while every local build and this job were green.
       - name: Build the docs
-        run: python -m sphinx docs docs/_build/html -b html -W --keep-going -n
+        run: python -m sphinx docs docs/_build/html -b html -W --keep-going -n -j auto
