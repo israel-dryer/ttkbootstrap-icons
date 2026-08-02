@@ -163,8 +163,22 @@ granted. **If he declines, `[meteocons]` cannot ship in 5.0.0 and #88 has to be
 reverted along with the pack's extra.**
 
 Release mechanics live in `RELEASE.md`, and are real now: tag-driven, Trusted
-Publishing, no token anywhere. The tag scheme is `v<version>` for the base
-package and `<distribution>-v<version>` for the other seventeen.
+Publishing, no token anywhere. **One tag, `v<version>`, releases the whole
+repository** — it builds all eighteen distributions, publishes the ones PyPI
+does not already have, and creates one GitHub Release.
+
+**Per-distribution tags were a mistake I introduced, not a decision the owner
+made.** #70 shipped `<distribution>-v<version>` for the other seventeen; the
+owner's position, stated 2026-08-02, is that a monorepo has one tag and the
+base package carries the change. It was retired before any such tag was ever
+pushed, so nothing is orphaned. `packages.py` rejects the old shape with an
+explanation rather than a parse error, because it is plausible enough that
+someone will try it.
+
+The publish order is no longer a human procedure. It is three ordered steps in
+the `publish` job — packs, base, shim — with `skip-existing` on the first and
+last. A base version already on PyPI fails the release, because the base is
+bumped every time and an existing one means the tag is wrong.
 
 ---
 
@@ -509,9 +523,12 @@ Each of these looks like a defect in isolation. They aren't.
   5.0.0 forever. Without it that build fails loudly instead, and
   `SETUPTOOLS_SCM_PRETEND_VERSION_FOR_TKINTER_ICONS` is the honest escape hatch.
   And `describe_command` matches only
-  `v[0-9]*`, because the default tag regex reads `tkinter-icons-fa-v1.1.0` as
-  version 1.1.0 — and pack tags are pushed *first* in a release, so without it
-  the base build takes a pack's number.
+  `v[0-9]*`. That guard was essential when packs were tagged individually — the
+  default regex reads `tkinter-icons-fa-v1.1.0` as version 1.1.0, and pack tags
+  were pushed *first*, so the base build would take a pack's number. With one
+  tag per release it is belt-and-braces rather than load-bearing. **Keep it
+  anyway**: it costs nothing, and it is the thing that would stop a stray
+  hand-pushed tag in the old shape from silently renumbering a base wheel.
 
 - **A pack's provider name is not guaranteed to be its entry-point key.**
   `registry.py` registers under `provider_instance.name`, and the entry point
