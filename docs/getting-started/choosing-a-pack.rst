@@ -7,7 +7,8 @@ You are not locked in either way. Every pack's icon class takes the same argumen
 
 .. code-block:: python
 
-   from tkinter_icons import LucideIcon as Icon   # was: MaterialIcon as Icon
+   # from tkinter_icons import MaterialIcon as Icon
+   from tkinter_icons import LucideIcon as Icon
 
 Start here
 ----------
@@ -38,7 +39,7 @@ What actually distinguishes them
 
 **Drawing weight.** Sets are not interchangeable visually. ``[lucide]`` is light and even; ``[material]`` is heavier; ``[bootstrap]`` sits between them. Mixing two general-purpose sets in one interface usually looks like a mistake — mixing a UI set with a logo set does not.
 
-**Styles.** Nine of the sixteen offer more than one style of the same icon, so you can use an outline normally and a fill for the selected state. The other seven do not, and take no ``style`` argument. :doc:`../user-guide/icons-and-names` covers how a style is chosen.
+**Styles.** Of the :packs-stat:`total`, :packs-stat:`styled` offer more than one style of the same icon, so you can use an outline normally and a fill for the selected state. The other :packs-stat:`unstyled` do not, and take no ``style`` argument. :doc:`../user-guide/icons-and-names` covers how a style is chosen.
 
 **Vocabulary.** Names are upstream's own. If you already think in Font Awesome names, using that pack will feel faster than a set with better coverage but unfamiliar names.
 

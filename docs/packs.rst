@@ -16,26 +16,22 @@ Each pack is its own PyPI distribution because each carries its own font file, b
 The sixteen sets
 ----------------
 
-**Install** is the extra to add to ``pip install "tkinter-icons[...]"``. **Import** is the class name, from ``tkinter_icons``. **Icons** counts distinct names across all of that pack's styles.
+Each card carries a sample of the set, the extra that installs it, and roughly how many icons it has. Open one for the same glyphs drawn in every style the pack offers, a runnable example, and the exact figures.
+
+.. pack-cards::
+
+Side by side
+------------
+
+**Install** is the extra to add to ``pip install "tkinter-icons[...]"``. **Icons** counts distinct names across all of that pack's styles.
 
 .. packs-table::
 
 .. note::
 
-   Counts and versions on this page are read from the installed packs when the documentation is built, not typed in — so they describe exactly the release you are reading about.
+   Counts, styles, and the previews above are read from the installed packs when the documentation is built, not typed in — so they describe exactly the release you are reading about.
 
-Choosing one
-------------
-
-The sets overlap far less than their sizes suggest. Four questions usually settle it.
-
-**Do you need a general-purpose UI set?** ``[material]`` is the largest by a wide margin and covers almost anything an application needs. ``[lucide]`` is smaller, lighter in weight, and consistent. ``[bootstrap]`` is a good middle ground with a fill/outline pair for most icons. ``[remix]``, ``[eva]``, ``[ionicons]``, and ``[typicons]`` are alternatives in the same space with their own drawing style.
-
-**Do you need Font Awesome specifically?** ``[fontawesome]`` is the one people usually mean by name, and it brings three styles — ``solid``, ``regular``, and ``brands`` — in one pack.
-
-**Do you need logos?** ``[simple]`` carries several thousand brand marks; ``[devicon]`` carries developer tooling and language logos. Neither is a UI set — they have no "save" or "settings" icon — so you will usually pair one with a general-purpose pack.
-
-**Do you need something specialised?** ``[weather]`` and ``[meteocons]`` draw forecast symbols; ``[rpg-awesome]`` draws swords, potions, and monsters; ``[google-material]`` is Google's own set in four styles, distinct from ``[material]`` (which is the community-extended Pictogrammers set).
+:doc:`getting-started/choosing-a-pack` is the shorter answer if you would rather be told than compare.
 
 Using two at once
 -----------------
@@ -52,6 +48,8 @@ Nothing stops you. Name both extras, import both classes, and they coexist — e
 
    save = LucideIcon("save", size=20)
    github = SimpleIcon("github", size=20)
+
+The usual reason is a UI set plus a logo set: no general-purpose pack has a GitHub mark, and no logo pack has a "save" icon.
 
 .. warning::
 
@@ -70,22 +68,41 @@ Some packs draw the same icon more than one way — outline and fill, solid and 
    BootstrapIcon("house", style="fill")
    BootstrapIcon("house-fill")            # same thing, style carried in the name
 
-Seven of the sixteen have no styles at all and take no ``style`` argument. The Styles column above lists what each pack accepts, and :doc:`user-guide/icons-and-names` covers how a name resolves against a style.
+Of the :packs-stat:`total`, :packs-stat:`unstyled` have no styles at all and take no ``style`` argument. The Styles column above lists what each pack accepts, each pack's own page marks its default, and :doc:`user-guide/icons-and-names` covers how a name resolves against a style.
 
 Upstream sources
 ----------------
 
-Every pack redistributes someone else's icon font under its own license, and ships that license inside the installed package. Drawing the glyphs in your application is what these licenses are for, but a few carry attribution terms — see `THIRD-PARTY-NOTICES.md <https://github.com/israel-dryer/tkinter-icons/blob/main/THIRD-PARTY-NOTICES.md>`__ for the details per pack.
-
-.. pack-links::
+Every pack redistributes someone else's icon font under its own license, and ships that license inside the installed package. Drawing the glyphs in your application is what these licenses are for, but a few carry attribution terms — see `THIRD-PARTY-NOTICES.md <https://github.com/israel-dryer/tkinter-icons/blob/main/THIRD-PARTY-NOTICES.md>`__ for the details per pack, or a pack's own page for its upstream project and license.
 
 Nothing installed yet?
 ----------------------
 
-If you got here from an error message, this is what it was telling you: the base package is a renderer, and it needs a pack before it can draw. Pick one from the table above and install it as an extra. Anything from the list works with the same code.
+If you got here from an error message, this is what it was telling you: the base package is a renderer, and it needs a pack before it can draw. Pick one from the grid above and install it as an extra. Anything from the list works with the same code.
 
 .. code-block:: bash
 
    pip install "tkinter-icons[bootstrap]"     # Bootstrap Icons
    pip install "tkinter-icons[fontawesome]"   # Font Awesome 6 Free
    pip install "tkinter-icons[material]"      # Material Design Icons
+
+.. toctree::
+   :hidden:
+   :maxdepth: 1
+
+   packs/bootstrap
+   packs/devicon
+   packs/eva
+   packs/fluent
+   packs/fluent-regular
+   packs/fontawesome
+   packs/google-material
+   packs/ionicons
+   packs/lucide
+   packs/material
+   packs/meteocons
+   packs/remix
+   packs/rpg-awesome
+   packs/simple
+   packs/typicons
+   packs/weather
