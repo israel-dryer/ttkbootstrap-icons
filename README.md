@@ -76,14 +76,14 @@ Each pack is its own distribution because each ships a font, but you install the
 
 | Extra | Icon set | | Extra | Icon set |
 |---|---|---|---|---|
-| `bootstrap` | Bootstrap Icons | | `material` | Material Design Icons |
-| `devicon` | Devicon | | `meteocons` | Meteocons |
-| `eva` | Eva Icons | | `remix` | Remix Icon |
-| `fluent` | Fluent System Icons | | `rpg-awesome` | RPG Awesome |
-| `fluent-regular` | Fluent System Icons (Regular) | | `simple` | Simple Icons |
-| `fontawesome` | Font Awesome 6 (Free) | | `typicons` | Typicons |
-| `google-material` | Google Material Icons | | `weather` | Weather Icons |
-| `ionicons` | Ion Icons | | `lucide` | Lucide Icons |
+| `bootstrap` | Bootstrap Icons | | `lucide` | Lucide Icons |
+| `devicon` | Devicon | | `material` | Material Design Icons |
+| `eva` | Eva Icons | | `meteocons` | Meteocons |
+| `fluent` | Fluent System Icons | | `remix` | Remix Icon |
+| `fluent-regular` | Fluent System Icons (Regular) | | `rpg-awesome` | RPG Awesome |
+| `fontawesome` | Font Awesome 6 (Free) | | `simple` | Simple Icons |
+| `google-material` | Google Material Icons | | `typicons` | Typicons |
+| `ionicons` | Ion Icons | | `weather` | Weather Icons |
 
 ## Upgrading from ttkbootstrap-icons
 

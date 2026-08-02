@@ -145,10 +145,20 @@ class TestEveryPackIsDocumented:
 
     @pytest.mark.parametrize("pack", KNOWN_PACKS, ids=lambda p: p.extra)
     def test_pack_page_is_in_the_toctree(self, pack):
+        """Matched as a whole entry, because one extra is a prefix of another.
+
+        A substring test passes for `fluent` on the strength of the
+        `packs/fluent-regular` line, so deleting the `fluent` entry would leave
+        an orphaned page that nothing here notices.
+        """
         index = self.DOCS / "packs.rst"
         if not index.exists():
             pytest.skip("docs not present in this checkout")
-        assert f"packs/{pack.extra}" in index.read_text(encoding="utf-8-sig")
+        entries = [
+            line.strip()
+            for line in index.read_text(encoding="utf-8-sig").splitlines()
+        ]
+        assert f"packs/{pack.extra}" in entries
 
     @pytest.mark.parametrize("pack", KNOWN_PACKS, ids=lambda p: p.extra)
     def test_pack_page_renders_its_facts_and_preview(self, pack):

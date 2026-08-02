@@ -151,8 +151,24 @@ BLURB: dict[str, str] = {
 
 
 def showcase_for(extra: str, style: str | None) -> list[str]:
-    """The glyphs to draw for one pack and style."""
-    return SHOWCASE_OVERRIDES.get(extra, {}).get(style) or SHOWCASE[extra]
+    """The glyphs to draw for one pack and style.
+
+    Raises with the fix rather than a bare `KeyError`. `check_showcase` warns
+    about a pack with no entry, but a warning is only a build failure under
+    `-W`; without this, the next thing a reader saw was a traceback from inside
+    a directive rather than the sentence telling them what to add.
+    """
+    override = SHOWCASE_OVERRIDES.get(extra, {}).get(style)
+    if override:
+        return override
+    try:
+        return SHOWCASE[extra]
+    except KeyError:
+        raise KeyError(
+            f"no SHOWCASE entry for pack {extra!r} - add one to "
+            f"docs/_ext/pack_showcase.py, listing {PREVIEW_COUNT} icon names "
+            f"that resolve in every one of that pack's styles"
+        ) from None
 
 
 def pack_by_extra(extra: str):
@@ -319,12 +335,17 @@ class IconHeroDirective(SphinxDirective):
         for offset in self.ROWS:
             for position, pack in enumerate(KNOWN_PACKS):
                 try:
-                    provider_for(pack)
+                    provider = provider_for(pack)
                 except PackNotInstalled:
                     if pack.extra not in missing:
                         missing.append(pack.extra)
                     continue
-                names = showcase_for(pack.extra, None)
+                # The style the cell is *drawn* in, not `None`. `render_grid`
+                # draws in `provider.default_style`, so picking names from the
+                # general list would break the moment a pack's default style
+                # gained an override — which is exactly the case an override
+                # exists for, a style the general list cannot resolve against.
+                names = showcase_for(pack.extra, provider.default_style)
                 cells.append((pack, names[(position + offset) % len(names)]))
 
         if missing:
@@ -602,6 +623,12 @@ class PackCardsDirective(SphinxDirective):
             # wrapping it onto a second line. The count is abbreviated because
             # a card is for comparing magnitudes — the exact figure is in the
             # table below and on the pack's own page.
+            if pack.extra not in BLURB:
+                raise KeyError(
+                    f"no BLURB entry for pack {pack.extra!r} - add a one-line "
+                    f"description to docs/_ext/pack_showcase.py, or the card "
+                    f"grid has nothing to say about it"
+                )
             lines += [
                 f"      {BLURB[pack.extra]}",
                 "",

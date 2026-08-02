@@ -14,9 +14,14 @@ name in the first column is the link to them.
 
 That means a docs build needs the packs installed. A pack that is missing is
 reported as a Sphinx warning and rendered with an em dash in the columns it
-cannot fill — so a local build without the packs still works and still reads
-correctly, while the docs workflow (which builds with `-W`) refuses to publish a
-table with holes in it.
+cannot fill, so a local build without them still completes and the gaps are
+visible as gaps. CI's `docs` job and Read the Docs both build with `-W`, which
+turns those warnings into a failure rather than publishing a table of blanks.
+
+The counted statistics degrade the same way and for the same reason: with
+nothing installed there is no honest total to state, so they render the em dash
+too. A headline reading "0,000+ icons" would be worse than one that visibly has
+no answer.
 """
 
 from __future__ import annotations
@@ -169,6 +174,15 @@ _STATS = {
     "icons": lambda rows: f"{sum(r['count'] for r in rows) // 1000:,},000+",
 }
 
+#: Statistics that have no meaning when the packs are not installed, and the
+#: test that says so. `total` is exempt: it counts the catalogue, which is a
+#: fact about `KNOWN_PACKS` rather than about the environment.
+_NEEDS_PACKS = {
+    "styled": lambda rows: any(r["styles"] != UNKNOWN for r in rows),
+    "unstyled": lambda rows: any(r["styles"] != UNKNOWN for r in rows),
+    "icons": lambda rows: any(r["count"] for r in rows),
+}
+
 
 def packs_stat_role(name, rawtext, text, lineno, inliner, options=None, content=None):
     """One counted fact about the catalogue, inline in a sentence.
@@ -188,7 +202,13 @@ def packs_stat_role(name, rawtext, text, lineno, inliner, options=None, content=
             line=lineno,
         )
         return [inliner.problematic(rawtext, rawtext, message)], [message]
-    return [nodes.Text(_STATS[text](_pack_rows()))], []
+
+    rows = _pack_rows()
+    # `packs-table` has already warned about the missing packs, so this stays
+    # silent rather than warning once more per statistic on the same page.
+    if text in _NEEDS_PACKS and not _NEEDS_PACKS[text](rows):
+        return [nodes.Text(UNKNOWN)], []
+    return [nodes.Text(_STATS[text](rows))], []
 
 
 def setup(app):
