@@ -83,6 +83,37 @@ jobs:
       - name: Verify every distribution
         run: python .github/scripts/verify_packages.py --imports
 
+      # `packs.py` sends anyone with no pack installed to `<docs>/packs.html` -
+      # from the ImportError raised by `Icon.__init__` and from the browser's
+      # welcome screen. Those are the two places a user who cannot yet draw an
+      # icon lands, so that page 404ing is the worst version of this link
+      # breaking. Renaming the page is allowed; renaming it without updating
+      # `PACKS_DOC_URL` is not, and this is what says so.
+      #
+      # This lived in the Pages workflow, which built the site itself and could
+      # check the built file. Read the Docs builds elsewhere, so the check is
+      # here instead and asserts against the source tree: the docname has to
+      # exist under docs/, which is what determines the published path.
+      - name: The page the library links to must exist
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from urllib.parse import urlparse
+
+          from tkinter_icons.packs import PACKS_DOC_URL
+
+          page = Path(urlparse(PACKS_DOC_URL).path).name
+          source = Path("docs") / f"{Path(page).stem}.rst"
+          if not source.is_file():
+              raise SystemExit(
+                  f"PACKS_DOC_URL points at {page!r}, which no document under docs/ produces.\n"
+                  f"Expected {source}. Either restore that page or update PACKS_DOC_URL in "
+                  f"packs.py - it is the only pointer to the catalogue that a user with no "
+                  f"pack installed is given."
+              )
+          print(f"ok: {PACKS_DOC_URL} <- {source}")
+          PY
+
       - name: Build all eighteen distributions
         run: |
           for package in packages/*/; do

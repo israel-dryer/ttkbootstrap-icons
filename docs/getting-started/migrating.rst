@@ -47,7 +47,7 @@ Also worth knowing
 
 **The asset-building commands are gone.** ``tkicons-build-all``, ``tkicons-metrics``, and the per-pack ``tkicons-<pack>-build`` commands regenerate assets into a source tree, so they did nothing from an installed wheel. ``tkinter-icons`` — the browser — is the only command now. Maintainers run the rest with ``python -m``; see :doc:`../about/contributing`.
 
-**The old documentation URL is dead.** GitHub redirects repository URLs but not project Pages, so ``israel-dryer.github.io/ttkbootstrap-icons/`` does not forward here. Update any bookmarks to `israel-dryer.github.io/tkinter-icons <https://israel-dryer.github.io/tkinter-icons/>`_.
+**The documentation moved.** The docs now live on Read the Docs at `tkinter-icons.readthedocs.io <https://tkinter-icons.readthedocs.io/en/latest/>`_. The old GitHub Pages sites do not forward — GitHub redirects repository URLs but not project Pages — so both ``israel-dryer.github.io/ttkbootstrap-icons/`` and ``israel-dryer.github.io/tkinter-icons/`` are dead. Update any bookmarks.
 
 When to drop the shim
 ---------------------
