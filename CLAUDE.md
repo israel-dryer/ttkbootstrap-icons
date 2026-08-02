@@ -87,24 +87,29 @@ Also merged: #77, fixing three cloud-review findings plus a pre-existing
 pack-asset-runner bug. Merged since: #82 (metrics for fourteen packs) and #83
 (upstream license files).
 
-**Four PRs are open as one stack**, each based on the one above it. Rebased onto
-current `5.0` on 2026-08-01, so all four are `MERGEABLE`:
+**All four merged into `5.0` on 2026-08-02**, in order, each as a merge commit:
 
-| PR | Branch | Base | What |
-|---|---|---|---|
-| #84 | `fix/pyinstaller-hook-discovery` | `5.0` | registers the `pyinstaller40` entry point; adds hooks for `bs` and `fluent-reg` |
-| #85 | `feat/docs-sphinx` | #84 | `Closes #71` — the Sphinx site |
-| #86 | `feat/pack-icon-completeness` | #85 | `options=` and a working `render_pil` on all sixteen pack classes |
-| #88 | `fix/meteocons-naming-and-attribution` | #86 | semantic glyph names and correct attribution for Meteocons |
+| PR | What |
+|---|---|
+| #84 | registers the `pyinstaller40` entry point; adds the missing hooks for `bs` and `fluent-reg` |
+| #85 | `Closes #71` — the Sphinx site replacing 42 MkDocs pages |
+| #86 | `options=` and a working `render_pil` on all sixteen pack classes |
+| #88 | semantic glyph names and correct attribution for Meteocons |
 
-Merge in that order, or retarget as each lands — GitHub retargets automatically.
+Every branch is deleted; `origin` holds `main`, `5.0`, and `gh-pages` only.
 
-**#84 carries four deletions that belong to #85** — `mkdocs.yml`,
-`deploy-docs.ps1`, `deploy-docs.sh`, `scripts/gen_providers_docs.py`. They
-leaked from a staged `git rm` that was still in the index when the branch was
-cut. Merged in order the end state is right, but #84 alone removes the docs
-toolchain with no replacement. Left as-is pending a decision; fixing it means
-amending #84 and rebasing the three above it.
+**`gh-pages` is kept on purpose.** It is the old `mkdocs gh-deploy` output and is
+what currently serves the live site. Deleting it before the repository's Pages
+source is switched to **GitHub Actions** would take the documentation offline —
+the new `docs.yml` workflow cannot publish until that setting changes, and it has
+never run. Switch the setting, let one deploy succeed, *then* delete the branch.
+
+**A `--delete-branch` merge closes any PR that targets the deleted branch.**
+Merging #84 that way closed #85 outright, and a closed PR cannot be reopened
+while its base is gone or retargeted while closed — recovering it meant pushing
+the base branch back at its old SHA, reopening, then retargeting. When merging a
+stack, retarget the child to `5.0` *first*, merge the parent without
+`--delete-branch`, and delete branches at the end.
 
 Open follow-ups that are **not** release blockers: #87 (screenshots and the
 browser's app icon are pre-5.0) and #89 (per-pack docs pages, plus a prose pass).
@@ -152,26 +157,38 @@ package and `<distribution>-v<version>` for the other seventeen.
 
 ## Next session — start here
 
-The code is done and the preflight is clean. What is left is review, one answer
-from outside the project, and content.
+`5.0` now carries everything for the release. Verified on the merged branch,
+2026-08-02: `pytest` 311 passed / 1 skipped; `verify_packages.py --strict` **all
+clear**; `generate_metrics --all --check` clean; `sphinx-build -W -n` clean with
+`packs.html` present.
 
-1. **Review and merge the four-PR stack** — #84 → #85 → #86 → #88, in that
-   order. Nothing else can proceed while they sit. Decide the #84 scope leak
-   first, since fixing it rewrites all four.
+Four things stand between here and 5.0.0, and only one of them is code.
 
-2. **Wait on the Meteocons answer.** See "Current state". Everything is written
-   assuming permission.
+1. **The Meteocons permission answer.** The owner is asking Alessio Atzeni. See
+   "Current state" — everything is written assuming yes. If the answer is no,
+   revert #88, drop the `meteocons` extra from the base package, and remove the
+   pack from the catalogue, the notices, and the docs.
 
-3. **#89 — per-pack docs pages and a prose pass.** The generating machinery is
-   already merged with the stack (`docs/_ext/pack_showcase.py`); what is missing
-   is the sixteen pages and the `conf.py` registration. Not a release blocker.
+2. **Switch GitHub Pages to the Actions source, and let `docs.yml` deploy.** The
+   workflow exists and has never run; the site is still whatever `mkdocs
+   gh-deploy` last pushed to `gh-pages`. Nothing verifies the published site
+   matches the repository until this happens, and `packs.html` — which the
+   library links to from `Icon.__init__` — is only correct once it does. Delete
+   `gh-pages` after the first successful deploy.
 
-4. **Then release.** `verify_packages.py --strict` already passes. Publish order
-   is load-bearing — see Conventions.
+3. **#89, the docs content pass.** Sixteen per-pack pages plus a re-read of the
+   prose. The generating machinery is already on `5.0`; `conf.py` does not yet
+   register `pack_showcase`. Not a release blocker, but it is the last thing that
+   would embarrass the release.
 
-Verified with the stack applied, 2026-08-01: `pytest` 311 passed / 1 skipped;
-`verify_packages.py --strict` all clear; `generate_metrics --all --check` clean;
-`sphinx-build -W -n` clean, `packs.html` present.
+4. **Then release.** The preflight already passes. Publish order is load-bearing
+   — see Conventions.
+
+**The milestone issues stay open until `5.0` reaches `main`.** #67, #68, #69,
+#71, and #79 are all shipped, and closing them by hand loses the link to the
+merge that shipped them — which already happened to #70 and #75 and cannot be
+undone. They close together when the single `5.0` → `main` PR lands. #87 and #89
+are genuine follow-ups and outlive the milestone.
 
 **Two rules the owner stated this session, which outlive it.** Prose is written
 **unwrapped** — one long line per paragraph in markdown, PR bodies, and commit
