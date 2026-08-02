@@ -148,19 +148,13 @@ The release workflow additionally re-measures the released pack's glyph metrics
 and compares them against what is committed, so committed metrics cannot drift
 from the font that produced them.
 
-### Two known blockers
+### Both former blockers are closed
 
-Both are warnings today, and both will stop a `--strict` release:
+Two warnings used to stand between this preflight and a `--strict` release. Neither does now: #82 generated metrics for the fourteen packs that lacked them, and #83 vendored upstream license files for `bs`, `meteocons` and `typicons`. All sixteen packs carry both today, and `verify_packages.py --strict --imports --tag v5.0.0` reports all clear across all eighteen distributions.
 
-- **Fourteen packs have no generated metrics.** Only `bs` and `fa` do. Fixing it
-  is one `python -m tkinter_icons.tools.generate_metrics --all` in an
-  environment with every pack installed, then a commit.
-- **Three packs ship no upstream license file** — `bs`, `meteocons`, and
-  `typicons`, while the other thirteen do. `bs` redistributes Bootstrap Icons.
-  This needs the actual upstream license text and copyright line, which is a
-  decision rather than something to generate. They are listed in
-  `KNOWN_LICENSE_GAPS` in `verify_packages.py`; delete each from that set as it
-  is resolved.
+**`KNOWN_LICENSE_GAPS` is now an empty set, and keeping it empty is load-bearing.** A *listed* pack downgrades the missing-license finding from an error to a warning, so with nothing listed, a seventeenth pack added without its upstream license fails the preflight outright instead of passing as a known exception. Do not add a name there to get a build through.
+
+What remains is not a preflight failure and does not block a release: the check asks whether a license file exists, not whether it is the right text. Eight packs ship a summary or the wrong copyright line — `gmi`, `mat` and `remix` (Apache 2.0), `simple` (CC0) and `lucide` (ISC) link to the canonical text rather than reproducing it, and `devicon`, `eva` and `rpga` carry the MIT body under a generic copyright line rather than upstream's own. Apache 2.0 in particular requires giving recipients a copy, which a link does not satisfy. `THIRD-PARTY-NOTICES.md` records it under "Known gap"; that is the place to update when it is fixed.
 
 ## Version numbering
 
