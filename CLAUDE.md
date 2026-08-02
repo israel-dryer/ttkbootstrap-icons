@@ -137,8 +137,7 @@ Open follow-ups, none of them release blockers: **#87** — the screenshots and
 the browser's app icon are done, the *generated* renderer figures are not;
 **#90** — sixteen pack READMEs still teach the pre-#69 install idiom on PyPI;
 **#91** — reaching the pure-Pillow renderer should not require `tkinter`
-installed. #89 is closed by #92 apart from its prose pass, which is folded
-into the list under "Next session".
+installed. #92 did the substance of #89 apart from its prose pass, which is folded into the list under "Next session" — but #89 is still open on GitHub and will not close itself; see the step-3 note there.
 
 **#79 shipped as #81, not #80.** #80 was merged into `5.0` prematurely — without
 permission and before review — and `5.0` was reset to drop it. The rollback was
@@ -155,10 +154,7 @@ merged into `5.0` does not close the issue it names, because GitHub only honours
 when the single `5.0` → `main` PR lands, so an issue closed early loses its link
 to the merge that actually shipped it.
 
-**#70 and #75 are nonetheless already CLOSED** (checked 2026-07-31); #67, #68,
-#69, #71, #79 are open. Whatever closed those two, the link is already lost and
-reopening them would not restore it — so leave them and do not close any more by
-hand.
+**Four of them are nonetheless already CLOSED — #67, #68, #70 and #75** (#70 and #75 checked 2026-07-31, #67 and #68 by 2026-08-02); #69, #71 and #79 are the ones still open. Nothing went wrong: this is the same drift the paragraph above describes, not a repeat of the #80 incident. Whatever closed them, the link to the merge that shipped them is already lost and reopening would not restore it — so leave them, and do not close any more by hand.
 
 **`verify_packages.py --strict` reports "all clear"** across all eighteen
 distributions, as of 2026-08-01 with the stack applied. Both former blockers are
@@ -214,13 +210,17 @@ bumped every time and an existing one means the tag is wrong.
 
 1. **Merge #95.** Notes only, and it describes the release process the rest of this list assumes.
 
-2. **Dry-run the release workflow.** Actions → Release → *Run workflow*, naming `v5.0.0` and the `5.0` branch. `release.yml` was rewritten wholesale by #97 and **has never executed in any form**. The dry run builds and verifies all eighteen and publishes nothing — the `publish` and `release` jobs are gated on a tag push. Do not skip this. The alternative to finding a problem here is finding it during an irreversible upload.
+2. **Publish the sixteen legacy packs, before the tag.** `release/ttkbootstrap-icons-packs-final`, built and verified but not uploaded. `RELEASE.md` has the procedure and the reasoning; the short version is that their `<5` caps have to land before the shim exists, and the automated run publishes the shim, so there is no longer a gap to slot them into. Manual `twine` upload with a token — that branch is cut from `v4.0.0` and has no `.github` at all.
 
-3. **Publish the sixteen legacy packs, before the tag.** `release/ttkbootstrap-icons-packs-final`, built and verified but not uploaded. `RELEASE.md` has the procedure and the reasoning; the short version is that their `<5` caps have to land before the shim exists, and the automated run publishes the shim, so there is no longer a gap to slot them into. Manual `twine` upload with a token — that branch is cut from `v4.0.0` and has no `.github` at all.
+3. **Merge `5.0` → `main` as one PR.** What it closes, and what it does not, is below — the PR body has to carry `Closes #89` itself. This step also has to come before the dry run, which is not an ordering preference: `workflow_dispatch` offers a *Run workflow* button only for workflows present on the **default branch**, and `main` has no `.github/` directory at all today. `gh workflow list --all` confirms it — `CI` and `pages-build-deployment`, no `Release`. There is nothing to dispatch until this merge lands.
 
-4. **Merge `5.0` → `main` as one PR, then tag `v5.0.0`.** That merge is what closes #67, #68, #69, #71, #79 and #89 — see below. Then one tag releases everything.
+4. **Dry-run the release workflow, still before the tag.** Actions → Release → *Run workflow*, naming `v5.0.0` and now `main`. `release.yml` was rewritten wholesale by #97 and **has never executed in any form**. The dry run builds and verifies all eighteen and publishes nothing — the `publish` and `release` jobs are gated on `github.event_name == 'push'`. Do not skip this. The alternative to finding a problem here is finding it during an irreversible upload.
 
-5. **Afterwards:** point RTD's Default branch back at `main`, delete `gh-pages`, and delete the merged remote branches. Leave `release/ttkbootstrap-icons-packs-final` alone.
+5. **Tag `v5.0.0`.** One tag releases everything.
+
+6. **Afterwards:** point RTD's Default branch back at `main`, delete `gh-pages`, and delete the merged remote branches. Leave `release/ttkbootstrap-icons-packs-final` alone.
+
+**What step 3 actually closes — checked 2026-08-02.** #67, #68, #70 and #75 are already closed. Of the rest, the commit bodies on `5.0` carry `Closes #69`, `Closes #71` and `Closes #79`, and those three close on the push to `main`. **#89 does not close, and expecting it to is the trap**: no commit body mentions it, its `Closes #89` lives only in PR #92's body, and a PR merged to a non-default base does not close its linked issues — nor does GitHub re-evaluate the link when that branch later reaches `main`. So put `Closes #89` in the `5.0` → `main` PR body, along with #69, #71 and #79 for belt and braces. #67's only reference anywhere is `Refs #67`, which is not a closing keyword; it is already closed, so nothing needs doing, but do not read its presence in a commit as a link that will fire.
 
 ### Not blocking, and worth doing next
 
@@ -229,11 +229,7 @@ bumped every time and an existing one means the tag is wrong.
 - **#90.** Sixteen pack READMEs still teach `pip install tkinter-icons-weather` and `from tkinter_icons_weather import WeatherIcon` on their PyPI pages. The chosen approach is recorded on the issue: screenshot the rendered docs pack page in light mode, generate the factual blocks, keep a hand-written intro.
 - **#91.** `import tkinter_icons` requires `tkinter` even for `render_pil`, which the headless guide had to be softened to admit. Making the Tk imports lazy is a small, contained change and restores the stronger claim.
 
-**The milestone issues stay open until `5.0` reaches `main`.** #67, #68, #69,
-#71, and #79 are all shipped, and closing them by hand loses the link to the
-merge that shipped them — which already happened to #70 and #75 and cannot be
-undone. They close together when the single `5.0` → `main` PR lands. #87 and #89
-are genuine follow-ups and outlive the milestone.
+**The milestone issues stay open until `5.0` reaches `main`.** #69, #71 and #79 are shipped and still open, and closing them by hand loses the link to the merge that shipped them — which already happened to #67, #68, #70 and #75 and cannot be undone. They close on the merge, via the `Closes #n` keywords already in the commit bodies. #87 and #89 are genuine follow-ups and outlive the milestone; #89 in particular will *not* close on its own, which is why the step-3 note above says to name it in the merge PR body.
 
 **Two rules the owner stated this session, which outlive it.** Prose is written
 **unwrapped** — one long line per paragraph in markdown, PR bodies, and commit
