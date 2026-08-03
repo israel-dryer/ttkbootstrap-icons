@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
-from ttkbootstrap_icons_weather import WeatherIcon
+from tkinter_icons_weather import WeatherIcon
 
 
 def main():

@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
-from ttkbootstrap_icons_rpga import RPGAIcon
+from tkinter_icons_rpga import RPGAIcon
 
 
 def main():

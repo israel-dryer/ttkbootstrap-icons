@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
-from ttkbootstrap_icons_devicon import DevIcon
+from tkinter_icons_devicon import DevIcon
 
 
 def main():

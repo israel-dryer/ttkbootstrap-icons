@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
-from ttkbootstrap_icons_fa import FAIcon
+from tkinter_icons_fa import FAIcon
 
 
 def main():

@@ -1,0 +1,173 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "5.0"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test ${{ matrix.os }} / py${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        include:
+          - os: windows-latest
+            python-version: "3.13"
+          - os: macos-latest
+            python-version: "3.13"
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # setuptools-scm reads the tag history to version the base package.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # Most of the suite renders through `Icon.render_pil`, which is pure PIL
+      # and needs no display. The handful of Tk-level tests are marked `gui` and
+      # skip themselves where there is no display — so this is what makes them
+      # actually run on Linux rather than silently skip.
+      - name: Install Tk and a virtual display
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y python3-tk xvfb
+
+      - name: Install the base package and every pack
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e packages/tkinter-icons
+          python -m pip install --no-deps $(printf -- '-e %s ' packages/tkinter-icons-*/)
+          python -m pip install --no-deps -e packages/ttkbootstrap-icons-shim
+          # tomli is tomllib's backport; the pack tests read pyproject.toml and
+          # 3.10 has no tomllib in the stdlib.
+          python -m pip install pytest 'tomli; python_version < "3.11"'
+        shell: bash
+
+      - name: Run tests
+        run: ${{ runner.os == 'Linux' && 'xvfb-run -a' || '' }} python -m pytest -q
+        shell: bash
+
+  packaging:
+    name: Packaging preflight
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install the base package and every pack
+        run: |
+          python -m pip install --upgrade pip build twine
+          python -m pip install -e packages/tkinter-icons
+          python -m pip install --no-deps $(printf -- '-e %s ' packages/tkinter-icons-*/)
+          python -m pip install --no-deps -e packages/ttkbootstrap-icons-shim
+
+      # Not --strict here. The known warnings (packs without generated metrics,
+      # three packs missing an upstream license file) are release blockers, not
+      # reasons to fail every pull request. The release workflow runs --strict.
+      - name: Verify every distribution
+        run: python .github/scripts/verify_packages.py --imports
+
+      # `packs.py` sends anyone with no pack installed to `<docs>/packs.html` -
+      # from the ImportError raised by `Icon.__init__` and from the browser's
+      # welcome screen. Those are the two places a user who cannot yet draw an
+      # icon lands, so that page 404ing is the worst version of this link
+      # breaking. Renaming the page is allowed; renaming it without updating
+      # `PACKS_DOC_URL` is not, and this is what says so.
+      #
+      # This lived in the Pages workflow, which built the site itself and could
+      # check the built file. Read the Docs builds elsewhere, so the check is
+      # here instead and asserts against the source tree: the docname has to
+      # exist under docs/, which is what determines the published path.
+      - name: The page the library links to must exist
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from urllib.parse import urlparse
+
+          from tkinter_icons.packs import PACKS_DOC_URL
+
+          page = Path(urlparse(PACKS_DOC_URL).path).name
+          source = Path("docs") / f"{Path(page).stem}.rst"
+          if not source.is_file():
+              raise SystemExit(
+                  f"PACKS_DOC_URL points at {page!r}, which no document under docs/ produces.\n"
+                  f"Expected {source}. Either restore that page or update PACKS_DOC_URL in "
+                  f"packs.py - it is the only pointer to the catalogue that a user with no "
+                  f"pack installed is given."
+              )
+          print(f"ok: {PACKS_DOC_URL} <- {source}")
+          PY
+
+      - name: Build all eighteen distributions
+        run: |
+          for package in packages/*/; do
+            python -m build --outdir dist "$package"
+          done
+
+      - name: Check the built metadata
+        run: python -m twine check dist/*
+
+  docs:
+    name: Docs build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # setuptools-scm reads the tag history to version the base package,
+          # and conf.py reads that version back out of the installed metadata.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      # `icon.py` imports tkinter at module scope, so importing the package at
+      # all needs it - see #91. Nothing here needs a display.
+      - name: Install Tk
+        run: sudo apt-get update && sudo apt-get install -y python3-tk
+
+      # Every pack, not just a couple. `packs-table` and `pack_showcase` read
+      # each set's styles, upstream version, and glyph count from the installed
+      # provider and render its previews with the real font, so a partial
+      # install builds a table with holes and pages with missing strips.
+      # `--no-deps` because each pack floors on `tkinter-icons>=5.0.0` and the
+      # source checkout reports a dev version below that until the tag exists.
+      - name: Install the base package and every pack
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e packages/tkinter-icons
+          python -m pip install --no-deps $(printf -- '-e %s ' packages/tkinter-icons-*/)
+          python -m pip install -r docs/requirements.txt
+
+      # Read the Docs builds the published site, but an RTD build is not a
+      # GitHub status check - so without this job a pull request can go green
+      # with a broken cross-reference or a SHOWCASE name that no longer
+      # resolves, and the failure only shows up as a red RTD build afterwards.
+      # `-W` is what makes a pack that could not be read a failure rather than
+      # a table of blanks; `-n` does the same for unresolved references.
+      #
+      # `-j auto` mirrors the command Read the Docs actually runs, and is the
+      # reason this job exists on Linux rather than only in a maintainer's
+      # local build. Sphinx's parallel mode needs `os.fork`, so on Windows it
+      # silently degrades to serial and an extension declaring itself unsafe
+      # for parallel reading never warns - which is exactly how a `-W` failure
+      # reached RTD while every local build and this job were green.
+      - name: Build the docs
+        run: python -m sphinx docs docs/_build/html -b html -W --keep-going -n -j auto

@@ -1,0 +1,184 @@
+/* Brand palette, from assets/README.md — teal on a Tailwind neutral ramp, and
+   deliberately not bootstack's Bootstrap blue: the two projects share tooling
+   and conventions, not an identity.
+
+   These are the link/primary values, NOT the mark's `#0F9488`. That colour is
+   3.74:1 on white and 4.12:1 on the dark background — under WCAG AA in both
+   modes, which is fine for a logotype (exempt under 1.4.3) and wrong for a
+   link. The two below are the same hue one step out in each direction, at
+   5.47:1 and 8.29:1. */
+:root {
+    --pst-color-primary: #0F766E;
+    --pst-color-link: #0F766E;
+    --pst-color-link-hover: #0F9488;
+}
+
+html[data-theme="dark"] {
+    --pst-color-primary: #2DD4BF;
+    --pst-color-link: #2DD4BF;
+    --pst-color-link-hover: #5EEAD4;
+}
+
+/* Navbar wordmark: cap the logo height so it sits comfortably in the header.
+   Same 48px as ttkbootstrap and bootstack, so the three sites' headers line up. */
+.navbar-brand.logo {
+    max-height: 48px !important;
+}
+
+/* Landing-page hero band: thirty-two glyphs sampled across all sixteen packs,
+   drawn at build time by the library itself. Full width and slightly muted, so
+   it reads as a texture behind the opening claim rather than competing with
+   the wordmark above it. */
+.icon-hero {
+    width: 100%;
+    height: auto;
+    margin: 1.75rem 0 2rem;
+    opacity: 0.85;
+}
+
+/* Landing-page call-to-action row. */
+.hero-ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin: 1.5rem 0 1rem;
+}
+
+/* The credibility line under the buttons: licence, Python floor, dependency
+   count. Deliberately text rather than shields.io badges — a badge strip is a
+   third-party request per page load, styles like GitHub rather than like this
+   theme, and a PyPI version badge would contradict the docs it sits on for the
+   whole window between tagging and publishing. */
+.hero-meta {
+    font-size: 0.85rem;
+    color: var(--pst-color-text-muted);
+    margin: 0 0 2.25rem;
+}
+
+/* The pack comparison table is six columns of short values; let it breathe
+   rather than wrapping every cell, and scroll on a narrow screen instead of
+   forcing the whole page to. */
+.packs-table {
+    font-size: 0.9rem;
+}
+
+.packs-table td,
+.packs-table th {
+    vertical-align: top;
+}
+
+.packs-table code {
+    white-space: nowrap;
+}
+
+/* Scoped to article content: an unscoped `img` rule also catches the navbar
+   logo and icon links, which the theme sizes itself. */
+.bd-article img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* ---------------------------------------------------------------------------
+   Pack previews and cards
+
+   Every preview is written twice by docs/_ext/pack_showcase.py — once in dark
+   ink for a light page, once in light ink for a dark one. The swap itself is
+   the theme's: pydata already ships `.only-light` / `.only-dark` for exactly
+   this, and using them rather than a pair of rules here also opts the strips
+   out of the theme's dark-mode image treatment, which puts a white plate and a
+   brightness filter behind any image it does not recognise — visible as a pale
+   card behind every glyph strip.
+   --------------------------------------------------------------------------- */
+
+/* One row of glyphs, each labelled with the name that draws it. Six cells at
+   the widths below fit the theme's content column, which is why the showcase
+   lists are six long. Still a wrapping flex row rather than a fixed grid, so a
+   narrow window degrades to two rows instead of overflowing. */
+.pack-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem 0.5rem;
+    margin: 0.5rem 0 1.75rem;
+}
+
+.pack-glyph {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    /* Equal cells so the labels line up even where the glyphs differ in
+       width; `flex: 1` lets them share whatever the column actually is. */
+    flex: 1 1 4rem;
+    min-width: 4rem;
+    max-width: 8rem;
+}
+
+/* Rendered at twice display size so the glyph stays sharp on a 2x screen. */
+.pack-glyph-img {
+    height: 2.5rem;
+    width: auto;
+}
+
+.pack-glyph code {
+    font-size: 0.75rem;
+    text-align: center;
+    /* A long name breaks rather than widening its cell and pushing the row
+       out of alignment. */
+    overflow-wrap: anywhere;
+}
+
+/* The style the row is drawn in, written as the argument you would pass. */
+.pack-style {
+    margin: 1.5rem 0 0;
+    font-size: 0.9rem;
+    color: var(--pst-color-text-muted);
+}
+
+.pack-thumb {
+    height: 1.75rem;
+    width: auto;
+    max-width: 100%;
+    margin-bottom: 0.75rem;
+}
+
+/* Two columns of short values, the left one a label. Same treatment as the
+   comparison table so the two read as one family. */
+.pack-facts {
+    font-size: 0.9rem;
+}
+
+.pack-facts td {
+    vertical-align: top;
+}
+
+.pack-facts code {
+    white-space: nowrap;
+}
+
+/* The card grid on the packs page. `sd-card-title` is sphinx-design's; the
+   default size competes with the page's own headings at sixteen cards. */
+.pack-cards .sd-card-title {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.pack-cards .sd-card-body {
+    font-size: 0.9rem;
+}
+
+/* Extra hard left, count hard right. They are two paragraphs so that a long
+   extra such as `[fluent-regular]` pushes the count away from it rather than
+   wrapping it onto a line of its own. */
+.pack-cards .sd-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.75rem;
+    font-size: 0.8rem;
+    opacity: 0.85;
+}
+
+.pack-cards .sd-card-footer p {
+    margin: 0;
+}

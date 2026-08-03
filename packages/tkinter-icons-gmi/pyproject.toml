@@ -1,0 +1,48 @@
+[project]
+name = "tkinter-icons-gmi"
+version = "1.1.0"
+description = "Google Material Icons (baseline/outlined/round/sharp/twotone) provider for tkinter-icons"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Israel Dryer" }]
+dependencies = ["Pillow>=9.1", "tkinter-icons>=5.0.0"]
+
+license = "MIT"
+license-files = ["LICENSE"]
+
+[project.urls]
+Homepage = "https://github.com/israel-dryer/tkinter-icons"
+
+# Auto-discovery hook for the base registry
+[project.entry-points."tkinter_icons.providers"]
+gmi = "tkinter_icons_gmi.provider:GoogleMaterialIconFontProvider"
+
+[tool.setuptools.package-data]
+"tkinter_icons_gmi" = ["fonts/*.*", "glyphmap*.json", "metrics*.json", "LICENSES/*"]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+# `tools` regenerates this pack's assets from upstream sources and is useless
+# from an installed wheel. Excluding it keeps `tkinter_icons_*.tools` from
+# becoming a public import path we would owe compatibility on after 5.0.0.
+# The maintainer workflow runs against an editable checkout, where it is on disk.
+exclude = ["*.tools", "*.tools.*"]
+
+# Excluding `tools` from `packages.find` is not enough on its own. With
+# `include-package-data`, setuptools reads an existing `.egg-info/SOURCES.txt`
+# and pulls what it lists in as package data - and the release workflow
+# editable-installs every pack before building, so that file is present and
+# lists these very files. This is what actually keeps them out of the wheel.
+[tool.setuptools.exclude-package-data]
+"tkinter_icons_gmi" = ["tools/*"]
+
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+
+

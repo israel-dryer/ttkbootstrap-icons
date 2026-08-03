@@ -1,0 +1,153 @@
+[build-system]
+requires = ["setuptools>=77", "setuptools-scm>=10"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tkinter-icons"
+dynamic = ["version"]
+description = "Base package for font-based icons in Tkinter/ttkbootstrap with installable icon providers: Bootstrap, Font Awesome, Material, Ionicons, Remix, Fluent, Simple, Weather, Lucide, Eva & more."
+readme = { file = "README.md", content-type = "text/markdown" }
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Israel Dryer", email = "israel.dryer@gmail.com" }
+]
+keywords = ["tkinter", "ttk", "bootstrap", "gui", "desktop", "python3",
+    "ui", "widgets", "theming", "cross-platform", "modern",
+    "responsive", "python-gui", "icon"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Win32 (MS Windows)",
+    "Environment :: X11 Applications :: GTK",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: User Interfaces",
+    "Operating System :: OS Independent"
+]
+dependencies = [
+    "pillow>=9.1.0",
+    "typing-extensions>=4.7.1"
+]
+
+# Icon packs are separate distributions because each ships its own fonts, but
+# they are presented as extras so users install one library:
+#     pip install tkinter-icons[material]
+# There is deliberately no `all` extra. The sixteen sets serve disjoint purposes
+# - brand marks, developer logos, fantasy glyphs, weather symbols - so no
+# application draws from all of them, and installing every one costs ~17 MB of
+# fonts and JSON to get fifteen icon sets nobody opens. That is the bundling
+# extras exist to avoid. Users who need two name two: tkinter-icons[a,b].
+# Publish the pack releases BEFORE the base release that references them,
+# otherwise these floors point at versions PyPI does not have yet.
+[project.optional-dependencies]
+bootstrap = ["tkinter-icons-bs>=1.1.0"]
+devicon = ["tkinter-icons-devicon>=1.1.0"]
+eva = ["tkinter-icons-eva>=1.1.0"]
+fluent = ["tkinter-icons-fluent>=1.1.0"]
+fluent-regular = ["tkinter-icons-fluent-reg>=1.1.0"]
+fontawesome = ["tkinter-icons-fa>=1.1.0"]
+google-material = ["tkinter-icons-gmi>=1.1.0"]
+ionicons = ["tkinter-icons-ion>=1.1.0"]
+lucide = ["tkinter-icons-lucide>=1.1.0"]
+material = ["tkinter-icons-mat>=1.1.0"]
+meteocons = ["tkinter-icons-meteocons>=1.1.0"]
+remix = ["tkinter-icons-remix>=1.1.0"]
+rpg-awesome = ["tkinter-icons-rpga>=1.1.0"]
+simple = ["tkinter-icons-simple>=1.1.0"]
+typicons = ["tkinter-icons-typicons>=1.1.0"]
+weather = ["tkinter-icons-weather>=1.1.0"]
+
+# Only the browser is published. `tkinter_icons.tools` holds maintainer tools -
+# they regenerate assets and metrics into a source tree, so they are meaningless
+# from an installed wheel, and `generate_metrics` would write into site-packages.
+# Maintainers run them with `python -m tkinter_icons.tools.<name>`.
+[project.scripts]
+tkinter-icons = "tkinter_icons.browser:main"
+
+# How PyInstaller finds the hooks this package ships. Without it the hooks are
+# inert: they sit in `_pyinstaller/`, PyInstaller never looks there, and a frozen
+# application starts with no fonts and draws no icons - silently, because a
+# missing glyph renders transparent by default. The hooks existed from the start;
+# only this registration was missing, so every frozen app needed an explicit
+# `hookspath` and the documentation claiming auto-detection was wrong.
+#
+# `get_hook_dirs` returns a list of directories, which is the signature
+# PyInstaller expects. One directory covers every pack, since all sixteen hooks
+# live in the base package.
+[project.entry-points.pyinstaller40]
+hook-dirs = "tkinter_icons._pyinstaller:get_hook_dirs"
+
+[project.urls]
+Homepage = "https://github.com/israel-dryer/tkinter-icons"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+# `tools` is maintainer-only and must not ship: once a wheel is on PyPI,
+# `tkinter_icons.tools` is a public import path we would owe compatibility on.
+exclude = ["*.tools", "*.tools.*"]
+
+[tool.setuptools.package-data]
+tkinter_icons = [
+    "assets/**/*",
+    "_pyinstaller/*.py"
+]
+
+# Excluding `tools` from `packages.find` is not enough here. This package takes
+# its version from setuptools-scm, whose git file-finder combined with
+# `include-package-data` pulls every tracked file under `src/tkinter_icons/`
+# into the wheel as package data - including the .py files of a package that
+# was deliberately not declared. The packs need the same stanza for a different
+# reason: `include-package-data` also honours an existing `.egg-info/SOURCES.txt`.
+[tool.setuptools.exclude-package-data]
+tkinter_icons = ["tools/*"]
+
+# The repository holds eighteen distributions, and only this one takes its
+# version from a tag. The base package is tagged `v<version>`; every pack and
+# the shim are tagged `<distribution>-v<version>`.
+#
+# Both settings below exist to keep a pack tag from becoming the base package's
+# version. setuptools-scm's default tag_regex strips a leading prefix, so it
+# reads `tkinter-icons-fa-v1.1.0` as version 1.1.0 quite happily — and since
+# pack tags are pushed *before* the base tag in a release, the most recent tag
+# at base-build time is almost always a pack's. Without the `--match`, building
+# `tkinter-icons` during a 5.0.0 release would produce a wheel numbered 1.1.0.
+#
+# `root` is the repository, not this directory. Without it setuptools-scm looks
+# for a git repo at `packages/tkinter-icons`, does not find one, and silently
+# falls back — so every build produced 5.0.0 whatever the tag said, and a 5.0.1
+# tag would have shipped a wheel numbered 5.0.0.
+#
+# **There is deliberately no `fallback_version`.** There used to be, set to
+# 5.0.0, and while `root` was missing it was what every single build actually
+# used — which is why the misconfiguration above went unnoticed for so long. It
+# is not needed now, and it is worse than not needed. Measured, building the
+# base package four ways:
+#
+#   sdist -> wheel, no git    correct version either way; it comes from PKG-INFO
+#   source tree, no git       WITH a fallback: a wheel silently numbered 5.0.0
+#                             WITHOUT: a hard error naming the two real fixes
+#
+# So the only thing a fallback buys is a wheel that lies about its version, in
+# the one case where nothing else can tell the truth. CI and the release
+# workflow both check out with `fetch-depth: 0`, so neither can reach that path.
+# Anyone who genuinely needs to build without git history sets
+# `SETUPTOOLS_SCM_PRETEND_VERSION_FOR_TKINTER_ICONS`, which says what it is doing.
+[tool.setuptools_scm]
+root = "../.."
+version_file = "src/tkinter_icons/_version.py"
+
+[tool.setuptools_scm.tag]
+regex = "^v(?P<version>\\d+\\.\\d+\\.\\d+.*)$"
+
+[tool.setuptools_scm.scm.git]
+describe_command = ["git", "describe", "--dirty", "--tags", "--long", "--match", "v[0-9]*"]

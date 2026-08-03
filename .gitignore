@@ -6,7 +6,7 @@ build/
 __pycache__/
 
 # Auto-generated version file
-packages/ttkbootstrap-icons/src/ttkbootstrap_icons/_version.py
+packages/tkinter-icons/src/tkinter_icons/_version.py
 
 # IDE
 .vscode/
@@ -33,3 +33,11 @@ Thumbs.db
 .pypirc
 /site/
 /dev-features/
+
+# Sphinx build output
+docs/_build/
+
+# Pack preview strips, drawn into the source tree by docs/_ext/pack_showcase.py
+# on every build. Generated from the installed fonts, so committing them would
+# pin the docs to whatever the machine that last built them had installed.
+docs/_static/previews/

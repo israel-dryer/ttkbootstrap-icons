@@ -1,0 +1,1178 @@
+{
+"ic-fluent-accessibility-checkmark-32-light": [
+0.0918,
+0.06055,
+0.86328,
+0.89453
+],
+"ic-fluent-add-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-alert-32-light": [
+0.1543,
+0.12305,
+0.69141,
+0.75195
+],
+"ic-fluent-app-folder-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-app-generic-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-archive-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-archive-settings-32-light": [
+0.09375,
+0.09375,
+0.86133,
+0.84961
+],
+"ic-fluent-arrow-clockwise-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-arrow-down-32-light": [
+0.1543,
+0.09375,
+0.69141,
+0.8125
+],
+"ic-fluent-arrow-download-32-light": [
+0.1875,
+0.09375,
+0.625,
+0.79688
+],
+"ic-fluent-arrow-forward-32-light": [
+0.09375,
+0.1875,
+0.8125,
+0.625
+],
+"ic-fluent-arrow-hook-down-left-32-light": [
+0.1875,
+0.2168,
+0.625,
+0.62891
+],
+"ic-fluent-arrow-hook-down-right-32-light": [
+0.1875,
+0.2168,
+0.625,
+0.62891
+],
+"ic-fluent-arrow-hook-up-left-32-light": [
+0.1875,
+0.1543,
+0.625,
+0.62891
+],
+"ic-fluent-arrow-hook-up-right-32-light": [
+0.1875,
+0.1543,
+0.625,
+0.62891
+],
+"ic-fluent-arrow-redo-32-light": [
+0.125,
+0.09375,
+0.7207,
+0.8125
+],
+"ic-fluent-arrow-reply-32-light": [
+0.09375,
+0.1875,
+0.8125,
+0.625
+],
+"ic-fluent-arrow-reply-all-32-light": [
+0.09375,
+0.1875,
+0.8125,
+0.625
+],
+"ic-fluent-arrow-undo-32-light": [
+0.1543,
+0.09375,
+0.7207,
+0.8125
+],
+"ic-fluent-attach-32-light": [
+0.06055,
+0.06055,
+0.87891,
+0.875
+],
+"ic-fluent-auto-fit-32-light": [
+0.1875,
+0.125,
+0.625,
+0.75
+],
+"ic-fluent-auto-fit-width-32-light": [
+0.125,
+0.1875,
+0.75,
+0.625
+],
+"ic-fluent-autocorrect-32-light": [
+0.0625,
+0.1543,
+0.87695,
+0.6582
+],
+"ic-fluent-book-contacts-32-light": [
+0.1543,
+0.06055,
+0.69141,
+0.87891
+],
+"ic-fluent-breakout-room-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-broom-32-light": [
+0.06055,
+0.06055,
+0.87891,
+0.87891
+],
+"ic-fluent-calendar-3-day-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-calendar-checkmark-32-light": [
+0.09375,
+0.09375,
+0.86133,
+0.86133
+],
+"ic-fluent-calendar-clock-32-light": [
+0.09375,
+0.09375,
+0.875,
+0.875
+],
+"ic-fluent-calendar-data-bar-32-light": [
+0.09375,
+0.09375,
+0.875,
+0.875
+],
+"ic-fluent-calendar-day-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-calendar-edit-32-light": [
+0.0918,
+0.09375,
+0.87695,
+0.87695
+],
+"ic-fluent-calendar-empty-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-calendar-ltr-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-calendar-month-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-calendar-multiple-32-light": [
+0.09375,
+0.09375,
+0.8457,
+0.8457
+],
+"ic-fluent-calendar-pattern-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-calendar-reply-32-light": [
+0.0918,
+0.09375,
+0.87695,
+0.875
+],
+"ic-fluent-calendar-sparkle-32-light": [
+0.09375,
+-0.00195,
+0.875,
+0.9082
+],
+"ic-fluent-calendar-todo-32-light": [
+0.0918,
+0.09375,
+0.84766,
+0.84375
+],
+"ic-fluent-calendar-work-week-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-chat-32-light": [
+0.06055,
+0.06055,
+0.87891,
+0.87891
+],
+"ic-fluent-checkmark-32-light": [
+0.06055,
+0.1543,
+0.87891,
+0.62891
+],
+"ic-fluent-checkmark-circle-32-light": [
+0.06055,
+0.06055,
+0.87891,
+0.87891
+],
+"ic-fluent-classification-32-light": [
+0.06055,
+0.06055,
+0.87891,
+0.87891
+],
+"ic-fluent-clipboard-paste-32-light": [
+0.12305,
+0.06055,
+0.7832,
+0.87891
+],
+"ic-fluent-clock-32-light": [
+0.06055,
+0.06055,
+0.87891,
+0.87891
+],
+"ic-fluent-clock-alarm-32-light": [
+0.09375,
+0.0918,
+0.8125,
+0.78516
+],
+"ic-fluent-color-32-light": [
+0.0625,
+0.06055,
+0.87891,
+0.84766
+],
+"ic-fluent-color-fill-32-light": [
+0.0918,
+0.09375,
+0.81445,
+0.8125
+],
+"ic-fluent-color-fill-accent-32-light": [
+0.10938,
+0.60938,
+0.78125,
+0.28125
+],
+"ic-fluent-comment-32-light": [
+0.06055,
+0.09375,
+0.87891,
+0.84766
+],
+"ic-fluent-comment-add-32-light": [
+0.06055,
+0.04492,
+0.89453,
+0.89648
+],
+"ic-fluent-compose-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-copy-32-light": [
+0.1543,
+0.06055,
+0.69141,
+0.87891
+],
+"ic-fluent-crop-32-light": [
+0.06055,
+0.06055,
+0.87891,
+0.87891
+],
+"ic-fluent-cursor-32-light": [
+0.1875,
+0.06055,
+0.6875,
+0.87695
+],
+"ic-fluent-cut-32-light": [
+0.10742,
+0.06055,
+0.78516,
+0.87891
+],
+"ic-fluent-delete-32-light": [
+0.09375,
+0.06055,
+0.8125,
+0.87891
+],
+"ic-fluent-dismiss-32-light": [
+0.12305,
+0.12305,
+0.75391,
+0.75391
+],
+"ic-fluent-dismiss-circle-32-light": [
+0.06055,
+0.06055,
+0.87891,
+0.87891
+],
+"ic-fluent-document-24-light": [
+0.16602,
+0.08398,
+0.66797,
+0.83203
+],
+"ic-fluent-document-28-light": [
+0.14062,
+0.07031,
+0.71875,
+0.85938
+],
+"ic-fluent-document-32-light": [
+0.1543,
+0.06055,
+0.69141,
+0.87891
+],
+"ic-fluent-document-48-light": [
+0.16406,
+0.08398,
+0.67188,
+0.83203
+],
+"ic-fluent-document-lightning-32-light": [
+0.03125,
+0.06055,
+0.81445,
+0.9082
+],
+"ic-fluent-document-signature-32-light": [
+0.1543,
+0.06055,
+0.76953,
+0.87891
+],
+"ic-fluent-document-sparkle-24-light": [
+0.0,
+0.08398,
+0.83594,
+0.91797
+],
+"ic-fluent-document-sparkle-28-light": [
+0.0,
+0.07031,
+0.85938,
+0.92969
+],
+"ic-fluent-document-sparkle-32-light": [
+0.03125,
+0.06055,
+0.81445,
+0.9082
+],
+"ic-fluent-document-sparkle-48-light": [
+0.01953,
+0.08398,
+0.81641,
+0.89648
+],
+"ic-fluent-door-arrow-right-32-light": [
+0.1543,
+0.06055,
+0.81445,
+0.9082
+],
+"ic-fluent-edit-32-light": [
+0.0625,
+0.0625,
+0.875,
+0.875
+],
+"ic-fluent-emoji-32-light": [
+0.06055,
+0.06055,
+0.87891,
+0.87891
+],
+"ic-fluent-eye-32-light": [
+0.06055,
+0.1875,
+0.87891,
+0.5625
+],
+"ic-fluent-eye-off-32-light": [
+0.06055,
+0.06055,
+0.87891,
+0.87891
+],
+"ic-fluent-filter-32-light": [
+0.09375,
+0.25,
+0.8125,
+0.46875
+],
+"ic-fluent-flag-32-light": [
+0.1543,
+0.09375,
+0.75195,
+0.8125
+],
+"ic-fluent-flag-off-32-light": [
+0.06055,
+0.06055,
+0.87891,
+0.87891
+],
+"ic-fluent-flash-32-light": [
+0.18555,
+0.06055,
+0.62891,
+0.87891
+],
+"ic-fluent-folder-arrow-right-32-light": [
+0.06055,
+0.12305,
+0.92383,
+0.83203
+],
+"ic-fluent-folder-mail-32-light": [
+0.06055,
+0.12305,
+0.9082,
+0.81641
+],
+"ic-fluent-hand-draw-32-light": [
+0.125,
+0.06055,
+0.71875,
+0.87891
+],
+"ic-fluent-history-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-image-add-32-light": [
+0.03125,
+0.03125,
+0.90625,
+0.9082
+],
+"ic-fluent-image-alt-text-32-light": [
+0.03125,
+0.03125,
+0.90625,
+0.9082
+],
+"ic-fluent-image-copy-32-light": [
+0.09375,
+0.12305,
+0.7832,
+0.7832
+],
+"ic-fluent-image-reflection-32-light": [
+0.12305,
+0.06055,
+0.75391,
+0.87891
+],
+"ic-fluent-image-shadow-32-light": [
+0.06055,
+0.06055,
+0.87695,
+0.87695
+],
+"ic-fluent-immersive-reader-32-light": [
+0.06055,
+0.12305,
+0.89453,
+0.81641
+],
+"ic-fluent-important-32-light": [
+0.31055,
+0.06055,
+0.37891,
+0.87891
+],
+"ic-fluent-lasso-32-light": [
+0.06055,
+0.06055,
+0.87891,
+0.9082
+],
+"ic-fluent-layout-column-two-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-layout-column-two-focus-left-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-layout-column-two-focus-right-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-layout-row-two-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-layout-row-two-focus-top-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-layout-row-two-focus-top-settings-32-light": [
+0.09375,
+0.09375,
+0.875,
+0.86523
+],
+"ic-fluent-layout-row-two-settings-32-light": [
+0.09375,
+0.09375,
+0.875,
+0.86523
+],
+"ic-fluent-lightbulb-32-light": [
+0.1875,
+0.06055,
+0.625,
+0.87891
+],
+"ic-fluent-link-32-light": [
+0.06055,
+0.28125,
+0.87695,
+0.4082
+],
+"ic-fluent-lock-closed-32-light": [
+0.12305,
+0.06055,
+0.75391,
+0.87891
+],
+"ic-fluent-lock-open-32-light": [
+0.12305,
+0.0,
+0.8457,
+0.93945
+],
+"ic-fluent-mail-32-light": [
+0.06055,
+0.1543,
+0.87891,
+0.69141
+],
+"ic-fluent-mail-alert-32-light": [
+0.06055,
+0.04492,
+0.93945,
+0.79883
+],
+"ic-fluent-mail-arrow-clockwise-32-light": [
+0.06055,
+0.03125,
+0.92578,
+0.81445
+],
+"ic-fluent-mail-arrow-double-back-32-light": [
+0.06055,
+0.03125,
+0.9082,
+0.81445
+],
+"ic-fluent-mail-copy-32-light": [
+0.06055,
+0.1543,
+0.87891,
+0.72266
+],
+"ic-fluent-mail-edit-32-light": [
+0.06055,
+0.12305,
+0.9082,
+0.84766
+],
+"ic-fluent-mail-list-32-light": [
+0.06055,
+0.06055,
+0.9082,
+0.78516
+],
+"ic-fluent-mail-multiple-32-light": [
+0.09375,
+0.1543,
+0.8125,
+0.69141
+],
+"ic-fluent-mail-read-32-light": [
+0.06055,
+0.06055,
+0.87891,
+0.78516
+],
+"ic-fluent-mail-read-multiple-32-light": [
+0.09375,
+0.0918,
+0.8125,
+0.75391
+],
+"ic-fluent-mail-rewind-32-light": [
+0.06055,
+0.03125,
+0.93945,
+0.81445
+],
+"ic-fluent-mail-settings-32-light": [
+0.06055,
+0.04102,
+0.9082,
+0.80469
+],
+"ic-fluent-mail-template-32-light": [
+0.06055,
+0.06055,
+0.87891,
+0.87891
+],
+"ic-fluent-mail-unread-32-light": [
+0.06055,
+0.09375,
+0.9082,
+0.75195
+],
+"ic-fluent-mail-warning-32-light": [
+0.06055,
+0.03125,
+0.91016,
+0.81445
+],
+"ic-fluent-mic-32-light": [
+0.1875,
+0.06055,
+0.625,
+0.87891
+],
+"ic-fluent-molecule-32-light": [
+0.0918,
+0.0625,
+0.81445,
+0.875
+],
+"ic-fluent-note-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-options-32-light": [
+0.06055,
+0.15625,
+0.87695,
+0.68945
+],
+"ic-fluent-paint-brush-32-light": [
+0.1875,
+0.06055,
+0.625,
+0.87891
+],
+"ic-fluent-panel-left-default-32-light": [
+0.0625,
+0.12305,
+0.87695,
+0.75195
+],
+"ic-fluent-panel-left-focus-right-32-light": [
+0.06055,
+0.12305,
+0.87891,
+0.75195
+],
+"ic-fluent-pen-sparkle-32-light": [
+0.06055,
+0.03125,
+0.87891,
+0.90625
+],
+"ic-fluent-people-32-light": [
+0.06055,
+0.1543,
+0.87891,
+0.69141
+],
+"ic-fluent-people-add-32-light": [
+0.06055,
+0.12305,
+0.89453,
+0.86133
+],
+"ic-fluent-people-checkmark-32-light": [
+0.06055,
+0.12305,
+0.89453,
+0.86133
+],
+"ic-fluent-people-community-32-light": [
+0.06055,
+0.09375,
+0.87891,
+0.78125
+],
+"ic-fluent-people-edit-32-light": [
+0.06055,
+0.125,
+0.89258,
+0.86133
+],
+"ic-fluent-people-list-32-light": [
+0.06055,
+0.1543,
+0.87891,
+0.7207
+],
+"ic-fluent-people-lock-32-light": [
+0.06055,
+0.12305,
+0.86328,
+0.86133
+],
+"ic-fluent-people-settings-32-light": [
+0.06055,
+0.12305,
+0.89258,
+0.85156
+],
+"ic-fluent-people-sync-32-light": [
+0.06055,
+0.12305,
+0.89258,
+0.86133
+],
+"ic-fluent-person-32-light": [
+0.12305,
+0.06055,
+0.75391,
+0.87891
+],
+"ic-fluent-person-add-32-light": [
+0.12305,
+0.06055,
+0.8457,
+0.9082
+],
+"ic-fluent-person-available-32-light": [
+0.12305,
+0.06055,
+0.8457,
+0.9082
+],
+"ic-fluent-person-feedback-32-light": [
+0.06055,
+0.06055,
+0.87891,
+0.87891
+],
+"ic-fluent-person-mail-32-light": [
+0.06055,
+0.06055,
+0.9082,
+0.9082
+],
+"ic-fluent-person-prohibited-32-light": [
+0.12305,
+0.06055,
+0.8457,
+0.9082
+],
+"ic-fluent-person-suport-32-light": [
+0.125,
+0.06055,
+0.75195,
+0.87891
+],
+"ic-fluent-phone-32-light": [
+0.2168,
+0.06055,
+0.56641,
+0.87891
+],
+"ic-fluent-picture-in-picture-32-light": [
+0.06055,
+0.09375,
+0.9082,
+0.8125
+],
+"ic-fluent-pin-32-light": [
+0.125,
+0.06445,
+0.8125,
+0.81055
+],
+"ic-fluent-pin-off-32-light": [
+0.06055,
+0.06055,
+0.87891,
+0.87891
+],
+"ic-fluent-poll-32-light": [
+0.06055,
+0.09375,
+0.8457,
+0.8125
+],
+"ic-fluent-print-32-light": [
+0.06055,
+0.09375,
+0.87891,
+0.8125
+],
+"ic-fluent-question-32-light": [
+0.28125,
+0.12305,
+0.4375,
+0.7832
+],
+"ic-fluent-read-aloud-32-light": [
+0.0918,
+0.0918,
+0.81445,
+0.7832
+],
+"ic-fluent-rectangle-landscape-32-light": [
+0.06055,
+0.12305,
+0.87891,
+0.75195
+],
+"ic-fluent-rotate-left-32-light": [
+0.09375,
+0.06055,
+0.8125,
+0.8457
+],
+"ic-fluent-save-32-light": [
+0.09375,
+0.0918,
+0.8125,
+0.81445
+],
+"ic-fluent-search-32-light": [
+0.09375,
+0.09375,
+0.8457,
+0.8457
+],
+"ic-fluent-search-sparkle-32-light": [
+0.09375,
+0.0,
+0.8457,
+0.93945
+],
+"ic-fluent-send-clock-32-light": [
+0.06055,
+0.06055,
+0.9082,
+0.9082
+],
+"ic-fluent-settings-32-light": [
+0.07812,
+0.06055,
+0.84375,
+0.87891
+],
+"ic-fluent-share-32-light": [
+0.09375,
+0.06055,
+0.8457,
+0.8457
+],
+"ic-fluent-shield-error-32-light": [
+0.09375,
+0.06055,
+0.8125,
+0.87891
+],
+"ic-fluent-signature-32-light": [
+0.0625,
+0.06055,
+0.87695,
+0.87891
+],
+"ic-fluent-speaker-mute-32-light": [
+0.06055,
+0.13086,
+0.84766,
+0.73828
+],
+"ic-fluent-square-arrow-forward-32-light": [
+0.09375,
+0.09375,
+0.84375,
+0.84375
+],
+"ic-fluent-stamp-32-light": [
+0.07422,
+0.0918,
+0.83398,
+0.83398
+],
+"ic-fluent-star-add-32-light": [
+0.09375,
+0.0918,
+0.8457,
+0.8457
+],
+"ic-fluent-star-arrow-right-32-light": [
+0.0625,
+0.09375,
+0.8457,
+0.84375
+],
+"ic-fluent-sticker-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-tab-add-32-light": [
+0.09375,
+0.09375,
+0.86133,
+0.85938
+],
+"ic-fluent-table-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-table-alt-text-32-light": [
+0.09375,
+0.09375,
+0.875,
+0.84375
+],
+"ic-fluent-table-cells-merge-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-table-cells-split-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-table-dismiss-32-light": [
+0.09375,
+0.09375,
+0.875,
+0.875
+],
+"ic-fluent-table-move-above-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-table-move-below-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-table-move-left-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-table-move-right-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-table-settings-32-light": [
+0.09375,
+0.09375,
+0.875,
+0.86523
+],
+"ic-fluent-table-simple-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-tag-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-text-32-light": [
+0.1875,
+0.125,
+0.625,
+0.75
+],
+"ic-fluent-text-clear-formatting-32-light": [
+0.06055,
+0.06055,
+0.87891,
+0.87891
+],
+"ic-fluent-text-collapse-32-light": [
+0.04688,
+0.125,
+0.89258,
+0.7207
+],
+"ic-fluent-text-density-32-light": [
+0.09375,
+0.06055,
+0.8125,
+0.87695
+],
+"ic-fluent-text-edit-style-32-light": [
+0.0918,
+0.06055,
+0.81445,
+0.87695
+],
+"ic-fluent-text-expand-32-light": [
+0.04688,
+0.125,
+0.89258,
+0.7207
+],
+"ic-fluent-textbox-align-top-left-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-toolbox-32-light": [
+0.06055,
+0.09375,
+0.87891,
+0.7832
+],
+"ic-fluent-translate-32-light": [
+0.0625,
+0.15625,
+0.86133,
+0.6582
+],
+"ic-fluent-video-32-light": [
+0.06055,
+0.17188,
+0.87891,
+0.65625
+],
+"ic-fluent-video-clip-32-light": [
+0.06055,
+0.12305,
+0.87891,
+0.75391
+],
+"ic-fluent-weather-moon-32-light": [
+0.07617,
+0.06445,
+0.83008,
+0.875
+],
+"ic-fluent-weather-sunny-32-light": [
+0.0625,
+0.06055,
+0.87695,
+0.87695
+],
+"ic-fluent-window-32-light": [
+0.09375,
+0.09375,
+0.8125,
+0.8125
+],
+"ic-fluent-wrench-screwdriver-32-light": [
+0.0918,
+0.09375,
+0.81445,
+0.8125
+],
+"ic-fluent-zoom-in-32-light": [
+0.06055,
+0.06055,
+0.84766,
+0.84766
+],
+"ic-fluent-zoom-out-32-light": [
+0.06055,
+0.06055,
+0.84766,
+0.84766
+]
+}
