@@ -77,6 +77,55 @@ class TestShimMigrationMessageIsInstallable:
         assert not unknown, f"migration warning tells users to install extras that do not exist: {unknown}"
 
 
+class TestReadmesDoNotAdvertiseExtrasThatDoNotExist:
+    """A README is an install instruction too, and it reaches further than the warning.
+
+    The shim's warning was fixed when `[all]` was dropped; its README was not,
+    and kept telling readers to run `pip install "tkinter-icons[all]"` on the
+    package's own PyPI page. The warning had a test, the README had nothing.
+
+    The failure is silent in both places for the same reason: pip does not treat
+    an unknown extra as an error. It installs the base package, which has no
+    glyphs, and the reader is left exactly where the surrounding text is warning
+    them not to be.
+
+    Docs pages are deliberately out of scope. `installation.rst` names
+    `tkinter-icons[all]` on purpose, as the example of what fails quietly, and a
+    check that could not tell that apart from an instruction would be pressure to
+    delete the explanation.
+    """
+
+    @staticmethod
+    def _repo_root():
+        import pathlib
+
+        root = pathlib.Path(__file__).resolve().parents[1]
+        if not (root / "packages").is_dir():
+            pytest.skip("not running from a source checkout")
+        return root
+
+    def test_every_extra_named_in_a_readme_exists(self):
+        import re
+
+        root = self._repo_root()
+        readmes = [p for p in [root / "README.md", *(root / "packages").glob("*/README.md")] if p.is_file()]
+        assert readmes, "no READMEs found to check"
+
+        known = {pack.extra for pack in KNOWN_PACKS}
+        offenders = {}
+        for readme in readmes:
+            named = {
+                extra.strip()
+                for group in re.findall(
+                    r"tkinter-icons\[([^\]]+)\]", readme.read_text(encoding="utf-8-sig")
+                )
+                for extra in group.split(",")
+            }
+            if unknown := sorted(named - known):
+                offenders[str(readme.relative_to(root))] = unknown
+        assert not offenders, f"READMEs name extras that do not exist: {offenders}"
+
+
 class TestProviderDiscoveryIsConsistent:
     """Every discovery site must scan both entry-point groups.
 

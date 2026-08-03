@@ -13,7 +13,8 @@ it, so existing installs keep working, and it will not receive further updates.
 
 ```bash
 pip uninstall ttkbootstrap-icons
-pip install "tkinter-icons[all]"     # or just the packs you use
+pip install "tkinter-icons[bootstrap]"          # name the packs you use
+pip install "tkinter-icons[bootstrap,material]" # two at once
 ```
 
 Then change your imports:

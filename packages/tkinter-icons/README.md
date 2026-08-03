@@ -63,7 +63,7 @@ Sizes, styles, and glyph counts for each: **[the packs page](https://tkinter-ico
 
 ## Upgrading from ttkbootstrap-icons
 
-This package was published as `ttkbootstrap-icons` through 4.0.0. Installing that name still works — it is now a forwarding shim — and [the migration notes](https://tkinter-icons.readthedocs.io/en/latest/getting-started/migrating.html) cover the two things that genuinely changed.
+This package was published as `ttkbootstrap-icons` through 4.0.0. Installing that name still works — it is now a forwarding shim — and [the migration notes](https://tkinter-icons.readthedocs.io/en/latest/getting-started/migrating.html) cover what genuinely changed.
 
 ## License
 

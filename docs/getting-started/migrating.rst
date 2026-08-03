@@ -16,9 +16,9 @@ The move
 
    * - 4.0.0
      - 5.0.0
-   * - ``pip install ttkbootstrap-icons``
+   * - ``pip install ttkbootstrap-icons ttkbootstrap-icons-bs``
      - ``pip install "tkinter-icons[bootstrap]"``
-   * - ``pip install ttkbootstrap-icons-mat``
+   * - ``pip install ttkbootstrap-icons ttkbootstrap-icons-mat``
      - ``pip install "tkinter-icons[material]"``
    * - ``from ttkbootstrap_icons import Icon``
      - ``from tkinter_icons import Icon``
@@ -29,14 +29,8 @@ The move
 
 Both spellings of every class are exported, so ``MatIcon``, ``FAIcon``, and ``GMatIcon`` still resolve from ``tkinter_icons`` alongside the spelled-out ``MaterialIcon``, ``FontAwesomeIcon``, and ``GoogleMaterialIcon``. Nothing forces you to rename anything beyond the import root.
 
-Two things genuinely changed
-----------------------------
-
-**The base package no longer bundles Bootstrap icons.** That happened in 4.0.0, not in the rename, but it is the change people notice on upgrade. If you relied on Bootstrap being built in, add the pack:
-
-.. code-block:: bash
-
-   pip install "tkinter-icons[bootstrap]"
+What genuinely changed
+----------------------
 
 **Icons render slightly differently.** 5.0.0 centers glyphs on their measured ink rather than on Pillow's ``getbbox``, which under-reports it. Full-bleed icons gain the padding they were missing, and everything else sits a little more centered. If you compensated for the old behaviour with your own padding or a ``y_bias``, take it back out. :doc:`../user-guide/sizing-and-quality` explains the change.
 
