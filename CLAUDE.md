@@ -69,9 +69,9 @@ the only way to build this package without git. See "Deliberate decisions".
 
 | | |
 |---|---|
-| `main` | 5.0.0 content, merged, **not tagged** — `31fcf74` |
+| `main` | 5.0.0 content, merged, **not tagged** — handoff commits move this SHA; the packaged content has not changed since `31fcf74` |
 | the sixteen legacy packs | **published to PyPI** with their `<5` caps, 2026-08-02 |
-| the release workflow | dry run **passed** at `31fcf74`, 2026-08-03 |
+| the release workflow | dry run **passed** at `31fcf74`, 2026-08-03 — later commits are documentation only, so the artifacts it verified still stand |
 | the #102 pre-tag review | **done** 2026-08-03; findings on the issue, fixes in #104 and #105 |
 | **the 5.0.0 release** | **half published, and blocked on a PyPI rate limit** — see below |
 
