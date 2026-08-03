@@ -37,7 +37,7 @@ every package inside is renamed; only the containing directory lags. Don't
 .venv-home/Scripts/python.exe -m pip install --no-deps $(printf -- '-e %s ' packages/tkinter-icons-*/)
 .venv-home/Scripts/python.exe -m pip install --no-deps -e packages/ttkbootstrap-icons-shim
 .venv-home/Scripts/python.exe -m pip install -r docs/requirements.txt pytest
-.venv-home/Scripts/python.exe -m pytest -q          # 365 passed, 1 skipped
+.venv-home/Scripts/python.exe -m pytest -q          # 414 passed (1-2 skip, Tk-ordering)
 ```
 
 Having every pack installed is worth keeping. The docs build reads each pack's live provider for the packs table and the previews, `generate_metrics --all` needs them, and `verify_packages.py --imports` exercises every entry point.
@@ -69,10 +69,12 @@ the only way to build this package without git. See "Deliberate decisions".
 
 | | |
 |---|---|
-| `main` | 5.0.0 content, merged, **not tagged** — `ea266e2` |
+| `main` | 5.0.0 content, merged, **not tagged** — `5f35f9f` |
 | the sixteen legacy packs | **published to PyPI** with their `<5` caps, 2026-08-02 |
-| the release workflow | dry run **passed** — first execution ever |
-| what is left | one tag |
+| the sixteen `tkinter-icons-*` packs | **do not exist on PyPI** — 404 until the tag creates them |
+| the release workflow | dry run **passed** at `ea266e2`, now five commits behind |
+| the #102 pre-tag review | **done** 2026-08-03; findings on the issue, fixes in #104 and #105 |
+| what is left | one dry run, one tag |
 
 Milestone **5.0.0** (issues #67–#71, #75, #79):
 
@@ -112,7 +114,14 @@ Closed unmerged: #96, superseded by #97.
 | #99 | bootstack removed from every user-facing mention — see below |
 | #100 | **the release merge**: `5.0` → `main`, closing #69, #71, #79 and #89 |
 
-**In flight: #101** — four docs fixes found by reading rather than by any check. A broken `[all]` install line on the shim's *PyPI page*, the migration guide implying 4.0.0 shipped Bootstrap, that guide explaining two releases at once, and the ttkbootstrap examples teaching a pre-2.0 API. It also adds the guard that would have caught the first one.
+**Merged 2026-08-03, closing out the pre-tag review:**
+
+| PR | What |
+|---|---|
+| #101 | four docs fixes found by reading — the shim's broken `[all]` install line, the migration guide implying 4.0.0 shipped Bootstrap, that guide explaining two releases at once, and the ttkbootstrap examples teaching a pre-2.0 API — plus the guard that would have caught the first |
+| #103 | a CI badge on the repository README, and the downloads badge removed from both (it was a live 404 until the tag) |
+| #104 | the three claims #102's review found in the *published release text* — a shell command inside a `python` fence, the wrong "17 MB", and a conditional dressed as unconditional |
+| #105 | `Closes #90` — the sixteen pack READMEs generated from the catalogue, the pre-rename screenshots dropped |
 
 **The milestone issues are all closed, and #89 closed because #100's body named it.** That was not automatic: no commit body mentions #89, and its `Closes #89` lived only in PR #92's body, which merged to `5.0` — a non-default base — so GitHub had already discarded the link and does not re-evaluate it. #69, #71 and #79 closed from keywords already in the commit bodies. #67, #68, #70 and #75 were closed earlier by hand and their links are lost for good.
 
@@ -147,11 +156,10 @@ the base branch back at its old SHA, reopening, then retargeting. When merging a
 stack, retarget the child to `5.0` *first*, merge the parent without
 `--delete-branch`, and delete branches at the end.
 
-Open follow-ups, none of them release blockers: **#87** — the screenshots and
-the browser's app icon are done, the *generated* renderer figures are not;
-**#90** — sixteen pack READMEs still teach the pre-#69 install idiom on PyPI;
+Open follow-ups, neither a release blocker: **#87** — the screenshots and
+the browser's app icon are done, the *generated* renderer figures are not; and
 **#91** — reaching the pure-Pillow renderer should not require `tkinter`
-installed. #92 did the substance of #89 apart from its prose pass, which is folded into the list under "Next session" — but #89 is still open on GitHub and will not close itself; see the step-3 note there.
+installed. **#90 closed from #105**, which generated the sixteen pack READMEs rather than hand-editing them. #92 did the substance of #89 apart from its prose pass, which is folded into the list under "Next session"; #89 itself closed with #100.
 
 **#79 shipped as #81, not #80.** #80 was merged into `5.0` prematurely — without
 permission and before review — and `5.0` was reset to drop it. The rollback was
@@ -220,40 +228,41 @@ bumped every time and an existing one means the tag is wrong.
 
 **One irreversible step remains: the tag.** Everything before it is done. `main` is 5.0.0, the sixteen legacy packs are published with their caps, and the release workflow has been exercised end to end without publishing anything.
 
-**Before the tag, do the review in #102.** That is the explicit ask from 2026-08-02, and the reasoning is that every failure this milestone found late was found by *reading*, not by a check: #101's four fixes were all invisible to `pytest`, `verify_packages.py`, and `sphinx -W`, and one of them — `pip install "tkinter-icons[all]"` on the shim's PyPI page — was a command that cannot work, sitting on a page about to be published. A green preflight is not evidence the prose is right.
+**The #102 review is done, and there are no open PRs.** It was carried out 2026-08-03 and its findings are two comments on the issue: the findings themselves, then the wrap-up marking every checklist item closed. Three landed in #104, the fourth became #105. Read those two comments before re-opening any of it — they record what was measured, not just what was concluded.
 
-Then:
+Two steps remain:
 
-1. **Merge #101** (or close it, if the review supersedes it). It is the only open PR.
+1. **Re-run the Release dry run against `main`.** Actions → Release → *Run workflow*, `v5.0.0`, branch `main`. The last run — [30774503160](https://github.com/israel-dryer/tkinter-icons/actions/runs/30774503160), the workflow's first execution ever — verified `ea266e2`, which is now five commits behind. Build succeeded; `publish` and `release` correctly skipped, both gated on `github.event_name == 'push'`. It costs one click and re-verifies the exact tree about to be tagged.
 
-2. **Re-run the Release dry run against `main`.** Actions → Release → *Run workflow*, `v5.0.0`, branch `main`. The last run — [30774503160](https://github.com/israel-dryer/tkinter-icons/actions/runs/30774503160), the workflow's first execution ever — verified `ea266e2`, which is *older* than whatever the review lands. Build succeeded; `publish` and `release` correctly skipped, both gated on `github.event_name == 'push'`. It costs one click and re-verifies the exact tree about to be tagged.
+2. **Tag `v5.0.0`.** `git tag v5.0.0 && git push origin v5.0.0`. One tag builds all eighteen, publishes packs → base → shim in that order, and writes one GitHub Release. **This is the point of no return** — PyPI does not allow re-uploading a version, even a deleted one.
 
-3. **Tag `v5.0.0`.** `git tag v5.0.0 && git push origin v5.0.0`. One tag builds all eighteen, publishes packs → base → shim in that order, and writes one GitHub Release. **This is the point of no return** — PyPI does not allow re-uploading a version, even a deleted one.
+3. **Afterwards:** point Read the Docs' Default branch back at `main`; delete `gh-pages`; delete the merged remote branches — `5.0`, `docs/handoff-post-95`, `docs/legacy-final-release-and-meteocons`, `docs/drop-bootstack-references`, `docs/migration-scope-and-shim-extra`, `docs/ci-badge`, `docs/pack-readmes-generated`, and `fix/release-latest-marker` (that last is #96, closed unmerged and superseded by #97). **Leave `release/ttkbootstrap-icons-packs-final` alone** — it is the only tree where the sixteen old packs still exist.
 
-4. **Afterwards:** point Read the Docs' Default branch back at `main`; delete `gh-pages`; delete the merged remote branches — `5.0`, `docs/handoff-post-95`, `docs/legacy-final-release-and-meteocons`, `docs/drop-bootstack-references`, `docs/migration-scope-and-shim-extra`, and `fix/release-latest-marker` (that last is #96, closed unmerged and superseded by #97). **Leave `release/ttkbootstrap-icons-packs-final` alone** — it is the only tree where the sixteen old packs still exist.
+### What the #102 review found, and the two traps in it
 
-### The pre-tag review — #102
+The mechanics are on the issue. What is worth carrying forward is the shape of the mistakes, because none of them moved a check.
 
-**Tracked as #102**, which carries the checklist and is the place to record findings. The summary below is why it exists; the issue is what to work from.
+**A README on PyPI is frozen at release time, and that changes when a README bug must be fixed.** This is the one that nearly went wrong. The sixteen pack READMEs were known off-idiom, tracked as #90, and the obvious call was to ship and fix afterwards, since every install line and import in them resolved. That call was wrong: `curl https://pypi.org/pypi/tkinter-icons-lucide/json` returned **404**, because the sixteen `tkinter-icons-*` distributions do not exist until the tag creates them. So they were not stale pages to tidy later, they were sixteen first impressions — and deferring meant sixteen *extra pack releases*, not sixteen commits. **Check whether a page exists before deciding it can be fixed later.** #105 generated them instead.
 
-Verified green on `main` as of 2026-08-02: `pytest` 365 passed / 1 skipped, `verify_packages.py --strict --imports --tag v5.0.0` all clear across eighteen, `generate_metrics --all --check` clean, `sphinx-build -W --keep-going -n -j auto` clean. **Do not treat that as the review.** It is the floor.
+**Prose that repeats a number is worse than prose that contradicts itself,** because nothing looks wrong. "About 17 MB" appeared in `packs.rst`, `packaging.rst` and `CHANGELOG.md`, in perfect agreement, and was wrong on either reading — the real figures are 21.86 MB installed and about 8.27 MB compressed. Cross-document consistency checks find disagreement; they do not find a number nobody ever measured.
 
-What is worth a human or an agent actually reading, roughly in order of what would hurt most if wrong:
+Three more, each fixed and each invisible to `pytest`, `sphinx -W` and `verify_packages.py`:
 
-- **Every install line and import line that ships to PyPI.** The eighteen `README.md` files are the pages users land on, and they are checked by almost nothing. `TestReadmesDoNotAdvertiseExtrasThatDoNotExist` now catches a nonexistent *extra*, and that is all it catches — it says nothing about a wrong import, a stale class name, or an install command that is merely misleading. Note that the sixteen pack READMEs are *known* wrong and tracked as #90.
-- **Runnable examples, actually run.** The ttkbootstrap page taught a pre-2.0 API for an unknown length of time and every check passed throughout. Nothing executes the code in the docs. Anything with `.. code-block:: python` is unverified unless someone types it.
-- **Claims about behaviour that no test pins.** `sizing-and-quality`, `stateful-icons`, and `headless-rendering` describe measured ink, even-snapping, oversampling and state maps in prose. #87 exists because those should be *generated figures*; until they are, they are assertions.
-- **The 5.0.0 changelog entry**, because `release_notes.py` slices it verbatim into the GitHub Release. A mistake there is published under the release's own name and cannot be quietly amended.
-- **Cross-document consistency.** `CHANGELOG.md`, `RELEASE.md`, both root READMEs, and the docs say overlapping things about install idiom, the missing `[all]`, and what 4.0.0 did. Two of this session's four fixes were one document contradicting another.
+- The 5.0.0 changelog opened with a **shell command inside a `python` fence** — the first code on the GitHub Release page, and a `NameError` if copied. Generate the release body with `release_notes.py` and *read it* before tagging; it is not the same text as the changelog section.
+- "`Icon` itself still raises" was true only in a **cold process**. Construct any pack icon first and the base `Icon.render_pil` succeeds from whichever set loaded last. Test claims about fresh state in a fresh interpreter.
+- The #105 generator first wrote "**reproduced in this package under `LICENSES/`**", which is false for the eight packs whose `LICENSES/` holds a summary and a link — `gmi`'s is six lines pointing at apache.org. A generator multiplies a wrong sentence by sixteen.
+
+**Two facts a later reader will otherwise rediscover the hard way.** The multi-style packs store `metrics-<style>.json`, not `metrics.json`, so a naive existence probe falsely reports `fluent`, `fontawesome` and `google-material` as shipping no metrics. And all 93 `.. code-block:: python` blocks in the docs now execute cleanly apart from fragments that reference an earlier block on the same page — but two of the headless-rendering examples **write into the current directory**, so run them from a temp cwd or they leave `home.png` and `icons/` in the repo.
 
 ### Not blocking, and worth doing next
 
 - **#87's other half.** The five screenshots are retaken and the browser has its own icon, but the *generated* figures are not built: `user-guide/sizing-and-quality` still describes measured ink, padding, oversampling and even-snapping entirely in prose, where every claim is unfalsifiable by the reader and every one of them is a side-by-side render the library could draw at build time. Same for outline-vs-fill on `icons-and-names` and the multi-pack comparison on `choosing-a-pack`. `pack_showcase.py` already does exactly this for the pack previews — the pattern, the light/dark handling and the `-W` safety net all exist.
 - **#89's prose pass.** The pages shipped; the re-read did not. Repetition across pages, and `#0d6efd` — Bootstrap blue — still in the examples on `index.rst` and `icons-and-names.rst`, on a site whose palette is teal. The landing page and both READMEs were fixed; these two were left because changing one of three would have been worse than leaving all three. #89 is closed, so this survives only here — it is a genuine loose end, not a completed item.
-- **#90.** Sixteen pack READMEs still teach `pip install tkinter-icons-weather` and `from tkinter_icons_weather import WeatherIcon` on their PyPI pages. The chosen approach is recorded on the issue: screenshot the rendered docs pack page in light mode, generate the factual blocks, keep a hand-written intro.
-- **#91.** `import tkinter_icons` requires `tkinter` even for `render_pil`, which the headless guide had to be softened to admit. Making the Tk imports lazy is a small, contained change and restores the stronger claim.
+- **#91.** `import tkinter_icons` requires `tkinter` even for `render_pil`, which the headless guide had to be softened to admit. Making the Tk imports lazy is a small, contained change and restores the stronger claim. Note that the base `Icon.render_pil` being order-dependent — raising cold, succeeding after any pack icon exists — lives in the same code and is worth folding in.
 
-**The milestone is closed.** #67–#71, #75, #79 and #89 are all closed as of #100. The three still open — #87, #90, #91 — are genuine follow-ups that outlive the milestone and block nothing.
+**The milestone is closed, and #90 with it.** #67–#71, #75, #79 and #89 closed as of #100; #90 closed from #105. The two still open — **#87** and **#91** — are genuine follow-ups that outlive the milestone and block nothing.
+
+**The pack READMEs are generated now, and hand-editing one will be reverted by CI.** `.github/scripts/generate_pack_readmes.py` writes all sixteen from `KNOWN_PACKS`, each live provider, and `pack_showcase.SHOWCASE` — the same table the docs previews use, so a README and its docs page cannot disagree. `--check` runs in CI's docs job; `TestPackReadmesTeachTheExtrasIdiom` covers the install line, the import root and the absence of a bare install on all five platforms without needing `docs/_ext`. The only hand-written part is the intro paragraph under the H1, which regeneration preserves verbatim. If you want to state a fact on one of those pages, add it to the generator.
 
 **Two rules the owner stated this session, which outlive it.** Prose is written
 **unwrapped** — one long line per paragraph in markdown, PR bodies, and commit
