@@ -6,6 +6,7 @@
        width="420">
 </picture>
 
+[![CI](https://github.com/israel-dryer/tkinter-icons/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/israel-dryer/tkinter-icons/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/tkinter-icons.svg)](https://pypi.org/project/tkinter-icons/)
 [![Python Versions](https://img.shields.io/pypi/pyversions/tkinter-icons.svg)](https://pypi.org/project/tkinter-icons/)
 [![Downloads](https://static.pepy.tech/badge/tkinter-icons)](https://pepy.tech/project/tkinter-icons)
