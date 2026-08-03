@@ -69,12 +69,75 @@ the only way to build this package without git. See "Deliberate decisions".
 
 | | |
 |---|---|
-| `main` | 5.0.0 content, merged, **not tagged** — `5f35f9f` |
+| `main` | 5.0.0 content, merged, **not tagged** — `31fcf74` |
 | the sixteen legacy packs | **published to PyPI** with their `<5` caps, 2026-08-02 |
-| the sixteen `tkinter-icons-*` packs | **do not exist on PyPI** — 404 until the tag creates them |
-| the release workflow | dry run **passed** at `ea266e2`, now five commits behind |
+| the release workflow | dry run **passed** at `31fcf74`, 2026-08-03 |
 | the #102 pre-tag review | **done** 2026-08-03; findings on the issue, fixes in #104 and #105 |
-| what is left | one dry run, one tag |
+| **the 5.0.0 release** | **half published, and blocked on a PyPI rate limit** — see below |
+
+### The release is in progress and stalled — read this before touching anything
+
+**Four of the eighteen are on PyPI. Fourteen are not.** Published 2026-08-03: `tkinter-icons-bs`, `-devicon`, `-eva`, `-fa`, all at 1.1.0. Still unpublished: the other twelve packs, `tkinter-icons` 5.0.0 itself, and the `ttkbootstrap-icons` 5.0.0 shim.
+
+**Nothing is user-visible-broken, and that is worth preserving.** The base is not published, so no one can run `pip install "tkinter-icons[lucide]"` and hit a half-resolved extra. Four orphan packs with no base package are harmless. **Publish the base only after all sixteen packs are live** — its extras pin `>=1.1.0`, so a base published early is the one state that breaks a real install.
+
+**What blocked it: `429 Too many new projects created`.** This release creates seventeen brand-new PyPI project names, and PyPI caps new-project creation per user. Four went through, then everything after was refused. This is *not* the "20 per hour" default in `warehouse/config.py` — eight probes spread over 5.5 hours were all refused, so production runs something stricter and undocumented. It is also **not** bot detection or an automation block: four uploads succeeded first from the same machine, token and IP, and the same wall would appear running `twine` by hand or publishing through Trusted Publishing.
+
+**Do not retry in a loop. Every attempt appears to spend from the quota, refused ones included** — that is the most likely reason 5.5 hours of hourly probing never cleared it, and those probes may have been holding the window open. PyPI's own guidance, from [the trusted-publishers troubleshooting page](https://docs.pypi.org/trusted-publishers/troubleshooting/#ratelimiting), is **wait 24 hours, try once, then email admin@pypi.org**. Note that page documents a *different* limit — 100 trusted-publisher registrations per 24h — so only its remedy applies, not its number.
+
+**Last attempt was 2026-08-03 05:31.** The next attempt should be after **2026-08-04 05:31**, and should be a single upload, not a loop.
+
+### Resuming the release
+
+**The artifacts are gone** — they were built into a session scratchpad. Rebuild them; the build is reproducible and takes about a minute.
+
+**The `v5.0.0` tag exists locally and is not pushed.** It is what makes setuptools-scm resolve the base to `5.0.0` instead of `4.0.1.dev<n>`. If it is missing, recreate it before building, or export `SETUPTOOLS_SCM_PRETEND_VERSION_FOR_TKINTER_ICONS=5.0.0`.
+
+```bash
+git tag v5.0.0                      # if `git tag -l v5.0.0` is empty
+DIST=/tmp/dist && rm -rf $DIST && mkdir -p $DIST
+for d in packages/tkinter-icons-*/ packages/tkinter-icons packages/ttkbootstrap-icons-shim; do
+  .venv-home/Scripts/python.exe -m build --outdir $DIST "$d"
+done
+.venv-home/Scripts/python.exe -m twine check $DIST/*          # expect 36 PASSED
+```
+
+Then upload **one project at a time**, in this order, stopping at the first 429:
+
+```bash
+# 1. the twelve remaining packs, one command per pack
+.venv-home/Scripts/python.exe -m twine upload --config-file .pypirc --skip-existing \
+  /tmp/dist/tkinter_icons_fluent-1.1.0*
+# then: fluent_reg, gmi, ion, lucide, mat, meteocons, remix, rpga, simple, typicons, weather
+
+# 2. only after all sixteen packs are live
+.venv-home/Scripts/python.exe -m twine upload --config-file .pypirc /tmp/dist/tkinter_icons-5.0.0*
+
+# 3. last, so it never points at a version that does not exist
+.venv-home/Scripts/python.exe -m twine upload --config-file .pypirc --skip-existing \
+  /tmp/dist/ttkbootstrap_icons-5.0.0*
+```
+
+Check what is actually live rather than trusting a log — a batch loop misreported this once, because `curl` inside `while read` eats stdin:
+
+```bash
+for d in $(.venv-home/Scripts/python.exe -c "from tkinter_icons.packs import KNOWN_PACKS; print(' '.join(p.distribution for p in KNOWN_PACKS))"); do
+  printf '%-28s %s\n' "$d" "$(curl -s -o /dev/null -w '%{http_code}' https://pypi.org/pypi/$d/json </dev/null)"
+done
+```
+
+**`.pypirc` is in the repository root**, gitignored at `.gitignore:33` and untracked, so the token cannot be committed. `twine` does not find it automatically — it reads `~/.pypirc` — hence `--config-file .pypirc` on every command above.
+
+### After the packages are up
+
+**Pushing `v5.0.0` will produce one red workflow run, and that is expected.** `publish` fails deliberately when the base version is already on PyPI, because normally that means the tag is wrong (`release.yml`, and "Deliberate decisions" below). Since the base will have been uploaded by hand, that check fires. Packs and the shim skip-existing cleanly. Consequence: the `release` job never runs, so **create the GitHub Release by hand**:
+
+```bash
+.venv-home/Scripts/python.exe .github/scripts/release_notes.py CHANGELOG.md 5.0.0 NOTES.md /dev/stdout tkinter-icons
+gh release create v5.0.0 --title "tkinter-icons 5.0.0 — renamed to tkinter-icons, rebuilt around measured glyph ink" --notes-file NOTES.md
+```
+
+**Trusted Publishing was deliberately deferred, and this is the reason.** The owner's call, 2026-08-03: registering seventeen *pending* publishers means seventeen web forms of five fields each before anything can be published, which is not a reasonable thing to have on the critical path. Once these projects exist, a publisher is configured on each project's own settings page instead, at whatever pace suits — see `RELEASE.md`. Until that is done **the release workflow cannot publish**, so 5.0.1 is a manual upload too unless the publishers are set up first.
 
 Milestone **5.0.0** (issues #67–#71, #75, #79):
 
@@ -204,10 +267,19 @@ extra, and revert #88 — not erasure.
 Do not reopen this as an open question. If a complaint arrives, the path above
 is the plan.
 
-Release mechanics live in `RELEASE.md`, and are real now: tag-driven, Trusted
-Publishing, no token anywhere. **One tag, `v<version>`, releases the whole
-repository** — it builds all eighteen distributions, publishes the ones PyPI
-does not already have, and creates one GitHub Release.
+Release mechanics live in `RELEASE.md`: tag-driven, Trusted Publishing, no token
+anywhere. **One tag, `v<version>`, releases the whole repository** — it builds
+all eighteen distributions, publishes the ones PyPI does not already have, and
+creates one GitHub Release.
+
+**None of that is live yet, and 5.0.0 is not being released that way.** Trusted
+Publishing needs a publisher registered per project, and for a project that does
+not exist yet that means a *pending* publisher — seventeen web forms before the
+first upload. The owner declined that on the critical path (2026-08-03), so
+5.0.0 is being uploaded by hand with a token from `.pypirc`, and the publishers
+get configured afterwards against projects that exist. **Until they are
+configured the workflow cannot publish anything**, so treat the tag-driven path
+as designed-and-tested but not yet in service.
 
 **Per-distribution tags were a mistake I introduced, not a decision the owner
 made.** #70 shipped `<distribution>-v<version>` for the other seventeen; the
@@ -226,17 +298,15 @@ bumped every time and an existing one means the tag is wrong.
 
 ## Next session — start here
 
-**One irreversible step remains: the tag.** Everything before it is done. `main` is 5.0.0, the sixteen legacy packs are published with their caps, and the release workflow has been exercised end to end without publishing anything.
+**The release is half done and waiting on a PyPI rate limit. Do not start anything else until it is finished.** Full detail is under "The release is in progress and stalled" in Current state; the short version is that four packs are published, fourteen distributions are not, and PyPI refuses to create more new projects.
 
-**The #102 review is done, and there are no open PRs.** It was carried out 2026-08-03 and its findings are two comments on the issue: the findings themselves, then the wrap-up marking every checklist item closed. Three landed in #104, the fourth became #105. Read those two comments before re-opening any of it — they record what was measured, not just what was concluded.
+**The next action is a single upload attempt after 2026-08-04 05:31** — 24 hours from the last one. One command, one project, no retry loop; every attempt seems to spend from the quota whether or not it succeeds. If it is still refused, email admin@pypi.org, which is what PyPI's own docs tell you to do. The commands to rebuild and to resume are in that section, in order, with the reason the order matters.
 
-Two steps remain:
+**Everything that precedes publishing is done.** `main` is `31fcf74`, the dry run passed against exactly that commit, the #102 review is complete, and there are no open PRs. The review's findings are two comments on #102 — the findings, then the wrap-up marking every item closed — and they record what was measured, not just what was concluded. Read those before re-opening any of it.
 
-1. **Re-run the Release dry run against `main`.** Actions → Release → *Run workflow*, `v5.0.0`, branch `main`. The last run — [30774503160](https://github.com/israel-dryer/tkinter-icons/actions/runs/30774503160), the workflow's first execution ever — verified `ea266e2`, which is now five commits behind. Build succeeded; `publish` and `release` correctly skipped, both gated on `github.event_name == 'push'`. It costs one click and re-verifies the exact tree about to be tagged.
+**Do not re-run the dry run or re-review.** Both were done against the current tree. The only thing standing between here and a finished release is PyPI's quota.
 
-2. **Tag `v5.0.0`.** `git tag v5.0.0 && git push origin v5.0.0`. One tag builds all eighteen, publishes packs → base → shim in that order, and writes one GitHub Release. **This is the point of no return** — PyPI does not allow re-uploading a version, even a deleted one.
-
-3. **Afterwards:** point Read the Docs' Default branch back at `main`; delete `gh-pages`; delete the merged remote branches — `5.0`, `docs/handoff-post-95`, `docs/legacy-final-release-and-meteocons`, `docs/drop-bootstack-references`, `docs/migration-scope-and-shim-extra`, `docs/ci-badge`, `docs/pack-readmes-generated`, and `fix/release-latest-marker` (that last is #96, closed unmerged and superseded by #97). **Leave `release/ttkbootstrap-icons-packs-final` alone** — it is the only tree where the sixteen old packs still exist.
+**Afterwards** — once all eighteen are on PyPI and the GitHub Release exists: point Read the Docs' Default branch back at `main`; delete `gh-pages`; set up the seventeen trusted publishers so the *next* release can be tag-driven; delete the merged remote branches — `5.0`, `docs/handoff-post-95`, `docs/legacy-final-release-and-meteocons`, `docs/drop-bootstack-references`, `docs/migration-scope-and-shim-extra`, `docs/ci-badge`, `docs/pack-readmes-generated`, and `fix/release-latest-marker` (that last is #96, closed unmerged and superseded by #97). **Leave `release/ttkbootstrap-icons-packs-final` alone** — it is the only tree where the sixteen old packs still exist.
 
 ### What the #102 review found, and the two traps in it
 
