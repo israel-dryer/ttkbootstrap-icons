@@ -8,7 +8,6 @@
 
 [![PyPI](https://img.shields.io/pypi/v/tkinter-icons.svg)](https://pypi.org/project/tkinter-icons/)
 [![Python Versions](https://img.shields.io/pypi/pyversions/tkinter-icons.svg)](https://pypi.org/project/tkinter-icons/)
-[![Downloads](https://static.pepy.tech/badge/tkinter-icons)](https://pepy.tech/project/tkinter-icons)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](../../LICENSE)
 
 Font-based icons for Tkinter — 61,000+ icons across sixteen sets, one import, no image files to manage.
