@@ -16,9 +16,9 @@ The move
 
    * - 4.0.0
      - 5.0.0
-   * - ``pip install ttkbootstrap-icons ttkbootstrap-icons-bs``
+   * - ``pip install ttkbootstrap-icons-bs``
      - ``pip install "tkinter-icons[bootstrap]"``
-   * - ``pip install ttkbootstrap-icons ttkbootstrap-icons-mat``
+   * - ``pip install ttkbootstrap-icons-mat``
      - ``pip install "tkinter-icons[material]"``
    * - ``from ttkbootstrap_icons import Icon``
      - ``from tkinter_icons import Icon``

@@ -37,10 +37,12 @@ every package inside is renamed; only the containing directory lags. Don't
 .venv-home/Scripts/python.exe -m pip install --no-deps $(printf -- '-e %s ' packages/tkinter-icons-*/)
 .venv-home/Scripts/python.exe -m pip install --no-deps -e packages/ttkbootstrap-icons-shim
 .venv-home/Scripts/python.exe -m pip install -r docs/requirements.txt pytest
-.venv-home/Scripts/python.exe -m pytest -q          # 364 passed, 1 skipped
+.venv-home/Scripts/python.exe -m pytest -q          # 365 passed, 1 skipped
 ```
 
 Having every pack installed is worth keeping. The docs build reads each pack's live provider for the packs table and the previews, `generate_metrics --all` needs them, and `verify_packages.py --imports` exercises every entry point.
+
+**`ttkbootstrap` is deliberately *not* installed here**, even though the docs have an integration page for it. Verifying those examples means a throwaway venv (`python -m venv`, then `pip install ttkbootstrap` plus the packs the example uses); that keeps a widget library out of the environment the release is verified in. It is not a large cost — the whole ttkbootstrap 2.0 rewrite was checked that way.
 
 **Everything but the base package needs `--no-deps`** in a working tree. Each
 pack and the shim require `tkinter-icons>=5.0.0`, and setuptools-scm now really
@@ -63,10 +65,14 @@ the only way to build this package without git. See "Deliberate decisions".
 
 ## Current state
 
-| Branch | What |
+**`5.0` reached `main` on 2026-08-02 as PR #100, and `main` is now 5.0.0 — untagged.** The integration branch has done its job; `5.0` still exists on `origin` but nothing lands there any more. **New work branches off `main` and PRs to `main`.**
+
+| | |
 |---|---|
-| `main` | 4.0.0, untouched, still publishable |
-| `5.0` | integration branch — all 5.0 work lands here, then one PR to `main` |
+| `main` | 5.0.0 content, merged, **not tagged** — `ea266e2` |
+| the sixteen legacy packs | **published to PyPI** with their `<5` caps, 2026-08-02 |
+| the release workflow | dry run **passed** — first execution ever |
+| what is left | one tag |
 
 Milestone **5.0.0** (issues #67–#71, #75, #79):
 
@@ -98,7 +104,17 @@ Also merged: #77, three cloud-review findings plus a pack-asset-runner bug; #82
 
 Closed unmerged: #96, superseded by #97.
 
-**Nothing is in flight.** Every PR for 5.0.0 is merged into `5.0`, and what remains is the release itself — the numbered list under "Next session".
+**Merged into `main` after #100, and therefore after the milestone closed:**
+
+| PR | What |
+|---|---|
+| #98 | retires #95 from the handoff, reopens the list on the release |
+| #99 | bootstack removed from every user-facing mention — see below |
+| #100 | **the release merge**: `5.0` → `main`, closing #69, #71, #79 and #89 |
+
+**In flight: #101** — four docs fixes found by reading rather than by any check. A broken `[all]` install line on the shim's *PyPI page*, the migration guide implying 4.0.0 shipped Bootstrap, that guide explaining two releases at once, and the ttkbootstrap examples teaching a pre-2.0 API. It also adds the guard that would have caught the first one.
+
+**The milestone issues are all closed, and #89 closed because #100's body named it.** That was not automatic: no commit body mentions #89, and its `Closes #89` lived only in PR #92's body, which merged to `5.0` — a non-default base — so GitHub had already discarded the link and does not re-evaluate it. #69, #71 and #79 closed from keywords already in the commit bodies. #67, #68, #70 and #75 were closed earlier by hand and their links are lost for good.
 
 `origin` also carries two branches that are **not** stale and must not be
 deleted with the rest:
@@ -202,30 +218,42 @@ bumped every time and an existing one means the tag is wrong.
 
 ## Next session — start here
 
-`5.0` carries everything for the release. Verified on the merged branch, 2026-08-02: `pytest` 364 passed / 1 skipped; `verify_packages.py --strict --imports --tag v5.0.0` **all clear across all eighteen**; `generate_metrics --all --check` clean; `sphinx-build -W --keep-going -n -j auto` clean with `packs.html` present.
+**One irreversible step remains: the tag.** Everything before it is done. `main` is 5.0.0, the sixteen legacy packs are published with their caps, and the release workflow has been exercised end to end without publishing anything.
 
-**Nothing is blocking. What remains is a release, done in an order that matters.**
+**Before the tag, do the review in #102.** That is the explicit ask from 2026-08-02, and the reasoning is that every failure this milestone found late was found by *reading*, not by a check: #101's four fixes were all invisible to `pytest`, `verify_packages.py`, and `sphinx -W`, and one of them — `pip install "tkinter-icons[all]"` on the shim's PyPI page — was a command that cannot work, sitting on a page about to be published. A green preflight is not evidence the prose is right.
 
-1. **Publish the sixteen legacy packs, before the tag.** `release/ttkbootstrap-icons-packs-final`, built and verified but not uploaded. `RELEASE.md` has the procedure and the reasoning; the short version is that their `<5` caps have to land before the shim exists, and the automated run publishes the shim, so there is no longer a gap to slot them into. Manual `twine` upload with a token — that branch is cut from `v4.0.0` and has no `.github` at all.
+Then:
 
-2. **Merge `5.0` → `main` as one PR.** What it closes, and what it does not, is below — the PR body has to carry `Closes #89` itself. This step also has to come before the dry run, which is not an ordering preference: `workflow_dispatch` offers a *Run workflow* button only for workflows present on the **default branch**, and `main` has no `.github/` directory at all today. `gh workflow list --all` confirms it — `CI` and `pages-build-deployment`, no `Release`. There is nothing to dispatch until this merge lands.
+1. **Merge #101** (or close it, if the review supersedes it). It is the only open PR.
 
-3. **Dry-run the release workflow, still before the tag.** Actions → Release → *Run workflow*, naming `v5.0.0` and now `main`. `release.yml` was rewritten wholesale by #97 and **has never executed in any form**. The dry run builds and verifies all eighteen and publishes nothing — the `publish` and `release` jobs are gated on `github.event_name == 'push'`. Do not skip this. The alternative to finding a problem here is finding it during an irreversible upload.
+2. **Re-run the Release dry run against `main`.** Actions → Release → *Run workflow*, `v5.0.0`, branch `main`. The last run — [30774503160](https://github.com/israel-dryer/tkinter-icons/actions/runs/30774503160), the workflow's first execution ever — verified `ea266e2`, which is *older* than whatever the review lands. Build succeeded; `publish` and `release` correctly skipped, both gated on `github.event_name == 'push'`. It costs one click and re-verifies the exact tree about to be tagged.
 
-4. **Tag `v5.0.0`.** One tag releases everything.
+3. **Tag `v5.0.0`.** `git tag v5.0.0 && git push origin v5.0.0`. One tag builds all eighteen, publishes packs → base → shim in that order, and writes one GitHub Release. **This is the point of no return** — PyPI does not allow re-uploading a version, even a deleted one.
 
-5. **Afterwards:** point RTD's Default branch back at `main`, delete `gh-pages`, and delete the merged remote branches. Leave `release/ttkbootstrap-icons-packs-final` alone.
+4. **Afterwards:** point Read the Docs' Default branch back at `main`; delete `gh-pages`; delete the merged remote branches — `5.0`, `docs/handoff-post-95`, `docs/legacy-final-release-and-meteocons`, `docs/drop-bootstack-references`, `docs/migration-scope-and-shim-extra`, and `fix/release-latest-marker` (that last is #96, closed unmerged and superseded by #97). **Leave `release/ttkbootstrap-icons-packs-final` alone** — it is the only tree where the sixteen old packs still exist.
 
-**What step 2 actually closes — checked 2026-08-02.** #67, #68, #70 and #75 are already closed. Of the rest, the commit bodies on `5.0` carry `Closes #69`, `Closes #71` and `Closes #79`, and those three close on the push to `main`. **#89 does not close, and expecting it to is the trap**: no commit body mentions it, its `Closes #89` lives only in PR #92's body, and a PR merged to a non-default base does not close its linked issues — nor does GitHub re-evaluate the link when that branch later reaches `main`. So put `Closes #89` in the `5.0` → `main` PR body, along with #69, #71 and #79 for belt and braces. #67's only reference anywhere is `Refs #67`, which is not a closing keyword; it is already closed, so nothing needs doing, but do not read its presence in a commit as a link that will fire.
+### The pre-tag review — #102
+
+**Tracked as #102**, which carries the checklist and is the place to record findings. The summary below is why it exists; the issue is what to work from.
+
+Verified green on `main` as of 2026-08-02: `pytest` 365 passed / 1 skipped, `verify_packages.py --strict --imports --tag v5.0.0` all clear across eighteen, `generate_metrics --all --check` clean, `sphinx-build -W --keep-going -n -j auto` clean. **Do not treat that as the review.** It is the floor.
+
+What is worth a human or an agent actually reading, roughly in order of what would hurt most if wrong:
+
+- **Every install line and import line that ships to PyPI.** The eighteen `README.md` files are the pages users land on, and they are checked by almost nothing. `TestReadmesDoNotAdvertiseExtrasThatDoNotExist` now catches a nonexistent *extra*, and that is all it catches — it says nothing about a wrong import, a stale class name, or an install command that is merely misleading. Note that the sixteen pack READMEs are *known* wrong and tracked as #90.
+- **Runnable examples, actually run.** The ttkbootstrap page taught a pre-2.0 API for an unknown length of time and every check passed throughout. Nothing executes the code in the docs. Anything with `.. code-block:: python` is unverified unless someone types it.
+- **Claims about behaviour that no test pins.** `sizing-and-quality`, `stateful-icons`, and `headless-rendering` describe measured ink, even-snapping, oversampling and state maps in prose. #87 exists because those should be *generated figures*; until they are, they are assertions.
+- **The 5.0.0 changelog entry**, because `release_notes.py` slices it verbatim into the GitHub Release. A mistake there is published under the release's own name and cannot be quietly amended.
+- **Cross-document consistency.** `CHANGELOG.md`, `RELEASE.md`, both root READMEs, and the docs say overlapping things about install idiom, the missing `[all]`, and what 4.0.0 did. Two of this session's four fixes were one document contradicting another.
 
 ### Not blocking, and worth doing next
 
 - **#87's other half.** The five screenshots are retaken and the browser has its own icon, but the *generated* figures are not built: `user-guide/sizing-and-quality` still describes measured ink, padding, oversampling and even-snapping entirely in prose, where every claim is unfalsifiable by the reader and every one of them is a side-by-side render the library could draw at build time. Same for outline-vs-fill on `icons-and-names` and the multi-pack comparison on `choosing-a-pack`. `pack_showcase.py` already does exactly this for the pack previews — the pattern, the light/dark handling and the `-W` safety net all exist.
-- **#89's prose pass.** The pages shipped; the re-read did not. Repetition across pages, and `#0d6efd` — Bootstrap blue — still in the examples on `index.rst` and `icons-and-names.rst`, on a site whose palette is teal. The landing page and both READMEs were fixed; these two were left because changing one of three would have been worse than leaving all three.
+- **#89's prose pass.** The pages shipped; the re-read did not. Repetition across pages, and `#0d6efd` — Bootstrap blue — still in the examples on `index.rst` and `icons-and-names.rst`, on a site whose palette is teal. The landing page and both READMEs were fixed; these two were left because changing one of three would have been worse than leaving all three. #89 is closed, so this survives only here — it is a genuine loose end, not a completed item.
 - **#90.** Sixteen pack READMEs still teach `pip install tkinter-icons-weather` and `from tkinter_icons_weather import WeatherIcon` on their PyPI pages. The chosen approach is recorded on the issue: screenshot the rendered docs pack page in light mode, generate the factual blocks, keep a hand-written intro.
 - **#91.** `import tkinter_icons` requires `tkinter` even for `render_pil`, which the headless guide had to be softened to admit. Making the Tk imports lazy is a small, contained change and restores the stronger claim.
 
-**The milestone issues stay open until `5.0` reaches `main`.** #69, #71 and #79 are shipped and still open, and closing them by hand loses the link to the merge that shipped them — which already happened to #67, #68, #70 and #75 and cannot be undone. They close on the merge, via the `Closes #n` keywords already in the commit bodies. #87 and #89 are genuine follow-ups and outlive the milestone; #89 in particular will *not* close on its own, which is why the step-3 note above says to name it in the merge PR body.
+**The milestone is closed.** #67–#71, #75, #79 and #89 are all closed as of #100. The three still open — #87, #90, #91 — are genuine follow-ups that outlive the milestone and block nothing.
 
 **Two rules the owner stated this session, which outlive it.** Prose is written
 **unwrapped** — one long line per paragraph in markdown, PR bodies, and commit
@@ -236,6 +264,10 @@ do not quietly rewrite the docs down to match what ships. Both are recorded in
 
 **Working style, learned the hard way this milestone:** push and open the PR,
 then stop. Do not merge, and do not close milestone issues by hand.
+
+**The checks do not read prose, and this milestone kept proving it.** `pytest`, `verify_packages.py --strict`, `generate_metrics --check` and `sphinx -W` were all green while the shim's PyPI page told users to run an install command that cannot work, the migration guide asserted the opposite of what 4.0.0 shipped, and the ttkbootstrap examples taught an API that project has retired. Every one of those was found by a person reading, and each was then fixed *and* narrowed by a guard where a guard was possible — `TestReadmesDoNotAdvertiseExtrasThatDoNotExist` is that pattern. When a docs bug is found, ask what would have caught it, and add that if it is cheap; where it is not cheap, say so in the issue rather than pretending the fix was the whole job.
+
+**Do not paste an install command, an import, or an API call into documentation without running it.** The ttkbootstrap rewrite was verified in a throwaway venv precisely so `.venv-home` stayed as this file describes it; that is the pattern to copy, not an unusual precaution.
 
 ---
 
@@ -535,12 +567,9 @@ Each of these looks like a defect in isolation. They aren't.
 
 ## Conventions
 
-- **Branches:** `refactor/*`, `fix/*`, `feat/*` off `5.0`. PRs target `5.0`.
-  Stack dependent PRs on each other; GitHub retargets on merge.
-- **Every PR names an issue** on the 5.0.0 milestone with `Closes #n` — which
-  takes effect only when `5.0` reaches `main`, so the issues stay open in the
-  meantime. Merge with a merge commit (`gh pr merge <n> --merge --delete-branch`),
-  matching #72–#78.
+- **Branches:** `refactor/*`, `fix/*`, `feat/*`, `docs/*` off **`main`**, and PRs target **`main`**. This changed with #100 — `5.0` was the integration branch and is finished. Stack dependent PRs on each other; GitHub retargets on merge.
+- **Every PR names an issue with `Closes #n`** where one exists. Now that `main` is the default branch this takes effect on merge, immediately — which is the normal GitHub behaviour and was *not* true during the `5.0` period. Pure bookkeeping PRs (#94, #98) name no issue; that is an accepted exception, not an oversight.
+  Merge with a merge commit (`gh pr merge <n> --merge --delete-branch`), matching #72–#78.
 - **Changelog:** root `CHANGELOG.md` for the base package, plus one per pack.
   Format follows bootstack: `## [<version>] — <descriptive title>`, which drives
   the GitHub Release title and body via `release_notes.py`.
