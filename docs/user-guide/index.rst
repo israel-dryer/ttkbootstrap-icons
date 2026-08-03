@@ -33,7 +33,7 @@ Four short pages: install a pack, draw an icon, work out which set you want, and
       :link: ../getting-started/migrating
       :link-type: doc
 
-      Coming from ``ttkbootstrap-icons`` 4.0.0. Your code keeps working; two things genuinely changed.
+      Coming from ``ttkbootstrap-icons`` 4.0.0. Your code keeps working; the imports and the centering are what change.
 
 Feature guides
 --------------

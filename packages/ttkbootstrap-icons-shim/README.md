@@ -13,21 +13,17 @@ it, so existing installs keep working, and it will not receive further updates.
 
 ```bash
 pip uninstall ttkbootstrap-icons
-pip install "tkinter-icons[bootstrap]"          # name the packs you use
-pip install "tkinter-icons[bootstrap,material]" # two at once
+pip install "tkinter-icons[material]"
 ```
 
-Then change your imports:
+Icon packs are now extras, one per set, and there is no `[all]` — name the ones
+you use: `pip install "tkinter-icons[bootstrap,material]"`.
+
+Then change your imports, which now all come from one root:
 
 ```python
 from ttkbootstrap_icons_mat import MatIcon    # old
 from tkinter_icons import MaterialIcon        # new
-```
-
-Icon packs are now extras, so you install and import one name:
-
-```bash
-pip install "tkinter-icons[material]"
 ```
 
 See the [documentation](https://tkinter-icons.readthedocs.io/en/latest/) for the

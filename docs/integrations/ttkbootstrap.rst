@@ -86,8 +86,12 @@ A common reason to mix: Bootstrap for interface chrome, ``[simple]`` for brand m
 
    from tkinter_icons import SimpleIcon
 
-   github = SimpleIcon("github", size=16, color=app.style.colors.fg)
-   ttk.Button(app, text="Sign in with GitHub", image=github.image, compound="left").pack()
+   github = SimpleIcon("github", size=16)
+   button = ttk.Button(app, text="Sign in with GitHub", compound="left").pack()
+
+   github.map(button)
+
+A monochrome brand mark wants the button's own foreground, so map it rather than naming a color. The accent tokens above are fixed for a family and survive a light/dark switch unchanged, but ``colors.fg`` inverts between the two — read once into a constructor, it would leave a near-white mark on a light background.
 
 Which library draws your icon?
 ------------------------------

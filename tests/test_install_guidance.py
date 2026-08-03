@@ -117,7 +117,9 @@ class TestReadmesDoNotAdvertiseExtrasThatDoNotExist:
             named = {
                 extra.strip()
                 for group in re.findall(
-                    r"tkinter-icons\[([^\]]+)\]", readme.read_text(encoding="utf-8-sig")
+                    # Both spellings: pip normalises them, so `tkinter_icons[all]`
+                    # is the same broken instruction and has to be caught too.
+                    r"tkinter[-_]icons\[([^\]]+)\]", readme.read_text(encoding="utf-8-sig")
                 )
                 for extra in group.split(",")
             }
