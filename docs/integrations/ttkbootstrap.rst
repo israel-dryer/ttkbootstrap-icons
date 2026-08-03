@@ -3,7 +3,11 @@ ttkbootstrap
 
 `ttkbootstrap <https://github.com/israel-dryer/ttkbootstrap>`_ is a themed widget library for tkinter. It has Bootstrap icons built in, so if Bootstrap icons are all you need, you do not need this library at all.
 
-You do need it when you want **a different icon set** — Material, Lucide, Font Awesome, brand marks — inside a ttkbootstrap application. Everything works, because a ttkbootstrap ``Window`` is a ``tkinter.Tk`` and its widgets are ttk widgets.
+You do need it when you want **a different icon set** — Material, Lucide, Font Awesome, brand marks — inside a ttkbootstrap application. Everything works, because a ttkbootstrap ``App`` is a ``tkinter.Tk`` and its widgets are ttk widgets.
+
+.. note::
+
+   These examples target **ttkbootstrap 2.0 and later**, where ``ttk.App`` creates the root window and installs a theme in one step, and the theme is driven from the app rather than through a ``Style``.
 
 The basics
 ----------
@@ -14,7 +18,7 @@ The basics
 
    from tkinter_icons import LucideIcon
 
-   app = ttk.Window(themename="darkly")
+   app = ttk.App(title="Icons", theme="bootstrap-dark")
 
    save = LucideIcon("save", size=16, color="white")
    ttk.Button(app, text="Save", image=save.image, compound="left").pack(padx=20, pady=20)
@@ -34,11 +38,10 @@ Let the theme pick the color
 
    from tkinter_icons import LucideIcon
 
-   app = ttk.Window(themename="darkly")
+   app = ttk.App(title="Icons", theme="bootstrap-dark")
 
    icon = LucideIcon("check", size=16)
-   button = ttk.Button(app, text="Approve", bootstyle="success")
-   button.pack(padx=20, pady=20)
+   button = ttk.Button(app, text="Approve", bootstyle="success").pack(padx=20, pady=20)
 
    icon.map(button)
 
@@ -48,7 +51,8 @@ The icon now follows the button through hover, pressed, and disabled — and re-
 
 .. code-block:: python
 
-   app.style.theme_use("flatly")     # icons recolor themselves
+   app.theme_use("bootstrap-light")   # icons recolor themselves
+   app.toggle_theme()                 # or just flip light/dark
 
 See :doc:`../user-guide/stateful-icons` for per-state colors and per-state icon names.
 
@@ -82,7 +86,7 @@ A common reason to mix: Bootstrap for interface chrome, ``[simple]`` for brand m
 
    from tkinter_icons import SimpleIcon
 
-   github = SimpleIcon("github", size=16, color="white")
+   github = SimpleIcon("github", size=16, color=app.style.colors.fg)
    ttk.Button(app, text="Sign in with GitHub", image=github.image, compound="left").pack()
 
 Which library draws your icon?
