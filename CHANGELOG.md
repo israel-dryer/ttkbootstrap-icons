@@ -24,9 +24,11 @@ depends on `tkinter-icons` and re-exports everything, including submodules, so
 `from ttkbootstrap_icons.icon import Icon` keeps working. It warns once on
 import and will not be updated again.
 
-```python
+```bash
 pip install "tkinter-icons[material]"
+```
 
+```python
 from tkinter_icons import MaterialIcon
 ```
 
@@ -98,7 +100,7 @@ from tkinter_icons import MaterialIcon
   generated — and the runner treated that as a failure rather than a skip.
   (#77)
 
-- **`render_pil` works on a pack's icon class without a warm-up.** It read `Icon._icon_set_current`, a `ClassVar` shared by every subclass, so `MaterialIcon.render_pil("home")` drew a Material icon only if something had already constructed one — and raised `RuntimeError` in a fresh process, which is exactly how a test suite or a build step would call it. A pack now names its own provider through `Icon.provider_class`, and `render_pil` resolves friendly names the way the constructor does. `Icon` itself still raises, since it has no pack of its own.
+- **`render_pil` works on a pack's icon class without a warm-up.** It read `Icon._icon_set_current`, a `ClassVar` shared by every subclass, so `MaterialIcon.render_pil("home")` drew a Material icon only if something had already constructed one — and raised `RuntimeError` in a fresh process, which is exactly how a test suite or a build step would call it. A pack now names its own provider through `Icon.provider_class`, and `render_pil` resolves friendly names the way the constructor does. The base `Icon` has no pack of its own, so it raises in a fresh process and otherwise falls back to whichever set was loaded last.
 
 - **Every pack's icon class accepts `options`.** `RenderOptions` was public API and the documented way to change how an icon draws, reachable only through `Icon.render_pil` or the base `Icon` — never through the sixteen classes anyone actually constructs. It is keyword-only, so it cannot be confused with `style`.
 
@@ -122,9 +124,9 @@ from tkinter_icons import MaterialIcon
 
 - **The `[all]` extra.** The sixteen sets serve disjoint purposes — brand
   marks, developer logos, fantasy glyphs, weather symbols — so no application
-  draws from all of them, and installing every one cost about 17 MB of fonts
-  and JSON to get fifteen icon sets nobody opens. That is the bundling extras
-  exist to avoid. Name the one or two you need. (#79)
+  draws from all of them, and installing every one cost about 22 MB of fonts
+  and JSON on disk to get fifteen icon sets nobody opens. That is the bundling
+  extras exist to avoid. Name the one or two you need. (#79)
 
 - **`BaseFontProvider`, `ProviderRegistry`, and `load_external_providers` are no
   longer re-exported from the package root.** They define an icon set rather

@@ -76,7 +76,7 @@ The lever is therefore which packs you install. ``[material]`` and ``[fluent]`` 
 
 .. tip::
 
-   This is also why there is no ``[all]`` extra: it would put roughly 17 MB of fonts into every bundle to supply icon sets the application never draws.
+   This is also why there is no ``[all]`` extra: it would put roughly 22 MB of fonts and glyph data into every bundle to supply icon sets the application never draws.
 
 Other freezers
 --------------

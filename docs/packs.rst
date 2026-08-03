@@ -53,7 +53,7 @@ The usual reason is a UI set plus a logo set: no general-purpose pack has a GitH
 
 .. warning::
 
-   There is deliberately no ``[all]`` extra. The sets serve disjoint purposes, so no application draws from all sixteen, and installing every one costs about 17 MB to get fifteen sets nobody opens — the bundling that extras exist to avoid. Name the ones you use.
+   There is deliberately no ``[all]`` extra. The sets serve disjoint purposes, so no application draws from all sixteen, and installing every one costs about 22 MB on disk to get fifteen sets nobody opens — the bundling that extras exist to avoid. Name the ones you use.
 
 Styles
 ------
