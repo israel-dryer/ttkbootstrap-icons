@@ -6,13 +6,19 @@ Fluent System Icons by Microsoft provide regular and filled styles across many s
 [![PyPI](https://img.shields.io/pypi/v/tkinter-icons-fluent.svg)](https://pypi.org/project/tkinter-icons-fluent/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
 
+**Fluent System Icons** — 12,879 icons, upstream v1.1.261. One of sixteen icon packs for [`tkinter-icons`](https://pypi.org/project/tkinter-icons/).
+
 ---
 
 ## Install
 
+This pack is an extra of `tkinter-icons`, so you install and import one name:
+
 ```bash
-pip install tkinter-icons-fluent
+pip install "tkinter-icons[fluent]"
 ```
+
+Installing `tkinter-icons-fluent` directly also works and pulls in the base package, but the extra is the supported form — it is what the error messages, the documentation, and the other fifteen packs all use.
 
 ---
 
@@ -20,15 +26,12 @@ pip install tkinter-icons-fluent
 
 ```python
 import tkinter as tk
-from tkinter_icons_fluent import FluentIcon
+from tkinter_icons import FluentIcon
 
 root = tk.Tk()
 
-regular = FluentIcon("home-16", size=24, color="#6f42c1", style="regular")
-filled = FluentIcon("home-16", size=24, color="#6f42c1", style="filled")
-
-tk.Button(root, image=regular.image, text="Regular", compound="left").pack()
-tk.Button(root, image=filled.image, text="Filled", compound="left").pack()
+icon = FluentIcon("search-32", size=24, color="#333", style="regular")
+tk.Button(root, image=icon.image, text="Home", compound="left").pack()
 
 root.mainloop()
 ```
@@ -37,29 +40,33 @@ root.mainloop()
 
 ## Styles
 
-| Variant   | Description          |
-|:----------|:---------------------|
-| `regular` | Outline/line style   |
-| `filled`  | Filled style         |
+Fluent System Icons ships 3 styles:
+
+- `regular` (default)
+- `filled`
+- `light`
+
+Pass one as `style=`, or put it in the name — `FluentIcon("search-32", style="regular")` and `FluentIcon("search-32-regular")` are the same icon.
 
 ---
 
-## Icon Browser
+## Browse the icons
 
-Browse available icons with the built-in browser. From your terminal run:
+Every glyph in this pack, rendered by the library itself:
+<https://tkinter-icons.readthedocs.io/en/latest/packs/fluent.html>
+
+Or run the browser that ships with the base package:
 
 ```bash
 tkinter-icons
 ```
 
-Use **Copy Name** in the browser to copy the icon name and style directly for use in your code.
-
-![Icon Browser](https://raw.githubusercontent.com/israel-dryer/tkinter-icons/main/packages/tkinter-icons-fluent/browser.png)
+Use **Copy Name** there to copy an icon name straight into your code.
 
 ---
 
-## License and Attribution
+## License and attribution
 
-- **Upstream license:** Microsoft Fluent UI System Icons — https://github.com/microsoft/fluentui-system-icons
+- **Upstream:** Fluent System Icons — <https://github.com/microsoft/fluentui-system-icons>
+- **Upstream license:** <https://github.com/microsoft/fluentui-system-icons/blob/main/LICENSE> — see `LICENSES/` in this package
 - **Wrapper license:** MIT © Israel Dryer
-

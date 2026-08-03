@@ -2,52 +2,66 @@
 
 Fluent System Icons (Regular style only) provider for tkinter-icons.
 
-This is a lightweight package that includes only the Regular style from Microsoft's Fluent System Icons. If you need multiple styles (Regular, Filled, Light), use the full `tkinter-icons-fluent` package instead.
+This is a lightweight pack that includes only the Regular style from Microsoft's Fluent System Icons. If you need multiple styles (Regular, Filled, Light), install `"tkinter-icons[fluent]"` instead.
 
-## Installation
+[![PyPI](https://img.shields.io/pypi/v/tkinter-icons-fluent-reg.svg)](https://pypi.org/project/tkinter-icons-fluent-reg/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
+
+**Fluent System Icons (Regular)** — 6,336 icons, upstream v1.1.261. One of sixteen icon packs for [`tkinter-icons`](https://pypi.org/project/tkinter-icons/).
+
+---
+
+## Install
+
+This pack is an extra of `tkinter-icons`, so you install and import one name:
 
 ```bash
-pip install tkinter-icons-fluent-reg
+pip install "tkinter-icons[fluent-regular]"
 ```
 
-## Usage
+Installing `tkinter-icons-fluent-reg` directly also works and pulls in the base package, but the extra is the supported form — it is what the error messages, the documentation, and the other fifteen packs all use.
+
+---
+
+## Quick start
 
 ```python
-from tkinter_icons_fluent_reg import FluentRegularIcon
-
-# Create an icon
-icon = FluentRegularIcon("settings-16", size=24, color="black")
-
-# Use in a tkinter widget
 import tkinter as tk
-from tkinter import ttk
+from tkinter_icons import FluentRegularIcon
 
 root = tk.Tk()
-label = ttk.Label(root, text="Settings", image=icon.image, compound="left")
-label.pack()
+
+icon = FluentRegularIcon("home-24", size=24, color="#333")
+tk.Button(root, image=icon.image, text="Home", compound="left").pack()
+
 root.mainloop()
 ```
 
-## Features
+---
 
-- **Lightweight**: Only includes the Regular style (smaller package size)
-- **Simple API**: No style parameter needed - always uses Regular
-- **Full icon set**: Includes all Regular icons from Fluent System Icons v1.1.261
+## Styles
 
-## When to use this package
+This pack ships a single font with no style variants, so there is no `style` argument.
 
-Use `tkinter-icons-fluent-reg` when:
-- You only need the Regular style
-- You want to minimize package size
-- You want a simpler API without style selection
+---
 
-Use `tkinter-icons-fluent` when:
-- You need multiple styles (Regular, Filled, Light)
-- You want to switch between styles at runtime
+## Browse the icons
 
-## License
+Every glyph in this pack, rendered by the library itself:
+<https://tkinter-icons.readthedocs.io/en/latest/packs/fluent-regular.html>
 
-MIT License
+Or run the browser that ships with the base package:
 
-Fluent System Icons are licensed under the MIT License by Microsoft.
-See https://github.com/microsoft/fluentui-system-icons/blob/main/LICENSE
+```bash
+tkinter-icons
+```
+
+Use **Copy Name** there to copy an icon name straight into your code.
+
+---
+
+## License and attribution
+
+- **Upstream:** Fluent System Icons (Regular) — <https://github.com/microsoft/fluentui-system-icons>
+- **Upstream license:** <https://github.com/microsoft/fluentui-system-icons/blob/main/LICENSE> — see `LICENSES/` in this package
+- **Wrapper license:** MIT © Israel Dryer

@@ -128,6 +128,67 @@ class TestReadmesDoNotAdvertiseExtrasThatDoNotExist:
         assert not offenders, f"READMEs name extras that do not exist: {offenders}"
 
 
+class TestPackReadmesTeachTheExtrasIdiom:
+    """The sixteen pack READMEs are PyPI landing pages, and PyPI freezes them per release.
+
+    They shipped the pre-#69 idiom for the whole 5.0.0 cycle — `pip install
+    tkinter-icons-lucide` and `from tkinter_icons_lucide import LucideIcon` — because
+    sixteen hand-written copies of one page go stale together and nothing read them.
+    `TestReadmesDoNotAdvertiseExtrasThatDoNotExist` did not catch it: every name in
+    them was real, just not the supported way in.
+
+    Cost of catching it late is what makes this worth a test rather than an edit. A
+    README on PyPI cannot be corrected without releasing a new version of that
+    distribution, so sixteen wrong pages are sixteen extra pack releases, not sixteen
+    commits.
+
+    `.github/scripts/generate_pack_readmes.py --check` is the stronger guard and it
+    covers the generated facts too. This one is deliberately independent of it: it
+    needs no `docs/_ext` on the path and no live provider, so it still runs on every
+    platform in the test matrix.
+    """
+
+    @staticmethod
+    def _readme(pack):
+        import pathlib
+
+        root = pathlib.Path(__file__).resolve().parents[1]
+        path = root / "packages" / pack.distribution / "README.md"
+        if not path.is_file():
+            pytest.skip("not running from a source checkout")
+        return path.read_text(encoding="utf-8-sig")
+
+    @pytest.mark.parametrize("pack", KNOWN_PACKS, ids=lambda p: p.extra)
+    def test_the_install_line_is_the_extras_form(self, pack):
+        assert pack.install_command in self._readme(pack), (
+            f"{pack.distribution}/README.md does not carry {pack.install_command!r}"
+        )
+
+    @pytest.mark.parametrize("pack", KNOWN_PACKS, ids=lambda p: p.extra)
+    def test_no_bare_install_of_the_raw_distribution(self, pack):
+        import re
+
+        text = self._readme(pack)
+        # The prose may name the distribution - it is the page's own title. What must
+        # not appear is a *command* telling the reader to install it that way.
+        bare = re.findall(rf"pip install {re.escape(pack.distribution)}\b", text)
+        assert not bare, f"{pack.distribution}/README.md teaches a bare install: {bare}"
+
+    @pytest.mark.parametrize("pack", KNOWN_PACKS, ids=lambda p: p.extra)
+    def test_imports_come_from_the_single_root(self, pack):
+        import re
+
+        text = self._readme(pack)
+        wrong = re.findall(rf"from {re.escape(pack.module)} import (\w+)", text)
+        assert not wrong, (
+            f"{pack.distribution}/README.md imports from the pack module: {wrong}. "
+            f"Every class is re-exported from tkinter_icons."
+        )
+        assert f"from tkinter_icons import {pack.export_names[0]}" in text, (
+            f"{pack.distribution}/README.md never shows the supported import"
+        )
+
+
 class TestProviderDiscoveryIsConsistent:
     """Every discovery site must scan both entry-point groups.
 

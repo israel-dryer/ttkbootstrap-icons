@@ -2,49 +2,69 @@
 
 Bootstrap Icons provider for tkinter-icons.
 
-## Installation
+[![PyPI](https://img.shields.io/pypi/v/tkinter-icons-bs.svg)](https://pypi.org/project/tkinter-icons-bs/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
+
+**Bootstrap Icons** — 2,078 icons, upstream v1.13.1. One of sixteen icon packs for [`tkinter-icons`](https://pypi.org/project/tkinter-icons/).
+
+---
+
+## Install
+
+This pack is an extra of `tkinter-icons`, so you install and import one name:
 
 ```bash
-pip install tkinter-icons-bs
+pip install "tkinter-icons[bootstrap]"
 ```
 
-## Usage
+Installing `tkinter-icons-bs` directly also works and pulls in the base package, but the extra is the supported form — it is what the error messages, the documentation, and the other fifteen packs all use.
+
+---
+
+## Quick start
 
 ```python
-from tkinter_icons_bs import BootstrapIcon
-
-# Create an icon
-icon = BootstrapIcon("house", size=24, color="black", style="outline")
-
-# Use in a tkinter widget
 import tkinter as tk
-from tkinter import ttk
+from tkinter_icons import BootstrapIcon
 
 root = tk.Tk()
-label = ttk.Label(root, text="Home", image=icon.image, compound="left")
-label.pack()
+
+icon = BootstrapIcon("house", size=24, color="#333", style="outline")
+tk.Button(root, image=icon.image, text="Home", compound="left").pack()
+
 root.mainloop()
 ```
 
+---
+
 ## Styles
 
-Bootstrap Icons supports two styles:
-- `outline` (default)
+Bootstrap Icons ships 2 styles:
+
 - `fill`
+- `outline` (default)
 
-You can specify the style either as a parameter or as part of the icon name:
+Pass one as `style=`, or put it in the name — `BootstrapIcon("house", style="fill")` and `BootstrapIcon("house-fill")` are the same icon.
 
-```python
-# Using style parameter
-icon1 = BootstrapIcon("house", style="fill")
+---
 
-# Using style in name
-icon2 = BootstrapIcon("house-fill")
+## Browse the icons
+
+Every glyph in this pack, rendered by the library itself:
+<https://tkinter-icons.readthedocs.io/en/latest/packs/bootstrap.html>
+
+Or run the browser that ships with the base package:
+
+```bash
+tkinter-icons
 ```
 
-## License
+Use **Copy Name** there to copy an icon name straight into your code.
 
-MIT License
+---
 
-Bootstrap Icons are licensed under the MIT License.
-See https://github.com/twbs/icons/blob/main/LICENSE
+## License and attribution
+
+- **Upstream:** Bootstrap Icons — <https://icons.getbootstrap.com/>
+- **Upstream license:** <https://github.com/twbs/icons/blob/main/LICENSE> — see `LICENSES/` in this package
+- **Wrapper license:** MIT © Israel Dryer

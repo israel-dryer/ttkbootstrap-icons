@@ -171,3 +171,15 @@ jobs:
       # reached RTD while every local build and this job were green.
       - name: Build the docs
         run: python -m sphinx docs docs/_build/html -b html -W --keep-going -n -j auto
+
+      # The sixteen pack READMEs are generated from `KNOWN_PACKS` and each live
+      # provider, so they carry the glyph count and the upstream version as facts
+      # rather than as prose someone has to remember to update. This job is where
+      # the check belongs: the generator imports `docs/_ext/pack_showcase`, so it
+      # needs the same environment the docs build already sets up.
+      #
+      # It matters more than a normal drift check because PyPI freezes a README at
+      # release time. A wrong one cannot be edited - it needs a new version of that
+      # distribution - so sixteen stale pages cost sixteen extra pack releases.
+      - name: Pack READMEs are up to date
+        run: python .github/scripts/generate_pack_readmes.py --check
