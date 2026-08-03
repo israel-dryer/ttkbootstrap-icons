@@ -6,13 +6,19 @@ Font Awesome Free offers large, well-known icon sets across solid, regular, and 
 [![PyPI](https://img.shields.io/pypi/v/tkinter-icons-fa.svg)](https://pypi.org/project/tkinter-icons-fa/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
 
+**Font Awesome 6 (Free)** — 2,141 icons, upstream v6.7.2. One of sixteen icon packs for [`tkinter-icons`](https://pypi.org/project/tkinter-icons/).
+
 ---
 
 ## Install
 
+This pack is an extra of `tkinter-icons`, so you install and import one name:
+
 ```bash
-pip install tkinter-icons-fa
+pip install "tkinter-icons[fontawesome]"
 ```
+
+Installing `tkinter-icons-fa` directly also works and pulls in the base package, but the extra is the supported form — it is what the error messages, the documentation, and the other fifteen packs all use.
 
 ---
 
@@ -20,49 +26,49 @@ pip install tkinter-icons-fa
 
 ```python
 import tkinter as tk
-from tkinter_icons_fa import FAIcon
+from tkinter_icons import FontAwesomeIcon
 
 root = tk.Tk()
 
-solid = FAIcon("house", size=24, color="#0d6efd", style="solid")
-regular = FAIcon("house", size=24, color="#0d6efd", style="regular")
-brand = FAIcon("github", size=24, color="#0d6efd", style="brands")
-
-tk.Button(root, image=solid.image, text="Solid", compound="left").pack()
-tk.Button(root, image=regular.image, text="Regular", compound="left").pack()
-tk.Button(root, image=brand.image, text="Brand", compound="left").pack()
+icon = FontAwesomeIcon("user", size=24, color="#333", style="solid")
+tk.Button(root, image=icon.image, text="Home", compound="left").pack()
 
 root.mainloop()
 ```
+
+`FontAwesomeIcon` is also exported as `FAIcon`; both spellings resolve to the same class.
 
 ---
 
 ## Styles
 
-| Variant   | Description                   |
-|:----------|:------------------------------|
-| `solid`   | Filled style (most common)    |
-| `regular` | Outline/line style            |
-| `brands`  | Brand and logo glyphs         |
+Font Awesome 6 (Free) ships 3 styles:
+
+- `solid` (default)
+- `regular`
+- `brands`
+
+Pass one as `style=`, or put it in the name — `FontAwesomeIcon("user", style="solid")` and `FontAwesomeIcon("user-solid")` are the same icon.
 
 ---
 
-## Icon Browser
+## Browse the icons
 
-Browse available icons with the built-in browser. From your terminal run:
+Every glyph in this pack, rendered by the library itself:
+<https://tkinter-icons.readthedocs.io/en/latest/packs/fontawesome.html>
+
+Or run the browser that ships with the base package:
 
 ```bash
 tkinter-icons
 ```
 
-Use **Copy Name** in the browser to copy the icon name and style directly for use in your code.
-
-![Icon Browser](https://raw.githubusercontent.com/israel-dryer/tkinter-icons/main/packages/tkinter-icons-fa/browser.png)
+Use **Copy Name** there to copy an icon name straight into your code.
 
 ---
 
-## License and Attribution
+## License and attribution
 
-- **Upstream license:** Font Awesome (varies by asset) — https://fontawesome.com/
+- **Upstream:** Font Awesome 6 (Free) — <https://fontawesome.com/v6/icons>
+- **Upstream license:** <https://fontawesome.com/license> — see `LICENSES/` in this package
 - **Wrapper license:** MIT © Israel Dryer
-

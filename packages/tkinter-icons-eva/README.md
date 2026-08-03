@@ -6,13 +6,19 @@ Eva Icons offers clean outline and filled variants for modern UIs.
 [![PyPI](https://img.shields.io/pypi/v/tkinter-icons-eva.svg)](https://pypi.org/project/tkinter-icons-eva/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
 
+**Eva Icons** — 980 icons, upstream v1.1.3. One of sixteen icon packs for [`tkinter-icons`](https://pypi.org/project/tkinter-icons/).
+
 ---
 
 ## Install
 
+This pack is an extra of `tkinter-icons`, so you install and import one name:
+
 ```bash
-pip install tkinter-icons-eva
+pip install "tkinter-icons[eva]"
 ```
+
+Installing `tkinter-icons-eva` directly also works and pulls in the base package, but the extra is the supported form — it is what the error messages, the documentation, and the other fifteen packs all use.
 
 ---
 
@@ -20,15 +26,12 @@ pip install tkinter-icons-eva
 
 ```python
 import tkinter as tk
-from tkinter_icons_eva import EvaIcon
+from tkinter_icons import EvaIcon
 
 root = tk.Tk()
 
-outline = EvaIcon("activity", size=24, color="#333", style="outline")
-filled = EvaIcon("activity", size=24, color="#333", style="fill")
-
-tk.Button(root, image=outline.image, text="Outline", compound="left").pack()
-tk.Button(root, image=filled.image, text="Fill", compound="left").pack()
+icon = EvaIcon("home", size=24, color="#333", style="fill")
+tk.Button(root, image=icon.image, text="Home", compound="left").pack()
 
 root.mainloop()
 ```
@@ -37,28 +40,32 @@ root.mainloop()
 
 ## Styles
 
-| Variant  | Description            |
-|:---------|:-----------------------|
-| `outline`| Outline stroke variant |
-| `fill`   | Filled variant         |
+Eva Icons ships 2 styles:
+
+- `outline`
+- `fill` (default)
+
+Pass one as `style=`, or put it in the name — `EvaIcon("home", style="outline")` and `EvaIcon("home-outline")` are the same icon.
 
 ---
 
-## Icon Browser
+## Browse the icons
 
-Browse available icons with the built-in browser. From your terminal run:
+Every glyph in this pack, rendered by the library itself:
+<https://tkinter-icons.readthedocs.io/en/latest/packs/eva.html>
+
+Or run the browser that ships with the base package:
 
 ```bash
 tkinter-icons
 ```
 
-Use **Copy Name** in the browser to copy the icon name and style directly for use in your code.
-
-![Icon Browser](https://raw.githubusercontent.com/israel-dryer/tkinter-icons/main/packages/tkinter-icons-eva/browser.png)
+Use **Copy Name** there to copy an icon name straight into your code.
 
 ---
 
-## License and Attribution
+## License and attribution
 
-- **Upstream license:** MIT (Eva Icons) - https://github.com/akveo/eva-icons
-- **Wrapper license:** MIT - Israel Dryer
+- **Upstream:** Eva Icons — <https://akveo.github.io/eva-icons/#/>
+- **Upstream license:** <https://github.com/akveo/eva-icons/blob/master/LICENSE.txt> — see `LICENSES/` in this package
+- **Wrapper license:** MIT © Israel Dryer
