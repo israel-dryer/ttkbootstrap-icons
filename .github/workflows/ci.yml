@@ -18,12 +18,21 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         include:
+          # Windows and macOS spot-check the two newest rather than the whole
+          # sweep. Both are listed because this is a Tk library and Tk is the
+          # most platform- and version-sensitive thing in it, so a new Python
+          # claim needs evidence on more than Linux before it reaches the
+          # classifiers - see the badge note in CLAUDE.md.
           - os: windows-latest
             python-version: "3.13"
+          - os: windows-latest
+            python-version: "3.14"
           - os: macos-latest
             python-version: "3.13"
+          - os: macos-latest
+            python-version: "3.14"
 
     steps:
       - uses: actions/checkout@v6
