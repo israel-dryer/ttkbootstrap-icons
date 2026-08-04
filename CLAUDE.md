@@ -28,16 +28,22 @@ name is still the old one*. The GitHub repo is `israel-dryer/tkinter-icons` and
 every package inside is renamed; only the containing directory lags. Don't
 "fix" it mid-session without updating the remote checkout path.
 
-**Use `.venv-home`, not `.venv`.** The old `.venv` was created by a different Windows account and its interpreter is unreadable now — `Access is denied` on the exe itself, not on a file it wants. The same ownership split makes git refuse the repository until you run `git config --global --add safe.directory D:/Development/ttkbootstrap-icons`, and it makes `.pytest_cache/` unwritable, which prints a `PytestCacheWarning` on every run and is harmless.
-
-`.venv-home` has **all sixteen packs** installed, plus the shim, pytest, the docs toolchain, PyInstaller, and fontTools:
+**Which virtualenv works depends on the Windows account you are logged in as, so do not trust a name written down here — check.** There are two, `.venv` and `.venv-home`, created by two different accounts on this machine, and which of them is live flips with the login. Only the one whose base interpreter belongs to the current account runs at all; the other fails with `Access is denied` on the exe itself, not on a file it wants. This file asserted "use `.venv-home`, not `.venv`" for several sessions and was simply wrong by 2026-08-04, when the login had changed — so read `pyvenv.cfg` and match `home =` against the current user rather than believing the last person who wrote it down:
 
 ```bash
-.venv-home/Scripts/python.exe -m pip install -e packages/tkinter-icons
-.venv-home/Scripts/python.exe -m pip install --no-deps $(printf -- '-e %s ' packages/tkinter-icons-*/)
-.venv-home/Scripts/python.exe -m pip install --no-deps -e packages/ttkbootstrap-icons-shim
-.venv-home/Scripts/python.exe -m pip install -r docs/requirements.txt pytest
-.venv-home/Scripts/python.exe -m pytest -q          # 414 passed (1-2 skip, Tk-ordering)
+head -1 .venv/pyvenv.cfg .venv-home/pyvenv.cfg
+```
+
+The same ownership split makes git refuse the repository until you run `git config --global --add safe.directory D:/Development/ttkbootstrap-icons`, and it can make `.pytest_cache/` unwritable, which prints a `PytestCacheWarning` on every run and is harmless.
+
+**Whichever one is live needs all eighteen distributions installed**, plus pytest, the docs toolchain, PyInstaller, and fontTools. If the login has just changed, the newly-live venv is probably bare and needs the whole block — it takes a couple of minutes. Substitute the working venv for `.venv` throughout:
+
+```bash
+.venv/Scripts/python.exe -m pip install --no-deps -e packages/tkinter-icons
+.venv/Scripts/python.exe -m pip install --no-deps $(printf -- '-e %s ' packages/tkinter-icons-*/)
+.venv/Scripts/python.exe -m pip install --no-deps -e packages/ttkbootstrap-icons-shim
+.venv/Scripts/python.exe -m pip install twine pytest pyinstaller fonttools -r docs/requirements.txt
+.venv/Scripts/python.exe -m pytest -q          # 414 passed (1-2 skip, Tk-ordering)
 ```
 
 Having every pack installed is worth keeping. The docs build reads each pack's live provider for the packs table and the previews, `generate_metrics --all` needs them, and `verify_packages.py --imports` exercises every entry point.
@@ -69,59 +75,59 @@ the only way to build this package without git. See "Deliberate decisions".
 
 | | |
 |---|---|
-| `main` | 5.0.0 content, merged, **not tagged** — handoff commits move this SHA; the packaged content has not changed since `31fcf74` |
+| `main` | 5.0.0 content, merged; `v5.0.0` exists **locally, unpushed**, and now points at the tip — see below |
 | the sixteen legacy packs | **published to PyPI** with their `<5` caps, 2026-08-02 |
 | the release workflow | dry run **passed** at `31fcf74`, 2026-08-03 — later commits are documentation only, so the artifacts it verified still stand |
 | the #102 pre-tag review | **done** 2026-08-03; findings on the issue, fixes in #104 and #105 |
-| **the 5.0.0 release** | **half published, and blocked on a PyPI rate limit** — see below |
+| **the 5.0.0 release** | **eight of eighteen published, and metered out over several days** — see below |
 
-### The release is in progress and stalled — read this before touching anything
+### The release is in progress, and it is rationed — read this before touching anything
 
-**Four of the eighteen are on PyPI. Fourteen are not.** Published 2026-08-03: `tkinter-icons-bs`, `-devicon`, `-eva`, `-fa`, all at 1.1.0. Still unpublished: the other twelve packs, `tkinter-icons` 5.0.0 itself, and the `ttkbootstrap-icons` 5.0.0 shim.
+**Eight of the eighteen are on PyPI as of 2026-08-04.** `tkinter-icons-bs`, `-devicon`, `-eva`, `-fa` went up 2026-08-03; `tkinter-icons` 5.0.0 itself plus `-mat`, `-simple`, `-lucide` went up 2026-08-04. **Still unpublished: nine packs** — `weather`, `gmi`, `remix`, `fluent`, `typicons`, `fluent-reg`, `meteocons`, `ion`, `rpga` — **and the `ttkbootstrap-icons` 5.0.0 shim**, which still shows 4.0.0 on PyPI.
 
-**Nothing is user-visible-broken, and that is worth preserving.** The base is not published, so no one can run `pip install "tkinter-icons[lucide]"` and hit a half-resolved extra. Four orphan packs with no base package are harmless. **Publish the base only after all sixteen packs are live** — its extras pin `>=1.1.0`, so a base published early is the one state that breaks a real install.
+**The limit is four new PyPI projects per 24 hours.** Israel confirmed this directly, 2026-08-04 — it is not a guess from watching uploads fail, and it is not the "20 per hour" default in `warehouse/config.py`. Seventeen of the eighteen distributions are brand-new project names, so the release is inherently a four-day operation. The eighteenth, the shim, publishes to a project that already exists and so should not cost a slot; it has not been tested, because it is scheduled last anyway.
 
-**What blocked it: `429 Too many new projects created`.** This release creates seventeen brand-new PyPI project names, and PyPI caps new-project creation per user. Four went through, then everything after was refused. This is *not* the "20 per hour" default in `warehouse/config.py` — eight probes spread over 5.5 hours were all refused, so production runs something stricter and undocumented. It is also **not** bot detection or an automation block: four uploads succeeded first from the same machine, token and IP, and the same wall would appear running `twine` by hand or publishing through Trusted Publishing.
+**A refused attempt does not obviously spend from the quota, and the earlier claim that it does was never well-supported.** This file used to assert it, reasoning from eight probes over 5.5 hours that all failed — but every one of those probes fell inside 24 hours of the four successes, so a plain rolling window explains them equally well. 2026-08-04 supports the simpler reading: after a full 24-hour wait, four uploads went through back-to-back with no warm-up. Still, **do not retry in a loop** — there is no upside, and PyPI's own guidance from [the trusted-publishers troubleshooting page](https://docs.pypi.org/trusted-publishers/troubleshooting/#ratelimiting) is to wait, try once, then email admin@pypi.org. Note that page documents a *different* limit — 100 trusted-publisher registrations per 24h — so only its remedy applies, not its number.
 
-**Do not retry in a loop. Every attempt appears to spend from the quota, refused ones included** — that is the most likely reason 5.5 hours of hourly probing never cleared it, and those probes may have been holding the window open. PyPI's own guidance, from [the trusted-publishers troubleshooting page](https://docs.pypi.org/trusted-publishers/troubleshooting/#ratelimiting), is **wait 24 hours, try once, then email admin@pypi.org**. Note that page documents a *different* limit — 100 trusted-publisher registrations per 24h — so only its remedy applies, not its number.
+**The base was published fifth-from-last rather than last, deliberately reversing what this file used to instruct.** The old rule was "publish the base only after all sixteen packs are live", because its extras pin `>=1.1.0`. Under a four-a-day cap that rule bought nothing and cost three extra days in which *nothing at all* was installable, including the four packs already up. The failure it was protecting against was measured before the decision and is mild: `pip install "tkinter-icons[weather]"` against an unpublished pack gives `ERROR: No matching distribution found`, resolution aborts, and nothing is installed — a clean refusal, not a half-installed environment. `pip install "tkinter-icons[material,simple]"` was verified end-to-end from PyPI in a throwaway venv the same day, down to `MatIcon.render_pil('home')` returning real ink.
 
-**Last attempt was 2026-08-03 05:31.** The next attempt should be after **2026-08-04 05:31**, and should be a single upload, not a loop.
+**Last attempt was 2026-08-04 09:51** — a fifth upload that turned out to be one past the cap, in case a request to raise the limit had landed. It had not. **The next window opens ~09:49 EDT 2026-08-05.**
 
 ### Resuming the release
 
-**The artifacts are gone** — they were built into a session scratchpad. Rebuild them; the build is reproducible and takes about a minute.
+**The artifacts already exist, in `dist/`, and do not need rebuilding.** All 36 files, `twine check` clean, built 2026-08-04. `dist/` is gitignored at `.gitignore:3`, so unlike the previous attempt — which built into a session scratchpad and lost everything — these survive between sessions. Rebuild only if something in the tree actually changes.
 
-**The `v5.0.0` tag exists locally and is not pushed.** It is what makes setuptools-scm resolve the base to `5.0.0` instead of `4.0.1.dev<n>`. If it is missing, recreate it before building, or export `SETUPTOOLS_SCM_PRETEND_VERSION_FOR_TKINTER_ICONS=5.0.0`.
+**If you do rebuild, the base needs `SETUPTOOLS_SCM_PRETEND_VERSION_FOR_TKINTER_ICONS=5.0.0`, and this is not optional while PyCharm is open.** PyCharm rewrites the tracked file `.idea/modules.xml` while it runs, including *during* a build, which makes setuptools-scm see a dirty tree at the tag and produce `5.0.1.dev0+g<sha>.d<date>`. That `+…` local version identifier is **rejected outright by PyPI**. Stashing `.idea` first is not enough — the IDE puts it back mid-build. The tag alone is not enough either.
 
 ```bash
-git tag v5.0.0                      # if `git tag -l v5.0.0` is empty
-DIST=/tmp/dist && rm -rf $DIST && mkdir -p $DIST
-for d in packages/tkinter-icons-*/ packages/tkinter-icons packages/ttkbootstrap-icons-shim; do
-  .venv-home/Scripts/python.exe -m build --outdir $DIST "$d"
+DIST=dist && rm -rf $DIST && mkdir -p $DIST
+for d in packages/tkinter-icons-*/ packages/ttkbootstrap-icons-shim; do
+  .venv/Scripts/python.exe -m build --outdir $DIST "$d"
 done
-.venv-home/Scripts/python.exe -m twine check $DIST/*          # expect 36 PASSED
+SETUPTOOLS_SCM_PRETEND_VERSION_FOR_TKINTER_ICONS=5.0.0 \
+  .venv/Scripts/python.exe -m build --outdir $DIST packages/tkinter-icons
+.venv/Scripts/python.exe -m twine check $DIST/*          # expect 36 PASSED
 ```
 
-Then upload **one project at a time**, in this order, stopping at the first 429:
+**The `v5.0.0` tag is local and unpushed, and now points at the tip of `main`, not at `31fcf74`.** It was moved 2026-08-04 because handoff commits had left it three behind, which made the base build as `5.0.1.dev3+g<sha>`. The only delta across those commits is `CLAUDE.md`, which ships in no distribution, so the tagged content still matches what the dry run verified. Undo is `git tag -f v5.0.0 31fcf74`.
+
+Then upload **one project at a time**, stopping at the first 429 — four per day, in this order:
 
 ```bash
-# 1. the twelve remaining packs, one command per pack
-.venv-home/Scripts/python.exe -m twine upload --config-file .pypirc --skip-existing \
-  /tmp/dist/tkinter_icons_fluent-1.1.0*
-# then: fluent_reg, gmi, ion, lucide, mat, meteocons, remix, rpga, simple, typicons, weather
+# 2026-08-05: weather, gmi, remix, fluent
+.venv/Scripts/python.exe -m twine upload --config-file .pypirc dist/tkinter_icons_weather-1.1.0*
+# 2026-08-06: typicons, fluent_reg, meteocons, ion
+# 2026-08-07: rpga, then the shim (below), then push the tag
 
-# 2. only after all sixteen packs are live
-.venv-home/Scripts/python.exe -m twine upload --config-file .pypirc /tmp/dist/tkinter_icons-5.0.0*
-
-# 3. last, so it never points at a version that does not exist
-.venv-home/Scripts/python.exe -m twine upload --config-file .pypirc --skip-existing \
-  /tmp/dist/ttkbootstrap_icons-5.0.0*
+# last, so it never points at a version that does not exist
+.venv/Scripts/python.exe -m twine upload --config-file .pypirc --skip-existing \
+  dist/ttkbootstrap_icons-5.0.0*
 ```
 
 Check what is actually live rather than trusting a log — a batch loop misreported this once, because `curl` inside `while read` eats stdin:
 
 ```bash
-for d in $(.venv-home/Scripts/python.exe -c "from tkinter_icons.packs import KNOWN_PACKS; print(' '.join(p.distribution for p in KNOWN_PACKS))"); do
+for d in $(.venv/Scripts/python.exe -c "from tkinter_icons.packs import KNOWN_PACKS; print(' '.join(p.distribution for p in KNOWN_PACKS))"); do
   printf '%-28s %s\n' "$d" "$(curl -s -o /dev/null -w '%{http_code}' https://pypi.org/pypi/$d/json </dev/null)"
 done
 ```
@@ -133,7 +139,7 @@ done
 **Pushing `v5.0.0` will produce one red workflow run, and that is expected.** `publish` fails deliberately when the base version is already on PyPI, because normally that means the tag is wrong (`release.yml`, and "Deliberate decisions" below). Since the base will have been uploaded by hand, that check fires. Packs and the shim skip-existing cleanly. Consequence: the `release` job never runs, so **create the GitHub Release by hand**:
 
 ```bash
-.venv-home/Scripts/python.exe .github/scripts/release_notes.py CHANGELOG.md 5.0.0 NOTES.md /dev/stdout tkinter-icons
+.venv/Scripts/python.exe .github/scripts/release_notes.py CHANGELOG.md 5.0.0 NOTES.md /dev/stdout tkinter-icons
 gh release create v5.0.0 --title "tkinter-icons 5.0.0 — renamed to tkinter-icons, rebuilt around measured glyph ink" --notes-file NOTES.md
 ```
 
@@ -298,11 +304,13 @@ bumped every time and an existing one means the tag is wrong.
 
 ## Next session — start here
 
-**The release is half done and waiting on a PyPI rate limit. Do not start anything else until it is finished.** Full detail is under "The release is in progress and stalled" in Current state; the short version is that four packs are published, fourteen distributions are not, and PyPI refuses to create more new projects.
+**The release is metered out four distributions a day and is not finished. Do not start anything else until it is.** Full detail is under "The release is in progress, and it is rationed" in Current state; the short version is that eight of eighteen are published, the base among them, and PyPI allows four new projects per 24 hours.
 
-**The next action is a single upload attempt after 2026-08-04 05:31** — 24 hours from the last one. One command, one project, no retry loop; every attempt seems to spend from the quota whether or not it succeeds. If it is still refused, email admin@pypi.org, which is what PyPI's own docs tell you to do. The commands to rebuild and to resume are in that section, in order, with the reason the order matters.
+**The next action is four uploads after ~09:49 EDT on 2026-08-05** — `weather`, `gmi`, `remix`, `fluent`, one command each, stopping at the first 429. The artifacts are already built in `dist/`; nothing needs rebuilding. Then `typicons`, `fluent_reg`, `meteocons`, `ion` on 08-06, and `rpga` plus the shim on 08-07, after which push the tag and cut the GitHub Release by hand.
 
-**Everything that precedes publishing is done.** `main` is `31fcf74`, the dry run passed against exactly that commit, the #102 review is complete, and there are no open PRs. The review's findings are two comments on #102 — the findings, then the wrap-up marking every item closed — and they record what was measured, not just what was concluded. Read those before re-opening any of it.
+**The remaining order is chosen, and the reasoning is worth not re-deriving.** Download counts on the legacy `ttkbootstrap-icons-*` packs separate `bs` (1595/month) and to a lesser degree `fa` and `weather` (~300) from everything else, but the rest sit between 95 and 141 a month, which at that scale is indistinguishable mirror and bot traffic. The better signal was which extras the project's own entry-path docs tell people to type: `[material]` appears six times across the READMEs and getting-started pages, `[material,simple]` three times, then `[lucide,simple]`, `[lucide,material]`, `[weather]`, `[bootstrap]`. That is why `mat`, `simple` and `lucide` went first and `weather` leads the next batch — after which every install line on those pages resolves.
+
+**Everything that precedes publishing is done.** The dry run passed against `31fcf74`, whose packaged content is identical to the tip, the #102 review is complete, and there are no open PRs beyond handoff bookkeeping. The review's findings are two comments on #102 — the findings, then the wrap-up marking every item closed — and they record what was measured, not just what was concluded. Read those before re-opening any of it.
 
 **Do not re-run the dry run or re-review.** Both were done against the current tree. The only thing standing between here and a finished release is PyPI's quota.
 
@@ -346,7 +354,7 @@ then stop. Do not merge, and do not close milestone issues by hand.
 
 **The checks do not read prose, and this milestone kept proving it.** `pytest`, `verify_packages.py --strict`, `generate_metrics --check` and `sphinx -W` were all green while the shim's PyPI page told users to run an install command that cannot work, the migration guide asserted the opposite of what 4.0.0 shipped, and the ttkbootstrap examples taught an API that project has retired. Every one of those was found by a person reading, and each was then fixed *and* narrowed by a guard where a guard was possible — `TestReadmesDoNotAdvertiseExtrasThatDoNotExist` is that pattern. When a docs bug is found, ask what would have caught it, and add that if it is cheap; where it is not cheap, say so in the issue rather than pretending the fix was the whole job.
 
-**Do not paste an install command, an import, or an API call into documentation without running it.** The ttkbootstrap rewrite was verified in a throwaway venv precisely so `.venv-home` stayed as this file describes it; that is the pattern to copy, not an unusual precaution.
+**Do not paste an install command, an import, or an API call into documentation without running it.** The ttkbootstrap rewrite was verified in a throwaway venv precisely so the working venv stayed as this file describes it; that is the pattern to copy, not an unusual precaution. Note the API surface is easy to get wrong from memory even when the docs are right: `render_pil` is a **classmethod** taking the glyph name — `MaterialIcon.render_pil("home", size=32)`, not `MaterialIcon("home", size=32).render_pil()`.
 
 ---
 
@@ -663,6 +671,8 @@ Each of these looks like a defect in isolation. They aren't.
 3. `ttkbootstrap-icons` 5.0.0 (the shim) — last, so it never points at a version
    that doesn't exist yet
 
+That is the order the `publish` job enforces, and it is right whenever the whole release can go out at once. **It was deliberately broken for 5.0.0**, where PyPI's four-new-projects-per-day cap stretched the upload across four days: the base went up on day two, ahead of nine packs, because holding it meant three further days in which nothing at all was installable. Step 3 held regardless. See "The release is in progress, and it is rationed". The cost of publishing the base early is one clean `No matching distribution found` per not-yet-published extra, which was measured before the call rather than assumed.
+
 ---
 
 ## Open decisions
@@ -683,6 +693,7 @@ thread-safe."
 
 ## Known gotchas
 
+- **The "Python Versions" badge is not editable text — it is published metadata, and it is frozen.** Both READMEs carry `img.shields.io/pypi/pyversions/tkinter-icons.svg`, which shields renders purely from the `Programming Language :: Python :: 3.x` trove classifiers on the *released* base distribution. Those stop at 3.13 (`packages/tkinter-icons/pyproject.toml`), as does the CI matrix in `ci.yml`, so the badge will read "3.10 | 3.11 | 3.12 | 3.13" until a **new base release** carries a new classifier — editing the README or the pyproject changes nothing on PyPI. This is the same "frozen at release time" trap the #102 review found in the pack READMEs, in its metadata form. Nothing is *blocked* by it: `requires-python = ">=3.10"` has no upper bound, so newer interpreters install and run fine; the badge merely understates. Adding a version to the classifiers without adding it to the CI matrix would be a claim with no check behind it.
 - **Trust a pack's `license_url` at your peril.** It was wrong twice. `weather`
   pointed at the Typicons licence, so the browser's "License" link opened another
   project's terms; `meteocons` pointed at basmilius/weather-icons, which is a
