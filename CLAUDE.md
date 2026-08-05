@@ -83,7 +83,7 @@ the only way to build this package without git. See "Deliberate decisions".
 
 ### The release is in progress, and it is rationed — read this before touching anything
 
-**Eight of the eighteen are on PyPI as of 2026-08-04.** `tkinter-icons-bs`, `-devicon`, `-eva`, `-fa` went up 2026-08-03; `tkinter-icons` 5.0.0 itself plus `-mat`, `-simple`, `-lucide` went up 2026-08-04. **Still unpublished: nine packs** — `weather`, `gmi`, `remix`, `fluent`, `typicons`, `fluent-reg`, `meteocons`, `ion`, `rpga` — **and the `ttkbootstrap-icons` 5.0.0 shim**, which still shows 4.0.0 on PyPI.
+**Twelve of the eighteen are on PyPI as of 2026-08-05.** `tkinter-icons-bs`, `-devicon`, `-eva`, `-fa` went up 2026-08-03; `tkinter-icons` 5.0.0 itself plus `-mat`, `-simple`, `-lucide` went up 2026-08-04; `-weather`, `-gmi`, `-remix`, `-fluent` went up 2026-08-05. **Still unpublished: five packs** — `typicons`, `fluent-reg`, `meteocons`, `ion`, `rpga` — **and the `ttkbootstrap-icons` 5.0.0 shim**, which still shows 4.0.0 on PyPI.
 
 **The limit is four new PyPI projects per 24 hours.** Israel confirmed this directly, 2026-08-04 — it is not a guess from watching uploads fail, and it is not the "20 per hour" default in `warehouse/config.py`. Seventeen of the eighteen distributions are brand-new project names, so the release is inherently a four-day operation. The eighteenth, the shim, publishes to a project that already exists and so should not cost a slot; it has not been tested, because it is scheduled last anyway.
 
@@ -91,7 +91,9 @@ the only way to build this package without git. See "Deliberate decisions".
 
 **The base was published fifth-from-last rather than last, deliberately reversing what this file used to instruct.** The old rule was "publish the base only after all sixteen packs are live", because its extras pin `>=1.1.0`. Under a four-a-day cap that rule bought nothing and cost three extra days in which *nothing at all* was installable, including the four packs already up. The failure it was protecting against was measured before the decision and is mild: `pip install "tkinter-icons[weather]"` against an unpublished pack gives `ERROR: No matching distribution found`, resolution aborts, and nothing is installed — a clean refusal, not a half-installed environment. `pip install "tkinter-icons[material,simple]"` was verified end-to-end from PyPI in a throwaway venv the same day, down to `MatIcon.render_pil('home')` returning real ink.
 
-**Last attempt was 2026-08-04 09:51** — a fifth upload that turned out to be one past the cap, in case a request to raise the limit had landed. It had not. **The next window opens ~09:49 EDT 2026-08-05.**
+**The last four went up 2026-08-05, 10:07–10:09 EDT**, back-to-back with no refusals and no warm-up — the fourth day running that a full 24-hour wait was followed by four clean uploads. **The next window opens ~10:07 EDT 2026-08-06.** No fifth was attempted this time; there is nothing to learn from it that the previous two probes did not already fail to settle.
+
+`pip install "tkinter-icons[weather]"` was verified end-to-end from PyPI in a throwaway venv the same day, down to `WeatherIcon.render_pil("day-sunny", size=32)` returning 323 non-transparent pixels.
 
 ### Resuming the release
 
@@ -111,20 +113,23 @@ SETUPTOOLS_SCM_PRETEND_VERSION_FOR_TKINTER_ICONS=5.0.0 \
 
 **The `v5.0.0` tag is local and unpushed, and points at `ee118e2`. Do not move it again.** It was moved there 2026-08-04, off `31fcf74`, because handoff commits had left it three behind and the base was building as `5.0.1.dev3+g<sha>`; that was safe at the time because the only delta was `CLAUDE.md`, which ships in no distribution. **That is no longer true.** #109 added a `Programming Language :: Python :: 3.14` classifier to the base `pyproject.toml`, so `main` now differs from the released tree in packaged metadata. The tag as it stands describes exactly what went to PyPI as 5.0.0; dragging it to the tip would make it describe a base wheel carrying a classifier the published 5.0.0 does not have. If it is ever lost, recreate it with `git tag v5.0.0 ee118e2`, not at `HEAD`.
 
-**The same divergence changes what "rebuild the artifacts" means.** The nine remaining packs and the shim are untouched by #109 and rebuild from `main` identically — that is the only rebuild the rest of this release needs. The **base** is different: rebuilding `tkinter_icons-5.0.0` from `main` now produces a wheel that is not what PyPI is serving. It does not matter in practice, because the base is already published and must not be re-uploaded, but do not treat a wholesale `rm -rf dist` as free. If you need the base rebuilt as-released, build it from the tag.
+**The same divergence changes what "rebuild the artifacts" means.** The five remaining packs and the shim are untouched by #109 and rebuild from `main` identically — that is the only rebuild the rest of this release needs. The **base** is different: rebuilding `tkinter_icons-5.0.0` from `main` now produces a wheel that is not what PyPI is serving. It does not matter in practice, because the base is already published and must not be re-uploaded, but do not treat a wholesale `rm -rf dist` as free. If you need the base rebuilt as-released, build it from the tag.
 
 Then upload **one project at a time**, stopping at the first 429 — four per day, in this order:
 
 ```bash
-# 2026-08-05: weather, gmi, remix, fluent
-.venv/Scripts/python.exe -m twine upload --config-file .pypirc dist/tkinter_icons_weather-1.1.0*
 # 2026-08-06: typicons, fluent_reg, meteocons, ion
+.venv/Scripts/python.exe -m twine upload --config-file .pypirc dist/tkinter_icons_typicons-1.1.0*
 # 2026-08-07: rpga, then the shim (below), then push the tag
 
 # last, so it never points at a version that does not exist
 .venv/Scripts/python.exe -m twine upload --config-file .pypirc --skip-existing \
   dist/ttkbootstrap_icons-5.0.0*
 ```
+
+**`rpga` and the shim can go on the same day**, which is why 08-07 carries two: `ttkbootstrap-icons` publishes to a project that already exists, so it should not draw from the four-new-projects quota. That remains untested — it is scheduled last either way — so if it does 429, it is the only thing left and 08-08 finishes it.
+
+**One glob to be careful with:** `dist/tkinter_icons_fluent-1.1.0*` matches only `fluent`, because `fluent_reg`'s files are `tkinter_icons_fluent_reg-1.1.0*` — the character after `fluent` is `_`, not `-`. That is correct as written, but it is one hyphen away from silently spending two quota slots in a command that reads like it spends one.
 
 Check what is actually live rather than trusting a log — a batch loop misreported this once, because `curl` inside `while read` eats stdin:
 
@@ -306,11 +311,13 @@ bumped every time and an existing one means the tag is wrong.
 
 ## Next session — start here
 
-**The release is metered out four distributions a day and is not finished. Do not start anything else until it is.** Full detail is under "The release is in progress, and it is rationed" in Current state; the short version is that eight of eighteen are published, the base among them, and PyPI allows four new projects per 24 hours.
+**The release is metered out four distributions a day and is not finished. Do not start anything else until it is.** Full detail is under "The release is in progress, and it is rationed" in Current state; the short version is that twelve of eighteen are published, the base among them, and PyPI allows four new projects per 24 hours.
 
-**The next action is four uploads after ~09:49 EDT on 2026-08-05** — `weather`, `gmi`, `remix`, `fluent`, one command each, stopping at the first 429. The artifacts are already built in `dist/`; nothing needs rebuilding. Then `typicons`, `fluent_reg`, `meteocons`, `ion` on 08-06, and `rpga` plus the shim on 08-07, after which push the tag and cut the GitHub Release by hand.
+**The next action is four uploads after ~10:07 EDT on 2026-08-06** — `typicons`, `fluent_reg`, `meteocons`, `ion`, one command each, stopping at the first 429. The artifacts are already built in `dist/`; nothing needs rebuilding. Then `rpga` plus the shim on 08-07, after which push the tag and cut the GitHub Release by hand.
 
-**The remaining order is chosen, and the reasoning is worth not re-deriving.** Download counts on the legacy `ttkbootstrap-icons-*` packs separate `bs` (1595/month) and to a lesser degree `fa` and `weather` (~300) from everything else, but the rest sit between 95 and 141 a month, which at that scale is indistinguishable mirror and bot traffic. The better signal was which extras the project's own entry-path docs tell people to type: `[material]` appears six times across the READMEs and getting-started pages, `[material,simple]` three times, then `[lucide,simple]`, `[lucide,material]`, `[weather]`, `[bootstrap]`. That is why `mat`, `simple` and `lucide` went first and `weather` leads the next batch — after which every install line on those pages resolves.
+**The remaining order is chosen, and the reasoning is worth not re-deriving.** Download counts on the legacy `ttkbootstrap-icons-*` packs separate `bs` (1595/month) and to a lesser degree `fa` and `weather` (~300) from everything else, but the rest sit between 95 and 141 a month, which at that scale is indistinguishable mirror and bot traffic. The better signal was which extras the project's own entry-path docs tell people to type: `[material]` appears six times across the READMEs and getting-started pages, `[material,simple]` three times, then `[lucide,simple]`, `[lucide,material]`, `[weather]`, `[bootstrap]`. That is why `mat`, `simple` and `lucide` went first and `weather` led the 08-05 batch. **As of 2026-08-05 every install line in the two READMEs, `docs/index.rst` and `docs/getting-started/` resolves against PyPI** — the real extras named there are exactly `bootstrap`, `lucide`, `material`, `simple` and `weather`, all live. (`[all]` also appears on that path, in `installation.rst:31`, but it is the note explaining that no such extra exists; `[example]` and `[extra]` are hypotheticals in `contributing.rst`.) So the ordering question is settled and the five left are alphabetical convenience.
+
+**The sixteen per-pack docs pages are a different matter, and five of them are briefly wrong in public.** Each names its own extra, so `packs/typicons`, `packs/fluent-regular`, `packs/meteocons`, `packs/ionicons` and `packs/rpg-awesome` currently print an install line that 404s — live on Read the Docs right now. That is inherent to a rationed release rather than a defect, and it self-resolves on 08-07; it is recorded here only so it is recognised as expected rather than rediscovered as a bug.
 
 **Everything that precedes publishing is done.** The dry run passed against `31fcf74`, whose packaged content is identical to the tip, the #102 review is complete, and there are no open PRs beyond handoff bookkeeping. The review's findings are two comments on #102 — the findings, then the wrap-up marking every item closed — and they record what was measured, not just what was concluded. Read those before re-opening any of it.
 
