@@ -268,31 +268,15 @@ bumped every time and an existing one means the tag is wrong.
 
 ## Next session — start here
 
-### Reviewing the open stack — read this first, then delete it when the stack merges
+### The docs stack merged, 2026-08-08 — #121 through #125
 
-**Five PRs are open and stacked, all green.** Review `main...docs/review-fixes`, which is nine commits and contains every one of them. Merge order, each based on the one above:
+**All five are on `main`, the five branches are deleted, and `origin` carries only `main` and `release/ttkbootstrap-icons-packs-final` again.** #117 closed from #121. **#87 stayed open by design** — #123 shipped the generated figures only, and the three real-window captures it also asks for are still outstanding.
 
-| PR | Branch | What | Closes |
-|---|---|---|---|
-| #121 | `docs/on-missing-scope` | what `on_missing` actually governs | **#117** |
-| #122 | `docs/prose-pass` | #89's prose pass, two stale numbers, two guards | — |
-| #123 | `docs/renderer-figures` | #87's generated figures | — |
-| #124 | `docs/handoff-figures-and-cleanup` | handoff: cleanup, the gh-pages URL | — |
-| #125 | `docs/review-fixes` | two rounds of review fixes, the apt/CI fix | — |
+**Three review rounds ran on that stack, and each round's fixes produced the next round's findings.** That is the fact worth carrying, not the individual defects. Rounds 2 and 3 were largely *corrections being corrected*, which is a different failure from sloppy original work and wants a different remedy — stop transcribing, commit the measurement.
 
-**#123 must not close #87** — it is the generated half only; the three real-window captures are untouched.
-
-**Two review passes have already run, and the second found problems that the first pass's fixes created.** That is the fact worth carrying into a third: this stack's failure mode has been *fixes introducing defects*, not the original work being sloppy.
-
-- **Round 1**, `main...docs/renderer-figures` at `high` — seven findings. A padded-box guide drawn with `round` where the renderer uses `int`, so the exemplar glyph crossed its own guide. `image-rendering: pixelated` applied to three figures displayed 1:1. A census that said "every glyph in all sixteen packs" over default styles only. An over-broad MB regex. A dead `Panel.size` whose use would have made a difference-assertion pass unconditionally. Two modules each declaring `PackNotInstalled`. Three dead imports.
-- **Round 2**, `docs/handoff-figures-and-cleanup...docs/review-fixes` at `high` — four findings. Two figure-subject numbers quoted from a 400-name sample, one of which contradicted the page beside it. An unexplained denominator, which cost the reviewer a 123-glyph discrepancy they could not resolve. **The MB guard narrowed to three filenames — a regression introduced by round 1's fix**, removing the coverage the check exists for. A missing blank line that made Markdown fold "it is gone" into the `release/ttkbootstrap-icons-packs-final` bullet, i.e. the one branch this file insists must never be deleted.
-
-**Nothing has yet reviewed round 2's own fixes.** A third pass should weight these:
-
-- `tests/test_install_guidance.py` — the MB guard has now been rewritten twice. It sweeps by paragraph context; check the regex cannot miss a restatement phrased differently, and that excluding `CHANGELOG.md` (frozen history) and `CLAUDE.md` (narrates the wrong number deliberately) is the only exclusion.
-- Every census number in `sizing-and-quality.rst`, `render.py`'s `_place_by_bbox` docstring, `render_figures.FIGURES`' note, and this file. They have been restated twice and must agree with each other and with the census.
-- `docs/_ext/render_figures.py` — restructured by round 1's fix. The imports from `pack_showcase` are deliberate; `note_self` staying local is deliberate and load-bearing.
-- **`parallel_write_safe` is asserted, not tested.** `save_atomic` is the argument for it. Nobody has run the docs build under contention to prove it.
+- **Round 1** — seven findings. A padded-box guide drawn with `round` where the renderer uses `int`, so the exemplar glyph crossed its own guide. `image-rendering: pixelated` on three figures displayed 1:1. A census that said "every glyph in all sixteen packs" over default styles only. An over-broad MB regex. A dead `Panel.size` whose use would have made a difference-assertion pass unconditionally. Two modules each declaring `PackNotInstalled`.
+- **Round 2** — four. Two figure-subject numbers quoted from a 400-name sample. An unexplained denominator, which cost the reviewer a 123-glyph discrepancy they could not resolve. **The MB guard narrowed to three filenames — a regression introduced by round 1's own fix.** A missing blank line that made Markdown fold "it is gone" into the `release/ttkbootstrap-icons-packs-final` bullet.
+- **Round 3** — seven, five of them numbers. The published "measured ink fills 94% to 102% of the padded box" describes something `_place_by_ink` cannot do, since it fits ink to that box and never enlarges past it. It survived because round 1's *correct* fix to `padded_box_inset` was never propagated to the prose derived from the old float arithmetic. Also `IDENTICAL`'s justification quoting a replaced figure's score, and `render_figures.setup()` re-asserting the parallel-write argument `pack_showcase` had just been rewritten to disown.
 
 **The census is a committed artifact now, and that is round 3's answer to why round 2's fixes were themselves wrong.** Three sessions measured it with a throwaway snippet and transcribed the result by hand into four files, and the numbers disagreed every time — including once where a *correct* fix to `padded_box_inset` was never propagated to the prose derived from the old arithmetic. `.github/scripts/generate_placement_census.py` does the measuring, `docs/_data/placement-census.json` holds the result, and `tests/test_placement_census.py` checks all four files against it. Regenerate with the script, never by hand; `--check` runs in CI's docs job and verifies the tree. It is 178,584 renders and takes about 20 seconds, so the reason it is a committed artifact is not cost — it is that it needs all sixteen packs installed, which the test matrix deliberately does not guarantee.
 
@@ -304,14 +288,15 @@ bumped every time and an existing one means the tag is wrong.
 
 ```bash
 .venv-home/Scripts/python.exe -m sphinx docs docs/_build/html -b html -W --keep-going -n -j auto
-.venv-home/Scripts/python.exe -m pytest -q                       # 433 passed
+.venv-home/Scripts/python.exe -m pytest -q                       # 467 passed
+.venv-home/Scripts/python.exe .github/scripts/generate_placement_census.py --check
 .venv-home/Scripts/python.exe .github/scripts/verify_packages.py --strict
 .venv-home/Scripts/python.exe .github/scripts/generate_pack_readmes.py --check
 ```
 
 Read the venv note under "Environment" first — which of `.venv` and `.venv-home` works depends on the Windows login, and the wrong one fails with `Access is denied` on the exe itself.
 
-**Merge without `--delete-branch`, in order, and delete the branches at the end.** A `--delete-branch` merge closes any PR targeting the deleted branch, which is how #85 was lost; with five stacked PRs it would close the next one each time.
+**Merging that stack taught one mechanical thing this file had wrong, and it is under "Conventions" now: GitHub does *not* retarget a stacked PR when its base merges.** It retargets on branch *deletion* — which is the one thing you must not do mid-stack. Retarget each child by hand with `gh pr edit <n> --base main`, and check the base before every merge.
 
 ---
 
@@ -352,17 +337,9 @@ Two of the eleven were not ancestors of `main` and both were checked rather than
 
 **1. Read the Docs' Default branch is back on `main`** — confirmed by the owner 2026-08-08. Docs-only merges are visible again.
 
-**2. The work that needs no tag is written and open for review, as a stack of three.** Review and merge in order; each is based on the one above it and GitHub retargets on merge.
+**2. The work that needs no tag is merged**, 2026-08-08 — #121 through #125, which grew from the planned stack of three when two review rounds were folded in. #117 is closed and **#87 is still open**, since only its generated half shipped. Nothing in 5.0.x now depends on a merge.
 
-| PR | Base | What |
-|---|---|---|
-| #121 | `main` | `Closes #117` |
-| #122 | #121 | #89's prose pass |
-| #123 | #122 | #87's generated figures |
-
-Do not merge them without being asked to merge that specific PR — see the #80 incident below. **#87 stays open**: this is its generated half only, and the three real-window captures it also asks for are untouched.
-
-**3. Then cut `v5.0.1`.** This is the first tag-driven release — publishers are configured and verified, so pushing the tag is the whole procedure. No manual upload, no `.pypirc`.
+**3. Then cut `v5.0.1`. This is the only step left, and it is not started.** This is the first tag-driven release — publishers are configured and verified, so pushing the tag is the whole procedure. No manual upload, no `.pypirc`.
 
 **What the tag needs prepared first:**
 
@@ -769,9 +746,11 @@ Each of these looks like a defect in isolation. They aren't.
 
 ## Conventions
 
-- **Branches:** `refactor/*`, `fix/*`, `feat/*`, `docs/*` off **`main`**, and PRs target **`main`**. This changed with #100 — `5.0` was the integration branch and is finished. Stack dependent PRs on each other; GitHub retargets on merge.
+- **Branches:** `refactor/*`, `fix/*`, `feat/*`, `docs/*` off **`main`**, and PRs target **`main`**. This changed with #100 — `5.0` was the integration branch and is finished. Stack dependent PRs on each other.
+
+  **Retarget each child by hand as its parent merges — GitHub does not do it for you, and this file said it did until 2026-08-08.** Merging #121 left #122 still based on `docs/on-missing-scope`, so merging #122 next would have put it on that branch rather than on `main`. GitHub retargets when the base branch is **deleted**, which is exactly what you must not do in a stack: a `--delete-branch` merge closes any PR targeting the deleted branch, which is how #85 was lost, and with five stacked PRs it would close the next one each time. So the two rules together are: merge with plain `gh pr merge <n> --merge`, run `gh pr edit <n+1> --base main` before each subsequent merge, verify the base actually changed, and delete every branch at the end.
 - **Every PR names an issue with `Closes #n`** where one exists. Now that `main` is the default branch this takes effect on merge, immediately — which is the normal GitHub behaviour and was *not* true during the `5.0` period. Pure bookkeeping PRs (#94, #98) name no issue; that is an accepted exception, not an oversight.
-  Merge with a merge commit (`gh pr merge <n> --merge --delete-branch`), matching #72–#78.
+  Merge with a merge commit (`gh pr merge <n> --merge --delete-branch`), matching #72–#78 — but **drop `--delete-branch` whenever anything is stacked on the PR**, for the reason under Branches above.
 - **Changelog:** root `CHANGELOG.md` for the base package, plus one per pack.
   Format follows bootstack: `## [<version>] — <descriptive title>`, which drives
   the GitHub Release title and body via `release_notes.py`.
