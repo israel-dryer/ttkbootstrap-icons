@@ -28,7 +28,7 @@ from __future__ import annotations
 import importlib
 import pathlib
 import re
-import tomllib
+import sys
 
 import pytest
 
@@ -67,8 +67,27 @@ def pack_dir(pack) -> pathlib.Path:
     return path
 
 
+def toml_parser():
+    """`tomllib` is 3.11 and later; 3.10 needs `tomli` under the old name.
+
+    Imported here rather than at module scope, which is where
+    `tests/test_packs.py` does the same dance. The difference is deliberate: a
+    module-level `importorskip` takes the *whole* file with it, so a 3.10
+    checkout without `tomli` would silently lose the README-intro check too —
+    and that one parses no TOML. A guard that quietly stops covering half of
+    what it names is the failure this pack's own history is made of. CI does
+    install `tomli` below 3.11, so on the matrix both forms cover the same
+    ground; this one also survives a bare interpreter.
+    """
+    if sys.version_info >= (3, 11):
+        import tomllib
+
+        return tomllib
+    return pytest.importorskip("tomli", reason="3.10 needs tomli to read pyproject.toml")
+
+
 def summary(pack) -> str:
-    config = tomllib.loads((pack_dir(pack) / "pyproject.toml").read_text(encoding="utf-8"))
+    config = toml_parser().loads((pack_dir(pack) / "pyproject.toml").read_text(encoding="utf-8"))
     return config["project"]["description"]
 
 
