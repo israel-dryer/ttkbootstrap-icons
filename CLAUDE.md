@@ -268,6 +268,61 @@ bumped every time and an existing one means the tag is wrong.
 
 ## Next session — start here
 
+### Reviewing the open stack — read this first, then delete it when the stack merges
+
+**Five PRs are open and stacked, all green.** Review `main...docs/review-fixes`, which is nine commits and contains every one of them. Merge order, each based on the one above:
+
+| PR | Branch | What | Closes |
+|---|---|---|---|
+| #121 | `docs/on-missing-scope` | what `on_missing` actually governs | **#117** |
+| #122 | `docs/prose-pass` | #89's prose pass, two stale numbers, two guards | — |
+| #123 | `docs/renderer-figures` | #87's generated figures | — |
+| #124 | `docs/handoff-figures-and-cleanup` | handoff: cleanup, the gh-pages URL | — |
+| #125 | `docs/review-fixes` | two rounds of review fixes, the apt/CI fix | — |
+
+**#123 must not close #87** — it is the generated half only; the three real-window captures are untouched.
+
+**Two review passes have already run, and the second found problems that the first pass's fixes created.** That is the fact worth carrying into a third: this stack's failure mode has been *fixes introducing defects*, not the original work being sloppy.
+
+- **Round 1**, `main...docs/renderer-figures` at `high` — seven findings. A padded-box guide drawn with `round` where the renderer uses `int`, so the exemplar glyph crossed its own guide. `image-rendering: pixelated` applied to three figures displayed 1:1. A census that said "every glyph in all sixteen packs" over default styles only. An over-broad MB regex. A dead `Panel.size` whose use would have made a difference-assertion pass unconditionally. Two modules each declaring `PackNotInstalled`. Three dead imports.
+- **Round 2**, `docs/handoff-figures-and-cleanup...docs/review-fixes` at `high` — four findings. Two figure-subject numbers quoted from a 400-name sample, one of which contradicted the page beside it. An unexplained denominator, which cost the reviewer a 123-glyph discrepancy they could not resolve. **The MB guard narrowed to three filenames — a regression introduced by round 1's fix**, removing the coverage the check exists for. A missing blank line that made Markdown fold "it is gone" into the `release/ttkbootstrap-icons-packs-final` bullet, i.e. the one branch this file insists must never be deleted.
+
+**Nothing has yet reviewed round 2's own fixes.** A third pass should weight these:
+
+- `tests/test_install_guidance.py` — the MB guard has now been rewritten twice. It sweeps by paragraph context; check the regex cannot miss a restatement phrased differently, and that excluding `CHANGELOG.md` (frozen history) and `CLAUDE.md` (narrates the wrong number deliberately) is the only exclusion.
+- Every census number in `sizing-and-quality.rst`, `render.py`'s `_place_by_bbox` docstring, `render_figures.FIGURES`' note, and this file. They have been restated twice and must agree with each other and with the reproduction below.
+- `docs/_ext/render_figures.py` — restructured by round 1's fix. The imports from `pack_showcase` are deliberate; `note_self` staying local is deliberate and load-bearing.
+- **`parallel_write_safe` is asserted, not tested.** `save_atomic` is the argument for it. Nobody has run the docs build under contention to prove it.
+
+**To reproduce the census** — iterate `provider.style_list`, not `default_style`, and count only glyphs that draw:
+
+```python
+for style in (provider.style_list or [None]):
+    s = get_icon_set(provider, style)
+    for name, glyph in s.glyphs.items():        # 89,292 entries
+        bb = render_glyph(glyph, 96, "black", ink=..., font_key=s.font_key,
+                          font_bytes=s.font_bytes, options=s.options
+                          ).getchannel("A").getbbox()
+        if bb is None: continue                 # 123 draw nothing; 89,169 remain
+```
+
+**Settled — decisions, not defects. Do not re-open these:** the even-snapping figure was drawn, looked at, and deleted because a PNG cannot reproduce a 150% display scale; `tests/test_render_figures.py` deliberately refuses to judge whether a figure *reads*, because a pixel metric ranked the rejected subject above its replacement; `icons-and-names` reuses `pack-preview:: bootstrap` rather than growing a second directive; #87 stays open.
+
+**Verify with**, in a checkout with every pack installed:
+
+```bash
+.venv-home/Scripts/python.exe -m sphinx docs docs/_build/html -b html -W --keep-going -n -j auto
+.venv-home/Scripts/python.exe -m pytest -q                       # 433 passed
+.venv-home/Scripts/python.exe .github/scripts/verify_packages.py --strict
+.venv-home/Scripts/python.exe .github/scripts/generate_pack_readmes.py --check
+```
+
+Read the venv note under "Environment" first — which of `.venv` and `.venv-home` works depends on the Windows login, and the wrong one fails with `Access is denied` on the exe itself.
+
+**Merge without `--delete-branch`, in order, and delete the branches at the end.** A `--delete-branch` merge closes any PR targeting the deleted branch, which is how #85 was lost; with five stacked PRs it would close the next one each time.
+
+---
+
 **The release is finished. Nothing about 5.0.0 is outstanding.** All eighteen distributions are on PyPI, the tag is pushed, the GitHub Release is cut and corrected, Trusted Publishing is configured and verified, and every install line on every docs page and README now resolves. Do not re-run the dry run, re-review, or re-derive the publish order — all of it was done against this tree.
 
 **The next release can be tag-driven, and that path is now proven rather than assumed.** Push `v<version>` and the workflow builds all eighteen, publishes what PyPI does not have, and cuts one GitHub Release. The one caveat is the permanent red run on `v5.0.0` described in Current state, which is specific to that tag.
@@ -363,7 +418,7 @@ Three more, each fixed and each invisible to `pytest`, `sphinx -W` and `verify_p
 
 ### What building the figures found, 2026-08-08
 
-**A page's central claim was backwards, and only drawing it exposed that.** `sizing-and-quality` said `getbbox` "makes full-bleed glyphs slightly too large — they end up with no padding at all, touching the edges". `_place_by_bbox` only ever *shrinks* a glyph that overflows, so a glyph fitted that way lands **inside** the padded box: a per-pack median of 73%–96% of it against 94%–102% on the ink path. The touching is real but comes from the other half of the function — vertical centering is against `ascent + descent` rather than against the ink. Census over every glyph in **every style** of all sixteen packs, each with its own pack's options: **518 of 89,169 overflow on the fallback path, 0 of 89,169 on the measured one.** The same wrong sentence was in `_place_by_bbox`'s own docstring; both are fixed in #123.
+**A page's central claim was backwards, and only drawing it exposed that.** `sizing-and-quality` said `getbbox` "makes full-bleed glyphs slightly too large — they end up with no padding at all, touching the edges". `_place_by_bbox` only ever *shrinks* a glyph that overflows, so a glyph fitted that way lands **inside** the padded box: a per-pack median of 73%–96% of it against 94%–102% on the ink path. The touching is real but comes from the other half of the function — vertical centering is against `ascent + descent` rather than against the ink. Census over every glyph in **every style** of all sixteen packs, each with its own pack's options: **518 of the 89,169 glyphs that draw ink overflow on the fallback path, 0 on the measured one.** The same wrong sentence was in `_place_by_bbox`'s own docstring; both are fixed in #123.
 
 **That number was wrong once, in the direction that flatters.** The first census iterated each pack's *default* style only — 48,082 glyphs — and the prose said "every glyph in all sixteen packs". It covered a little over half of them, and it excluded exactly the non-default cuts a user reaches through `style=`. **Iterate `provider.style_list`, not just `default_style`**, whenever a claim is about the whole library; the shortcut is easy to write and the resulting sentence is unfalsifiable by a reader.
 
@@ -562,8 +617,13 @@ Each of these looks like a defect in isolation. They aren't.
 - **There is no `[all]` extra, and it must not come back.** The sixteen sets
   serve disjoint purposes — brand marks, developer logos, fantasy glyphs,
   weather symbols — so no application draws from all of them; installing every
-  one costs ~17 MB to get fifteen icon sets nobody opens, which is the bundling
-  extras exist to avoid. Users needing two name two: `tkinter-icons[a,b]`.
+  one costs **22.02 MB** to get fifteen icon sets nobody opens, which is the
+  bundling extras exist to avoid. (This bullet said "~17 MB" until 2026-08-08 —
+  the fourth surviving copy of the figure #104 corrected in two places and #122
+  in a third. It is outside `TestTheCostOfInstallingEverythingIsMeasured`'s
+  sweep on purpose, since this file quotes the wrong number deliberately when
+  telling the story; that exemption is exactly why this copy lasted longest.
+  A number asserted here is still a number a future session will repeat.) Users needing two name two: `tkinter-icons[a,b]`.
   Enforced twice: `test_there_is_no_all_extra`, and an error in
   `check_extras_cover_every_pack`. Pack-to-extra coverage is now checked against
   the pack directories rather than through `[all]`, which is a better check —
