@@ -27,6 +27,8 @@ have avoided the second file at the cost of looking washed out in both themes.
 from __future__ import annotations
 
 import importlib
+import os
+import threading
 from pathlib import Path
 
 from docutils import nodes
@@ -150,6 +152,29 @@ BLURB: dict[str, str] = {
 }
 
 
+def save_atomic(image, out: Path) -> None:
+    """Write `image` to `out` without ever leaving a half-written file there.
+
+    Two documents may legitimately want the same preview: `packs/bootstrap`
+    shows Bootstrap's two styles because it is Bootstrap's page, and
+    `user-guide/icons-and-names` shows them because they are the clearest
+    example of what a style *is*. Under `-j auto` those are different workers,
+    and both would otherwise open the same path and write it at once.
+
+    The bytes are identical either way — everything feeding them is a constant
+    or a font file — so the only real hazard is a torn read while one worker is
+    mid-write. Writing beside the target and renaming removes it: `replace` is
+    atomic on both platforms, so a reader sees the old file or the new one.
+    """
+    out.parent.mkdir(parents=True, exist_ok=True)
+    scratch = out.with_name(f"{out.stem}.{os.getpid()}.{threading.get_ident()}.tmp{out.suffix}")
+    try:
+        image.save(scratch)
+        scratch.replace(out)
+    finally:
+        scratch.unlink(missing_ok=True)
+
+
 def showcase_for(extra: str, style: str | None) -> list[str]:
     """The glyphs to draw for one pack and style.
 
@@ -229,8 +254,7 @@ def render_one(pack, name: str, style: str | None, ink: str, out: Path, px: int)
             f"{pack.extra}: {name!r} rendered nothing in style {style!r}. "
             f"Fix the name in SHOWCASE rather than shipping a blank preview."
         )
-    out.parent.mkdir(parents=True, exist_ok=True)
-    glyph.save(out)
+    save_atomic(glyph, out)
 
 
 def render_strip(
@@ -268,8 +292,7 @@ def render_strip(
             )
         strip.paste(glyph, (index * (px + gap), 0), glyph)
 
-    out.parent.mkdir(parents=True, exist_ok=True)
-    strip.save(out)
+    save_atomic(strip, out)
 
 
 def render_grid(cells, cols: int, ink: str, out: Path, px: int, gap: int) -> None:
@@ -302,8 +325,7 @@ def render_grid(cells, cols: int, ink: str, out: Path, px: int, gap: int) -> Non
         y = (index // cols) * (px + gap)
         grid.paste(glyph, (x, y), glyph)
 
-    out.parent.mkdir(parents=True, exist_ok=True)
-    grid.save(out)
+    save_atomic(grid, out)
 
 
 class IconHeroDirective(SphinxDirective):
@@ -709,12 +731,15 @@ def setup(app):
     # parallel reading" into a failed build — the docs themselves being clean
     # is beside the point once a warning is an error.
     #
-    # The claim holds because nothing here is shared across workers. The three
-    # tables are read-only constants. Every rendered file's name is derived from
-    # (extra, style, name, theme), and each is written by exactly one document:
-    # a pack's previews only by its own page, the thumbnails only by packs.rst,
-    # the hero band only by index.rst — so no two workers write the same path.
-    # `mkdir(parents=True, exist_ok=True)` tolerates the race on the shared
-    # directory itself, and the completeness check runs on `env-before-read-docs`,
-    # which fires once in the parent.
+    # The claim holds because nothing here is *mutated* across workers. The
+    # three tables are read-only constants, and the completeness check runs on
+    # `env-before-read-docs`, which fires once in the parent.
+    #
+    # Two documents can write the same path, and that used to be untrue: a
+    # pack's previews were written only by its own page, until
+    # `user-guide/icons-and-names` started showing Bootstrap's two styles as
+    # the example of what a style is. `save_atomic` is what makes that safe
+    # rather than a constraint nobody would remember — every write goes through
+    # it, so the only way two workers can collide is by both producing the same
+    # bytes and one of them winning the rename.
     return {"version": "1.0", "parallel_read_safe": True, "parallel_write_safe": True}

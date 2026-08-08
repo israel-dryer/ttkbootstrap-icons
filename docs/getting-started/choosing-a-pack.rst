@@ -37,7 +37,11 @@ What actually distinguishes them
 
 **Size.** ``[material]`` and ``[fluent]`` are the large sets, and large sets are large files — which matters when you freeze the application, since a font ships whole whether you use four glyphs or four thousand. See :doc:`../user-guide/packaging`.
 
-**Drawing weight.** Sets are not interchangeable visually. ``[lucide]`` is light and even; ``[material]`` is heavier; ``[bootstrap]`` sits between them. Mixing two general-purpose sets in one interface usually looks like a mistake — mixing a UI set with a logo set does not.
+**Drawing weight.** Sets are not interchangeable visually. Five packs, the same five things, each drawn the way that pack draws them when you pass no ``style``:
+
+.. pack-comparison::
+
+``[lucide]`` is light and even; ``[material]`` and ``[remix]`` default to a solid fill; ``[bootstrap]`` and ``[fontawesome]`` sit between them, and both offer the other cut as a style. Mixing two general-purpose sets in one interface usually looks like a mistake — mixing a UI set with a logo set does not.
 
 **Styles.** Of the :packs-stat:`total`, :packs-stat:`styled` offer more than one style of the same icon, so you can use an outline normally and a fill for the selected state. The other :packs-stat:`unstyled` do not, and take no ``style`` argument. :doc:`../user-guide/icons-and-names` covers how a style is chosen.
 

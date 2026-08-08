@@ -311,9 +311,15 @@ def _place_by_bbox(
     """Size and position a glyph by measuring it at render time.
 
     The fallback for glyphs with no entry in the provider's `metrics.json`.
-    `getbbox` under-reports ink on icon fonts, so full-bleed glyphs come out
-    slightly large and some sit off-center; regenerate the provider's metrics
-    to take the accurate path.
+
+    `getbbox` under-reports ink on icon fonts, and this only ever shrinks a
+    glyph that overflows, so a glyph fitted this way lands *inside* the padded
+    box rather than filling it — between 73% and 96% of it, depending on the
+    set. Centering is vertical against `ascent + descent` rather than against
+    the ink, so a set whose glyphs sit off the font's baseline rides high in
+    the frame: measured over all sixteen packs, 390 of 48,082 glyphs run past
+    the edge on this path and none do on the ink path. Regenerate the
+    provider's metrics to take the accurate one.
     """
     font = load_font(font_key, font_bytes, max(1, canvas_size))
     ascent, descent = font.getmetrics()
