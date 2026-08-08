@@ -1,7 +1,8 @@
 # tkinter-icons-gmi
 
-An icon provider for the `tkinter-icons` library.  
-Google Material Icons offer baseline, outlined, round, sharp and twotone variants.
+Google's own Material icon set, in four cuts: baseline, outlined, round and sharp.
+
+For the community-maintained Material Design Icons, install `tkinter-icons[material]` instead — a different project, with far broader coverage.
 
 [![PyPI](https://img.shields.io/pypi/v/tkinter-icons-gmi.svg)](https://pypi.org/project/tkinter-icons-gmi/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)

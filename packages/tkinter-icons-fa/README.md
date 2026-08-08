@@ -1,7 +1,8 @@
 # tkinter-icons-fa
 
-An icon provider for the `tkinter-icons` library.  
-Font Awesome Free offers large, well-known icon sets across solid, regular, and brand categories.
+A broad interface set alongside a large collection of brand marks, in solid, regular and brands cuts.
+
+The brands cut is the reason to reach for this one: it is the pack that lets a third-party logo sit beside ordinary interface glyphs without installing a second set.
 
 [![PyPI](https://img.shields.io/pypi/v/tkinter-icons-fa.svg)](https://pypi.org/project/tkinter-icons-fa/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)

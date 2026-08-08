@@ -1,7 +1,8 @@
 # tkinter-icons-mat
 
-An icon provider for the `tkinter-icons` library.  
-Material Design Icons (community) offers a large collection of UI glyphs as a single TTF.
+The community-maintained Material Design Icons, in outline and filled cuts, and the largest set of the sixteen.
+
+Broad enough that it usually has a glyph for a specific domain concept, not only for generic interface actions.
 
 [![PyPI](https://img.shields.io/pypi/v/tkinter-icons-mat.svg)](https://pypi.org/project/tkinter-icons-mat/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)

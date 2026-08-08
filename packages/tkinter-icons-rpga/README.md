@@ -1,7 +1,8 @@
 # tkinter-icons-rpga
 
-An icon provider for the `tkinter-icons` library.  
-RPG Awesome is a fantasy-themed set of glyphs based on Font Awesome.
+Fantasy and tabletop-game glyphs — swords, shields, potions, dice and creatures.
+
+The one set here not aimed at application interfaces, and the clearest illustration of why the packs are separate downloads rather than one.
 
 [![PyPI](https://img.shields.io/pypi/v/tkinter-icons-rpga.svg)](https://pypi.org/project/tkinter-icons-rpga/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)

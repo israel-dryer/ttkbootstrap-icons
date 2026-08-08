@@ -1,7 +1,7 @@
 [project]
 name = "tkinter-icons-typicons"
-version = "1.1.0"
-description = "Typicons (font-based) provider for tkinter-icons"
+version = "1.1.1"
+description = "Typicons (outline, fill) — an icon pack for tkinter-icons"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [{ name = "Israel Dryer" }]

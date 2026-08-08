@@ -1,7 +1,7 @@
 [project]
 name = "tkinter-icons-gmi"
-version = "1.1.0"
-description = "Google Material Icons (baseline/outlined/round/sharp/twotone) provider for tkinter-icons"
+version = "1.1.1"
+description = "Google Material Icons (baseline, outlined, round, sharp) — an icon pack for tkinter-icons"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [{ name = "Israel Dryer" }]

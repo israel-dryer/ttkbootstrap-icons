@@ -1,7 +1,8 @@
 # tkinter-icons-meteocons
 
-An icon provider for the `tkinter-icons` library.  
-Meteocons is a compact weather-themed icon font by [Alessio Atzeni](https://www.alessioatzeni.com/meteocons/).
+A compact weather set — sun, cloud, precipitation and wind states — drawn by [Alessio Atzeni](https://www.alessioatzeni.com/meteocons/).
+
+For a much larger weather vocabulary, including moon phases and Beaufort codes, install `tkinter-icons[weather]` instead.
 
 [![PyPI](https://img.shields.io/pypi/v/tkinter-icons-meteocons.svg)](https://pypi.org/project/tkinter-icons-meteocons/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)

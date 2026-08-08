@@ -12,6 +12,18 @@ git history after the fact and are summaries rather than contemporaneous notes.
 
 <!-- release-notes-start -->
 
+## [1.1.1] — corrected style list, and an intro in this library's voice
+
+No glyph, font or metrics change: this release exists to correct text that PyPI freezes at release time.
+
+### Fixed
+
+- **This pack does not ship a `twotone` style, and claimed it did in two places.** The distribution summary and the README intro both listed it; the styles are baseline, outlined, round and sharp. (#111)
+
+### Changed
+
+- **The README intro and the distribution summary are written from this library's side rather than upstream's.** They now say what the set covers and when to reach for it, instead of repeating the upstream project's own description of the font. (#120)
+
 ## [1.1.0] — measured ink metrics, and the tkinter-icons rename
 
 Requires `tkinter-icons>=5.0.0`. Install it as an extra rather than by name:
