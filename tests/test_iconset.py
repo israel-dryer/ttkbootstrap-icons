@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import itertools
+
 import pytest
 
 from tkinter_icons.iconset import (
@@ -87,19 +89,31 @@ class TestIconSetCache:
         assert registered_icon_sets() == {icon_set.id: icon_set}
 
     def test_styles_get_independent_sets(self, registry):
-        """Two styles of one provider must not share glyph data."""
-        multi = next(
-            (
-                p for name in registry.names()
-                if (p := registry.get_provider(name)).has_styles and not p.uses_single_file
-            ),
-            None,
-        )
-        if multi is None:
+        """Each style of a multi-font provider gets its own set, id, and font.
+
+        Every such provider is checked, not just the first one the registry
+        happens to yield, and the comparison is on font bytes rather than glyph
+        contents. Both details matter: entry-point order is not stable across
+        platforms, and the providers disagree about whether styles share a glyph
+        map. `gmi` ships one name-to-codepoint map across all four of its styles
+        — that is how Material Icons work, one glyph set drawn by several fonts
+        — so asserting that glyph *contents* differ passed or failed purely on
+        which provider came first.
+        """
+        multi = [
+            p for name in registry.names()
+            if (p := registry.get_provider(name)).has_styles and not p.uses_single_file
+        ]
+        if not multi:
             pytest.skip("no multi-font provider installed")
-        first, second = multi.style_list[0], multi.style_list[1]
-        assert get_icon_set(multi, first) is not get_icon_set(multi, second)
-        assert get_icon_set(multi, first).glyphs != get_icon_set(multi, second).glyphs
+        for provider in multi:
+            for first, second in itertools.combinations(provider.style_list, 2):
+                a, b = get_icon_set(provider, first), get_icon_set(provider, second)
+                assert a is not b, f"{provider.name}: {first}/{second} share one set"
+                assert a.id != b.id, f"{provider.name}: {first}/{second} share an id"
+                assert a.font_bytes != b.font_bytes, (
+                    f"{provider.name}: {first}/{second} are drawn from the same font"
+                )
 
     def test_set_carries_provider_render_options(self, provider):
         assert get_icon_set(provider).options == provider.render_options
