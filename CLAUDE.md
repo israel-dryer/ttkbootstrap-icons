@@ -272,16 +272,26 @@ bumped every time and an existing one means the tag is wrong.
 
 **Janitorial, none of it blocking:** point Read the Docs' Default branch back at `main`; delete `gh-pages` (dead since the move to Read the Docs); delete the merged remote branches — `5.0`, `docs/handoff-post-95`, `docs/legacy-final-release-and-meteocons`, `docs/drop-bootstack-references`, `docs/migration-scope-and-shim-extra`, `docs/ci-badge`, `docs/pack-readmes-generated`, `docs/handoff-after-py314`, `release/finish-5.0.0`, `fix/iconset-style-test-order`, and `fix/release-latest-marker` (that last is #96, closed unmerged and superseded by #97). **Leave `release/ttkbootstrap-icons-packs-final` alone** — it is the only tree where the sixteen old packs still exist.
 
-**A 5.0.1 is planned, scoped around docs fixes.** The candidates as they stand:
+**The follow-up work is milestoned, and the split is deliberate.** The 5.0.0 milestone is closed; what outlived it moved to **5.0.x Fixes and Cleanup** and **5.1.0**.
+
+**5.0.x — one `v5.0.1` tag publishes the base 5.0.1 and `tkinter-icons-gmi` 1.1.1 together**, with the other fifteen packs skipping existing. That is #97 working as designed: distributions carry different version numbers, one tag ships them.
 
 | Issue | What |
 |---|---|
-| #115 | `render_pil` swallows the `ValueError` the constructor raises for an unresolvable name, against what `icons-and-names.rst:72` promises. Settle the open question on the issue first — it decides whether the code or the prose is what changes. |
-| #111 | The `gmi` README claims a `twotone` style; the provider ships four (`baseline`, `outlined`, `round`, `sharp`). Fix in the README's intro paragraph, which is the one hand-written part `generate_pack_readmes.py` preserves — not in the generator. |
-| #87 | The generated renderer figures, still unbuilt. The screenshots and the browser's app icon are done. |
-| #91 | `import tkinter_icons` requires `tkinter` even for `render_pil`. |
+| #118 | The `3.14` classifier is on `main` but frozen out of the published wheel, so the pyversions badge reads up to 3.13. Needs no code change — it needs a release to carry it, and it is the reason the base is in this one. |
+| #111 | `gmi` claims a `twotone` style; the provider ships four. Wrong in **two** frozen places — the README *and* the `description` field in its `pyproject.toml` — so it needs a pack release, not a docs edit. Fix the README's intro paragraph, the one hand-written part `generate_pack_readmes.py` preserves. |
+| #117 | The `on_missing` scope sentence in `icons-and-names.rst:72` describes a case that cannot occur. Docs-only; split out of #115 so it can ship in a patch. |
+| #87 | The generated renderer figures. **Ships on merge via Read the Docs, not with the tag** — it is milestoned here for tracking, not because it needs the release. |
 
-**Remember the base's Python-version metadata is frozen at 5.0.0.** #109 added a `3.14` classifier that is *not* in the published wheel, so the pyversions badge reads up to 3.13 until a new base release ships. A 5.0.1 would carry it — which is a reason to include the base in that release even if only the docs change.
+**5.1.0 — all three touch the same headless/`render_pil` surface**, and are cheaper done together than in three passes over one file.
+
+| Issue | What |
+|---|---|
+| #115 | `render_pil` has no `style=`, so **814 real icon names render blank** — every name that exists only in a non-default style, across six packs. Additive fix. Align `resolve_icon_style` (`f"-{s}" in name`) with `resolve_icon_name` (`name.endswith(f"-{s}")`) at the same time; they agree today only by accident of `style_list` ordering. |
+| #91 | `import tkinter_icons` requires `tkinter` even for `render_pil`, because `__init__.py:30` pulls `icon.py`, which imports `tkinter` at module scope. Making that lazy makes an import succeed that currently raises — additive, so minor rather than patch. |
+| #112 | PySimpleGUI integration, scoped as 5.1 since #71. |
+
+**Do not make `render_pil` raise on an unresolvable name before #115 lands.** It is the obvious reading of the original report and it is the wrong order: it would convert 814 silent blanks into 814 hard failures while the correct call is still awkward to write. The measurement behind that number is on #115 — all 814 fail at *resolution*, and none reach `on_missing` by resolving, which is why the code comment at `icon.py:242` is right and the prose is what is wrong.
 
 **Two lessons from finishing this release, both cheap to forget.** A generated artifact is only as good as the moment you read it: the release body was hard-wrapped and its title stuttered a distribution-name prefix left over from the retired eighteen-tag scheme, and neither was visible until the rendered page was read (#113). And a red CI run on a docs-only PR is worth diagnosing rather than re-running — the one on #110 was a genuine order-dependent test bug that had been passing or failing on entry-point ordering for however long (#114).
 
