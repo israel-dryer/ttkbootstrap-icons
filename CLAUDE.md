@@ -96,7 +96,7 @@ The same divergence means **the base cannot be rebuilt as-released from `main`**
 
 **A render check must assert on ink, never on the absence of an exception.** `render_pil` returns a fully transparent image for a name it cannot resolve, so a check that only looks for a raised exception passes on a typo. Assert `img.getbbox() is not None`, or count non-transparent pixels. This cost real time twice: once reading a live pack as broken when the name was wrong, and once when `RpgAwesomeIcon.render_pil('sword-brandish')` came back blank during the final release verification — the pack was fine, the glyph name was invented, and the real names come from `provider.build_name_lookup()[style]`, which is keyed by **style** and not by glyph name.
 
-That behaviour is now **#115**, and it is narrower than it first looks: `on_missing` is a real, documented, tested policy (`"transparent"` default, `"warn"`, `"raise"`), so the transparent square is deliberate. What is *not* deliberate is that the constructor raises `ValueError` on an unresolvable name while `render_pil` swallows it — and `docs/user-guide/icons-and-names.rst:72` says the policy is for a name that "resolves but is missing from the glyph map … rather than that you made a typo". Do not file that as "blank render is a bug"; the divergence between the two entry points is the finding.
+That behavior is now **#115**, and it is narrower than it first looks: `on_missing` is a real, documented, tested policy (`"transparent"` default, `"warn"`, `"raise"`), so the transparent square is deliberate. What is *not* deliberate is that the constructor raises `ValueError` on an unresolvable name while `render_pil` swallows it — and `docs/user-guide/icons-and-names.rst:72` says the policy is for a name that "resolves but is missing from the glyph map … rather than that you made a typo". Do not file that as "blank render is a bug"; the divergence between the two entry points is the finding.
 
 **PyPI allows four new projects per 24 hours.** Confirmed by the owner 2026-08-04, and it is not the "20 per hour" in `warehouse/config.py`. Seventeen of the eighteen names were brand new, so 5.0.0 was inherently a multi-day upload — five consecutive days, each a full 24-hour wait followed by four clean uploads with no warm-up. Publishing to a project that **already exists** does not draw from that quota, which is why the shim went up alongside `rpga` on the last day. Keep this only for the next release that creates new project names; a version bump on existing projects is unaffected.
 
@@ -159,7 +159,7 @@ Closed unmerged: #96, superseded by #97.
 | #101 | four docs fixes found by reading — the shim's broken `[all]` install line, the migration guide implying 4.0.0 shipped Bootstrap, that guide explaining two releases at once, and the ttkbootstrap examples teaching a pre-2.0 API — plus the guard that would have caught the first |
 | #103 | a CI badge on the repository README, and the downloads badge removed from both (it was a live 404 until the tag) |
 | #104 | the three claims #102's review found in the *published release text* — a shell command inside a `python` fence, the wrong "17 MB", and a conditional dressed as unconditional |
-| #105 | `Closes #90` — the sixteen pack READMEs generated from the catalogue, the pre-rename screenshots dropped |
+| #105 | `Closes #90` — the sixteen pack READMEs generated from the catalog, the pre-rename screenshots dropped |
 
 **The milestone issues are all closed, and #89 closed because #100's body named it.** That was not automatic: no commit body mentions #89, and its `Closes #89` lived only in PR #92's body, which merged to `5.0` — a non-default base — so GitHub had already discarded the link and does not re-evaluate it. #69, #71 and #79 closed from keywords already in the commit bodies. #67, #68, #70 and #75 were closed earlier by hand and their links are lost for good.
 
@@ -211,7 +211,7 @@ passing CI run, a `MERGEABLE` state, and the `gh pr merge` line under
 reviewed before it accumulates.
 
 **Most of these issues are still OPEN on GitHub, and that is correct** — a PR
-merged into `5.0` does not close the issue it names, because GitHub only honours
+merged into `5.0` does not close the issue it names, because GitHub only honors
 `Closes #n` on a merge into the default branch. They are meant to close together
 when the single `5.0` → `main` PR lands, so an issue closed early loses its link
 to the merge that actually shipped it.
@@ -356,7 +356,7 @@ Note what neither existing check caught. `generate_pack_readmes.py --check` was 
 
 **#120 is the bigger version of that finding, and it changes how large 5.0.1 is.** The pack README intros are written in upstream's voice — fifteen of sixteen, thirteen of them from one template: *"An icon provider for the `tkinter-icons` library. &lt;Upstream project&gt; &lt;marketing sentence&gt;."* Two things are wrong beyond the voice. **"Provider" is developer vocabulary** — #79 split that API out precisely because a consumer writes `from tkinter_icons import EvaIcon` and never touches a `BaseFontProvider`, yet it is the first noun on almost every pack's PyPI page. And the trailing sentence carries upstream's facts and upstream's framing, including "a single TTF font", which contradicts the positioning that users should never have to think about the font at all. `gmi`'s `twotone` claim is what that produces when upstream's copy goes stale.
 
-`fluent-reg` is the model to copy — it names the pack's role here, is honest about shipping one style, and points at `[fluent]` for people who want more. `meteocons` is the one intro whose upstream reference is **load-bearing**: the Alessio Atzeni attribution stays, for the licensing reasons under "Meteocons" below. `bs` has no characterisation at all, just a line and an inline badge.
+`fluent-reg` is the model to copy — it names the pack's role here, is honest about shipping one style, and points at `[fluent]` for people who want more. `meteocons` is the one intro whose upstream reference is **load-bearing**: the Alessio Atzeni attribution stays, for the licensing reasons under "Meteocons" below. `bs` has no characterization at all, just a line and an inline badge.
 
 **Scope decided 2026-08-08: all fifteen ship in 5.0.1.** The alternative was `gmi` alone — it is the only one publishing a false claim, where the other fourteen were publishing accurate text in the wrong voice — with the rest deferred to 5.1.0. The owner chose the wider scope, so 5.0.1 is fifteen bumps to 1.1.1 and fifteen changelog entries carried by the one `v5.0.1` tag. It is no longer a small patch, and that was the deliberate call rather than momentum.
 
@@ -489,7 +489,7 @@ Decisions behind it, each of which cost a discussion:
   `KNOWN_PACKS` and each live provider, and renders previews with the library
   itself, so a curated name that stops resolving fails the build.
 
-  **The pages are hand-written only where a table cannot go**: a characterisation
+  **The pages are hand-written only where a table cannot go**: a characterization
   of the set and one runnable example. Everything else is a directive. If you are
   tempted to type a fact onto one of those pages, that is the signal a directive
   is missing, not that this rule has an exception.
@@ -538,7 +538,7 @@ Decisions behind it, each of which cost a discussion:
   `PACKS_DOC_URL` points at actually exists is now a step in `ci.yml`'s packaging
   job. It checks `docs/packs.rst` in the source tree instead of the built file,
   because CI no longer builds the site. Do not drop it — that URL is the only
-  pointer to the catalogue a user with no pack installed is ever given.
+  pointer to the catalog a user with no pack installed is ever given.
 
 - **The one packs page must land at `packs.html` — the code already links
   there.** #79 pointed `PACKS_DOC_URL` (`packs.py:29`) at
@@ -546,7 +546,7 @@ Decisions behind it, each of which cost a discussion:
   user with *no pack installed* meets first: `no_packs_message()`, raised from
   `Icon.__init__`, and the browser's welcome screen. It 404s until #71 ships, so
   a Sphinx structure that names that page anything else leaves a dead link as
-  the only pointer to the catalogue, for exactly the users least able to find it
+  the only pointer to the catalog, for exactly the users least able to find it
   another way. Reverting to `REPO_URL` in the meantime was considered and
   declined — it is a second thing to remember to undo, and a silent revert if
   forgotten. Noted on #71. A preflight assertion that the path exists in the
@@ -564,7 +564,7 @@ everything behind mutable class state on `Icon`.
 | `render.py` | Drawing core. Pure PIL, **no Tkinter** — runs without a display. `RenderOptions` carries all the knobs. |
 | `iconset.py` | One immutable `IconSet` per (provider, style): font bytes, glyphs, metrics, options. |
 | `icon.py` | Tk-facing layer only. `Icon.render_pil()` is the headless entry point. |
-| `packs.py` | The pack catalogue — single source of truth for every install message and the lazy import root. |
+| `packs.py` | The pack catalog — single source of truth for every install message and the lazy import root. |
 | `providers.py` | `BaseFontProvider`, glyphmap/metrics loading. |
 | `registry.py` | Entry-point discovery. Scans **both** provider groups. |
 
@@ -753,7 +753,7 @@ Each of these looks like a defect in isolation. They aren't.
 - **Branches:** `refactor/*`, `fix/*`, `feat/*`, `docs/*` off **`main`**, and PRs target **`main`**. This changed with #100 — `5.0` was the integration branch and is finished. Stack dependent PRs on each other.
 
   **Retarget each child by hand as its parent merges — GitHub does not do it for you, and this file said it did until 2026-08-08.** Merging #121 left #122 still based on `docs/on-missing-scope`, so merging #122 next would have put it on that branch rather than on `main`. GitHub retargets when the base branch is **deleted**, which is exactly what you must not do in a stack: a `--delete-branch` merge closes any PR targeting the deleted branch, which is how #85 was lost, and with five stacked PRs it would close the next one each time. So the two rules together are: merge with plain `gh pr merge <n> --merge`, run `gh pr edit <n+1> --base main` before each subsequent merge, verify the base actually changed, and delete every branch at the end.
-- **Every PR names an issue with `Closes #n`** where one exists. Now that `main` is the default branch this takes effect on merge, immediately — which is the normal GitHub behaviour and was *not* true during the `5.0` period. Pure bookkeeping PRs (#94, #98) name no issue; that is an accepted exception, not an oversight.
+- **Every PR names an issue with `Closes #n`** where one exists. Now that `main` is the default branch this takes effect on merge, immediately — which is the normal GitHub behavior and was *not* true during the `5.0` period. Pure bookkeeping PRs (#94, #98) name no issue; that is an accepted exception, not an oversight.
   Merge with a merge commit (`gh pr merge <n> --merge --delete-branch`), matching #72–#78 — but **drop `--delete-branch` whenever anything is stacked on the PR**, for the reason under Branches above.
 - **Changelog:** root `CHANGELOG.md` for the base package, plus one per pack.
   Format follows bootstack: `## [<version>] — <descriptive title>`, which drives
@@ -791,6 +791,10 @@ thread-safe."
 
 ## Known gotchas
 
+- **A green local run proves one interpreter, and the matrix tests five.** `requires-python` is `>=3.10` and CI runs 3.10 through 3.14, but the working venv here is 3.13 — so anything version-gated passes locally and fails on collection in CI. `tests/test_pack_style_claims.py` shipped with a module-level `import tomllib`, which is 3.11 and later; the three 3.10 jobs failed to collect the file at all rather than failing a test. The pattern to copy is in `tests/test_packs.py`: guard on `sys.version_info` and fall back to `tomli`, which `ci.yml` installs below 3.11.
+
+  Prefer doing that **inside a helper** rather than at module scope. A module-level `importorskip` takes the whole file with it, so one missing backport silently retires every test in it — including the ones that never needed the import. That is the same "a guard quietly stops covering what it names" failure the placement census exists to prevent, one level down.
+
 - **`apt-get update` on a GitHub runner fails for repositories this project does not use, and it used to be able to fail a release.** All three Linux `Install Tk` steps ran `sudo apt-get update && sudo apt-get install -y python3-tk`. `update` exits 100 if *any* apt source on the runner image is mid-sync, and on 2026-08-08 Google Chrome's index was 1407 bytes where its release file said 1408 — so the docs job on #125 failed, having installed nothing and skipped every step after it. Nothing in this repository was involved.
 
   The `&&` was the bug. A partial `update` still refreshes the lists that succeeded, so the Ubuntu archive index is present either way; all three steps now let `update` fail with a warning and use `apt-get install` as the gate, which fails when Tk is genuinely unavailable and not when a Chrome mirror is resyncing. **`release.yml` had the same line**, which mattered more — a tag-driven release would have died the same way, and the next thing on the list is `v5.0.1`.
@@ -799,7 +803,7 @@ thread-safe."
 
 - **The "Python Versions" badge is not editable text — it is published metadata, and it is frozen.** Both READMEs carry `img.shields.io/pypi/pyversions/tkinter-icons.svg`, which shields renders purely from the `Programming Language :: Python :: 3.x` trove classifiers on the *released* base distribution. The published 5.0.0 stops at 3.13, so **the badge will read "3.10 | 3.11 | 3.12 | 3.13" until 5.0.1 ships**, regardless of what the tree says — editing the README or the pyproject changes nothing on PyPI. This is the same "frozen at release time" trap the #102 review found in the pack READMEs, in its metadata form. The tree is already ahead: #109 added the 3.14 classifier and put 3.14 in the CI matrix on all three platforms, so the fix is merged and simply waiting on a release. Nothing was *blocked* by the gap in the first place — `requires-python = ">=3.10"` has no upper bound, so newer interpreters install and run fine; the badge merely understates. **`tests/test_python_support.py` now pins the classifiers and the CI matrix to each other in both directions**, so the next version cannot be advertised without being tested, or tested without being advertised.
 - **Trust a pack's `license_url` at your peril.** It was wrong twice. `weather`
-  pointed at the Typicons licence, so the browser's "License" link opened another
+  pointed at the Typicons license, so the browser's "License" link opened another
   project's terms; `meteocons` pointed at basmilius/weather-icons, which is a
   different icon set by a different author in a different format — and #83
   vendored *that* project's MIT text for it on the strength of the URL. The font's
