@@ -139,11 +139,13 @@ jobs:
       - name: Extract the release title and notes from the changelog
         id: notes
         run: |
+          # No distribution-name prefix: one tag releases the whole repository
+          # (#97), so there is exactly one release per version and the prefix
+          # only stutters against a heading that names the project.
           python .github/scripts/release_notes.py \
             CHANGELOG.md \
             "${{ steps.resolve.outputs.version }}" \
-            RELEASE_NOTES.md "$GITHUB_OUTPUT" \
-            tkinter-icons
+            RELEASE_NOTES.md "$GITHUB_OUTPUT"
           if [ -s RELEASE_NOTES.md ]; then
             echo "Using curated notes ($(wc -l < RELEASE_NOTES.md) lines)."
           else

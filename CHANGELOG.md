@@ -12,17 +12,11 @@ history after the fact and are summaries rather than contemporaneous notes.
 
 <!-- release-notes-start -->
 
-## [5.0.0] — renamed to tkinter-icons, rebuilt around measured glyph ink
+## [5.0.0] — renamed, and rebuilt on measured ink
 
-`ttkbootstrap-icons` is now **`tkinter-icons`**. Bootstrap icons were built
-directly into ttkbootstrap, so this library is no longer the way to get icons
-for ttkbootstrap — it is for people on raw tkinter, and for people who want an
-icon set other than Bootstrap. The name now says that.
+`ttkbootstrap-icons` is now **`tkinter-icons`**. Bootstrap icons were built directly into ttkbootstrap, so this library is no longer the way to get icons for ttkbootstrap — it is for people on raw tkinter, and for people who want an icon set other than Bootstrap. The name now says that.
 
-Installing `ttkbootstrap-icons` still works. It becomes a forwarding shim that
-depends on `tkinter-icons` and re-exports everything, including submodules, so
-`from ttkbootstrap_icons.icon import Icon` keeps working. It warns once on
-import and will not be updated again.
+Installing `ttkbootstrap-icons` still works. It becomes a forwarding shim that depends on `tkinter-icons` and re-exports everything, including submodules, so `from ttkbootstrap_icons.icon import Icon` keeps working. It warns once on import and will not be updated again.
 
 ```bash
 pip install "tkinter-icons[material]"
@@ -32,107 +26,61 @@ pip install "tkinter-icons[material]"
 from tkinter_icons import MaterialIcon
 ```
 
+### Summary
+
+- **The library is now `tkinter-icons`.** `ttkbootstrap-icons` becomes a forwarding shim, so existing imports keep working. (#75)
+- **Icon packs install as extras** — `tkinter-icons[material]` — rather than as distributions you name yourself. (#69)
+- **Glyphs are centered on ink measured from the font** instead of on Pillow's `getbbox()`, which fixes padding and centering across every pack. (#67)
+- **Icons render without a display.** `Icon.render_pil()` returns a PIL image and touches no Tk. (#67)
+- **The published surface is smaller** — twenty-eight asset-building commands, the `tools` modules, and the `[all]` extra are gone. (#79)
+
 ### Added
 
-- **Sixteen icon packs are now extras of one library.** Each pack is still its
-  own distribution — it has to be, since each ships a font — but you no longer
-  install them by name. `pip install "tkinter-icons[material]"` pulls in the
-  right one, and two are named together as `tkinter-icons[material,simple]`.
-  Asking for a pack that is not installed raises with the exact install command
-  for it. (#69)
+- **Sixteen icon packs are now extras of one library.** Each pack is still its own distribution — it has to be, since each ships a font — but you no longer install them by name. `pip install "tkinter-icons[material]"` pulls in the right one, and two are named together as `tkinter-icons[material,simple]`. Asking for a pack that is not installed raises with the exact install command for it. (#69)
 
-- **`Icon.render_pil()`, a headless entry point.** It returns a PIL image and
-  touches no Tk, so icons can be rendered in a test suite, a build step, or any
-  process without a display. (#67)
+- **`Icon.render_pil()`, a headless entry point.** It returns a PIL image and touches no Tk, so icons can be rendered in a test suite, a build step, or any process without a display. (#67)
 
-- **`RenderOptions`, carrying every drawing knob as one immutable value.** Size,
-  color, padding, rotation, flip, and oversampling travel together instead of
-  living as mutable class state on `Icon`. (#67)
+- **`RenderOptions`, carrying every drawing knob as one immutable value.** Size, color, padding, rotation, flip, and oversampling travel together instead of living as mutable class state on `Icon`. (#67)
 
-- **`IconSet`, one immutable object per provider and style,** holding the font
-  bytes, the glyph map, the ink metrics, and the default options. (#67)
+- **`IconSet`, one immutable object per provider and style,** holding the font bytes, the glyph map, the ink metrics, and the default options. (#67)
 
-- **`python -m tkinter_icons.tools.generate_metrics`, which measures and
-  verifies glyph ink bounds.** `--all` regenerates every installed pack,
-  `--check` verifies without writing, which is what CI runs to catch drift in
-  the committed metrics. (#67)
+- **`python -m tkinter_icons.tools.generate_metrics`, which measures and verifies glyph ink bounds.** `--all` regenerates every installed pack, `--check` verifies without writing, which is what CI runs to catch drift in the committed metrics. (#67)
 
 ### Changed
 
-- **Glyphs are centered on measured ink, not on `font.getbbox()`.** Pillow's
-  `getbbox()` under-reports ink on icon fonts, which left full-bleed icons with
-  no padding at all and nudged everything else off center. Each glyph's true ink
-  is now measured once at 512px and shipped with its pack as em-fraction bounds
-  in `metrics.json`. A pack without metrics falls back to `getbbox`, so old
-  packs still render. (#67)
+- **Glyphs are centered on measured ink, not on `font.getbbox()`.** Pillow's `getbbox()` under-reports ink on icon fonts, which left full-bleed icons with no padding at all and nudged everything else off center. Each glyph's true ink is now measured once at 512px and shipped with its pack as em-fraction bounds in `metrics.json`. A pack without metrics falls back to `getbbox`, so old packs still render. (#67)
 
-- **The Bootstrap `y_bias` fudge was removed.** It existed to cancel the
-  `getbbox` skew; against real ink metrics it visibly pushes glyphs low. (#67)
+- **The Bootstrap `y_bias` fudge was removed.** It existed to cancel the `getbbox` skew; against real ink metrics it visibly pushes glyphs low. (#67)
 
-- **An odd size snaps up to the next even one.** `size=15` renders at 16px.
-  Half-pixel geometry is what produced the soft LANCZOS edges at fractional
-  display scaling. `icon.rendered_size` reports what was actually drawn, and it
-  is part of the cache key. (#67)
+- **An odd size snaps up to the next even one.** `size=15` renders at 16px. Half-pixel geometry is what produced the soft LANCZOS edges at fractional display scaling. `icon.rendered_size` reports what was actually drawn, and it is part of the cache key. (#67)
 
-- **The drawing internals are public.** `render.py` is pure PIL and imports no
-  Tkinter; `icon.py` is the only Tk-facing layer. Subclassing `Icon` to change
-  how something draws is no longer the only way in. (#67)
+- **The drawing internals are public.** `render.py` is pure PIL and imports no Tkinter; `icon.py` is the only Tk-facing layer. Subclassing `Icon` to change how something draws is no longer the only way in. (#67)
 
-- **Entry-point discovery scans both provider groups.** A pack published against
-  either `ttkbootstrap_icons.providers` or `tkinter_icons.providers` is found, so
-  upgrading the base package with old packs installed does not silently lose
-  every icon set. (#75)
+- **Entry-point discovery scans both provider groups.** A pack published against either `ttkbootstrap_icons.providers` or `tkinter_icons.providers` is found, so upgrading the base package with old packs installed does not silently lose every icon set. (#75)
 
 ### Fixed
 
-- **Image caches are scoped to the Tk interpreter and dropped when its root is
-  destroyed.** A `PhotoImage` belongs to the interpreter that created it, so a
-  process-wide cache handed out dead handles as soon as a root was replaced —
-  which is what happened in test suites and in any app that tears a window down
-  and builds another. (#68)
+- **Image caches are scoped to the Tk interpreter and dropped when its root is destroyed.** A `PhotoImage` belongs to the interpreter that created it, so a process-wide cache handed out dead handles as soon as a root was replaced — which is what happened in test suites and in any app that tears a window down and builds another. (#68)
 
-- **A stateful icon releases its widget bindings.** Icons bound to widget state
-  kept the widget, its images, and its theme-change binding alive after the
-  widget was gone. (#68)
+- **A stateful icon releases its widget bindings.** Icons bound to widget state kept the widget, its images, and its theme-change binding alive after the widget was gone. (#68)
 
-- **The pack asset runner no longer stops on a pack with nothing to build.**
-  `bs` has no `tools/generate_assets` — its assets were vendored, not
-  generated — and the runner treated that as a failure rather than a skip.
-  (#77)
+- **The pack asset runner no longer stops on a pack with nothing to build.** `bs` has no `tools/generate_assets` — its assets were vendored, not generated — and the runner treated that as a failure rather than a skip. (#77)
 
-- **`render_pil` works on a pack's icon class without a warm-up.** It read `Icon._icon_set_current`, a `ClassVar` shared by every subclass, so `MaterialIcon.render_pil("home")` drew a Material icon only if something had already constructed one — and raised `RuntimeError` in a fresh process, which is exactly how a test suite or a build step would call it. A pack now names its own provider through `Icon.provider_class`, and `render_pil` resolves friendly names the way the constructor does. The base `Icon` has no pack of its own, so it raises in a fresh process and otherwise falls back to whichever set was loaded last.
+- **`render_pil` works on a pack's icon class without a warm-up.** It read `Icon._icon_set_current`, a `ClassVar` shared by every subclass, so `MaterialIcon.render_pil("home")` drew a Material icon only if something had already constructed one — and raised `RuntimeError` in a fresh process, which is exactly how a test suite or a build step would call it. A pack now names its own provider through `Icon.provider_class`, and `render_pil` resolves friendly names the way the constructor does. The base `Icon` has no pack of its own, so it raises in a fresh process and otherwise falls back to whichever set was loaded last. (#86)
 
-- **Every pack's icon class accepts `options`.** `RenderOptions` was public API and the documented way to change how an icon draws, reachable only through `Icon.render_pil` or the base `Icon` — never through the sixteen classes anyone actually constructs. It is keyword-only, so it cannot be confused with `style`.
+- **Every pack's icon class accepts `options`.** `RenderOptions` was public API and the documented way to change how an icon draws, reachable only through `Icon.render_pil` or the base `Icon` — never through the sixteen classes anyone actually constructs. It is keyword-only, so it cannot be confused with `style`. (#86)
 
-- **PyInstaller finds the bundled hooks by itself.** The package shipped hooks but never registered them, so PyInstaller had no reason to look in `_pyinstaller/` and every frozen application needed an explicit `hookspath`. A `pyinstaller40` entry point now points at `get_hook_dirs`, which is what the documentation had always described. Two packs also had no hook file at all — `bs` and `fluent-reg` — so a frozen application using Bootstrap or Fluent (Regular) icons shipped without their fonts. All three failures were silent by construction: a glyph with no font renders transparent, so the application started normally and drew nothing.
+- **PyInstaller finds the bundled hooks by itself.** The package shipped hooks but never registered them, so PyInstaller had no reason to look in `_pyinstaller/` and every frozen application needed an explicit `hookspath`. A `pyinstaller40` entry point now points at `get_hook_dirs`, which is what the documentation had always described. Two packs also had no hook file at all — `bs` and `fluent-reg` — so a frozen application using Bootstrap or Fluent (Regular) icons shipped without their fonts. All three failures were silent by construction: a glyph with no font renders transparent, so the application started normally and drew nothing. (#84)
 
 ### Removed
 
-- **Only the icon browser is published as a command.** The base package
-  installed `tkicons-build-all` and `tkicons-metrics`, and each pack installed
-  its own `tkicons-<pack>-build` and `tkicons-<pack>-quick` — twenty-eight
-  commands across fourteen packs. They regenerate assets and metrics into a
-  source tree, so they do nothing useful from an installed wheel, and
-  `generate_metrics` would have written into site-packages. Maintainers run them
-  with `python -m`. `tkinter-icons` remains. (#79)
+- **Only the icon browser is published as a command.** The base package installed `tkicons-build-all` and `tkicons-metrics`, and each pack installed its own `tkicons-<pack>-build` and `tkicons-<pack>-quick` — twenty-eight commands across fourteen packs. They regenerate assets and metrics into a source tree, so they do nothing useful from an installed wheel, and `generate_metrics` would have written into site-packages. Maintainers run them with `python -m`. `tkinter-icons` remains. (#79)
 
-- **The `tools` modules no longer ship in any wheel.** Auto-discovery had been
-  sweeping `tkinter_icons_<pack>.tools` into all sixteen pack wheels, and
-  `tkinter_icons.tooling` into the base — upstream-scraping asset generators
-  that no user can run and that nothing imports at runtime. `tooling` moved
-  under `tkinter_icons.tools` with the rest. (#79)
+- **The `tools` modules no longer ship in any wheel.** Auto-discovery had been sweeping `tkinter_icons_<pack>.tools` into all sixteen pack wheels, and `tkinter_icons.tooling` into the base — upstream-scraping asset generators that no user can run and that nothing imports at runtime. `tooling` moved under `tkinter_icons.tools` with the rest. (#79)
 
-- **The `[all]` extra.** The sixteen sets serve disjoint purposes — brand
-  marks, developer logos, fantasy glyphs, weather symbols — so no application
-  draws from all of them, and installing every one cost about 22 MB of fonts
-  and JSON on disk to get fifteen icon sets nobody opens. That is the bundling
-  extras exist to avoid. Name the one or two you need. (#79)
+- **The `[all]` extra.** The sixteen sets serve disjoint purposes — brand marks, developer logos, fantasy glyphs, weather symbols — so no application draws from all of them, and installing every one cost about 22 MB of fonts and JSON on disk to get fifteen icon sets nobody opens. That is the bundling extras exist to avoid. Name the one or two you need. (#79)
 
-- **`BaseFontProvider`, `ProviderRegistry`, and `load_external_providers` are no
-  longer re-exported from the package root.** They define an icon set rather
-  than use one, and sat beside `MaterialIcon` as though the two were the same
-  kind of thing. Import them from `tkinter_icons.providers` and
-  `tkinter_icons.registry` — which is how all sixteen packs already do. (#79)
+- **`BaseFontProvider`, `ProviderRegistry`, and `load_external_providers` are no longer re-exported from the package root.** They define an icon set rather than use one, and sat beside `MaterialIcon` as though the two were the same kind of thing. Import them from `tkinter_icons.providers` and `tkinter_icons.registry` — which is how all sixteen packs already do. (#79)
 
 ## [4.0.0] — the base package no longer ships icons
 
