@@ -680,11 +680,42 @@ def _set_app_icon(root):
         pass
 
 
+def _silence_callback_errors(root: tk.Misc) -> None:
+    """Stop Tk printing a traceback when a callback raises.
+
+    Tk routes every exception raised inside an event handler to
+    `Tk.report_callback_exception`, whose default implementation writes
+    "Exception in Tkinter callback" and a full traceback to stderr. For a
+    library that is correct. For this, it means someone who typed
+    `tkinter-icons` to look at some icons gets a stack trace in their terminal
+    about a widget they did not know existed.
+
+    Guarding the handlers one at a time cannot achieve this. There are a dozen
+    of them, several do real work outside any `try`, and the next one anybody
+    adds would be unguarded again - the default has to change, not each caller.
+
+    Installed by `main`, which owns the root it creates. It is deliberately not
+    set in `IconPreviewerApp.__init__`: embedding the app in a root somebody
+    else owns must not silence *their* callbacks.
+    """
+    root.report_callback_exception = lambda exc, val, tb: None
+
+
 def main():
     root = tk.Tk()
-    _set_app_icon(root)
-    IconPreviewerApp(root)
-    root.mainloop()
+    _silence_callback_errors(root)
+    try:
+        _set_app_icon(root)
+        IconPreviewerApp(root)
+        root.mainloop()
+    except tk.TclError:
+        # The display went away - the window was killed, or the session ended
+        # mid-draw. There is nobody left to tell.
+        pass
+    except Exception:
+        # Anything else during startup or teardown. The window never opened, so
+        # a traceback would be the only thing the user ever saw from us.
+        pass
 
 
 if __name__ == "__main__":

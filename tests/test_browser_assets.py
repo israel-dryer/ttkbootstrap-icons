@@ -158,6 +158,87 @@ def test_the_browser_fails_invisibly(root, monkeypatch):
     assert not images, "the grid drew an image for a name that does not resolve"
 
 
+@pytest.mark.gui
+def test_a_raising_callback_prints_nothing(root, capsys):
+    """Tk's own traceback path, which no amount of guarding call sites closes.
+
+    Every exception raised inside an event handler goes to
+    `Tk.report_callback_exception`, which by default writes "Exception in
+    Tkinter callback" and a full stack trace to stderr. Someone who typed
+    `tkinter-icons` to look at some icons would read a traceback about a widget
+    they did not know existed.
+
+    A dozen handlers exist, several do real work outside any `try`, and the
+    next one added would be unguarded again — so the default is replaced rather
+    than each caller wrapped.
+    """
+    from tkinter_icons import browser
+
+    browser._silence_callback_errors(root)
+
+    def explode():
+        raise RuntimeError("failure inside an event handler")
+
+    button = tk.Button(root, text="x", command=explode)
+    button.pack()
+    root.update_idletasks()
+    button.invoke()
+    root.update()
+
+    assert root.winfo_exists(), "the window did not survive a raising callback"
+    captured = capsys.readouterr()
+    assert "Traceback" not in captured.err, f"a traceback reached the user: {captured.err[:300]}"
+    assert "Exception in Tkinter callback" not in captured.err
+    assert captured.out == ""
+
+
+@pytest.mark.gui
+def test_main_never_lets_an_error_escape(monkeypatch, capsys):
+    """The console script is the whole app, so nothing may escape it.
+
+    `main` creates the root, so it is where the callback default is replaced
+    and where a startup failure has to stop. Nothing about this is reachable
+    normally — it is the last line of defense for a user who typed a command
+    and expects a window, not a stack trace.
+    """
+    from tkinter_icons import browser
+
+    monkeypatch.setattr(tk.Tk, "mainloop", lambda self: None)
+
+    # `main` creates its own root, and with `mainloop` stubbed out nothing
+    # destroys it. A root left alive breaks the next test that needs a fresh
+    # interpreter — Tk 8.6 cannot reliably create a second one in a process —
+    # so it is captured here and torn down. Getting this wrong is invisible in
+    # this file and fails somewhere else entirely.
+    real_tk = tk.Tk
+    created = []
+
+    def capture(*args, **kwargs):
+        window = real_tk(*args, **kwargs)
+        created.append(window)
+        return window
+
+    monkeypatch.setattr(tk, "Tk", capture)
+
+    def explode(root):
+        raise RuntimeError("catastrophic startup failure")
+
+    monkeypatch.setattr(browser, "IconPreviewerApp", explode)
+
+    try:
+        browser.main()  # must not raise
+    finally:
+        for window in created:
+            try:
+                window.destroy()
+            except tk.TclError:
+                pass
+
+    captured = capsys.readouterr()
+    assert "Traceback" not in captured.err, f"a traceback reached the user: {captured.err[:300]}"
+    assert captured.out == ""
+
+
 def test_the_browser_chrome_icons_resolve():
     """The two glyphs the browser draws itself, rather than from its catalog.
 
