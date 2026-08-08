@@ -14,7 +14,7 @@ generated is the summary line and the hand-written intro, and that is exactly
 where the stale claim survived.
 
 **Scoped to false positives on purpose.** A pack naming a style it *does* ship
-is fine, and a pack characterising its glyphs is fine — "filled and outline
+is fine, and a pack characterizing its glyphs is fine — "filled and outline
 variants" beside a style literally named `fill` is prose, not a style claim. So
 this only fires on a word that reads as a style and is not in `style_list`, and
 it exempts a single-style pack naming its own style: `tkinter-icons-fluent-reg`

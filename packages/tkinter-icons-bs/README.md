@@ -1,6 +1,6 @@
 # tkinter-icons-bs
 
-General-purpose interface icons in matched outline and filled cuts — the set most likely to have a plain, recognisable glyph for a toolbar button or a menu entry.
+General-purpose interface icons in matched outline and filled cuts — the set most likely to have a plain, recognizable glyph for a toolbar button or a menu entry.
 
 If you are building on ttkbootstrap you do not need this pack: that project has Bootstrap icons built in. This one is for tkinter without it.
 
