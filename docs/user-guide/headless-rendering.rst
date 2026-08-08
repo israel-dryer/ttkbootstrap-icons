@@ -22,7 +22,7 @@ Rendering to a Pillow image
    image = MaterialIcon.render_pil("home", size=64, color="#0d6efd")
    image.save("home.png")
 
-The return is a square RGBA :class:`PIL.Image.Image`. A name that is not in the set comes back fully transparent rather than raising, subject to the ``on_missing`` policy described in :doc:`icons-and-names`.
+The return is a square RGBA :class:`PIL.Image.Image`. Any name this set cannot draw — including a plain typo, which the constructor would have raised on — comes back fully transparent rather than raising, subject to the ``on_missing`` policy described in :doc:`icons-and-names`.
 
 Called on a pack's class it draws that pack's glyphs and takes the same friendly names the constructor takes, so nothing has to be set up first. Called on :class:`~tkinter_icons.Icon` itself there is no pack to draw from, and you have to say which set to use — see :ref:`explicit-icon-sets` below.
 
