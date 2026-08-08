@@ -12,9 +12,9 @@ history after the fact and are summaries rather than contemporaneous notes.
 
 <!-- release-notes-start -->
 
-## [5.0.1] — accurate pack pages, and Python 3.14 declared
+## [5.0.1] — updated metadata and docs
 
-A patch release. Nothing in the renderer changed and no API moved: this exists to correct text and metadata that PyPI freezes at release time, and therefore could not be fixed without a release.
+A patch release with no executable code change. Every source edit in the eighteen distributions is a comment or a docstring; what moved is text and metadata that PyPI freezes at release time, and therefore could not be corrected without shipping a version.
 
 Fifteen of the sixteen icon packs go to 1.1.1. `tkinter-icons-fluent-reg` is unchanged at 1.1.0.
 
