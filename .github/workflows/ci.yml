@@ -48,9 +48,15 @@ jobs:
       # and needs no display. The handful of Tk-level tests are marked `gui` and
       # skip themselves where there is no display — so this is what makes them
       # actually run on Linux rather than silently skip.
+      # `update` is allowed to fail here for the same reason as in the docs job
+      # below: a third-party repository on the runner image being mid-sync must
+      # not decide whether Tk gets installed. The install is the gate.
       - name: Install Tk and a virtual display
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y python3-tk xvfb
+        run: |
+          sudo apt-get update \
+            || echo "::warning::apt-get update reported errors; the install below is the real check"
+          sudo apt-get install -y python3-tk xvfb
 
       - name: Install the base package and every pack
         run: |
@@ -149,8 +155,23 @@ jobs:
 
       # `icon.py` imports tkinter at module scope, so importing the package at
       # all needs it - see #91. Nothing here needs a display.
+      #
+      # `apt-get update` is deliberately allowed to fail. The runner image
+      # carries third-party apt sources this job never uses, and `update` exits
+      # 100 if *any* of them is mid-sync - which killed the docs build on #125
+      # because Google Chrome's index was 1407 bytes where the release file
+      # said 1408. `&&` then skipped the install and every step after it.
+      #
+      # A partial failure still refreshes the lists that did succeed ("they
+      # have been ignored, or old ones used instead"), so the Ubuntu archive
+      # index is present either way. Letting `install` be the gate means this
+      # step fails when Tk is genuinely unavailable and not when an unrelated
+      # repository is resyncing.
       - name: Install Tk
-        run: sudo apt-get update && sudo apt-get install -y python3-tk
+        run: |
+          sudo apt-get update \
+            || echo "::warning::apt-get update reported errors; the install below is the real check"
+          sudo apt-get install -y python3-tk
 
       # Every pack, not just a couple. `packs-table` and `pack_showcase` read
       # each set's styles, upstream version, and glyph count from the installed
