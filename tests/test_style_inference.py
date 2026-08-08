@@ -13,7 +13,7 @@ Where they disagreed the failure was silent in both directions. Bootstrap's
 `shield-fill-check` is a real glyph in the `fill` style, named that way on
 purpose — `build_name_lookup` singles it out in a comment. The suffix rule
 could not see the `fill`, so the constructor raised on a name the pack ships,
-while `render_pil` drew it anyway because Bootstrap keeps every style in one
+while `render_pil` drew it anyway, because Bootstrap keeps every style in one
 font file and the unresolved name happened to be a glyph name. One entry point
 failed on a good name; the other succeeded for the wrong reason.
 
@@ -199,10 +199,11 @@ class TestTheTwoResolversReadANameTheSameWay:
 class TestEveryNameIsReachableWithAnExplicitStyle:
     """The claim `style=` exists to make true.
 
-    Before it, 814 names across six packs were reachable from the constructor
-    and from nowhere headlessly. The census runs over every style rather than
-    each pack's default, because the names in question are by definition the
-    ones outside the default.
+    867 names across seven packs could not be reached by name at all, and the
+    ones in a non-default style had no headless spelling either. The census
+    runs over every style rather than each pack's default, because the names in
+    question are by definition the ones outside the default — measuring over
+    defaults would exclude exactly the population under test.
     """
 
     @pytest.mark.parametrize("pack", styled_packs(), ids=lambda p: p.extra)
@@ -254,9 +255,9 @@ class TestEveryNameIsReachableWithAnExplicitStyle:
 
         Font Awesome's brand marks carry no style token, so nothing in the name
         can lead a resolver to `brands`. While the default style gated
-        resolution this was the silent transparent square that made 814 names
-        look like typos; now the default is only a preference, and the name
-        finds the one style that has it.
+        resolution this was the silent transparent square that made 867 real
+        icons look like typos; now the default is only a preference, and the
+        name finds the one style that has it.
         """
         pack = next((p for p in INSTALLED if p.extra == "fontawesome"), None)
         if pack is None:
@@ -307,9 +308,9 @@ class TestTheTwoEntryPointsLookNamesUpTheSameWay:
     style and the glyph together. That is what makes this structural rather
     than a convention two functions have to keep to.
 
-    Failure is still deliberately different, and only there: an unresolvable
-    name raises from the constructor and applies `on_missing` from
-    `render_pil`. That divergence is documented, tested, and unchanged here.
+    Failure matches too: a name the pack cannot resolve raises from both.
+    `on_missing` keeps the case it was written for, where a name reaches a set
+    without having been resolved against it — see `test_pack_icon_surface`.
     """
 
     #: Icons rendered per style to compare pixels. Resolution is checked over
@@ -361,13 +362,13 @@ class TestTheTwoEntryPointsLookNamesUpTheSameWay:
 
 
 class TestAnExplicitStyleIsNeverSilentlyDropped:
-    """`style=` must not become a fourth way to fail without saying so.
+    """Asking for a style you cannot have is an error, not a quiet substitution.
 
-    The rest of `render_pil` swallows a resolution failure on purpose, so that
-    `on_missing` stays reachable from the headless path. That reasoning does
-    not extend to an argument the caller wrote out: ignoring it would draw a
-    glyph from the wrong style rather than nothing at all, since the icon set
-    is chosen before the name is resolved.
+    Naming a style narrows resolution to it and nothing else, so a name the
+    pack does not draw that way fails rather than falling back to a style that
+    does. Dropping the argument would be worse than drawing nothing: the icon
+    set follows the style, so the caller would get a real glyph in the wrong
+    cut and no indication of it.
     """
 
     def test_a_style_the_name_contradicts_raises(self):
@@ -386,18 +387,21 @@ class TestAnExplicitStyleIsNeverSilentlyDropped:
         with pytest.raises(ValueError, match="solid"):
             cls.render_pil("accusoft", size=32, style="solid")
 
-    def test_a_typo_without_a_style_stays_silent(self):
-        """The swallow is unchanged where no style was given.
+    def test_a_typo_raises_whether_or_not_a_style_was_named(self):
+        """Searching every style makes a typo fail against all of them.
 
-        Searching every style rather than only the default does not make a
-        typo resolve — it makes it fail against every style instead of one — so
-        `on_missing` still governs, and still defaults to a blank square.
+        A name that resolves nowhere means the pack has no such icon under any
+        style, which is the caller's mistake either way — so the error does not
+        depend on whether `style` was passed.
         """
         pack = next((p for p in INSTALLED if p.extra == "fontawesome"), None)
         if pack is None:
             pytest.skip("the fontawesome pack is not installed")
         cls = icon_class(pack)
-        assert cls.render_pil("accusofft", size=32).getchannel("A").getbbox() is None
+        with pytest.raises(ValueError, match="accusofft"):
+            cls.render_pil("accusofft", size=32)
+        with pytest.raises(ValueError, match="accusofft"):
+            cls.render_pil("accusofft", size=32, style="brands")
 
     def test_a_style_with_no_provider_to_resolve_it_raises(self):
         """`Icon` itself takes resolved glyph names, so it has no style to apply."""

@@ -449,7 +449,14 @@ class BaseFontProvider(ABC):
             if glyph is not None:
                 return candidate, glyph
 
-        raise ValueError(f"{name} not found in lookup for {self.name} in {candidates[0]} style.")
+        # Name what was actually searched. Reporting one style when several
+        # were tried sends the reader off to look for a `style=` that would
+        # fix it, and there isn't one.
+        if len(candidates) == 1:
+            raise ValueError(f"{name} not found in lookup for {self.name} in {candidates[0]} style.")
+        raise ValueError(
+            f"{name} not found in lookup for {self.name} in any of its styles: {', '.join(candidates)}."
+        )
 
     def resolve_icon_style(self, name: str, style: Optional[str] = None):
         """Resolve a user-supplied icon name and style to the style it draws from.

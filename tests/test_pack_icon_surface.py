@@ -114,8 +114,15 @@ class TestRenderPilNeedsNoWarmUp:
         image = cls.render_pil("house-fill", size=32, color="black")
         assert image.getchannel("A").getbbox() is not None
 
-    def test_a_missing_name_still_honours_on_missing(self):
-        """Resolution failure must not bypass the documented policy."""
+    def test_a_name_the_pack_cannot_resolve_raises(self):
+        """A typo is the caller's mistake, and `on_missing` is not for it.
+
+        This asserted the opposite until #115: a name no style of the pack has
+        came back as a transparent square, so a misspelling in a build script
+        or an export loop produced a blank PNG and exited zero. The policy is
+        for a set whose glyph map is inconsistent with the names built from it,
+        which is a different thing and is still covered below.
+        """
         pack = next((p for p in INSTALLED if p.extra == "bootstrap"), None)
         if pack is None:
             pytest.skip("the bootstrap pack is not installed")
@@ -123,19 +130,43 @@ class TestRenderPilNeedsNoWarmUp:
         original = Icon.on_missing
         try:
             Icon.on_missing = "transparent"
-            image = cls.render_pil("not-a-real-icon-name", size=16)
-            assert image.getchannel("A").getbbox() is None
+            with pytest.raises(ValueError, match="not-a-real-icon-name"):
+                cls.render_pil("not-a-real-icon-name", size=16)
         finally:
             Icon.on_missing = original
 
-    def test_the_constructor_raises_where_render_pil_stays_silent(self):
-        """The two entry points diverge on the same name, and the docs say so.
+    def test_on_missing_still_governs_a_set_asked_for_a_glyph_it_lacks(self):
+        """The case the policy was written for, still reachable.
 
-        `docs/user-guide/icons-and-names.rst` teaches this asymmetry as the
-        thing to know about `on_missing`: the constructor is the only entry
-        point that raises of its own accord, so a typo passed to `render_pil`
-        comes back blank unless the policy is changed. Pinned here because the
-        prose is otherwise unfalsifiable.
+        Handing a name straight to a set skips resolution entirely, so nothing
+        has vouched for it — that is where a glyph can be absent without anyone
+        having made a typo, and where `on_missing` applies.
+        """
+        pack = next((p for p in INSTALLED if p.extra == "bootstrap"), None)
+        if pack is None:
+            pytest.skip("the bootstrap pack is not installed")
+        from tkinter_icons.iconset import get_icon_set
+
+        icon_set = get_icon_set(icon_class(pack).provider_class(), "outline")
+        original = Icon.on_missing
+        try:
+            Icon.on_missing = "transparent"
+            image = Icon.render_pil("not-a-real-icon-name", size=16, icon_set=icon_set)
+            assert image.getchannel("A").getbbox() is None
+
+            Icon.on_missing = "raise"
+            with pytest.raises(KeyError, match="not-a-real-icon-name"):
+                Icon.render_pil("not-a-real-icon-name", size=16, icon_set=icon_set)
+        finally:
+            Icon.on_missing = original
+
+    def test_both_entry_points_reject_the_same_name(self):
+        """The asymmetry `icons-and-names` used to teach, now gone.
+
+        The constructor was the only entry point that raised of its own
+        accord, so the same typo produced a `ValueError` one way and a blank
+        image the other. Pinned as a pair because the prose describing it is
+        otherwise unfalsifiable in either direction.
         """
         pack = next((p for p in INSTALLED if p.extra == "bootstrap"), None)
         if pack is None:
@@ -143,6 +174,8 @@ class TestRenderPilNeedsNoWarmUp:
         cls = icon_class(pack)
         with pytest.raises(ValueError):
             cls("not-a-real-icon-name")
+        with pytest.raises(ValueError):
+            cls.render_pil("not-a-real-icon-name")
 
     def test_base_icon_still_requires_a_set(self):
         """`Icon` has no pack, so it must keep raising rather than guessing."""

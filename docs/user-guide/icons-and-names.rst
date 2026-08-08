@@ -69,7 +69,7 @@ Three rules, tried in order. Every entry point uses them — the pack's construc
 **Otherwise the pack's default style is tried first, and the pack's other styles after it.** So ``BootstrapIcon("house")`` is the ``outline`` house, because Bootstrap draws a house both ways and ``outline`` is its default — but ``FontAwesomeIcon("accusoft")`` is a brand mark, because ``brands`` is the only style Font Awesome draws it in. The default settles which icon you get; it does not limit which icons you can ask for.
 
 .. versionchanged:: 5.1.0
-   The default style used to be the only place an unadorned name was looked for, so a name that existed *only* in some other style resolved nowhere — 814 of them across six packs, every one a real icon its pack ships. It is now a preference rather than a gate. Nothing that already resolved resolves differently: measured over every name of every pack against every style, 342,128 combinations, 814 began resolving and none changed.
+   The default style used to be the only place an unadorned name was looked for, so a name that existed *only* in some other style resolved nowhere. It is now a preference rather than a gate. Nothing that already resolved resolves differently: measured over every name of all sixteen packs against every style each has — 365,051 combinations — 867 names began resolving, none stopped, and none changed which glyph it gave.
 
    The default cannot simply be dropped, which is the obvious next thought. It is what settles the 13,658 names that exist in more than one style — ``MaterialIcon("home")``, ``EvaIcon("activity")`` — not one of which writes a style into the name, so each would otherwise be ambiguous and have to raise.
 
@@ -84,16 +84,24 @@ A style is a different drawing of the same idea, not a different icon. Bootstrap
 When a name is wrong
 --------------------
 
-The same bad name fails two different ways, depending on which entry point you reached it through.
+Two different things can go wrong, and they are answered differently.
 
-**The pack's constructor raises**, immediately:
+**A name the pack does not have raises**, from every entry point, the moment you ask:
 
 .. code-block:: python
 
    MaterialIcon("hoome")
-   # ValueError: hoome not found in lookup for mat in fill style.
+   # ValueError: hoome not found in lookup for mat in any of its styles: fill, outline.
 
-**Everything that draws applies a policy instead.** :meth:`~tkinter_icons.Icon.render_pil` swallows the same failure on purpose: it is the headless path, usually writing a whole sheet of images at once, where one unusable name should not take the rest down with it. The base :class:`~tkinter_icons.Icon` never resolves at all — it takes an already-resolved glyph name and trusts it. ``on_missing`` is what both do when the set cannot draw the name they were handed, and by default that is a transparent square:
+   MaterialIcon.render_pil("hoome")
+   # ValueError: hoome not found in lookup for mat in any of its styles: fill, outline.
+
+The pack was asked for an icon it does not draw in any style. Nothing about that is recoverable, and a misspelling in an export script is worth stopping for — a transparent PNG written to disk looks like a success to every exit code that follows it.
+
+.. versionchanged:: 5.1.0
+   ``render_pil`` used to swallow this and return a transparent square, so the same typo raised one way and drew nothing the other. That was defensible while 867 real icons were also unreachable by name, because raising would have failed on names that were not typos at all. Both halves are fixed together: those names resolve now, so what is left really is a bad name.
+
+**A name that reaches an icon set with no glyph for it applies a policy instead.** This is the other failure: the set's data is inconsistent with the names built from it, or you passed a glyph name straight to the base :class:`~tkinter_icons.Icon`, or to ``render_pil`` with an explicit ``icon_set``, neither of which resolves anything. Nobody necessarily made a mistake, so ``on_missing`` decides, and by default that is a transparent square:
 
 .. code-block:: python
 
@@ -114,7 +122,7 @@ The same bad name fails two different ways, depending on which entry point you r
    * - ``"raise"``
      - Raise :class:`KeyError`.
 
-Since the constructor is the only thing that raises of its own accord, ``"warn"`` is what turns a silently blank square back into something you can see. It suits a test suite: nothing breaks, but nothing passes silently either.
+``"warn"`` is what turns that blank square into something you can see without stopping the run, which suits a test suite or a bulk export: nothing breaks, but nothing passes silently either. Reach for it if you build icon sets yourself, or pass glyph names straight to :class:`~tkinter_icons.Icon`; a pack's own names never land here, because they are resolved first.
 
 Asking for a pack you have not installed
 ----------------------------------------
