@@ -19,6 +19,7 @@ screen are checked here.
 from __future__ import annotations
 
 import importlib
+import tkinter as tk
 from importlib.resources import files
 
 import pytest
@@ -104,6 +105,49 @@ def test_every_name_the_browser_lists_still_resolves(pack):
         f"draw as an error tile: {broken[:5]}"
     )
     assert checked, f"the browser would list no names at all for {pack.extra}"
+
+
+@pytest.mark.gui
+def test_the_browser_degrades_instead_of_raising(root, monkeypatch):
+    """The property that makes it shippable: a broken name must not kill it.
+
+    The checks above say every name currently resolves. This one says it does
+    not matter if that stops being true — the browser is an application a user
+    runs, not a library call, so a name it cannot draw has to become a tile it
+    can, and never a traceback in a terminal.
+
+    Forced rather than waited for: every resolution raises, which is worse than
+    any real breakage, and the window has to still be standing afterwards.
+    """
+    from tkinter_icons import browser
+    from tkinter_icons.providers import BaseFontProvider
+
+    pack = next((p for p in INSTALLED if p.extra == "bootstrap"), None)
+    if pack is None:
+        pytest.skip("the bootstrap pack is not installed")
+    provider = provider_for(pack)
+    names = list(provider.build_display_index()["names_by_style"]["outline"])[:12]
+
+    def always_fails(self, name, style=None):
+        raise ValueError(f"simulated failure for {name}")
+
+    monkeypatch.setattr(BaseFontProvider, "resolve_icon_name", always_fails)
+
+    frame = tk.Frame(root)
+    frame.pack()
+    grid = browser.SimpleIconGrid(frame, provider, names, icon_size=32, icon_style="outline")
+    root.update_idletasks()
+
+    assert root.winfo_exists(), "the window did not survive a resolution failure"
+    tiles = [
+        grid.canvas.itemcget(item, "text")
+        for item in grid.canvas.find_all()
+        if grid.canvas.type(item) == "text"
+        and str(grid.canvas.itemcget(item, "text")).startswith("Error")
+    ]
+    assert len(tiles) == len(names), (
+        f"expected every name to degrade to an error tile, got {len(tiles)} of {len(names)}"
+    )
 
 
 def test_the_browser_chrome_icons_resolve():
