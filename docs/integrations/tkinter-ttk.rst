@@ -3,6 +3,11 @@ tkinter and ttk
 
 An icon's :attr:`~tkinter_icons.Icon.image` is an ordinary Tk-compatible image, so anything with an ``image`` option takes one. Nothing here is special to this library — it is the ordinary Tk API, written down in one place.
 
+.. image:: /assets/tkinter_ttk_widgets.png
+   :alt: A ttk window with a File menubar, a Save button, an icon-only close button, a labelled folder, and a treeview whose rows carry folder and document icons
+
+Everything below is in that window: the buttons and label across the top, the menu behind ``File``, and the treeview under both.
+
 .. important::
 
    **Keep a reference to the icon.** Tk does not own the images you give it; a ``PhotoImage`` that nothing refers to is garbage collected and the widget shows an empty box. Holding the icon object is enough, since it holds the image. This catches everyone once.
