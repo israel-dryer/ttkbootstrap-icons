@@ -163,14 +163,16 @@ Closed unmerged: #96, superseded by #97.
 
 **The milestone issues are all closed, and #89 closed because #100's body named it.** That was not automatic: no commit body mentions #89, and its `Closes #89` lived only in PR #92's body, which merged to `5.0` — a non-default base — so GitHub had already discarded the link and does not re-evaluate it. #69, #71 and #79 closed from keywords already in the commit bodies. #67, #68, #70 and #75 were closed earlier by hand and their links are lost for good.
 
-`origin` also carries two branches that are **not** stale and must not be
-deleted with the rest:
+`origin` carries one branch that is **not** stale and must not be deleted with
+the rest:
 
 - `release/ttkbootstrap-icons-packs-final` — the terminal release of the sixteen
   `ttkbootstrap-icons-*` packs, cut from `v4.0.0`. Merges nowhere. See
   `RELEASE.md`.
-- `gh-pages` — dead, and *can* now go; it served the old MkDocs site and Read
-  the Docs replaced it.
+
+`gh-pages` used to be listed alongside it. It is **gone as of 2026-08-08**, along
+with GitHub Pages itself — but it was not dead when this file said it was, and
+the entry under "Deliberate decisions" records what that cost.
 
 **The docs moved to Read the Docs, and GitHub Pages is out of the picture.**
 Decided 2026-08-02, matching `ttkbootstrap`, for versioned docs and PR previews
@@ -266,15 +268,62 @@ bumped every time and an existing one means the tag is wrong.
 
 ## Next session — start here
 
+### Reviewing the open stack — read this first, then delete it when the stack merges
+
+**Five PRs are open and stacked, all green.** Review `main...docs/review-fixes`, which is nine commits and contains every one of them. Merge order, each based on the one above:
+
+| PR | Branch | What | Closes |
+|---|---|---|---|
+| #121 | `docs/on-missing-scope` | what `on_missing` actually governs | **#117** |
+| #122 | `docs/prose-pass` | #89's prose pass, two stale numbers, two guards | — |
+| #123 | `docs/renderer-figures` | #87's generated figures | — |
+| #124 | `docs/handoff-figures-and-cleanup` | handoff: cleanup, the gh-pages URL | — |
+| #125 | `docs/review-fixes` | two rounds of review fixes, the apt/CI fix | — |
+
+**#123 must not close #87** — it is the generated half only; the three real-window captures are untouched.
+
+**Two review passes have already run, and the second found problems that the first pass's fixes created.** That is the fact worth carrying into a third: this stack's failure mode has been *fixes introducing defects*, not the original work being sloppy.
+
+- **Round 1**, `main...docs/renderer-figures` at `high` — seven findings. A padded-box guide drawn with `round` where the renderer uses `int`, so the exemplar glyph crossed its own guide. `image-rendering: pixelated` applied to three figures displayed 1:1. A census that said "every glyph in all sixteen packs" over default styles only. An over-broad MB regex. A dead `Panel.size` whose use would have made a difference-assertion pass unconditionally. Two modules each declaring `PackNotInstalled`. Three dead imports.
+- **Round 2**, `docs/handoff-figures-and-cleanup...docs/review-fixes` at `high` — four findings. Two figure-subject numbers quoted from a 400-name sample, one of which contradicted the page beside it. An unexplained denominator, which cost the reviewer a 123-glyph discrepancy they could not resolve. **The MB guard narrowed to three filenames — a regression introduced by round 1's fix**, removing the coverage the check exists for. A missing blank line that made Markdown fold "it is gone" into the `release/ttkbootstrap-icons-packs-final` bullet, i.e. the one branch this file insists must never be deleted.
+
+**Nothing has yet reviewed round 2's own fixes.** A third pass should weight these:
+
+- `tests/test_install_guidance.py` — the MB guard has now been rewritten twice. It sweeps by paragraph context; check the regex cannot miss a restatement phrased differently, and that excluding `CHANGELOG.md` (frozen history) and `CLAUDE.md` (narrates the wrong number deliberately) is the only exclusion.
+- Every census number in `sizing-and-quality.rst`, `render.py`'s `_place_by_bbox` docstring, `render_figures.FIGURES`' note, and this file. They have been restated twice and must agree with each other and with the census.
+- `docs/_ext/render_figures.py` — restructured by round 1's fix. The imports from `pack_showcase` are deliberate; `note_self` staying local is deliberate and load-bearing.
+- **`parallel_write_safe` is asserted, not tested.** `save_atomic` is the argument for it. Nobody has run the docs build under contention to prove it.
+
+**The census is a committed artifact now, and that is round 3's answer to why round 2's fixes were themselves wrong.** Three sessions measured it with a throwaway snippet and transcribed the result by hand into four files, and the numbers disagreed every time — including once where a *correct* fix to `padded_box_inset` was never propagated to the prose derived from the old arithmetic. `.github/scripts/generate_placement_census.py` does the measuring, `docs/_data/placement-census.json` holds the result, and `tests/test_placement_census.py` checks all four files against it. Regenerate with the script, never by hand; `--check` runs in CI's docs job and verifies the tree. It is 178,584 renders and takes about 20 seconds, so the reason it is a committed artifact is not cost — it is that it needs all sixteen packs installed, which the test matrix deliberately does not guarantee.
+
+**The definitions are the substance, not the numbers.** Round 3's review reported Weather's off-center as 9.0 px or 9.5 px depending on how it measured, against the documented 10.0 — and all three were defensible readings of an undefined phrase. Fill is now the longer side of the drawn glyph over the renderer's own padded box (`canvas - 2 * int(canvas * pad_factor)`, **not** the float `canvas * (1 - 2 * pad_factor)` — that discrepancy is what produced the impossible "ink fills up to 102%"), and off-center is the distance from the drawn glyph's center to the frame's. Quoting either figure without its definition is what made three rounds of correction possible.
+
+**Settled — decisions, not defects. Do not re-open these:** the even-snapping figure was drawn, looked at, and deleted because a PNG cannot reproduce a 150% display scale; `tests/test_render_figures.py` deliberately refuses to judge whether a figure *reads*, because a pixel metric ranked the rejected subject above its replacement; `icons-and-names` reuses `pack-preview:: bootstrap` rather than growing a second directive; #87 stays open.
+
+**Verify with**, in a checkout with every pack installed:
+
+```bash
+.venv-home/Scripts/python.exe -m sphinx docs docs/_build/html -b html -W --keep-going -n -j auto
+.venv-home/Scripts/python.exe -m pytest -q                       # 433 passed
+.venv-home/Scripts/python.exe .github/scripts/verify_packages.py --strict
+.venv-home/Scripts/python.exe .github/scripts/generate_pack_readmes.py --check
+```
+
+Read the venv note under "Environment" first — which of `.venv` and `.venv-home` works depends on the Windows login, and the wrong one fails with `Access is denied` on the exe itself.
+
+**Merge without `--delete-branch`, in order, and delete the branches at the end.** A `--delete-branch` merge closes any PR targeting the deleted branch, which is how #85 was lost; with five stacked PRs it would close the next one each time.
+
+---
+
 **The release is finished. Nothing about 5.0.0 is outstanding.** All eighteen distributions are on PyPI, the tag is pushed, the GitHub Release is cut and corrected, Trusted Publishing is configured and verified, and every install line on every docs page and README now resolves. Do not re-run the dry run, re-review, or re-derive the publish order — all of it was done against this tree.
 
 **The next release can be tag-driven, and that path is now proven rather than assumed.** Push `v<version>` and the workflow builds all eighteen, publishes what PyPI does not have, and cuts one GitHub Release. The one caveat is the permanent red run on `v5.0.0` described in Current state, which is specific to that tag.
 
-**The janitorial list is done apart from one item, 2026-08-08.** Read the Docs' Default branch is back on `main`, and every merged remote branch is deleted. `origin` now carries only `main`, the branches of whatever is in flight, `gh-pages`, and `release/ttkbootstrap-icons-packs-final` — **leave that last one alone**, it is the only tree where the sixteen old packs still exist.
+**The janitorial list is finished, 2026-08-08.** Read the Docs' Default branch is back on `main`, GitHub Pages is unpublished, and eleven remote branches are deleted including `gh-pages`. `origin` now carries only `main`, the branches of whatever is in flight, and `release/ttkbootstrap-icons-packs-final` — **leave that last one alone**, it is the only tree where the sixteen old packs still exist.
 
-Two of the ten deleted were not ancestors of `main` and both were checked rather than assumed. `docs/release-complete` carried one commit past its own merge, `05077d4`, whose patch is byte-identical to `491dae8` on `main` — the same work re-applied on `docs/milestone-split` and merged by #119. `fix/release-latest-marker` is #96, closed unmerged and superseded by #97, exactly as recorded. **Verify with `git merge-base --is-ancestor origin/<branch> origin/main` before deleting**, and when it says no, find out why rather than trusting a PR's merged badge — a branch can be merged and then pushed to again.
+Two of the eleven were not ancestors of `main` and both were checked rather than assumed. `docs/release-complete` carried one commit past its own merge, `05077d4`, whose patch is byte-identical to `491dae8` on `main` — the same work re-applied on `docs/milestone-split` and merged by #119. `fix/release-latest-marker` is #96, closed unmerged and superseded by #97, exactly as recorded. **Verify with `git merge-base --is-ancestor origin/<branch> origin/main` before deleting**, and when it says no, find out why rather than trusting a PR's merged badge — a branch can be merged and then pushed to again.
 
-**`gh-pages` is the one left, and it is waiting on the owner** — see the docs-URL entry under "Deliberate decisions". Pages was still enabled and serving from it as of 2026-08-08, so the branch must not be deleted until the site is unpublished; deleting it first leaves Pages configured against a branch that is gone.
+**Both old docs URLs now return 404, and `migrating.rst:44` is true as written** — it was not, for the whole 5.0.0 cycle. See the docs-URL entry under "Deliberate decisions" for what was wrong and how it was found. Note the site was unpublished *before* the branch was deleted, which is the order that matters; the Pages API record can linger with `status: built` after the site is already serving 404, so **`curl` is what tells you the site is down and the API is what tells you the configuration is gone**. They disagree for a while, and neither alone is the whole answer.
 
 **The follow-up work is milestoned, and the split is deliberate.** The 5.0.0 milestone is closed; what outlived it moved to **5.0.x Fixes and Cleanup** and **5.1.0**.
 
@@ -361,13 +410,17 @@ Three more, each fixed and each invisible to `pytest`, `sphinx -W` and `verify_p
 
 ### What building the figures found, 2026-08-08
 
-**A page's central claim was backwards, and only drawing it exposed that.** `sizing-and-quality` said `getbbox` "makes full-bleed glyphs slightly too large — they end up with no padding at all, touching the edges". `_place_by_bbox` only ever *shrinks* a glyph that overflows, so a glyph fitted that way lands **inside** the padded box: 73%–96% of it against 94%–103% on the ink path. The touching is real but comes from the other half of the function — vertical centering is against `ascent + descent` rather than against the ink. Census over every glyph in all sixteen packs, each with its own pack's options: **390 of 48,082 overflow on the fallback path, 0 of 48,082 on the measured one.** The same wrong sentence was in `_place_by_bbox`'s own docstring; both are fixed in #123.
+**A page's central claim was backwards, and only drawing it exposed that.** `sizing-and-quality` said `getbbox` "makes full-bleed glyphs slightly too large — they end up with no padding at all, touching the edges". `_place_by_bbox` only ever *shrinks* a glyph that overflows, so a glyph fitted that way lands **inside** the padded box: a per-pack median of 72%–95% of it against 92%–100% on the ink path. The touching is real but comes from the other half of the function — vertical centering is against `ascent + descent` rather than against the ink. Census over every glyph in **every style** of all sixteen packs, each with its own pack's options: **518 of the 89,169 glyphs that draw ink overflow on the fallback path, 0 on the measured one.** The same wrong sentence was in `_place_by_bbox`'s own docstring; both are fixed in #123.
+
+**That number was wrong once, in the direction that flatters.** The first census iterated each pack's *default* style only — 48,082 glyphs — and the prose said "every glyph in all sixteen packs". It covered a little over half of them, and it excluded exactly the non-default cuts a user reaches through `style=`. **Iterate `provider.style_list`, not just `default_style`**, whenever a claim is about the whole library; the shortcut is easy to write and the resulting sentence is unfalsifiable by a reader.
 
 **Measure with the options the thing actually uses.** The first subject for that figure was a Font Awesome glyph, picked from a sweep run with the *default* `RenderOptions`. Font Awesome's provider asks for `pad_factor=0.15`, so under its own options the two panels came out nearly identical. A sweep that does not use the real defaults ranks the wrong candidates first.
 
 **And then look at it.** The rejected Font Awesome pair scores a pairwise alpha difference of **0.243**; the Eva pair that replaced it scores **0.185**. A pixel metric ranks them the wrong way round, so `tests/test_render_figures.py` deliberately does not try to judge whether a figure *reads* — its floor is 0.02, which catches panels becoming identical and nothing more. That limit is stated in the test's own docstring rather than left implied.
 
 **A figure that cannot show its claim was drawn and deleted.** Even-snapping is about a half-pixel boundary *at fractional display scaling*, and a PNG in a browser cannot reproduce a 150% Windows scale factor — 15 pixels beside 16 shows two sizes of one icon and nothing about blur. Prefer no figure to a figure that quietly argues against the paragraph beside it.
+
+**Two extension modules must not each declare their own `PackNotInstalled`.** `render_figures` originally copied `PackNotInstalled`, `pack_by_extra`, `provider_for` and `INK` from `pack_showcase` rather than importing them. Two classes of the same name are two unrelated exceptions, so the first time anyone reached for one more helper across the boundary — which `save_atomic` already made the natural next edit — a missing pack would stop degrading to a warning and start crashing the build. They are imported now. **`note_self` is the one that must stay local**: it registers `__file__`, so the imported copy would note the wrong module and reintroduce the stale-page bug it exists to prevent.
 
 **`pack_showcase`'s parallel-safety reasoning changed and had to be repaired, not just relied on.** It declared `parallel_read_safe` partly because each preview path was written by exactly one document. Putting `pack-preview:: bootstrap` on `icons-and-names` makes that false — two workers, one path. Every write in both extension modules now goes through `pack_showcase.save_atomic`, which writes beside the target and renames. **If you add a directive that writes an image, route it through that**; the old invariant is gone and the comment asserting it has been replaced.
 
@@ -556,8 +609,13 @@ Each of these looks like a defect in isolation. They aren't.
 - **There is no `[all]` extra, and it must not come back.** The sixteen sets
   serve disjoint purposes — brand marks, developer logos, fantasy glyphs,
   weather symbols — so no application draws from all of them; installing every
-  one costs ~17 MB to get fifteen icon sets nobody opens, which is the bundling
-  extras exist to avoid. Users needing two name two: `tkinter-icons[a,b]`.
+  one costs **22.02 MB** to get fifteen icon sets nobody opens, which is the
+  bundling extras exist to avoid. (This bullet said "~17 MB" until 2026-08-08 —
+  the fourth surviving copy of the figure #104 corrected in two places and #122
+  in a third. It is outside `TestTheCostOfInstallingEverythingIsMeasured`'s
+  sweep on purpose, since this file quotes the wrong number deliberately when
+  telling the story; that exemption is exactly why this copy lasted longest.
+  A number asserted here is still a number a future session will repeat.) Users needing two name two: `tkinter-icons[a,b]`.
   Enforced twice: `test_there_is_no_all_extra`, and an error in
   `check_extras_cover_every_pack`. Pack-to-extra coverage is now checked against
   the pack directories rather than through `[all]`, which is a better check —
@@ -677,30 +735,33 @@ Each of these looks like a defect in isolation. They aren't.
   safe. Anything passing a name to `generate_metrics` has to import the provider
   to get it — reading the key gives an argument the CLI rejects.
 
-- **The old docs URL under the *old* name is dead; the one under the current
-  name was still live, and that was a mistake in this file.** GitHub redirects
-  repo URLs but not project Pages, so `israel-dryer.github.io/ttkbootstrap-icons/`
-  404s. This file then asserted that
-  `israel-dryer.github.io/tkinter-icons/` "will too" — and `migrating.rst:44`
-  shipped that as a statement of fact. It was false. Checked 2026-08-08:
-  `gh api repos/israel-dryer/tkinter-icons/pages` reported
-  `status: built`, source `gh-pages`, and the URL returned **200**, serving the
-  old MkDocs site — `<title>ttkbootstrap-icons</title>`, the pre-rename name
-  sixty-four times on the landing page, and the pre-#69 install idiom that #71
-  exists to have replaced.
+- **Both old docs URLs are dead — as of 2026-08-08, and not before.** GitHub
+  redirects repo URLs but not project Pages, so
+  `israel-dryer.github.io/ttkbootstrap-icons/` has 404'd since the rename. This
+  file then asserted that `israel-dryer.github.io/tkinter-icons/` "will too",
+  and `migrating.rst:44` shipped that to readers as a statement of fact.
 
-  The lesson is the same one the #102 review kept teaching: *check whether a
-  page exists before writing down what it does.* A sentence about a URL costs
-  one `curl` to verify and this one went unverified through a rename, a docs
-  rebuild, and a release.
+  **It was false for the whole 5.0.0 cycle.** Checked 2026-08-08:
+  `gh api repos/israel-dryer/tkinter-icons/pages` reported `status: built`,
+  source `gh-pages`, and the URL returned **200**, serving the old MkDocs site
+  — `<title>ttkbootstrap-icons</title>`, the pre-rename name sixty-four times
+  on the landing page, and the pre-#69 install idiom that #71 exists to have
+  replaced. So the docs told users the old site was gone while the old site was
+  up, teaching the install pattern the new docs were written to retire.
 
-  **Deleting the branch is not what takes it down, and the order matters.**
-  Pages stays enabled and keeps serving the last build; unpublish first
-  (Settings → Pages → Unpublish site, or
-  `gh api -X DELETE repos/israel-dryer/tkinter-icons/pages`), confirm the API
-  returns 404, then `git push origin --delete gh-pages`. Expect the URL itself
-  to serve 200 from CDN cache for a few minutes after unpublishing; the API is
-  the authority, not `curl`.
+  The lesson is the one the #102 review kept teaching: *check whether a page
+  exists before writing down what it does.* One `curl` would have caught this
+  at any point, and it went unverified through a rename, a docs rebuild, and a
+  release.
+
+  The owner unpublished Pages and the branch was deleted after. **That order is
+  the one to keep**: deleting the branch does not take the site down, it leaves
+  Pages configured against a branch that is gone. And the two signals disagree
+  for a while — after unpublishing, the URL served 404 while
+  `gh api .../pages` still reported `status: built` with the source set. So
+  **`curl` tells you the site is down; the API tells you the configuration is
+  gone.** Neither alone is the whole answer, and the earlier note in this file
+  claiming the API is authoritative "not `curl`" was half right at best.
 
   A custom domain was considered and declined.
 
@@ -746,6 +807,12 @@ thread-safe."
 ---
 
 ## Known gotchas
+
+- **`apt-get update` on a GitHub runner fails for repositories this project does not use, and it used to be able to fail a release.** All three Linux `Install Tk` steps ran `sudo apt-get update && sudo apt-get install -y python3-tk`. `update` exits 100 if *any* apt source on the runner image is mid-sync, and on 2026-08-08 Google Chrome's index was 1407 bytes where its release file said 1408 — so the docs job on #125 failed, having installed nothing and skipped every step after it. Nothing in this repository was involved.
+
+  The `&&` was the bug. A partial `update` still refreshes the lists that succeeded, so the Ubuntu archive index is present either way; all three steps now let `update` fail with a warning and use `apt-get install` as the gate, which fails when Tk is genuinely unavailable and not when a Chrome mirror is resyncing. **`release.yml` had the same line**, which mattered more — a tag-driven release would have died the same way, and the next thing on the list is `v5.0.1`.
+
+  Worth generalising: this is the second red run on a docs-only PR that was worth reading rather than re-running. The first (#110) was a genuine order-dependent test bug. **Read which *step* failed before concluding anything** — here every later step said `skipped`, which is the signature of an early `run` step aborting, not of a test failing.
 
 - **The "Python Versions" badge is not editable text — it is published metadata, and it is frozen.** Both READMEs carry `img.shields.io/pypi/pyversions/tkinter-icons.svg`, which shields renders purely from the `Programming Language :: Python :: 3.x` trove classifiers on the *released* base distribution. The published 5.0.0 stops at 3.13, so **the badge will read "3.10 | 3.11 | 3.12 | 3.13" until 5.0.1 ships**, regardless of what the tree says — editing the README or the pyproject changes nothing on PyPI. This is the same "frozen at release time" trap the #102 review found in the pack READMEs, in its metadata form. The tree is already ahead: #109 added the 3.14 classifier and put 3.14 in the CI matrix on all three platforms, so the fix is merged and simply waiting on a release. Nothing was *blocked* by the gap in the first place — `requires-python = ">=3.10"` has no upper bound, so newer interpreters install and run fine; the badge merely understates. **`tests/test_python_support.py` now pins the classifiers and the CI matrix to each other in both directions**, so the next version cannot be advertised without being tested, or tested without being advertised.
 - **Trust a pack's `license_url` at your peril.** It was wrong twice. `weather`

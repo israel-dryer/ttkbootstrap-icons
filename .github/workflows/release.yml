@@ -60,8 +60,18 @@ jobs:
       # `icon.py` imports tkinter at module scope, so importing the library at
       # all needs it - see #91. The metrics check below renders through Pillow
       # and needs no display.
+      #
+      # `update` is allowed to fail, and here that matters more than in CI.
+      # It exits 100 when *any* third-party repository on the runner image is
+      # mid-sync — Google Chrome's index did exactly that on 2026-08-08 — and
+      # `&&` would then skip the install and fail the whole release for a
+      # reason that has nothing to do with this repository. A release must not
+      # be decided by a Chrome mirror. The install below is the real check.
       - name: Install Tk
-        run: sudo apt-get update && sudo apt-get install -y python3-tk
+        run: |
+          sudo apt-get update \
+            || echo "::warning::apt-get update reported errors; the install below is the real check"
+          sudo apt-get install -y python3-tk
 
       # --no-deps for the packs, deliberately. Each pins `tkinter-icons>=5.0.0`,
       # and the editable base installed just above reports whatever the tag

@@ -38,18 +38,34 @@ render_figures = pytest.importorskip(
     "render_figures", reason="the docs extensions need Pillow and the packs"
 )
 
-#: Below this, two panels are the same picture. Well under the smallest real
-#: gap in the current set (0.059 for the oversampling pair), because this is a
-#: floor against collapse, not a judgement of whether a figure reads.
+#: Below this, two panels are the same picture: a floor against collapse, not
+#: a judgement of whether a figure reads.
+#:
+#: How far below every real figure this sits is checked by
+#: `TestTheFloorStaysAFloor` rather than written down here. It was written down
+#: here once — "0.059 for the oversampling pair" — and 0.059 is what Material's
+#: `cog` scores, the subject that was tried and replaced. The sentence
+#: justifying the threshold outlived the figure it was measured from, which is
+#: the same drift this file exists to catch one level down.
 IDENTICAL = 0.02
 
 
 def alpha_difference(first, second) -> float:
-    """Mean per-pixel difference of the alpha channels, 0.0 to 1.0."""
+    """Mean per-pixel difference of the alpha channels, 0.0 to 1.0.
+
+    Panels of one figure always share a size — every panel takes `figure.size`
+    and `figure.zoom` — so unequal sizes are a structural surprise rather than
+    a case to handle. An earlier version returned 1.0 for them, which would
+    have made the difference assertion below pass unconditionally for any
+    figure that acquired mismatched panels: the loudest possible failure
+    reported as the strongest possible pass.
+    """
     from PIL import ImageChops
 
-    if first.size != second.size:
-        return 1.0
+    assert first.size == second.size, (
+        f"panels differ in size ({first.size} vs {second.size}); a figure's "
+        f"panels are meant to differ in what they show, not in their frame"
+    )
     diff = ImageChops.difference(first.getchannel("A"), second.getchannel("A"))
     total = sum(value * count for value, count in enumerate(diff.histogram()))
     return total / (255 * first.size[0] * first.size[1])
@@ -85,6 +101,38 @@ class TestEveryFigureStillDraws:
                 f"({difference:.4f} <= {IDENTICAL}). Whatever the figure was "
                 f"demonstrating, it no longer demonstrates it."
             )
+
+
+class TestTheFloorStaysAFloor:
+    """`IDENTICAL` only means anything while every real figure clears it widely.
+
+    A threshold near the values it screens stops being a collapse detector and
+    starts being a judgement — the thing the module docstring explains this
+    file must not attempt. Measuring the margin also means no number here has
+    to be maintained by hand beside the constant it explains, which is exactly
+    how the previous justification came to describe a replaced subject.
+    """
+
+    #: The weakest figure must clear the floor by at least this multiple.
+    HEADROOM = 2.0
+
+    def test_no_figure_comes_close_to_the_floor(self):
+        gaps = {
+            key: min(
+                alpha_difference(first, second)
+                for first, second in itertools.combinations(panels_for(figure), 2)
+            )
+            for key, figure in sorted(render_figures.FIGURES.items())
+        }
+        assert gaps, "there are no figures, so the floor guards nothing"
+        weakest = min(gaps, key=gaps.__getitem__)
+        assert gaps[weakest] > IDENTICAL * self.HEADROOM, (
+            f"{weakest!r} scores {gaps[weakest]:.4f}, within {self.HEADROOM}x of "
+            f"the {IDENTICAL} floor. Either that figure has stopped showing its "
+            f"difference, or the floor has drifted up into the range of real "
+            f"figures and no longer distinguishes collapse from subtlety. "
+            f"All figures: { {k: round(v, 4) for k, v in gaps.items()} }"
+        )
 
 
 class TestTheComparisonGridIsComplete:

@@ -9,6 +9,7 @@ these are checked against `packs.py` rather than written out again here.
 from __future__ import annotations
 
 import inspect
+import re
 
 import pytest
 
@@ -145,23 +146,47 @@ class TestTheCostOfInstallingEverythingIsMeasured:
 
     TOLERANCE_MB = 1.0
 
+    #: What makes a paragraph part of the argument against `[all]`, as opposed
+    #: to some other paragraph that happens to mention a size.
+    #:
+    #: Scoped by *context*, not by filename. A hardcoded list of the three
+    #: files that carry it today would go stale silently the moment a fourth
+    #: restatement appeared — and a fourth restatement drifting out of
+    #: agreement is the entire failure this class exists for, since that is how
+    #: `installation.rst` kept saying 17 for five days after the others were
+    #: fixed. Matching the paragraph instead keeps coverage automatic while
+    #: still ignoring an unrelated figure: a font's own weight on a pack page,
+    #: or a frozen bundle size, sits in a paragraph that says none of these.
+    ABOUT_EVERY_PACK = re.compile(r"all sixteen|\[all\]|every pack", re.I)
+
     @staticmethod
     def _prose_claims():
-        """Every `N MB` figure in the prose that argues against `[all]`."""
+        """Every `N MB` figure in a paragraph arguing against `[all]`."""
         import pathlib
-        import re
 
         root = pathlib.Path(__file__).resolve().parents[1]
         if not (root / "docs").is_dir():
             pytest.skip("not running from a source checkout")
 
-        sources = [*(root / "docs").rglob("*.rst"), root / "README.md"]
+        cls = TestTheCostOfInstallingEverythingIsMeasured
+        # The docs and the front README: everything a reader meets that can
+        # still be corrected. `CHANGELOG.md` is deliberately out — it restates
+        # the figure for 5.0.0 and is frozen history, so a future release that
+        # legitimately changes the number would fail this against an entry
+        # nobody may edit. `CLAUDE.md` is out because it narrates the wrong
+        # number on purpose, as the story of how this check came to exist.
         found = {}
-        for path in sources:
+        for path in [*(root / "docs").rglob("*.rst"), root / "README.md"]:
             if "_build" in path.parts or not path.is_file():
                 continue
-            for match in re.finditer(r"(\d+(?:\.\d+)?) MB", path.read_text(encoding="utf-8-sig")):
-                found.setdefault(float(match.group(1)), []).append(str(path.relative_to(root)))
+            text = path.read_text(encoding="utf-8-sig")
+            for paragraph in re.split(r"\n\s*\n", text):
+                if not cls.ABOUT_EVERY_PACK.search(paragraph):
+                    continue
+                for match in re.finditer(r"(\d+(?:\.\d+)?) MB", paragraph):
+                    found.setdefault(float(match.group(1)), []).append(
+                        str(path.relative_to(root))
+                    )
         return found
 
     @staticmethod
@@ -194,10 +219,20 @@ class TestTheCostOfInstallingEverythingIsMeasured:
         )
 
     def test_that_figure_matches_the_installed_packs(self):
-        claimed = next(iter(self._prose_claims()))
+        # Guarded before indexing, and not left to the sibling test. Reaching
+        # straight for `next(iter(...))` raises a bare `StopIteration` when a
+        # rewording drops the last claim — a test *error* with no message,
+        # where the point of this class is that the failure names the number.
+        claims = self._prose_claims()
+        assert len(claims) == 1, (
+            f"expected exactly one size claim to check against the packs, found "
+            f"{claims}. See test_the_prose_states_one_figure for why there is one."
+        )
+        claimed, where = next(iter(claims.items()))
         measured = self._measured_mb()
         assert abs(claimed - measured) <= self.TOLERANCE_MB, (
-            f"the docs say {claimed} MB but the sixteen packs measure {measured:.2f} MB"
+            f"{', '.join(sorted(set(where)))} says {claimed} MB but the sixteen "
+            f"packs measure {measured:.2f} MB"
         )
 
 

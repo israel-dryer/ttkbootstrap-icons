@@ -23,28 +23,38 @@ Two mechanics follow from that.
 figure needs the `ink=None` path, and no public entry point offers it — that is
 correct, since it is a fallback for packs without metrics, not a mode.
 
-**Small sizes are drawn small and then magnified with nearest-neighbour.** The
-oversampling and snapping claims are about what happens at 16 pixels, so a
-figure rendered at 96 and shrunk by CSS would demonstrate nothing. Each panel is
-rendered at its real size and blown up by an integer factor with no
-interpolation, so the pixels a reader sees are the pixels the renderer wrote.
-`image-rendering: pixelated` in `custom.css` keeps the browser from undoing that.
+**A figure about small sizes is drawn small and then magnified with
+nearest-neighbour.** The oversampling claim is about what happens at 16 pixels,
+so a figure rendered at 96 and shrunk by CSS would demonstrate nothing. Such a
+panel is rendered at its real size and blown up by an integer factor with no
+interpolation, so the pixels a reader sees are the pixels the renderer wrote,
+and `custom.css` applies `image-rendering: pixelated` to *those* panels only.
+The figures read at their own size must not get that rule — they are displayed
+1:1, and pixelating them would let any zoom or non-integer device pixel ratio
+turn their antialiased edges blocky, in figures whose whole subject is render
+quality.
 """
 
 from __future__ import annotations
 
-import importlib
 from dataclasses import dataclass, field
 from pathlib import Path
 
 from sphinx.util import logging
 from sphinx.util.docutils import SphinxDirective
 
-logger = logging.getLogger(__name__)
+# Imported rather than redeclared, and `PackNotInstalled` is why. Two modules
+# each defining a class of that name produce two unrelated exceptions, so
+# `except render_figures.PackNotInstalled` would not catch what
+# `pack_showcase.provider_for` raises — a figure would stop degrading to a
+# warning and start crashing the build with a traceback. That trap only opens
+# once someone reaches for one more helper from the sibling module, which is
+# exactly what `save_atomic` already made natural. `INK` is shared for a
+# smaller reason: figures and previews appear on the same pages and have to sit
+# at the same weight.
+from pack_showcase import INK, PackNotInstalled, pack_by_extra, provider_for, save_atomic
 
-#: Ink per theme, matching `pack_showcase.INK` so figures and previews sit at
-#: the same weight on the same page.
-INK = {"light": "#111827", "dark": "#F9FAFB"}
+logger = logging.getLogger(__name__)
 
 #: Guide lines — the frame and the padded box — drawn at this alpha over the
 #: theme's ink. Visible enough to read as a boundary, faint enough that the
@@ -66,9 +76,6 @@ class Panel:
     #: False draws through `_place_by_bbox`, the fallback for a pack that ships
     #: no metrics. There is no public way to ask for this, which is the point.
     ink: bool = True
-    #: Overrides the figure's size for this panel alone. Only `snapping` needs
-    #: it, where the two sizes *are* the comparison.
-    size: int | None = None
 
 
 @dataclass(frozen=True)
@@ -96,8 +103,16 @@ class Figure:
 #:   with the *default* `RenderOptions`. Font Awesome's provider asks for
 #:   `pad_factor=0.15`, so with its own options the two panels came out nearly
 #:   identical. The subjects below are the extremes under each pack's real
-#:   options: Eva fills 73% of the padded box on the fallback path against 94%
-#:   on the measured one, and Weather sits a median 10.5 px high at this size.
+#:   options, censused over the whole glyph map of the style each figure draws:
+#:   Eva fills 79% of the padded box on the fallback path against 100% on the
+#:   measured one, and Weather sits a median 10.0 px off-center at 96 px.
+#: - Those two figures were first written down as 73%/94% and 10.5 px, from a
+#:   400-name sample rather than a census. Sampling is fine for ranking
+#:   candidates and not fine for a number anyone will quote — and the 10.5 then
+#:   contradicted the page's own "a median 10 pixels". Both now come from
+#:   `.github/scripts/generate_placement_census.py`, which is also where "fill"
+#:   and "off-center" are defined; quoting either without its definition is how
+#:   the same two numbers came to be restated three times and reconciled none.
 #: - The oversampling figure first used Material's `cog`, which is heavy enough
 #:   to survive without oversampling. Bootstrap's `gear` is a hairline and
 #:   turns to grey mush, which is what the claim is about.
@@ -193,44 +208,33 @@ COMPARISON_ROWS: tuple[tuple[str, dict[str, str]], ...] = (
 COMPARISON_PX = 72
 
 
-class PackNotInstalled(Exception):
-    """The pack is not importable here, so its figure degrades to a warning."""
-
-
-def pack_by_extra(extra: str):
-    from tkinter_icons.packs import KNOWN_PACKS
-
-    for pack in KNOWN_PACKS:
-        if pack.extra == extra:
-            return pack
-    raise KeyError(f"no pack with extra {extra!r}")
-
-
-def provider_for(pack):
-    try:
-        module = importlib.import_module(f"{pack.module}.provider")
-    except ImportError as exc:
-        raise PackNotInstalled(pack.extra) from exc
-    for name, obj in vars(module).items():
-        if name.endswith("FontProvider") and name != "BaseFontProvider":
-            return obj()
-    raise LookupError(f"no provider class in {pack.module}.provider")
-
-
 def figures_dir(env) -> Path:
     return Path(env.app.srcdir) / "_static" / "figures"
 
 
 def note_self(directive) -> None:
-    """Re-read the page when this module changes.
+    """Re-read the page when either extension module changes.
 
     Sphinx invalidates a document when the document changes, not when an
     extension does — so without this, editing `FIGURES` leaves the previously
     rendered PNGs in place and the build reports success. `pack_showcase` was
     caught by exactly this once, and the symptom is a stale page rather than a
     broken one.
+
+    Deliberately *not* imported from `pack_showcase` along with the rest.
+    `__file__` there is that module, so the imported version would register the
+    wrong dependency and reintroduce the bug it exists to prevent. Both files
+    are noted because `INK` and `save_atomic` come from over there, so a change
+    to either one changes what these figures look like.
     """
     directive.env.note_dependency(__file__)
+    directive.env.note_dependency(pack_showcase_file())
+
+
+def pack_showcase_file() -> str:
+    import pack_showcase
+
+    return pack_showcase.__file__
 
 
 def not_installed(directive, extra: str) -> list:
@@ -243,7 +247,31 @@ def not_installed(directive, extra: str) -> list:
     return []
 
 
-def draw_guides(image, guides: tuple[str, ...], pad_factor: float, ink: str, zoom: int):
+def padded_box_inset(options, base_size: int, zoom: int) -> int:
+    """Where the padded box actually falls, in displayed pixels.
+
+    This has to reproduce `render_glyph`'s arithmetic rather than approximate
+    it. The first version computed `round(width * pad_factor)`, and the
+    renderer computes `int(canvas_size * pad_factor)` — at 96 px and
+    `pad_factor=0.10` that is 10 against 9, so the guide was drawn one pixel
+    inside the box it claimed to mark and the exemplar glyph, correctly fitted
+    to rows 9–86, crossed its own guide on both edges. A figure whose caption
+    says "what the ink is supposed to fill" cannot have the ink spilling out of
+    it.
+
+    The padding is applied in oversampled space and the image is downscaled
+    afterwards, so the boundary comes back to final-image pixels through
+    `oversample` before the figure's own magnification is applied.
+    """
+    from tkinter_icons.render import auto_oversample, snap_size
+
+    snapped = snap_size(base_size, snap_even=options.snap_even)
+    oversample = max(1, int(options.oversample or auto_oversample(snapped)))
+    pad_oversampled = int(snapped * oversample * options.pad_factor)
+    return round(pad_oversampled / oversample * zoom)
+
+
+def draw_guides(image, guides: tuple[str, ...], options, base_size: int, zoom: int, ink: str):
     """Outline the frame, and optionally the padded box inside it.
 
     Without these, `pad_factor=0.0` beside `pad_factor=0.25` is just two sizes
@@ -264,8 +292,8 @@ def draw_guides(image, guides: tuple[str, ...], pad_factor: float, ink: str, zoo
 
     if "frame" in guides:
         draw.rectangle((0, 0, edge, edge), outline=stroke, width=1)
-    if "pad" in guides and pad_factor > 0:
-        inset = round(image.size[0] * pad_factor)
+    if "pad" in guides and options.pad_factor > 0:
+        inset = padded_box_inset(options, base_size, zoom)
         draw.rectangle((inset, inset, edge - inset, edge - inset), outline=stroke, width=1)
 
     return Image.alpha_composite(image, overlay)
@@ -299,7 +327,7 @@ def build_panel(pack, figure: Figure, panel: Panel, ink_color: str):
     options = icon_set.options.merge(**panel.options) if panel.options else icon_set.options
     image = render_glyph(
         glyph,
-        panel.size if panel.size is not None else figure.size,
+        figure.size,
         ink_color,
         font_key=icon_set.font_key,
         font_bytes=icon_set.font_bytes,
@@ -317,13 +345,11 @@ def build_panel(pack, figure: Figure, panel: Panel, ink_color: str):
         size = image.size[0] * figure.zoom
         image = image.resize((size, size), Image.NEAREST)
 
-    return draw_guides(image, figure.guides, options.pad_factor, ink_color, figure.zoom)
+    return draw_guides(image, figure.guides, options, figure.size, figure.zoom, ink_color)
 
 
 def render_panel(pack, figure: Figure, panel: Panel, ink_color: str, out: Path) -> None:
     """Draw one panel and write it."""
-    from pack_showcase import save_atomic
-
     save_atomic(build_panel(pack, figure, panel, ink_color), out)
 
 
@@ -361,6 +387,11 @@ class RendererFigureDirective(SphinxDirective):
             return not_installed(self, figure.pack)
 
         static = figures_dir(self.env)
+        # Only a magnified panel gets `pixelated`. The unmagnified ones are
+        # displayed 1:1, where the rule would let browser zoom or a fractional
+        # device pixel ratio blockify antialiased edges — in figures whose
+        # subject is render quality.
+        zoomed = " render-img-zoomed" if figure.zoom > 1 else ""
         lines = [".. container:: render-figure", ""]
         for index, panel in enumerate(figure.panels):
             lines += ["   .. container:: render-panel", ""]
@@ -370,7 +401,7 @@ class RendererFigureDirective(SphinxDirective):
                 lines += [
                     f"      .. image:: /_static/figures/{stem}.png",
                     f"         :alt: {figure.alt}",
-                    f"         :class: render-img only-{theme}",
+                    f"         :class: render-img{zoomed} only-{theme}",
                     "",
                 ]
             lines += [f"      {panel.caption}", ""]
@@ -393,8 +424,6 @@ class PackComparisonDirective(SphinxDirective):
     has_content = False
 
     def run(self):
-        from PIL import Image
-
         from tkinter_icons.iconset import get_icon_set
         from tkinter_icons.render import render_glyph
 
@@ -413,7 +442,7 @@ class PackComparisonDirective(SphinxDirective):
             icon_set = get_icon_set(provider, style)
 
             lines += ["   .. container:: comparison-row", ""]
-            lines += [f"      .. container:: comparison-label", "", f"         {pack.label}", ""]
+            lines += ["      .. container:: comparison-label", "", f"         {pack.label}", ""]
             lines += ["      .. container:: comparison-glyphs", ""]
 
             for concept, by_pack in COMPARISON_ROWS:
@@ -430,8 +459,6 @@ class PackComparisonDirective(SphinxDirective):
                             f"{extra}: {name!r} rendered nothing for the {concept!r} "
                             f"row. Fix COMPARISON_ROWS rather than shipping a gap."
                         )
-                    from pack_showcase import save_atomic
-
                     stem = f"compare-{extra}-{concept}-{theme}"
                     save_atomic(image, static / f"{stem}.png")
                     lines += [
@@ -485,7 +512,18 @@ def setup(app):
     app.add_directive("renderer-figure", RendererFigureDirective)
     app.add_directive("pack-comparison", PackComparisonDirective)
     app.connect("env-before-read-docs", check_figures)
-    # Safe for the same reasons `pack_showcase` is: the tables are read-only
-    # constants, and every output path is derived from the figure key or the
-    # (pack, concept) pair, each of which is written by exactly one document.
+    # Safe for the same reasons `pack_showcase` is, and deliberately not for
+    # the reason that module used to give. Read safety holds because nothing
+    # here is mutated across workers: `FIGURES` and `COMPARISON_ROWS` are
+    # read-only constants, and `check_figures` runs on `env-before-read-docs`,
+    # which fires once in the parent.
+    #
+    # Write safety does *not* rest on each path having one writer. That
+    # argument was true of `pack_showcase` until `icons-and-names` started
+    # drawing Bootstrap's styles, and it failed silently — two workers, one
+    # path, no warning. It is not worth re-deriving here for a module whose
+    # figure keys happen to be unique today. Every write in both modules goes
+    # through `save_atomic`, which writes beside the target and renames, so
+    # colliding workers can only produce the same bytes and race the rename.
+    # A new directive that writes an image must use it too.
     return {"version": "1.0", "parallel_read_safe": True, "parallel_write_safe": True}

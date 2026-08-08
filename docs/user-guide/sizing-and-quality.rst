@@ -52,7 +52,9 @@ It also places the glyph against the font's ascent and descent rather than again
 
 .. renderer-figure:: measured-ink-centering
 
-Both are the same glyph at the same requested size, and neither panel is exaggerated. Across every glyph in all sixteen packs, each drawn with its own pack's options, the ``getbbox`` path fills between 73% and 96% of the padded box depending on the set, sits up to a median 10.5 pixels off-center at this size, and pushes **390 of 48,082** glyphs past the edge of the frame. Measured ink fills 94% to 103%, centers within half a pixel everywhere, and overflows **none** of the 48,082.
+Both are the same glyph at the same requested size, and neither panel is exaggerated. Across every glyph in every style of all sixteen packs, each drawn with its own pack's options at 96 pixels, the ``getbbox`` path fills a per-pack median of 72% to 95% of the padded box, sits a median 10 pixels off-center in the worst pack, and pushes **518 of the 89,169 glyphs that draw any ink** past the edge of the frame. Measured ink fills 92% to 100%, sits a median 0.5 pixels off-center with a worst case of 2.2, and overflows **none** of the 89,169.
+
+100% is the ceiling on that path rather than a figure that happened to come out even: the renderer fits ink to the padded box and never enlarges past it, so a glyph on the measured path cannot overflow the box it was fitted to. Fill is the longer side of the drawn glyph against that box, and off-center is the distance from the middle of the drawn glyph to the middle of the frame. Both are measured by ``.github/scripts/generate_placement_census.py``, which renders every glyph both ways and is the source these numbers are checked against — they were hand-transcribed and wrong twice before that existed.
 
 So the real ink is measured instead, once, offline: every glyph in every pack is rendered at 512 pixels, its true inked bounds are measured, and the result is stored as fractions of the em in that pack's ``metrics.json``. Fractions scale, so one measurement serves every render size. The renderer fits and centers on *that*.
 

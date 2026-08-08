@@ -191,10 +191,6 @@ html[data-theme="dark"] {
 
    These differ from a preview in one way that matters: a preview is a picture
    of a set and can be scaled freely, while a figure is evidence about pixels.
-   The oversampling and snapping figures are rendered at 16 pixels and
-   magnified with nearest-neighbour, so `image-rendering: pixelated` below is
-   load-bearing — without it the browser resamples the blow-up and hands back
-   exactly the softness the figure exists to show.
    --------------------------------------------------------------------------- */
 
 .render-figure {
@@ -221,12 +217,24 @@ html[data-theme="dark"] {
 }
 
 .render-img {
-    /* The magnified figures are already at their display size in pixels; the
-       unmagnified ones are 96px drawn at 6rem, which is 2x on a 96 dpi
-       screen. Both want to be left alone. */
-    image-rendering: pixelated;
     height: 6rem;
     width: auto;
+}
+
+/* Only the magnified panels. The oversampling figure is rendered at 16 px and
+   blown up 6x with nearest-neighbour, so `pixelated` is load-bearing there —
+   without it the browser resamples the blow-up and hands back exactly the
+   softness the figure exists to show.
+
+   It must NOT apply to the rest. They are 96 px images at 6rem, which is 96
+   CSS px — 1:1, not 2x — so on any display with a device pixel ratio above 1,
+   or at any browser zoom, `pixelated` would make the browser nearest-neighbour
+   upscale them and turn antialiased glyph edges blocky. In figures whose whole
+   argument is about render quality, that is the worst possible artefact.
+   (`.pack-glyph-img` sidesteps the question entirely by showing its 96 px
+   images at 2.5rem.) */
+.render-img-zoomed {
+    image-rendering: pixelated;
 }
 
 /* ---------------------------------------------------------------------------
