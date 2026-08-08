@@ -18,7 +18,7 @@ No glyph, font or metrics change: this release exists to correct text that PyPI 
 
 ### Changed
 
-- **The README intro and the distribution summary are written from this library's side, not upstream's.** Both opened with the pack as "a provider for `tkinter-icons`" — `provider` is the developer API that #79 deliberately split out of the public surface, and nobody installing a pack ever touches a `BaseFontProvider`. The rest carried upstream's own description of the font, including framing this project exists to keep users away from. They now say what the set covers and when to reach for it, which is what a PyPI landing page has to answer. (#120)
+- **The README intro and the distribution summary are written from this library's side rather than upstream's.** They now say what the set covers and when to reach for it, instead of repeating the upstream project's own description of the font. (#120)
 
 ## [1.1.0] — measured ink metrics, and the tkinter-icons rename
 
