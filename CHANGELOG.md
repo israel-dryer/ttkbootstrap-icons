@@ -24,6 +24,8 @@ history after the fact and are summaries rather than contemporaneous notes.
 
   The change was not safe to make on its own, which is why it lands with the rest and not before: while 867 real icons were unreachable by name, raising would have failed on names that were not typos at all. They resolve now, so what is left really is a bad name.
 
+  **The icon browser is unaffected.** It is the one shipped consumer of name resolution, and it never used `render_pil`; every icon it builds already sits inside a `try`, so it degrades to an error tile rather than crashing. Checked rather than assumed: all 61,153 names it lists, across every style of all sixteen packs, still resolve, and drawing 1,860 of them in a real window produces no error tiles. Both are now guarded by tests, because a resolution change can degrade the browser without failing anything else.
+
   **`on_missing` is unaffected in the case it was written for.** A name that reaches an icon set without being resolved against it — the base `Icon`, or `render_pil` with an explicit `icon_set` — still applies the policy, and `"transparent"` is still the default. What changed is that a pack's own resolution failures no longer route into it. That restores the scope `docs/user-guide/icons-and-names.rst` described from the start and the code did not honor; #117 deleted the sentence because it was false, and this makes it true instead.
 
 ### Fixed
