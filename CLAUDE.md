@@ -301,7 +301,9 @@ Read the venv note under "Environment" first — which of `.venv` and `.venv-hom
 
 **The next release can be tag-driven, and that path is now proven rather than assumed.** Push `v<version>` and the workflow builds all eighteen, publishes what PyPI does not have, and cuts one GitHub Release. The one caveat is the permanent red run on `v5.0.0` described in Current state, which is specific to that tag.
 
-**The janitorial list is finished, 2026-08-08.** Read the Docs' Default branch is back on `main`, GitHub Pages is unpublished, and eleven remote branches are deleted including `gh-pages`. `origin` now carries only `main`, the branches of whatever is in flight, and `release/ttkbootstrap-icons-packs-final` — **leave that last one alone**, it is the only tree where the sixteen old packs still exist.
+**The janitorial list is finished, 2026-08-08.** Read the Docs' Default branch is back on `main`, GitHub Pages is unpublished, and eleven remote branches are deleted including `gh-pages`. A second sweep later the same day removed five more remote branches and twenty-two local ones, so both sides now carry only `main`, whatever is in flight, and `release/ttkbootstrap-icons-packs-final` — **leave that last one alone**, it is the only tree where the sixteen old packs still exist.
+
+Three local branches were not ancestors of `main` and each was checked rather than assumed, which is the rule below working. `docs/pre-tag-review-fixes` and `docs/release-complete` each carried one commit whose **patch id** matched a commit already on `main` — the same work re-applied, safe to drop. `fix/release-latest-marker` genuinely held a commit that is on `main` nowhere: `e7e7d32`, which is #96, closed unmerged and superseded by #97. It was deleted only after confirming GitHub still serves it at `refs/pull/96/head`, so `git fetch origin refs/pull/96/head` brings it back. **A closed PR's head ref is the safety net for exactly this case** — check it before deleting the last copy of anything.
 
 Two of the eleven were not ancestors of `main` and both were checked rather than assumed. `docs/release-complete` carried one commit past its own merge, `05077d4`, whose patch is byte-identical to `491dae8` on `main` — the same work re-applied on `docs/milestone-split` and merged by #119. `fix/release-latest-marker` is #96, closed unmerged and superseded by #97, exactly as recorded. **Verify with `git merge-base --is-ancestor origin/<branch> origin/main` before deleting**, and when it says no, find out why rather than trusting a PR's merged badge — a branch can be merged and then pushed to again.
 
@@ -330,7 +332,7 @@ Two of the eleven were not ancestors of `main` and both were checked rather than
 
 ### Doing 5.0.x — the plan, in order
 
-**Steps 1 and 2 are done. Step 3, the tag, is not started.**
+**Steps 1 and 2 are done, and everything step 3 needs prepared is prepared. The tag itself is not pushed.** Once #132 merges, `v5.0.1` is `git tag v5.0.1 && git push origin v5.0.1` and nothing else.
 
 **1. Read the Docs' Default branch is back on `main`** — confirmed by the owner 2026-08-08. Docs-only merges are visible again.
 
@@ -342,8 +344,14 @@ Two of the eleven were not ancestors of `main` and both were checked rather than
 
 - **#118 needs no file change.** The classifier is already on `main`; the base version comes from the tag through setuptools-scm. The release exists to carry it.
 - **Fifteen packs are already prepared and sitting at 1.1.1**, #111 and #120 together — see below. Each has its `version`, its `description`, its README intro and its own `## [1.1.1]` changelog entry. Those four are coupled: `verify_packages.py`'s `check_changelog` requires the newest changelog entry to *be* the version being shipped, and the release preflight runs `--strict`, so a bump without an entry fails the release rather than shipping quietly. `fluent-reg` is the sixteenth and stays at 1.1.0 — its intro was already the model the other fifteen were rewritten toward.
-- **The root `CHANGELOG.md` needs a `## [5.0.1] — <short title>` section.** That title becomes the GitHub Release title *verbatim* now that #113 stopped passing the distribution name, so keep it short — "renamed to tkinter-icons, rebuilt around measured glyph ink" was too long even before the prefix stuttered it. Prose **unwrapped**, one line per paragraph.
-- **Read the generated body before tagging**, which is not the same text as the changelog section: `python .github/scripts/release_notes.py CHANGELOG.md 5.0.1 NOTES.md /dev/stdout` — note there is no distribution argument any more.
+- **The root `CHANGELOG.md` section is written — `## [5.0.1] — updated metadata and docs`, in #132.** The title is the owner's and `release_notes.py` lifts it verbatim now that #113 stopped passing the distribution name, so a future one stays short: "renamed to tkinter-icons, rebuilt around measured glyph ink" was too long even before the prefix stuttered it. Prose **unwrapped**, one line per paragraph.
+- **Read the generated body before tagging**, which is not the same text as the changelog section. The last argument is the GitHub-output *file*, and `/dev/stdout` does not resolve on Windows — this file said it did, and `release_notes.py` dies with `FileNotFoundError` on `/proc/self/fd/1`. Pass a real path and read it:
+
+  ```bash
+  python .github/scripts/release_notes.py CHANGELOG.md 5.0.1 NOTES.md gh-output.txt
+  ```
+
+  There is no distribution argument any more. `gh-output.txt` is appended to, not truncated, so a second run leaves two `title=` lines and the last one is current.
 
 The other fifteen packs are untouched and skip-existing. One tag ships the base at 5.0.1 and `gmi` at 1.1.1 together.
 
@@ -788,6 +796,10 @@ thread-safe."
 ---
 
 ## Known gotchas
+
+- **A pattern that matches nothing looks exactly like a clean result, and this bit twice in one session.** The American-spelling sweep skipped the entire `.github/` tree, because it tested skip patterns as substrings and `.git` is a prefix of `.github` — it reported 27 files changed and looked like a complete pass. Then `git diff --stat v5.0.0..main -- 'packages/*/src'`, used to prove no code changed before a release, printed an empty diff: the pathspec matched nothing, and an empty diff is indistinguishable from no changes. Both conclusions happened to be right, neither was earned.
+
+  **So prove the pattern finds something before trusting that it found nothing.** Match whole path components rather than substrings, and when a sweep or a diff comes back empty, run it once against a case you know it should catch. Every guard in this repository exists because some check was silently covering less than its name claimed.
 
 - **A green local run proves one interpreter, and the matrix tests five.** `requires-python` is `>=3.10` and CI runs 3.10 through 3.14, but the working venv here is 3.13 — so anything version-gated passes locally and fails on collection in CI. `tests/test_pack_style_claims.py` shipped with a module-level `import tomllib`, which is 3.11 and later; the three 3.10 jobs failed to collect the file at all rather than failing a test. The pattern to copy is in `tests/test_packs.py`: guard on `sys.version_info` and fall back to `tomli`, which `ci.yml` installs below 3.11.
 
