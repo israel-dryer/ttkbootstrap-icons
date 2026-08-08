@@ -72,7 +72,7 @@ Keeping the bundle small
 
 An icon font ships every glyph it has, and there is no tree-shaking — the font is one file, so using four icons from a pack costs the same as using four thousand.
 
-The lever is therefore which packs you install. ``[material]`` and ``[fluent]`` are large sets and large files; ``[lucide]`` and ``[bootstrap]`` are a fraction of the size and cover ordinary application needs. Choosing a smaller pack is the whole optimisation.
+The lever is therefore which packs you install. ``[material]`` and ``[fluent]`` are large sets and large files; ``[lucide]`` and ``[bootstrap]`` are a fraction of the size and cover ordinary application needs. Choosing a smaller pack is the whole optimization.
 
 .. tip::
 

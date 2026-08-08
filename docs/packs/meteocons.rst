@@ -22,7 +22,7 @@ Using it
    overcast = MeteoconsIcon("clouds", size=48)
    storm = MeteoconsIcon("thunderstorm", size=48)
 
-At ninety-four glyphs it is the smallest pack in the catalogue by a long way, so it is also the cheapest to ship — see :doc:`../user-guide/packaging`.
+At ninety-four glyphs it is the smallest pack in the catalog by a long way, so it is also the cheapest to ship — see :doc:`../user-guide/packaging`.
 
 Names
 -----

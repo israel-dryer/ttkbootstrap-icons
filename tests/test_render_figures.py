@@ -14,7 +14,7 @@ ranks them the wrong way round, so there is no threshold here that would have
 caught it and pretending otherwise would be worse than pretending nothing.
 
 The floor below is set to catch a different failure: two panels becoming
-*identical*, which is what a refactor that quietly stops honouring `ink=False`
+*identical*, which is what a refactor that quietly stops honoring `ink=False`
 or a `Panel` whose options no longer differ would produce. Everything above that
 floor still needs a person to look at it.
 """

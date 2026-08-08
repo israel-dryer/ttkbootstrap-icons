@@ -27,7 +27,7 @@ extensions = [
     "sphinx_copybutton",
     "myst_parser",
     # Local: builds the icon-pack comparison table on packs.rst from the pack
-    # catalogue and the installed providers, so it cannot go stale. See
+    # catalog and the installed providers, so it cannot go stale. See
     # docs/_ext/packs_table.py.
     "packs_table",
     # Local: the card grid on packs.rst, and the facts table and preview strips

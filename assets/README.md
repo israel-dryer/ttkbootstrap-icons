@@ -56,7 +56,7 @@ ttkbootstrap, and this library is for people who are not using it.
 | Muted | `#4B5563` | `#9CA3AF` |
 | Border | `#D1D5DB` | `#374151` |
 
-**Do not use `#0F9488` as a link or primary colour.** It is 3.74:1 on white and
+**Do not use `#0F9488` as a link or primary color.** It is 3.74:1 on white and
 4.12:1 on a dark background — below WCAG AA's 4.5:1 in *both* modes, sitting in
 the middle where neither works. It is fine on the mark itself, which WCAG 1.4.3
 exempts as a logotype. The two link values above are the same hue one step out
@@ -105,7 +105,7 @@ single file serves both. `<picture>` does:
 
 PyPI's renderer keeps `<picture>` and `<img>` but strips `<source>`, so it falls
 through to the light wordmark — correct, since PyPI pages are always light.
-GitHub honours both. Verified against `readme_renderer`, which is what PyPI runs
+GitHub honors both. Verified against `readme_renderer`, which is what PyPI runs
 and what `twine check` uses.
 
 **PNG, not SVG, in a README.** `raw.githubusercontent.com` serves `.svg` as

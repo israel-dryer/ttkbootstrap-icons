@@ -1,4 +1,4 @@
-"""Generate the sixteen pack READMEs from the pack catalogue and the live providers.
+"""Generate the sixteen pack READMEs from the pack catalog and the live providers.
 
 These files are the PyPI landing page for sixteen distributions, and they were the
 last surface still teaching the pre-#69 idiom — `pip install tkinter-icons-lucide`

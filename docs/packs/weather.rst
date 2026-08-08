@@ -1,7 +1,7 @@
 Weather Icons
 =============
 
-Erik Flowers' forecast set, and the more systematic of the two weather packs. Every condition has a day and a night drawing, the moon phases are all there, and there are wind-direction and Beaufort-scale glyphs that nothing else in the catalogue carries.
+Erik Flowers' forecast set, and the more systematic of the two weather packs. Every condition has a day and a night drawing, the moon phases are all there, and there are wind-direction and Beaufort-scale glyphs that nothing else in the catalog carries.
 
 What makes it worth choosing over :doc:`meteocons` is that it maps directly onto weather APIs. The set ships aliases named after the condition codes that OpenWeatherMap, Weather Underground, and Forecast.io return, so you can turn an API response into an icon without writing the lookup table yourself.
 

@@ -1,7 +1,7 @@
 Typicons
 ========
 
-A small, sturdy set from an earlier era of icon design — heavier and more literal than anything else in the catalogue, drawn to read at 16px on screens that were not sharp. Stephen Hutchings has maintained it for over a decade.
+A small, sturdy set from an earlier era of icon design — heavier and more literal than anything else in the catalog, drawn to read at 16px on screens that were not sharp. Stephen Hutchings has maintained it for over a decade.
 
 It is the smallest general-purpose set here, so pick it for the drawing rather than the coverage. Where :doc:`lucide` is a thin even line and :doc:`remix` is a neutral grid, Typicons is solid and slightly chunky, and it holds together at sizes where lighter sets start to disappear.
 

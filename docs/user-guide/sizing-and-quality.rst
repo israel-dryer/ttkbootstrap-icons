@@ -61,7 +61,7 @@ So the real ink is measured instead, once, offline: every glyph in every pack is
 A pack with no metrics still renders — the ``getbbox`` path is the fallback — but it renders the way 4.x did. All sixteen packs ship metrics as of their 1.1.0 release, so the right-hand panels above are not a state you can install your way into; they are what the renderer falls back to for a pack that ships none.
 
 .. versionchanged:: 5.0.0
-   Glyphs are centered on measured ink rather than on ``font.getbbox()``. Full-bleed icons gain their padding and the rest sit a little more centered. If you compensated for the old behaviour with your own padding, remove it.
+   Glyphs are centered on measured ink rather than on ``font.getbbox()``. Full-bleed icons gain their padding and the rest sit a little more centered. If you compensated for the old behavior with your own padding, remove it.
 
 RenderOptions
 -------------

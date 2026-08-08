@@ -1,7 +1,7 @@
 Material Design Icons
 =====================
 
-The largest set in the catalogue, and by a wide margin. This is the Pictogrammers library — Google's Material set as a starting point, then extended by the community for years past it, which is why it has a glyph for things no other set here covers.
+The largest set in the catalog, and by a wide margin. This is the Pictogrammers library — Google's Material set as a starting point, then extended by the community for years past it, which is why it has a glyph for things no other set here covers.
 
 Pick it when coverage is the deciding factor. The cost is size: the font is the biggest of the sixteen, which matters when you freeze an application, since a font ships whole whether you use four glyphs or four thousand. See :doc:`../user-guide/packaging`.
 

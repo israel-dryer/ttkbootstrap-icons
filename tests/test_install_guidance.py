@@ -2,7 +2,7 @@
 
 The library's premise is one library with packs as extras. Guidance that still
 names raw distributions teaches the pattern being retired, and guidance that
-drifts from the catalogue goes stale the moment a pack is added or renamed. So
+drifts from the catalog goes stale the moment a pack is added or renamed. So
 these are checked against `packs.py` rather than written out again here.
 """
 
@@ -39,7 +39,7 @@ class TestExtrasFormEverywhere:
         extras framing at the one moment it matters most.
         """
         source = inspect.getsource(browser.IconPreviewerApp)
-        assert "KNOWN_PACKS" in source, "browser should generate guidance from the catalogue"
+        assert "KNOWN_PACKS" in source, "browser should generate guidance from the catalog"
         assert "pip install tkinter-icons-" not in source, "raw distribution install command in browser"
 
 
@@ -118,7 +118,7 @@ class TestReadmesDoNotAdvertiseExtrasThatDoNotExist:
             named = {
                 extra.strip()
                 for group in re.findall(
-                    # Both spellings: pip normalises them, so `tkinter_icons[all]`
+                    # Both spellings: pip normalizes them, so `tkinter_icons[all]`
                     # is the same broken instruction and has to be caught too.
                     r"tkinter[-_]icons\[([^\]]+)\]", readme.read_text(encoding="utf-8-sig")
                 )

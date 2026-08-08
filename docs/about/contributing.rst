@@ -11,7 +11,7 @@ Eighteen distributions live in one repository — the base package, sixteen icon
 .. code-block:: text
 
    packages/
-     tkinter-icons/              the renderer, the browser, the pack catalogue
+     tkinter-icons/              the renderer, the browser, the pack catalog
      tkinter-icons-bs/           one directory per pack ...
      tkinter-icons-mat/
      ...
@@ -171,7 +171,7 @@ Styles are a mapping when a set has them, each naming a font file, a predicate o
 
    python -m tkinter_icons.tools.generate_metrics example
 
-**6. The catalogue.** Add a :class:`~tkinter_icons.Pack` entry to ``KNOWN_PACKS`` in ``packs.py`` and an extra to the base package's ``pyproject.toml``. That is what makes ``pip install "tkinter-icons[example]"`` and ``from tkinter_icons import ExampleIcon`` work, and what every install message reads from.
+**6. The catalog.** Add a :class:`~tkinter_icons.Pack` entry to ``KNOWN_PACKS`` in ``packs.py`` and an extra to the base package's ``pyproject.toml``. That is what makes ``pip install "tkinter-icons[example]"`` and ``from tkinter_icons import ExampleIcon`` work, and what every install message reads from.
 
 **7. The PyInstaller hook**, one file in ``tkinter_icons/_pyinstaller/``:
 
@@ -181,7 +181,7 @@ Styles are a mapping when a set has them, each naming a font file, a predicate o
 
    datas = collect_data_files('tkinter_icons_example')
 
-Without it, a frozen application ships without your font and draws nothing — silently, since a missing glyph renders transparent. The test suite checks every pack in the catalogue has one.
+Without it, a frozen application ships without your font and draws nothing — silently, since a missing glyph renders transparent. The test suite checks every pack in the catalog has one.
 
 **8. The upstream license**, verbatim, under ``LICENSES/`` in the pack. The preflight fails without it.
 
