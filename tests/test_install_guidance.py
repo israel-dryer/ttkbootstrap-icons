@@ -145,6 +145,19 @@ class TestTheCostOfInstallingEverythingIsMeasured:
 
     TOLERANCE_MB = 1.0
 
+    #: The three places the argument against `[all]` is made. Scoped to a named
+    #: list rather than swept from every `.rst`, because an unrelated size —
+    #: a font's own weight on a pack page, a frozen bundle in `packaging.rst` —
+    #: would otherwise fail this with "the docs give more than one size for
+    #: installing every pack", which is not what went wrong. A fourth place
+    #: making the same argument should be added here; a size figure about
+    #: something else should not.
+    SOURCES = (
+        "docs/getting-started/installation.rst",
+        "docs/packs.rst",
+        "docs/user-guide/packaging.rst",
+    )
+
     @staticmethod
     def _prose_claims():
         """Every `N MB` figure in the prose that argues against `[all]`."""
@@ -155,13 +168,12 @@ class TestTheCostOfInstallingEverythingIsMeasured:
         if not (root / "docs").is_dir():
             pytest.skip("not running from a source checkout")
 
-        sources = [*(root / "docs").rglob("*.rst"), root / "README.md"]
         found = {}
-        for path in sources:
-            if "_build" in path.parts or not path.is_file():
-                continue
+        for relative in TestTheCostOfInstallingEverythingIsMeasured.SOURCES:
+            path = root / relative
+            assert path.is_file(), f"{relative} is gone; update SOURCES"
             for match in re.finditer(r"(\d+(?:\.\d+)?) MB", path.read_text(encoding="utf-8-sig")):
-                found.setdefault(float(match.group(1)), []).append(str(path.relative_to(root)))
+                found.setdefault(float(match.group(1)), []).append(relative)
         return found
 
     @staticmethod

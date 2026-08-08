@@ -45,11 +45,21 @@ IDENTICAL = 0.02
 
 
 def alpha_difference(first, second) -> float:
-    """Mean per-pixel difference of the alpha channels, 0.0 to 1.0."""
+    """Mean per-pixel difference of the alpha channels, 0.0 to 1.0.
+
+    Panels of one figure always share a size — every panel takes `figure.size`
+    and `figure.zoom` — so unequal sizes are a structural surprise rather than
+    a case to handle. An earlier version returned 1.0 for them, which would
+    have made the difference assertion below pass unconditionally for any
+    figure that acquired mismatched panels: the loudest possible failure
+    reported as the strongest possible pass.
+    """
     from PIL import ImageChops
 
-    if first.size != second.size:
-        return 1.0
+    assert first.size == second.size, (
+        f"panels differ in size ({first.size} vs {second.size}); a figure's "
+        f"panels are meant to differ in what they show, not in their frame"
+    )
     diff = ImageChops.difference(first.getchannel("A"), second.getchannel("A"))
     total = sum(value * count for value, count in enumerate(diff.histogram()))
     return total / (255 * first.size[0] * first.size[1])
