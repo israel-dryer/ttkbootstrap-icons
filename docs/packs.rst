@@ -36,20 +36,7 @@ Side by side
 Using two at once
 -----------------
 
-Nothing stops you. Name both extras, import both classes, and they coexist — each icon holds its own icon set, so the two never interfere.
-
-.. code-block:: bash
-
-   pip install "tkinter-icons[lucide,simple]"
-
-.. code-block:: python
-
-   from tkinter_icons import LucideIcon, SimpleIcon
-
-   save = LucideIcon("save", size=20)
-   github = SimpleIcon("github", size=20)
-
-The usual reason is a UI set plus a logo set: no general-purpose pack has a GitHub mark, and no logo pack has a "save" icon.
+Nothing stops you. Name both extras, import both classes, and they coexist — each icon holds its own icon set, so the two never interfere. :doc:`getting-started/choosing-a-pack` has the worked example and the usual reason for it.
 
 .. warning::
 

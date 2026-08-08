@@ -43,8 +43,8 @@ Pass a ``statespec`` — a list of ``(state, spec)`` pairs, where the spec is a 
 .. code-block:: python
 
    icon.map(button, statespec=[
-       ("pressed", "#0a58ca"),
-       ("hover", "#0d6efd"),
+       ("pressed", "#115E59"),
+       ("hover", "#0F766E"),
        ("disabled", "#adb5bd"),
    ])
 
@@ -62,7 +62,7 @@ The spec can be a dict instead, naming a different icon for that state — an ou
 
    icon.map(button, statespec=[
        ("hover", {"name": "house-fill"}),
-       ("pressed", {"name": "house-fill", "color": "#0a58ca"}),
+       ("pressed", {"name": "house-fill", "color": "#115E59"}),
    ])
 
 .. image:: /assets/03_icon_name_change.png
@@ -90,7 +90,7 @@ That distinction matters if you call ``map()`` more than once on the same widget
 
 .. code-block:: python
 
-   icon.map(button, subclass="nav", statespec=[("hover", "#0d6efd")])
+   icon.map(button, subclass="nav", statespec=[("hover", "#0F766E")])
    icon.map(button, subclass="nav", statespec=[("disabled", "#adb5bd")])
    # one style, both states
 

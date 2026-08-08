@@ -24,8 +24,14 @@ else:  # 3.10 has no tomllib; tomli is the same API under the old name.
 REPO = Path(__file__).resolve().parents[1]
 BASE_PYPROJECT = REPO / "packages" / "tkinter-icons" / "pyproject.toml"
 CI_WORKFLOW = REPO / ".github" / "workflows" / "ci.yml"
+INSTALL_DOC = REPO / "docs" / "getting-started" / "installation.rst"
 
 _VERSION = re.compile(r'"(3\.\d+)"')
+_TESTED_ON = re.compile(r"Tested on (3\.\d+) through (3\.\d+)")
+
+
+def _sorted_versions(versions: set[str]) -> list[str]:
+    return sorted(versions, key=lambda v: tuple(int(p) for p in v.split(".")))
 
 
 def _classifier_versions() -> set[str]:
@@ -75,4 +81,20 @@ class TestAdvertisedPythonVersionsAreTested:
         lowest = min(_tested_versions(), key=lambda v: tuple(int(p) for p in v.split(".")))
         assert floor == f">={lowest}", (
             f"requires-python is {floor!r} but the lowest version CI tests is {lowest}"
+        )
+
+    def test_the_installation_page_names_the_same_range(self) -> None:
+        """The third place the range is written down, and the one nothing read.
+
+        The classifiers and the matrix pin each other, so adding 3.14 to both
+        left the Requirements table on the installation page saying "3.10
+        through 3.13" with nothing failing. Docs are the surface a user
+        actually reads the range off.
+        """
+        claim = _TESTED_ON.search(INSTALL_DOC.read_text(encoding="utf-8"))
+        assert claim, "the installation page should carry a 'Tested on X through Y' row"
+        tested = _sorted_versions(_tested_versions())
+        assert claim.groups() == (tested[0], tested[-1]), (
+            f"{INSTALL_DOC.name} claims {claim.group(0)!r} but CI tests "
+            f"{tested[0]} through {tested[-1]}"
         )

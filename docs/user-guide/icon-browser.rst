@@ -50,4 +50,4 @@ Or embed it, if you want an icon picker inside your own tooling:
 
 .. note::
 
-   ``tkinter-icons`` is the only command this package installs. Earlier versions put up to twenty-eight asset-building commands on your ``PATH``, all of which regenerate assets into a source tree and did nothing from an installed wheel. Maintainers run those with ``python -m`` from a checkout — see :doc:`../about/contributing`.
+   ``tkinter-icons`` is the only command this package installs. The asset-building commands earlier versions put on your ``PATH`` are gone — see :doc:`../getting-started/migrating` for why, and :doc:`../about/contributing` for how maintainers run them now.
