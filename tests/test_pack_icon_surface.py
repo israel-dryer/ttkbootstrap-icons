@@ -128,6 +128,22 @@ class TestRenderPilNeedsNoWarmUp:
         finally:
             Icon.on_missing = original
 
+    def test_the_constructor_raises_where_render_pil_stays_silent(self):
+        """The two entry points diverge on the same name, and the docs say so.
+
+        `docs/user-guide/icons-and-names.rst` teaches this asymmetry as the
+        thing to know about `on_missing`: the constructor is the only entry
+        point that raises of its own accord, so a typo passed to `render_pil`
+        comes back blank unless the policy is changed. Pinned here because the
+        prose is otherwise unfalsifiable.
+        """
+        pack = next((p for p in INSTALLED if p.extra == "bootstrap"), None)
+        if pack is None:
+            pytest.skip("the bootstrap pack is not installed")
+        cls = icon_class(pack)
+        with pytest.raises(ValueError):
+            cls("not-a-real-icon-name")
+
     def test_base_icon_still_requires_a_set(self):
         """`Icon` has no pack, so it must keep raising rather than guessing."""
         original = Icon._icon_set_current

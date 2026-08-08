@@ -58,9 +58,9 @@ Omit ``style`` and the pack uses its default — ``outline`` for Bootstrap, ``so
 When a name is wrong
 --------------------
 
-Two different things can go wrong, and they fail in two different places.
+The same bad name fails two different ways, depending on which entry point you reached it through.
 
-**A name that does not resolve** raises immediately, from the pack's constructor:
+**The pack's constructor raises**, immediately:
 
 .. code-block:: python
 
@@ -69,7 +69,7 @@ Two different things can go wrong, and they fail in two different places.
 
 Names are the upstream project's, which is not always the word you would have picked — Material Design Icons calls the gear ``cog``, not ``settings``. The browser is the fastest way to find the one you want.
 
-**A name that resolves but is missing from the glyph map** is handled by a policy instead, because it means the pack's data is inconsistent rather than that you made a typo. By default such an icon draws as a transparent square, so one bad name cannot take down a window full of good ones:
+**Everything that draws applies a policy instead.** :meth:`~tkinter_icons.Icon.render_pil` swallows the same failure on purpose: it is the headless path, usually writing a whole sheet of images at once, where one unusable name should not take the rest down with it. The base :class:`~tkinter_icons.Icon` never resolves at all — it takes an already-resolved glyph name and trusts it. ``on_missing`` is what both do when the set cannot draw the name they were handed, and by default that is a transparent square:
 
 .. code-block:: python
 
@@ -90,7 +90,7 @@ Names are the upstream project's, which is not always the word you would have pi
    * - ``"raise"``
      - Raise :class:`KeyError`.
 
-``"warn"`` suits a test suite: nothing breaks, but nothing passes silently either.
+Since the constructor is the only thing that raises of its own accord, ``"warn"`` is what turns a silently blank square back into something you can see. It suits a test suite: nothing breaks, but nothing passes silently either.
 
 Asking for a pack you have not installed
 ----------------------------------------
