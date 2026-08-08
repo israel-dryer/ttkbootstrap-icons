@@ -21,7 +21,7 @@ The outline/fill pair is what this set is for. Draw the outline normally and swa
    star = BootstrapIcon("star", size=20)
    starred = BootstrapIcon("star", size=20, style="fill")
 
-   button.configure(image=starred.image if favourite else star.image)
+   button.configure(image=starred.image if favorite else star.image)
 
 Names
 -----

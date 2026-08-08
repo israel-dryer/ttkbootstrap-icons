@@ -73,7 +73,7 @@ What you get
 
    .. grid-item-card:: No image assets to manage
 
-      Size and color are arguments, not files. No ``icons/`` directory, no ``@2x`` duplicates, no second set for dark mode — ask for 16px grey and 32px teal from the same glyph.
+      Size and color are arguments, not files. No ``icons/`` directory, no ``@2x`` duplicates, no second set for dark mode — ask for 16px gray and 32px teal from the same glyph.
 
    .. grid-item-card:: Follows your ttk theme
 

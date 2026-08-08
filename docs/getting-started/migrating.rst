@@ -32,7 +32,7 @@ Both spellings of every class are exported, so ``MatIcon``, ``FAIcon``, and ``GM
 What genuinely changed
 ----------------------
 
-**Icons render slightly differently.** 5.0.0 centers glyphs on their measured ink rather than on Pillow's ``getbbox``, which under-reports it. Full-bleed icons gain the padding they were missing, and everything else sits a little more centered. If you compensated for the old behaviour with your own padding or a ``y_bias``, take it back out. :doc:`../user-guide/sizing-and-quality` explains the change.
+**Icons render slightly differently.** 5.0.0 centers glyphs on their measured ink rather than on Pillow's ``getbbox``, which under-reports it. Full-bleed icons gain the padding they were missing, and everything else sits a little more centered. If you compensated for the old behavior with your own padding or a ``y_bias``, take it back out. :doc:`../user-guide/sizing-and-quality` explains the change.
 
 Also worth knowing
 ------------------

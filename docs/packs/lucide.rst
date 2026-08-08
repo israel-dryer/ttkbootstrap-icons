@@ -3,7 +3,7 @@ Lucide Icons
 
 The most consistent set here. Lucide is a community-maintained continuation of Feather, and it keeps Feather's discipline: one stroke weight, one corner radius, one grid, applied to every glyph. Nothing in it is heavier or lighter than anything else in it.
 
-That evenness is the reason to choose it, and it is also the trade-off. There is no fill, so you cannot express a selected state by weight — you express it with colour, or with a background. Against :doc:`material`, Lucide is a fraction of the size and a much lighter line; against :doc:`bootstrap`, it is quieter and has no filled counterpart.
+That evenness is the reason to choose it, and it is also the trade-off. There is no fill, so you cannot express a selected state by weight — you express it with color, or with a background. Against :doc:`material`, Lucide is a fraction of the size and a much lighter line; against :doc:`bootstrap`, it is quieter and has no filled counterpart.
 
 .. pack-preview:: lucide
 
@@ -12,7 +12,7 @@ Using it
 
 .. pack-install:: lucide
 
-No styles, so the constructor is just name, size, and colour:
+No styles, so the constructor is just name, size, and color:
 
 .. code-block:: python
 

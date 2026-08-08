@@ -84,7 +84,7 @@ The same bad name fails two different ways, depending on which entry point you r
    :widths: 20 80
 
    * - Value
-     - Behaviour
+     - Behavior
    * - ``"transparent"``
      - Draw an empty square of the right size. The default.
    * - ``"warn"``
@@ -113,7 +113,7 @@ The import root knows all sixteen packs whether or not they are installed, so th
 Inspecting what you have
 ------------------------
 
-The pack catalogue is importable, which is useful in a diagnostics screen or a test that asserts what an environment carries:
+The pack catalog is importable, which is useful in a diagnostics screen or a test that asserts what an environment carries:
 
 .. code-block:: python
 

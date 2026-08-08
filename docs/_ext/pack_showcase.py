@@ -581,7 +581,7 @@ class PackInstallDirective(SphinxDirective):
 
 
 class PackCardsDirective(SphinxDirective):
-    """The pack catalogue as a grid of cards, each linking to its own page.
+    """The pack catalog as a grid of cards, each linking to its own page.
 
     Usage::
 
@@ -589,7 +589,7 @@ class PackCardsDirective(SphinxDirective):
 
     Generated rather than written out because a seventeenth pack must not be
     able to arrive without a card. Everything on a card except the one-line
-    description comes from the catalogue and the live provider; the description
+    description comes from the catalog and the live provider; the description
     comes from `BLURB`, which `check_showcase` requires to cover every pack.
     """
 

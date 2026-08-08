@@ -1,4 +1,4 @@
-"""The catalogue of icon packs, and the guidance shown when one is missing.
+"""The catalog of icon packs, and the guidance shown when one is missing.
 
 `tkinter-icons` is one library, but its icon packs are separate
 distributions — each carries its own font, and bundling sixteen of them would

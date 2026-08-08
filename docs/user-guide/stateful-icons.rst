@@ -1,7 +1,7 @@
 Stateful icons
 ==============
 
-A ttk widget already changes color as you interact with it — its foreground is one color at rest, another on hover, another when disabled. An icon set as a plain image does not follow any of that, and a blue icon on a button whose text has gone grey looks broken.
+A ttk widget already changes color as you interact with it — its foreground is one color at rest, another on hover, another when disabled. An icon set as a plain image does not follow any of that, and a blue icon on a button whose text has gone gray looks broken.
 
 :meth:`Icon.map <tkinter_icons.Icon.map>` fixes that in one call. The icon is re-rendered per state in the color the widget's own style uses for that state, and the results are mapped onto a child style applied to the widget.
 
@@ -101,7 +101,7 @@ That distinction matters if you call ``map()`` more than once on the same widget
    :widths: 20 80
 
    * - Mode
-     - Behaviour
+     - Behavior
    * - ``"merge"``
      - The default. Existing entries keep their order, incoming states overwrite matching ones, new states are appended.
    * - ``"replace"``

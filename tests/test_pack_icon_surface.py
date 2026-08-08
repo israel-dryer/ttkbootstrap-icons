@@ -34,7 +34,7 @@ def icon_class(pack):
 
 @pytest.mark.parametrize("pack", KNOWN_PACKS, ids=lambda p: p.extra)
 class TestEveryPackClass:
-    """Parametrized over the catalogue, so a new pack has to comply too."""
+    """Parametrized over the catalog, so a new pack has to comply too."""
 
     def test_accepts_options(self, pack):
         if not pack.is_installed:

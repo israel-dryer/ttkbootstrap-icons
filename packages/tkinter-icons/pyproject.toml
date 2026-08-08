@@ -108,7 +108,7 @@ tkinter_icons = [
 # `include-package-data` pulls every tracked file under `src/tkinter_icons/`
 # into the wheel as package data - including the .py files of a package that
 # was deliberately not declared. The packs need the same stanza for a different
-# reason: `include-package-data` also honours an existing `.egg-info/SOURCES.txt`.
+# reason: `include-package-data` also honors an existing `.egg-info/SOURCES.txt`.
 [tool.setuptools.exclude-package-data]
 tkinter_icons = ["tools/*"]
 

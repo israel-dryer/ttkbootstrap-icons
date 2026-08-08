@@ -15,7 +15,7 @@ Need more than one set? Name them together:
 
    pip install "tkinter-icons[material,simple]"
 
-:doc:`choosing-a-pack` covers which one to reach for; :doc:`../packs` is the full catalogue with sizes, styles, and upstream versions.
+:doc:`choosing-a-pack` covers which one to reach for; :doc:`../packs` is the full catalog with sizes, styles, and upstream versions.
 
 The base package draws nothing
 ------------------------------

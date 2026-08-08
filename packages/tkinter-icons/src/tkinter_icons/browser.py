@@ -449,7 +449,7 @@ class IconPreviewerApp:
         providers_frame = ttk.Frame(main_frame)
         providers_frame.pack(pady=20)
 
-        # Generated from the pack catalogue rather than hardcoded, so this stays
+        # Generated from the pack catalog rather than hardcoded, so this stays
         # correct as packs are added or renamed — and so the first screen a new
         # user sees teaches the extras form the rest of the library uses, not the
         # raw distribution names it replaces.
@@ -655,7 +655,7 @@ def _set_app_icon(root):
     decoration must not be able to stop the browser opening. If the images are
     somehow absent — a stripped install, a packaging tool that dropped package
     data — the window falls back to Tk's default icon and the application runs.
-    That is not a licence to let them go missing quietly: `test_browser_assets`
+    That is not a license to let them go missing quietly: `test_browser_assets`
     asserts they are packaged and readable, so a real regression fails in CI
     rather than degrading in the field.
     """

@@ -1,4 +1,4 @@
-"""The repository's distribution catalogue, derived from the tree itself.
+"""The repository's distribution catalog, derived from the tree itself.
 
 Eighteen distributions live under ``packages/``: the base package, sixteen icon
 packs, and the ``ttkbootstrap-icons`` compatibility shim. Nothing here is

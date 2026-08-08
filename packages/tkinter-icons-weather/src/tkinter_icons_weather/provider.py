@@ -13,7 +13,7 @@ class WeatherFontProvider(BaseFontProvider):
             homepage="https://erikflowers.github.io/weather-icons/",
             # Weather Icons has no LICENSE file; upstream states its terms in the
             # README, which is why this points at a heading anchor rather than a
-            # file. It pointed at the Typicons licence until 5.0.0 - a copy-paste
+            # file. It pointed at the Typicons license until 5.0.0 - a copy-paste
             # that the browser turned into a "License" link opening the wrong
             # project's terms.
             license_url="https://github.com/erikflowers/weather-icons#licensing",

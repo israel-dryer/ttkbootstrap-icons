@@ -243,7 +243,7 @@ class Icon(StatefulIconMixin, ABC):
                 name = provider.resolve_icon_name(name)
             except ValueError:
                 # Leave the name as given and let the missing-glyph path below
-                # apply `on_missing`, which is the documented behaviour for a
+                # apply `on_missing`, which is the documented behavior for a
                 # name this set does not have. Letting resolution raise here
                 # would make that policy unreachable from `render_pil`.
                 pass

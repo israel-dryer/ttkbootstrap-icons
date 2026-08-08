@@ -115,7 +115,7 @@ class Figure:
 #:   the same two numbers came to be restated three times and reconciled none.
 #: - The oversampling figure first used Material's `cog`, which is heavy enough
 #:   to survive without oversampling. Bootstrap's `gear` is a hairline and
-#:   turns to grey mush, which is what the claim is about.
+#:   turns to gray mush, which is what the claim is about.
 #:
 #: A figure whose panels look alike argues against the prose beside it, so
 #: check a new one by eye before adding it.

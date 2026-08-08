@@ -123,7 +123,7 @@ jobs:
               raise SystemExit(
                   f"PACKS_DOC_URL points at {page!r}, which no document under docs/ produces.\n"
                   f"Expected {source}. Either restore that page or update PACKS_DOC_URL in "
-                  f"packs.py - it is the only pointer to the catalogue that a user with no "
+                  f"packs.py - it is the only pointer to the catalog that a user with no "
                   f"pack installed is given."
               )
           print(f"ok: {PACKS_DOC_URL} <- {source}")

@@ -1,7 +1,7 @@
 RPG Awesome
 ===========
 
-Swords, shields, potions, monsters, spell effects, and armour. This is a set for games, character sheets, and inventory screens, and it is the only pack in the catalogue that has nothing to do with interface chrome.
+Swords, shields, potions, monsters, spell effects, and armour. This is a set for games, character sheets, and inventory screens, and it is the only pack in the catalog that has nothing to do with interface chrome.
 
 There is no reason to compare it with the others — nothing else here draws a dragon, and it does not draw a "save" icon. Install it alongside a general-purpose pack and use each for what it is for.
 

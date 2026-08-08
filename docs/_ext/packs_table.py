@@ -1,4 +1,4 @@
-"""The icon-pack comparison table, built from the catalogue rather than typed out.
+"""The icon-pack comparison table, built from the catalog rather than typed out.
 
 A hand-maintained table drifts: sixteen copies of the same install line all went
 stale at once under the old docs, which is what retired them. So the numbers come
@@ -63,7 +63,7 @@ _ROWS_CACHE: list | None = None
 
 
 def _pack_rows():
-    """Return one row of table data per known pack, in catalogue order."""
+    """Return one row of table data per known pack, in catalog order."""
     global _ROWS_CACHE
     if _ROWS_CACHE is None:
         _ROWS_CACHE = list(_build_pack_rows())
@@ -109,7 +109,7 @@ def _cell(text: str) -> str:
 
 
 class PacksTableDirective(SphinxDirective):
-    """Render the pack catalogue as a comparison table.
+    """Render the pack catalog as a comparison table.
 
     Usage::
 
@@ -175,7 +175,7 @@ _STATS = {
 }
 
 #: Statistics that have no meaning when the packs are not installed, and the
-#: test that says so. `total` is exempt: it counts the catalogue, which is a
+#: test that says so. `total` is exempt: it counts the catalog, which is a
 #: fact about `KNOWN_PACKS` rather than about the environment.
 _NEEDS_PACKS = {
     "styled": lambda rows: any(r["styles"] != UNKNOWN for r in rows),
@@ -185,7 +185,7 @@ _NEEDS_PACKS = {
 
 
 def packs_stat_role(name, rawtext, text, lineno, inliner, options=None, content=None):
-    """One counted fact about the catalogue, inline in a sentence.
+    """One counted fact about the catalog, inline in a sentence.
 
     Usage::
 

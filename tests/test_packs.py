@@ -1,6 +1,6 @@
-"""Tests for the pack catalogue and the single import root.
+"""Tests for the pack catalog and the single import root.
 
-The catalogue is the source of truth behind every "install this" message and
+The catalog is the source of truth behind every "install this" message and
 behind the lazy re-export, so it has to stay in step with the actual packages —
 these tests check it against the repo's own pyproject files.
 """
@@ -79,7 +79,7 @@ class TestCatalogue:
 
 
 class TestCatalogueMatchesRepo:
-    """Guards against the catalogue drifting from the actual packages."""
+    """Guards against the catalog drifting from the actual packages."""
 
     def _pyproject(self, pack):
         path = PACKAGES / pack.distribution / "pyproject.toml"
