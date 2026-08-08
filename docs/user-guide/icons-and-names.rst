@@ -10,7 +10,7 @@ Creating an icon costs almost nothing. The constructor resolves the name, record
 
    from tkinter_icons import MaterialIcon
 
-   home = MaterialIcon("home", size=24, color="#0d6efd")   # nothing drawn yet
+   home = MaterialIcon("home", size=24, color="#0F766E")   # nothing drawn yet
    home.image                                              # drawn here
 
 That is why icons can be built before there is a root window, kept in a module-level table, or passed around as configuration. It is also why the same icon costs nothing twice: two icons with the same set, name, size, color, and options share one rendered image.
@@ -66,8 +66,6 @@ The same bad name fails two different ways, depending on which entry point you r
 
    MaterialIcon("hoome")
    # ValueError: hoome not found in lookup for mat in fill style.
-
-Names are the upstream project's, which is not always the word you would have picked — Material Design Icons calls the gear ``cog``, not ``settings``. The browser is the fastest way to find the one you want.
 
 **Everything that draws applies a policy instead.** :meth:`~tkinter_icons.Icon.render_pil` swallows the same failure on purpose: it is the headless path, usually writing a whole sheet of images at once, where one unusable name should not take the rest down with it. The base :class:`~tkinter_icons.Icon` never resolves at all — it takes an already-resolved glyph name and trusts it. ``on_missing`` is what both do when the set cannot draw the name they were handed, and by default that is a transparent square:
 

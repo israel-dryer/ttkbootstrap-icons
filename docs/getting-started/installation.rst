@@ -24,7 +24,7 @@ The base package draws nothing
 
    Every install line in this documentation carries an extra, and that is deliberate. ``pip install tkinter-icons`` gives you a working renderer with no glyphs — asking for an icon class then raises an :class:`ImportError` naming the command you actually wanted.
 
-The split exists because each pack ships its own font. Bundling all sixteen would cost roughly 17 MB to supply fifteen icon sets an application never opens, so they are separate distributions — presented as extras so you install one library rather than learning sixteen distribution names.
+The split exists because each pack ships its own font. Bundling all sixteen would cost roughly 22 MB to supply fifteen icon sets an application never opens, so they are separate distributions — presented as extras so you install one library rather than learning sixteen distribution names.
 
 .. warning::
 
@@ -42,7 +42,7 @@ Requirements
    * - Requirement
      - Notes
    * - Python 3.10+
-     - Tested on 3.10 through 3.13.
+     - Tested on 3.10 through 3.14.
    * - Tk 8.6+
      - Ships with CPython on Windows and macOS.
    * - Pillow

@@ -10,7 +10,7 @@ Quickstart
 
    root = tk.Tk()
 
-   home = MaterialIcon("home", size=24, color="#0d6efd")
+   home = MaterialIcon("home", size=24, color="#0F766E")
    ttk.Button(root, text="Home", image=home.image, compound="left").pack(padx=20, pady=20)
 
    root.mainloop()

@@ -91,7 +91,7 @@ The window icon
 
    from tkinter_icons import LucideIcon, RenderOptions
 
-   mark = LucideIcon("zap", size=64, color="#0d6efd",
+   mark = LucideIcon("zap", size=64, color="#0F766E",
                      options=RenderOptions(pad_factor=0.0, align=True))
    root.iconphoto(True, mark.image)
 
@@ -120,7 +120,7 @@ Icon size is in pixels, font size usually in points, so they do not line up by d
    font = tkfont.nametofont("TkDefaultFont")
    size = font.metrics("linespace")            # pixels, scaling-aware
 
-   icon = LucideIcon("info", size=size, color="#0d6efd")
+   icon = LucideIcon("info", size=size, color="#0F766E")
 
 ``linespace`` already accounts for display scaling, so this stays right on a 150% display where a hard-coded 16 would not.
 

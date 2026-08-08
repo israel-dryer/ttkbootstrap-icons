@@ -34,8 +34,8 @@ Anything Pillow accepts: a name, a hex string, an ``rgb()`` string.
 .. code-block:: python
 
    MaterialIcon("home", color="black")
-   MaterialIcon("home", color="#0d6efd")
-   MaterialIcon("home", color="rgb(13, 110, 253)")
+   MaterialIcon("home", color="#0F766E")
+   MaterialIcon("home", color="rgb(15, 118, 110)")
 
 Color is part of the cache key, so the same icon in three colors is three images. For an icon that should follow a widget's own colors as the user interacts with it, don't set the color at all — see :doc:`stateful-icons`.
 

@@ -128,6 +128,79 @@ class TestReadmesDoNotAdvertiseExtrasThatDoNotExist:
         assert not offenders, f"READMEs name extras that do not exist: {offenders}"
 
 
+class TestTheCostOfInstallingEverythingIsMeasured:
+    """The number that carries the whole argument for extras, checked against the packs.
+
+    "There is no `[all]` extra" is justified in three places by the same figure,
+    and a figure repeated in agreement is invisible when it is wrong — the #102
+    review found "about 17 MB" stated identically in three files and correct in
+    none of them. It was corrected in two; `installation.rst` kept saying 17 for
+    another five days, because the fix that made the others agree had nothing to
+    check them against.
+
+    So this measures instead of comparing. The claim is rounded prose, so a
+    whole megabyte of tolerance is the point: it fails when a pack is added or a
+    font is replaced, not when a `.pyc` moves.
+    """
+
+    TOLERANCE_MB = 1.0
+
+    @staticmethod
+    def _prose_claims():
+        """Every `N MB` figure in the prose that argues against `[all]`."""
+        import pathlib
+        import re
+
+        root = pathlib.Path(__file__).resolve().parents[1]
+        if not (root / "docs").is_dir():
+            pytest.skip("not running from a source checkout")
+
+        sources = [*(root / "docs").rglob("*.rst"), root / "README.md"]
+        found = {}
+        for path in sources:
+            if "_build" in path.parts or not path.is_file():
+                continue
+            for match in re.finditer(r"(\d+(?:\.\d+)?) MB", path.read_text(encoding="utf-8-sig")):
+                found.setdefault(float(match.group(1)), []).append(str(path.relative_to(root)))
+        return found
+
+    @staticmethod
+    def _measured_mb():
+        """What the sixteen packs actually occupy once installed."""
+        import importlib
+        import pathlib
+
+        missing = [pack.extra for pack in KNOWN_PACKS if not pack.is_installed]
+        if missing:
+            pytest.skip(f"needs every pack installed; missing {missing}")
+
+        total = 0
+        for pack in KNOWN_PACKS:
+            module = importlib.import_module(pack.module)
+            root = pathlib.Path(module.__file__).parent
+            total += sum(
+                f.stat().st_size
+                for f in root.rglob("*")
+                if f.is_file() and f.suffix not in (".pyc", ".pyo")
+            )
+        return total / 1e6
+
+    def test_the_prose_states_one_figure(self):
+        claims = self._prose_claims()
+        assert claims, "no size claim found; the argument against [all] rests on one"
+        assert len(claims) == 1, (
+            f"the docs give more than one size for installing every pack: {claims}. "
+            "They are all the same measurement, so they cannot disagree."
+        )
+
+    def test_that_figure_matches_the_installed_packs(self):
+        claimed = next(iter(self._prose_claims()))
+        measured = self._measured_mb()
+        assert abs(claimed - measured) <= self.TOLERANCE_MB, (
+            f"the docs say {claimed} MB but the sixteen packs measure {measured:.2f} MB"
+        )
+
+
 class TestPackReadmesTeachTheExtrasIdiom:
     """The sixteen pack READMEs are PyPI landing pages, and PyPI freezes them per release.
 

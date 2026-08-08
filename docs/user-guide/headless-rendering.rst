@@ -19,7 +19,7 @@ Rendering to a Pillow image
 
    from tkinter_icons import MaterialIcon
 
-   image = MaterialIcon.render_pil("home", size=64, color="#0d6efd")
+   image = MaterialIcon.render_pil("home", size=64, color="#0F766E")
    image.save("home.png")
 
 The return is a square RGBA :class:`PIL.Image.Image`. Any name this set cannot draw — including a plain typo, which the constructor would have raised on — comes back fully transparent rather than raising, subject to the ``on_missing`` policy described in :doc:`icons-and-names`.
@@ -33,7 +33,7 @@ If you already have an icon, :meth:`~tkinter_icons.Icon.to_pil` renders that exa
 
 .. code-block:: python
 
-   icon = MaterialIcon("home", size=64, color="#0d6efd")
+   icon = MaterialIcon("home", size=64, color="#0F766E")
    icon.to_pil().save("home.png")
 
 Exporting a set of icons
@@ -89,7 +89,7 @@ Below :class:`~tkinter_icons.Icon` there is :func:`~tkinter_icons.render_glyph`,
    image = render_glyph(
        icon_set.glyph("home"),
        size=64,
-       color="#0d6efd",
+       color="#0F766E",
        font_key=icon_set.font_key,
        font_bytes=icon_set.font_bytes,
        ink=icon_set.ink("home"),
