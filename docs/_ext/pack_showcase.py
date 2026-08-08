@@ -31,7 +31,6 @@ import os
 import threading
 from pathlib import Path
 
-from docutils import nodes
 from sphinx.util import logging
 from sphinx.util.docutils import SphinxDirective
 
