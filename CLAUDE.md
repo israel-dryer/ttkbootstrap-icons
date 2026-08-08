@@ -71,6 +71,8 @@ the only way to build this package without git. See "Deliberate decisions".
 
 ## Current state
 
+**5.0.1 is released, 2026-08-08, and it was the first tag-driven one.** The base is at 5.0.1, fifteen packs at 1.1.1, `fluent-reg` unchanged at 1.1.0, the shim unchanged at 5.0.0, and the GitHub Release is cut as "5.0.1 — updated metadata and docs". Both things it existed for are confirmed *on PyPI* rather than inferred from a green run: the published base carries the `3.14` classifier, so the pyversions badge finally reads past 3.13, and `gmi` no longer claims a `twotone` style anywhere. It took two workflow runs — see the publisher note below, which is the most useful thing this release taught.
+
 **5.0.0 is released.** All eighteen distributions are on PyPI, `v5.0.0` is pushed, and the GitHub Release is cut. The integration branch `5.0` did its job long ago; **new work branches off `main` and PRs to `main`.**
 
 | | |
@@ -88,9 +90,15 @@ the only way to build this package without git. See "Deliberate decisions".
 
 The same divergence means **the base cannot be rebuilt as-released from `main`** — build it from the tag if you ever need that. The seventeen others are untouched by #109 and rebuild from `main` identically.
 
-**Trusted Publishing is configured on all eighteen projects and verified, 2026-08-08.** The owner filled the forms after the release rather than before it, which is what made a four-day manual upload tolerable — seventeen *pending* publishers would have been seventeen web forms standing between here and the first upload. Every form takes the same four values, and these are the OIDC claims the runner actually presents, not guesses: owner `israel-dryer`, repository `tkinter-icons`, workflow `release.yml`, environment `pypi`.
+**Trusted Publishing is configured on all eighteen projects, and as of the 5.0.1 release it is genuinely proven for the sixteen that uploaded a new version.** The owner filled the forms after the release rather than before it, which is what made a four-day manual upload tolerable — seventeen *pending* publishers would have been seventeen web forms standing between here and the first upload. Every form takes the same four values, and these are the OIDC claims the runner actually presents, not guesses: owner `israel-dryer`, repository `tkinter-icons`, workflow `release.yml`, environment `pypi`.
 
-**Verify publishers by re-running the tagged release workflow, not by reading the settings pages.** Re-running is free and safe: the packs step passes `--skip-existing`, so a correctly configured publisher makes it no-op instead of erroring. Read *which step* fails. `invalid-publisher` in **Publish the packs** means a publisher is missing or a field is mismatched. A `400 File already exists` in **Publish tkinter-icons** means authentication worked and you have hit the deliberate guard below — that is success, not failure.
+**"Verified" was wrong, and 5.0.1 is what proved it. Re-running the tagged workflow cannot check a pack's publisher.** This file used to say publishers were confirmed by re-running, because `--skip-existing` makes the packs step a safe no-op. That is exactly why it proves nothing: every pack version in that run was **already on PyPI**, so each upload returned `400 File already exists` and never exercised the token's project scope. `tkinter-icons-mat` had no Trusted Publisher for the whole period this file called all eighteen verified, and no amount of re-running would have shown it.
+
+**Only an upload of a genuinely new version tests a publisher.** 5.0.1 was the first, and it failed with `403 Invalid API Token: OIDC scoped token is not valid for project 'tkinter-icons-mat'` — not the `invalid-publisher` error described below, which is what a missing publisher looks like at the *minting* step rather than at the upload. The mint succeeded, scoped to the projects that did have publishers.
+
+**A failure there publishes some packs and not others.** twine uploads alphabetically and aborts on the first error, so `mat` failing left `bs` through `lucide` at 1.1.1 and `mat` through `weather` at 1.1.0 — eight published, seven not. That is not corruption and needs no re-tag: nothing partial was written for the failed project, the base step never ran so the packs-before-base order held, and re-running after adding the publisher skipped the eight and uploaded the seven. **Check what is actually live before doing anything else** — the loop under "Check what is live rather than trusting a log" answers it in one command.
+
+Read *which step* fails. `invalid-publisher` in **Publish the packs** means the OIDC exchange itself was refused. A `403 ... not valid for project '<name>'` means the exchange worked and that one project has no publisher. A `400 File already exists` in **Publish tkinter-icons** means authentication worked and you have hit the deliberate guard below — that is success, not failure.
 
 **A red run on the `v5.0.0` tag is expected and permanent.** The base step runs with `skip_existing: false` on purpose: a base version already on PyPI normally means the tag is wrong. Since 5.0.0's base was uploaded by hand, that check fires every time. Consequence: the `release` job never runs for this tag, which is why the GitHub Release was created by hand. This is specific to 5.0.0 — a normal tag-driven release will not hit it.
 
@@ -332,7 +340,7 @@ Two of the eleven were not ancestors of `main` and both were checked rather than
 
 ### Doing 5.0.x — the plan, in order
 
-**Steps 1 and 2 are done, and everything step 3 needs prepared is prepared. The tag itself is not pushed.** Once #132 merges, `v5.0.1` is `git tag v5.0.1 && git push origin v5.0.1` and nothing else.
+**All three steps are done — 5.0.1 shipped 2026-08-08.** Kept as a record of what a tag-driven release actually takes, since the next one follows the same path. The only item that did not close with a PR is **#118**, because the classifier needed no file change and the release alone carried it; it is still open and wants closing by hand once someone confirms the badge.
 
 **1. Read the Docs' Default branch is back on `main`** — confirmed by the owner 2026-08-08. Docs-only merges are visible again.
 
