@@ -196,10 +196,7 @@ the base branch back at its old SHA, reopening, then retargeting. When merging a
 stack, retarget the child to `5.0` *first*, merge the parent without
 `--delete-branch`, and delete branches at the end.
 
-Open follow-ups, neither a release blocker: **#87** — the screenshots and
-the browser's app icon are done, the *generated* renderer figures are not; and
-**#91** — reaching the pure-Pillow renderer should not require `tkinter`
-installed. **#90 closed from #105**, which generated the sixteen pack READMEs rather than hand-editing them. #92 did the substance of #89 apart from its prose pass, which is folded into the list under "Next session"; #89 itself closed with #100.
+One open follow-up, not a release blocker: **#91** — reaching the pure-Pillow renderer should not require `tkinter` installed. **#87 closed 2026-08-08 from #130**, which captured the three real-window screenshots; its generated figures landed in #123 and its retaken assets and app icon earlier still. **#90 closed from #105**, which generated the sixteen pack READMEs rather than hand-editing them. #92 did the substance of #89 apart from its prose pass, which is folded into the list under "Next session"; #89 itself closed with #100.
 
 **#79 shipped as #81, not #80.** #80 was merged into `5.0` prematurely — without
 permission and before review — and `5.0` was reset to drop it. The rollback was
@@ -270,7 +267,7 @@ bumped every time and an existing one means the tag is wrong.
 
 ### The docs stack merged, 2026-08-08 — #121 through #125
 
-**All five are on `main`, the five branches are deleted, and `origin` carries only `main` and `release/ttkbootstrap-icons-packs-final` again.** #117 closed from #121. **#87 stayed open by design** — #123 shipped the generated figures only, and the three real-window captures it also asks for are still outstanding.
+**All five are on `main`, the five branches are deleted, and `origin` carries only `main` and `release/ttkbootstrap-icons-packs-final` again.** #117 closed from #121. **#87 stayed open by design at the time** — #123 shipped the generated figures only, and the three real-window captures were split off. Those landed later the same day in #130, which closed it.
 
 **Three review rounds ran on that stack, and each round's fixes produced the next round's findings.** That is the fact worth carrying, not the individual defects. Rounds 2 and 3 were largely *corrections being corrected*, which is a different failure from sloppy original work and wants a different remedy — stop transcribing, commit the measurement.
 
@@ -282,7 +279,7 @@ bumped every time and an existing one means the tag is wrong.
 
 **The definitions are the substance, not the numbers.** Round 3's review reported Weather's off-center as 9.0 px or 9.5 px depending on how it measured, against the documented 10.0 — and all three were defensible readings of an undefined phrase. Fill is now the longer side of the drawn glyph over the renderer's own padded box (`canvas - 2 * int(canvas * pad_factor)`, **not** the float `canvas * (1 - 2 * pad_factor)` — that discrepancy is what produced the impossible "ink fills up to 102%"), and off-center is the distance from the drawn glyph's center to the frame's. Quoting either figure without its definition is what made three rounds of correction possible.
 
-**Settled — decisions, not defects. Do not re-open these:** the even-snapping figure was drawn, looked at, and deleted because a PNG cannot reproduce a 150% display scale; `tests/test_render_figures.py` deliberately refuses to judge whether a figure *reads*, because a pixel metric ranked the rejected subject above its replacement; `icons-and-names` reuses `pack-preview:: bootstrap` rather than growing a second directive; #87 stays open.
+**Settled — decisions, not defects. Do not re-open these:** the even-snapping figure was drawn, looked at, and deleted because a PNG cannot reproduce a 150% display scale; `tests/test_render_figures.py` deliberately refuses to judge whether a figure *reads*, because a pixel metric ranked the rejected subject above its replacement; `icons-and-names` reuses `pack-preview:: bootstrap` rather than growing a second directive.
 
 **Verify with**, in a checkout with every pack installed:
 
@@ -319,7 +316,7 @@ Two of the eleven were not ancestors of `main` and both were checked rather than
 | #118 | The `3.14` classifier is on `main` but frozen out of the published wheel, so the pyversions badge reads up to 3.13. Needs no code change — it needs a release to carry it, and it is the reason the base is in this one. |
 | #111 | `gmi` claims a `twotone` style; the provider ships four. Wrong in **two** frozen places — the README *and* the `description` field in its `pyproject.toml` — so it needs a pack release, not a docs edit. Fix the README's intro paragraph, the one hand-written part `generate_pack_readmes.py` preserves. |
 | #117 | The `on_missing` scope sentence in `icons-and-names.rst:72` describes a case that cannot occur. Docs-only; split out of #115 so it can ship in a patch. |
-| #87 | The generated renderer figures. **Ships on merge via Read the Docs, not with the tag** — it is milestoned here for tracking, not because it needs the release. |
+| #87 | **Closed 2026-08-08.** The generated renderer figures (#123) and then the three real-window screenshots (#130). Both shipped on merge via Read the Docs rather than with the tag, which is why it never blocked the release. |
 
 **5.1.0 — all three touch the same headless/`render_pil` surface**, and are cheaper done together than in three passes over one file.
 
@@ -337,7 +334,7 @@ Two of the eleven were not ancestors of `main` and both were checked rather than
 
 **1. Read the Docs' Default branch is back on `main`** — confirmed by the owner 2026-08-08. Docs-only merges are visible again.
 
-**2. The work that needs no tag is merged**, 2026-08-08 — #121 through #125, which grew from the planned stack of three when two review rounds were folded in. #117 is closed and **#87 is still open**, since only its generated half shipped. Nothing in 5.0.x now depends on a merge.
+**2. The work that needs no tag is merged**, 2026-08-08 — #121 through #125, which grew from the planned stack of three when two review rounds were folded in. #117 is closed, and **#87 closed afterwards from #130**. Nothing in 5.0.x now depends on a merge.
 
 **3. Then cut `v5.0.1`. This is the only step left, and it is not started.** This is the first tag-driven release — publishers are configured and verified, so pushing the tag is the whole procedure. No manual upload, no `.pypirc`.
 
@@ -384,10 +381,9 @@ Three more, each fixed and each invisible to `pytest`, `sphinx -W` and `verify_p
 
 ### Not blocking, and worth doing next
 
-- **#87's remaining third — the three real-window captures.** The generated figures are done in #123 and the five screenshots were retaken earlier, but `getting-started/quickstart`, `integrations/tkinter-ttk` and `integrations/ttkbootstrap` still carry no image. These genuinely need capturing and will need retaking when the UI changes, which is why they were split from the generated half rather than done with it. The last of the three needs a throwaway venv — `ttkbootstrap` is deliberately not installed in this tree.
 - **#91.** `import tkinter_icons` requires `tkinter` even for `render_pil`, which the headless guide had to be softened to admit. Making the Tk imports lazy is a small, contained change and restores the stronger claim. Note that the base `Icon.render_pil` being order-dependent — raising cold, succeeding after any pack icon exists — lives in the same code and is worth folding in.
 
-**The milestone is closed, and #90 with it.** #67–#71, #75, #79 and #89 closed as of #100; #90 closed from #105. The two still open — **#87** and **#91** — are genuine follow-ups that outlive the milestone and block nothing.
+**The milestone is closed, and #90 with it.** #67–#71, #75, #79 and #89 closed as of #100; #90 closed from #105, #87 from #130. The one still open — **#91** — is a genuine follow-up that outlives the milestone and blocks nothing.
 
 ### What building the figures found, 2026-08-08
 
@@ -420,6 +416,8 @@ do not quietly rewrite the docs down to match what ships. Both are recorded in
 then stop. Do not merge, and do not close milestone issues by hand.
 
 **The checks do not read prose, and this milestone kept proving it.** `pytest`, `verify_packages.py --strict`, `generate_metrics --check` and `sphinx -W` were all green while the shim's PyPI page told users to run an install command that cannot work, the migration guide asserted the opposite of what 4.0.0 shipped, and the ttkbootstrap examples taught an API that project has retired. Every one of those was found by a person reading, and each was then fixed *and* narrowed by a guard where a guard was possible — `TestReadmesDoNotAdvertiseExtrasThatDoNotExist` is that pattern. When a docs bug is found, ask what would have caught it, and add that if it is cheap; where it is not cheap, say so in the issue rather than pretending the fix was the whole job.
+
+**Docs images split in two, and the split is the point.** Anything that illustrates the *renderer* is drawn at build time by `docs/_ext/render_figures.py` and `pack_showcase.py`, so it cannot go stale. Anything showing *real widgets in a real window* has to be captured, and those are `.github/scripts/capture_screenshots.py` — one command that rebuilds all four from the examples their pages publish, rather than an afternoon of framing windows by hand. It needs a desktop session and is deliberately in no workflow: a headless runner yields a crash or a black rectangle, and a black rectangle is the failure that gets committed unnoticed. The `ttkbootstrap` pair is skipped unless you run it from a throwaway venv, for the usual reason. **Look at every capture before committing it** — the first run produced a quickstart window 146 px wide with its own title clipped, and the theme pair titled "bootstrap-…", neither of which any exit code reports.
 
 **Do not paste an install command, an import, or an API call into documentation without running it.** The ttkbootstrap rewrite was verified in a throwaway venv precisely so the working venv stayed as this file describes it; that is the pattern to copy, not an unusual precaution. Note the API surface is easy to get wrong from memory even when the docs are right: `render_pil` is a **classmethod** taking the glyph name — `MaterialIcon.render_pil("home", size=32)`, not `MaterialIcon("home", size=32).render_pil()`.
 
