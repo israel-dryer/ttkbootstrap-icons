@@ -169,8 +169,9 @@ deleted with the rest:
 - `release/ttkbootstrap-icons-packs-final` — the terminal release of the sixteen
   `ttkbootstrap-icons-*` packs, cut from `v4.0.0`. Merges nowhere. See
   `RELEASE.md`.
-- `gh-pages` — dead, and *can* now go; it served the old MkDocs site and Read
-  the Docs replaced it.
+`gh-pages` used to be listed here too. It is **gone as of 2026-08-08**, along
+with GitHub Pages itself — but it was not dead when this file said it was, and
+the entry under "Deliberate decisions" records what that cost.
 
 **The docs moved to Read the Docs, and GitHub Pages is out of the picture.**
 Decided 2026-08-02, matching `ttkbootstrap`, for versioned docs and PR previews
@@ -270,11 +271,11 @@ bumped every time and an existing one means the tag is wrong.
 
 **The next release can be tag-driven, and that path is now proven rather than assumed.** Push `v<version>` and the workflow builds all eighteen, publishes what PyPI does not have, and cuts one GitHub Release. The one caveat is the permanent red run on `v5.0.0` described in Current state, which is specific to that tag.
 
-**The janitorial list is done apart from one item, 2026-08-08.** Read the Docs' Default branch is back on `main`, and every merged remote branch is deleted. `origin` now carries only `main`, the branches of whatever is in flight, `gh-pages`, and `release/ttkbootstrap-icons-packs-final` — **leave that last one alone**, it is the only tree where the sixteen old packs still exist.
+**The janitorial list is finished, 2026-08-08.** Read the Docs' Default branch is back on `main`, GitHub Pages is unpublished, and eleven remote branches are deleted including `gh-pages`. `origin` now carries only `main`, the branches of whatever is in flight, and `release/ttkbootstrap-icons-packs-final` — **leave that last one alone**, it is the only tree where the sixteen old packs still exist.
 
 Two of the ten deleted were not ancestors of `main` and both were checked rather than assumed. `docs/release-complete` carried one commit past its own merge, `05077d4`, whose patch is byte-identical to `491dae8` on `main` — the same work re-applied on `docs/milestone-split` and merged by #119. `fix/release-latest-marker` is #96, closed unmerged and superseded by #97, exactly as recorded. **Verify with `git merge-base --is-ancestor origin/<branch> origin/main` before deleting**, and when it says no, find out why rather than trusting a PR's merged badge — a branch can be merged and then pushed to again.
 
-**`gh-pages` is the one left, and it is waiting on the owner** — see the docs-URL entry under "Deliberate decisions". Pages was still enabled and serving from it as of 2026-08-08, so the branch must not be deleted until the site is unpublished; deleting it first leaves Pages configured against a branch that is gone.
+**Both old docs URLs now return 404, and `migrating.rst:44` is true as written** — it was not, for the whole 5.0.0 cycle. See the docs-URL entry under "Deliberate decisions" for what was wrong and how it was found. Note the site was unpublished *before* the branch was deleted, which is the order that matters; the Pages API record can linger with `status: built` after the site is already serving 404, so **`curl` is what tells you the site is down and the API is what tells you the configuration is gone**. They disagree for a while, and neither alone is the whole answer.
 
 **The follow-up work is milestoned, and the split is deliberate.** The 5.0.0 milestone is closed; what outlived it moved to **5.0.x Fixes and Cleanup** and **5.1.0**.
 
@@ -681,30 +682,33 @@ Each of these looks like a defect in isolation. They aren't.
   safe. Anything passing a name to `generate_metrics` has to import the provider
   to get it — reading the key gives an argument the CLI rejects.
 
-- **The old docs URL under the *old* name is dead; the one under the current
-  name was still live, and that was a mistake in this file.** GitHub redirects
-  repo URLs but not project Pages, so `israel-dryer.github.io/ttkbootstrap-icons/`
-  404s. This file then asserted that
-  `israel-dryer.github.io/tkinter-icons/` "will too" — and `migrating.rst:44`
-  shipped that as a statement of fact. It was false. Checked 2026-08-08:
-  `gh api repos/israel-dryer/tkinter-icons/pages` reported
-  `status: built`, source `gh-pages`, and the URL returned **200**, serving the
-  old MkDocs site — `<title>ttkbootstrap-icons</title>`, the pre-rename name
-  sixty-four times on the landing page, and the pre-#69 install idiom that #71
-  exists to have replaced.
+- **Both old docs URLs are dead — as of 2026-08-08, and not before.** GitHub
+  redirects repo URLs but not project Pages, so
+  `israel-dryer.github.io/ttkbootstrap-icons/` has 404'd since the rename. This
+  file then asserted that `israel-dryer.github.io/tkinter-icons/` "will too",
+  and `migrating.rst:44` shipped that to readers as a statement of fact.
 
-  The lesson is the same one the #102 review kept teaching: *check whether a
-  page exists before writing down what it does.* A sentence about a URL costs
-  one `curl` to verify and this one went unverified through a rename, a docs
-  rebuild, and a release.
+  **It was false for the whole 5.0.0 cycle.** Checked 2026-08-08:
+  `gh api repos/israel-dryer/tkinter-icons/pages` reported `status: built`,
+  source `gh-pages`, and the URL returned **200**, serving the old MkDocs site
+  — `<title>ttkbootstrap-icons</title>`, the pre-rename name sixty-four times
+  on the landing page, and the pre-#69 install idiom that #71 exists to have
+  replaced. So the docs told users the old site was gone while the old site was
+  up, teaching the install pattern the new docs were written to retire.
 
-  **Deleting the branch is not what takes it down, and the order matters.**
-  Pages stays enabled and keeps serving the last build; unpublish first
-  (Settings → Pages → Unpublish site, or
-  `gh api -X DELETE repos/israel-dryer/tkinter-icons/pages`), confirm the API
-  returns 404, then `git push origin --delete gh-pages`. Expect the URL itself
-  to serve 200 from CDN cache for a few minutes after unpublishing; the API is
-  the authority, not `curl`.
+  The lesson is the one the #102 review kept teaching: *check whether a page
+  exists before writing down what it does.* One `curl` would have caught this
+  at any point, and it went unverified through a rename, a docs rebuild, and a
+  release.
+
+  The owner unpublished Pages and the branch was deleted after. **That order is
+  the one to keep**: deleting the branch does not take the site down, it leaves
+  Pages configured against a branch that is gone. And the two signals disagree
+  for a while — after unpublishing, the URL served 404 while
+  `gh api .../pages` still reported `status: built` with the source set. So
+  **`curl` tells you the site is down; the API tells you the configuration is
+  gone.** Neither alone is the whole answer, and the earlier note in this file
+  claiming the API is authoritative "not `curl`" was half right at best.
 
   A custom domain was considered and declined.
 
