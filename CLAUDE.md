@@ -293,6 +293,27 @@ bumped every time and an existing one means the tag is wrong.
 
 **Do not make `render_pil` raise on an unresolvable name before #115 lands.** It is the obvious reading of the original report and it is the wrong order: it would convert 814 silent blanks into 814 hard failures while the correct call is still awkward to write. The measurement behind that number is on #115 — all 814 fail at *resolution*, and none reach `on_missing` by resolving, which is why the code comment at `icon.py:242` is right and the prose is what is wrong.
 
+### Doing 5.0.x — the plan, in order
+
+**1. Point Read the Docs' Default branch at `main`, before anything else.** It is still on the janitorial list, and until it is done every docs-only change is invisible to visitors — you would do #87 and #89's prose pass and see nothing. One setting, and it unblocks the whole no-release half.
+
+**2. The work that needs no tag.** #87 (the generated renderer figures — `docs/_ext/pack_showcase.py` is the pattern, and it already handles light/dark and the `-W` safety net), #89's prose pass (repetition across pages, and `#0d6efd` Bootstrap blue still in the examples on `index.rst` and `icons-and-names.rst`, on a site whose palette is teal), and #117, whose fix is one sentence. All of it ships on merge. Delete `gh-pages` and the merged branches in the same pass.
+
+**3. Then cut `v5.0.1`.** This is the first tag-driven release — publishers are configured and verified, so pushing the tag is the whole procedure. No manual upload, no `.pypirc`.
+
+**What the tag needs prepared first:**
+
+- **#118 needs no file change.** The classifier is already on `main`; the base version comes from the tag through setuptools-scm. The release exists to carry it.
+- **`gmi` needs two edits and they are coupled.** `version = "1.1.1"` in `packages/tkinter-icons-gmi/pyproject.toml`, **and** a `## [1.1.1]` entry in that pack's changelog. `verify_packages.py`'s `check_changelog` requires the newest changelog entry to *be* the version being shipped, and the release preflight runs `--strict`, so a bump without a changelog entry fails the release rather than shipping quietly. Fix `description` on line 4 at the same time — #111 is wrong there as well as in the README.
+- **The root `CHANGELOG.md` needs a `## [5.0.1] — <short title>` section.** That title becomes the GitHub Release title *verbatim* now that #113 stopped passing the distribution name, so keep it short — "renamed to tkinter-icons, rebuilt around measured glyph ink" was too long even before the prefix stuttered it. Prose **unwrapped**, one line per paragraph.
+- **Read the generated body before tagging**, which is not the same text as the changelog section: `python .github/scripts/release_notes.py CHANGELOG.md 5.0.1 NOTES.md /dev/stdout` — note there is no distribution argument any more.
+
+The other fifteen packs are untouched and skip-existing. One tag ships the base at 5.0.1 and `gmi` at 1.1.1 together.
+
+**Add the guard while doing #111.** A check that each pack's `description` and README intro agree with its provider's real `style_list` would have caught this, and the sweep is already written — it found `gmi` as the only genuine offender across all sixteen. `fluent-reg` trips a naive version of that check and is a **false positive**: its "Regular" is the pack's identity, not a selectable style, since it deliberately ships one. Any guard has to allow a single-style pack to name its style. This is the "ask what would have caught it, and add that if it is cheap" pattern, and here it is cheap.
+
+**Do not touch the 5.1.0 items** — #115's `style=`, #91's lazy imports, #112. They share the `render_pil` surface and are cheaper as one pass; pulling one forward into the patch gets the ordering wrong. And **do not move `v5.0.0`** for any reason; `v5.0.1` is cut normally at the new tip.
+
 **Two lessons from finishing this release, both cheap to forget.** A generated artifact is only as good as the moment you read it: the release body was hard-wrapped and its title stuttered a distribution-name prefix left over from the retired eighteen-tag scheme, and neither was visible until the rendered page was read (#113). And a red CI run on a docs-only PR is worth diagnosing rather than re-running — the one on #110 was a genuine order-dependent test bug that had been passing or failing on entry-point ordering for however long (#114).
 
 ### What the #102 review found, and the two traps in it
