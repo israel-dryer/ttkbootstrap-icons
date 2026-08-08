@@ -54,6 +54,16 @@ The icon now follows the button through hover, pressed, and disabled — and re-
    app.theme_use("bootstrap-light")   # icons recolor themselves
    app.toggle_theme()                 # or just flip light/dark
 
+The same two mapped icons, under both themes, with no color named anywhere in the code:
+
+.. image:: /assets/ttkbootstrap_dark.png
+   :alt: Two buttons under the bootstrap-dark theme, an Approve button with a white check and a Save draft button with a dark disk icon
+
+.. image:: /assets/ttkbootstrap_light.png
+   :alt: The same two buttons under bootstrap-light, where the disk icon has inverted to white against the button's darker fill
+
+The check stays white because its button keeps a green fill in both themes. The save icon does not: it follows the secondary button's foreground, which inverts. That is the difference between mapping an icon and giving it a color.
+
 See :doc:`../user-guide/stateful-icons` for per-state colors and per-state icon names.
 
 Bootstyle colors
