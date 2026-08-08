@@ -41,3 +41,8 @@ docs/_build/
 # on every build. Generated from the installed fonts, so committing them would
 # pin the docs to whatever the machine that last built them had installed.
 docs/_static/previews/
+
+# Renderer figures, same story: docs/_ext/render_figures.py draws them at build
+# time. These are evidence about how the renderer behaves, so a committed copy
+# would be a picture of an older renderer that no longer fails when it should.
+docs/_static/figures/

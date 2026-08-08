@@ -35,6 +35,12 @@ extensions = [
     # time by this library, so the docs cannot claim a rendering the renderer
     # does not produce. See docs/_ext/pack_showcase.py.
     "pack_showcase",
+    # Local: the side-by-side renders on the sizing page and the pack
+    # comparison on choosing-a-pack. Same principle as pack_showcase, applied
+    # to claims about the renderer rather than to the sets — a page that
+    # asserts measured ink beats getbbox now shows both. See
+    # docs/_ext/render_figures.py.
+    "render_figures",
 ]
 
 # The Release Notes page supplies its own reStructuredText H1 and includes the

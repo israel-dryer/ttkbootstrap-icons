@@ -44,11 +44,19 @@ How a glyph gets centered
 
 This is the part 5.0.0 rebuilt, and it is worth one paragraph because it explains a visible change.
 
-An icon font's glyphs do not fill their em box, and they do not fill it consistently. Pillow's ``font.getbbox()`` reports a box that under-states the actual ink, so fitting to it makes full-bleed glyphs slightly too large — they end up with no padding at all, touching the edges — while others sit off-center.
+An icon font's glyphs do not fill their em box, and they do not fill it consistently. Pillow's ``font.getbbox()`` under-states the actual ink, so a glyph fitted to it lands well inside the box it was given — the faint inner square is what ``pad_factor`` reserves, and what the ink is supposed to fill:
+
+.. renderer-figure:: measured-ink
+
+It also places the glyph against the font's ascent and descent rather than against the glyph's own ink, so where the two disagree the icon rides high in its frame — far enough, in a set like Weather, to clip:
+
+.. renderer-figure:: measured-ink-centering
+
+Both are the same glyph at the same requested size, and neither panel is exaggerated. Across every glyph in all sixteen packs, each drawn with its own pack's options, the ``getbbox`` path fills between 73% and 96% of the padded box depending on the set, sits up to a median 10.5 pixels off-center at this size, and pushes **390 of 48,082** glyphs past the edge of the frame. Measured ink fills 94% to 103%, centers within half a pixel everywhere, and overflows **none** of the 48,082.
 
 So the real ink is measured instead, once, offline: every glyph in every pack is rendered at 512 pixels, its true inked bounds are measured, and the result is stored as fractions of the em in that pack's ``metrics.json``. Fractions scale, so one measurement serves every render size. The renderer fits and centers on *that*.
 
-A pack with no metrics still renders — the ``getbbox`` path is the fallback — but it renders the way 4.x did. All sixteen packs ship metrics as of their 1.1.0 release.
+A pack with no metrics still renders — the ``getbbox`` path is the fallback — but it renders the way 4.x did. All sixteen packs ship metrics as of their 1.1.0 release, so the right-hand panels above are not a state you can install your way into; they are what the renderer falls back to for a pack that ships none.
 
 .. versionchanged:: 5.0.0
    Glyphs are centered on measured ink rather than on ``font.getbbox()``. Full-bleed icons gain their padding and the rest sit a little more centered. If you compensated for the old behaviour with your own padding, remove it.
@@ -103,6 +111,14 @@ Start from the pack's defaults rather than from scratch, so you change one thing
    * - ``y_bias``
      - ``0.0``
      - Extra vertical offset as a fraction of the frame, applied after centering. Rarely needed now that centering works from measured ink.
+
+Two of those are easier seen than described. **Padding** is a fraction of the frame taken off every edge, and the glyph's ink is fitted to what remains — the faint inner square:
+
+.. renderer-figure:: padding
+
+**Oversampling** draws at a multiple of the target size and downscales, which is what keeps a small icon from losing its thin strokes. A 16-pixel Bootstrap gear, magnified six times with no smoothing so the pixels are the renderer's own:
+
+.. renderer-figure:: oversampling
 
 Two combinations worth knowing:
 

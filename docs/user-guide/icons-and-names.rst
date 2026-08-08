@@ -55,6 +55,10 @@ When both are given and they disagree, that is an error rather than a silent pre
 
 Omit ``style`` and the pack uses its default — ``outline`` for Bootstrap, ``solid`` for Font Awesome. The Styles column on :doc:`../packs` lists what each pack accepts; several packs have none and take no ``style`` argument at all.
 
+A style is a different drawing of the same idea, not a different icon. Bootstrap's two, on the same six names:
+
+.. pack-preview:: bootstrap
+
 When a name is wrong
 --------------------
 

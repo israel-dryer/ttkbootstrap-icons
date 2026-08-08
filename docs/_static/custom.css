@@ -182,3 +182,95 @@ html[data-theme="dark"] {
 .pack-cards .sd-card-footer p {
     margin: 0;
 }
+
+/* ---------------------------------------------------------------------------
+   Renderer figures
+
+   Written by docs/_ext/render_figures.py, in the same light/dark pair as the
+   pack previews and swapped by the same `.only-light` / `.only-dark`.
+
+   These differ from a preview in one way that matters: a preview is a picture
+   of a set and can be scaled freely, while a figure is evidence about pixels.
+   The oversampling and snapping figures are rendered at 16 pixels and
+   magnified with nearest-neighbour, so `image-rendering: pixelated` below is
+   load-bearing — without it the browser resamples the blow-up and hands back
+   exactly the softness the figure exists to show.
+   --------------------------------------------------------------------------- */
+
+.render-figure {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    align-items: flex-start;
+    margin: 1rem 0 2rem;
+}
+
+.render-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    /* Panels share the row evenly, so two panels are not two different widths
+       just because one caption is longer. */
+    flex: 1 1 8rem;
+    min-width: 7rem;
+    max-width: 14rem;
+    font-size: 0.8rem;
+    text-align: center;
+    color: var(--pst-color-text-muted);
+}
+
+.render-img {
+    /* The magnified figures are already at their display size in pixels; the
+       unmagnified ones are 96px drawn at 6rem, which is 2x on a 96 dpi
+       screen. Both want to be left alone. */
+    image-rendering: pixelated;
+    height: 6rem;
+    width: auto;
+}
+
+/* ---------------------------------------------------------------------------
+   Pack comparison
+
+   One row per pack, five concepts across. Deliberately not a table: the row
+   label is the only text, and a table would put a border between every glyph
+   and its neighbour — which is the comparison.
+   --------------------------------------------------------------------------- */
+
+.pack-comparison {
+    margin: 1rem 0 2rem;
+}
+
+.comparison-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    padding: 0.5rem 0;
+}
+
+.comparison-row + .comparison-row {
+    border-top: 1px solid var(--pst-color-border);
+}
+
+.comparison-label {
+    flex: 0 0 9rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.comparison-label p {
+    margin: 0;
+}
+
+.comparison-glyphs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    align-items: center;
+}
+
+.comparison-img {
+    height: 2.25rem;
+    width: auto;
+}
