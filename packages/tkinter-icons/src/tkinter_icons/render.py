@@ -317,10 +317,12 @@ def _place_by_bbox(
     box rather than filling it — a per-pack median of 73% to 96% of it,
     against 94% to 102% on the ink path. Centering is vertical against
     `ascent + descent` rather than against the ink, so a set whose glyphs sit
-    off the font's baseline rides high in the frame: over every glyph in every
-    style of all sixteen packs, 518 of 89,169 run past the edge of the frame on
-    this path and 0 of 89,169 do on the ink path. Regenerate the provider's
-    metrics to take the accurate one.
+    off the font's baseline rides high in the frame: over every style of all
+    sixteen packs, 518 of the 89,169 glyphs that draw any ink run past the edge
+    of the frame on this path, and 0 of them do on the ink path. (The glyph
+    maps hold 89,292 entries; the 123 that render nothing are excluded, since
+    an empty image cannot overflow.) Regenerate the provider's metrics to take
+    the accurate path.
     """
     font = load_font(font_key, font_bytes, max(1, canvas_size))
     ascent, descent = font.getmetrics()

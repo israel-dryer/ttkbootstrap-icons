@@ -103,8 +103,13 @@ class Figure:
 #:   with the *default* `RenderOptions`. Font Awesome's provider asks for
 #:   `pad_factor=0.15`, so with its own options the two panels came out nearly
 #:   identical. The subjects below are the extremes under each pack's real
-#:   options: Eva fills 73% of the padded box on the fallback path against 94%
-#:   on the measured one, and Weather sits a median 10.5 px high at this size.
+#:   options, censused over the whole glyph map of the style each figure draws:
+#:   Eva fills 79% of the padded box on the fallback path against 100% on the
+#:   measured one, and Weather sits a median 10.0 px off-center at this size.
+#: - Those two figures were first written down as 73%/94% and 10.5 px, from a
+#:   400-name sample rather than a census. Sampling is fine for ranking
+#:   candidates and not fine for a number anyone will quote — and the 10.5 then
+#:   contradicted the page's own "up to a median 10 pixels".
 #: - The oversampling figure first used Material's `cog`, which is heavy enough
 #:   to survive without oversampling. Bootstrap's `gear` is a hairline and
 #:   turns to grey mush, which is what the claim is about.

@@ -163,13 +163,14 @@ Closed unmerged: #96, superseded by #97.
 
 **The milestone issues are all closed, and #89 closed because #100's body named it.** That was not automatic: no commit body mentions #89, and its `Closes #89` lived only in PR #92's body, which merged to `5.0` — a non-default base — so GitHub had already discarded the link and does not re-evaluate it. #69, #71 and #79 closed from keywords already in the commit bodies. #67, #68, #70 and #75 were closed earlier by hand and their links are lost for good.
 
-`origin` also carries two branches that are **not** stale and must not be
-deleted with the rest:
+`origin` carries one branch that is **not** stale and must not be deleted with
+the rest:
 
 - `release/ttkbootstrap-icons-packs-final` — the terminal release of the sixteen
   `ttkbootstrap-icons-*` packs, cut from `v4.0.0`. Merges nowhere. See
   `RELEASE.md`.
-`gh-pages` used to be listed here too. It is **gone as of 2026-08-08**, along
+
+`gh-pages` used to be listed alongside it. It is **gone as of 2026-08-08**, along
 with GitHub Pages itself — but it was not dead when this file said it was, and
 the entry under "Deliberate decisions" records what that cost.
 
@@ -273,7 +274,7 @@ bumped every time and an existing one means the tag is wrong.
 
 **The janitorial list is finished, 2026-08-08.** Read the Docs' Default branch is back on `main`, GitHub Pages is unpublished, and eleven remote branches are deleted including `gh-pages`. `origin` now carries only `main`, the branches of whatever is in flight, and `release/ttkbootstrap-icons-packs-final` — **leave that last one alone**, it is the only tree where the sixteen old packs still exist.
 
-Two of the ten deleted were not ancestors of `main` and both were checked rather than assumed. `docs/release-complete` carried one commit past its own merge, `05077d4`, whose patch is byte-identical to `491dae8` on `main` — the same work re-applied on `docs/milestone-split` and merged by #119. `fix/release-latest-marker` is #96, closed unmerged and superseded by #97, exactly as recorded. **Verify with `git merge-base --is-ancestor origin/<branch> origin/main` before deleting**, and when it says no, find out why rather than trusting a PR's merged badge — a branch can be merged and then pushed to again.
+Two of the eleven were not ancestors of `main` and both were checked rather than assumed. `docs/release-complete` carried one commit past its own merge, `05077d4`, whose patch is byte-identical to `491dae8` on `main` — the same work re-applied on `docs/milestone-split` and merged by #119. `fix/release-latest-marker` is #96, closed unmerged and superseded by #97, exactly as recorded. **Verify with `git merge-base --is-ancestor origin/<branch> origin/main` before deleting**, and when it says no, find out why rather than trusting a PR's merged badge — a branch can be merged and then pushed to again.
 
 **Both old docs URLs now return 404, and `migrating.rst:44` is true as written** — it was not, for the whole 5.0.0 cycle. See the docs-URL entry under "Deliberate decisions" for what was wrong and how it was found. Note the site was unpublished *before* the branch was deleted, which is the order that matters; the Pages API record can linger with `status: built` after the site is already serving 404, so **`curl` is what tells you the site is down and the API is what tells you the configuration is gone**. They disagree for a while, and neither alone is the whole answer.
 
