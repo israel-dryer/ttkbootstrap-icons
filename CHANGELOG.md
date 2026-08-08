@@ -12,6 +12,16 @@ history after the fact and are summaries rather than contemporaneous notes.
 
 <!-- release-notes-start -->
 
+## [Unreleased]
+
+### Added
+
+- **`render_pil` takes `style`.** It takes it in the same position and with the same meaning the constructor gives it, so every icon a pack can draw is now reachable headlessly. Before, a name that exists only outside a pack's default style and does not spell that style out had no headless spelling at all: `FontAwesomeIcon("accusoft", style="brands")` worked, `FontAwesomeIcon.render_pil("accusoft")` returned a transparent square, and nothing raised. Measured across the packs that have styles, **814 real names were in that position** — 489 in Font Awesome, 185 in Fluent, 102 in Material, 28 in Devicon, 8 in Typicons and 2 in Eva. An explicit `style` is never swallowed the way a bare name is: naming a style the pack does not draw that icon in, or one the name contradicts, raises. (#115)
+
+### Fixed
+
+- **The two functions that read a style out of a name now read it the same way.** One matched `-<style>` anywhere in the name, the other only at the end, and they agreed on most names by accident of the order each pack declared its styles in. Where they disagreed the result was silent in both directions: Bootstrap's `shield-fill-check` is a real glyph the `fill` style ships, and its constructor rejected it, while `render_pil` drew it only because Bootstrap keeps every style in one font file and the unresolved name happened to be a glyph name. Both now use `BaseFontProvider.infer_style_from_name`, which matches whole hyphen-separated components, never the first one, longest match winning — so it does not depend on declaration order. 35 Bootstrap names start constructing. Measured by resolving every one of the 90,476 names in every style of every pack against every style that pack has — 342,128 combinations — the change is additive: 35 newly resolve, none stopped resolving, and not one name resolved to a different glyph. (#115)
+
 ## [5.0.1] — updated metadata and docs
 
 A patch release with no executable code change. Every source edit in the eighteen distributions is a comment or a docstring; what moved is text and metadata that PyPI freezes at release time, and therefore could not be corrected without shipping a version.

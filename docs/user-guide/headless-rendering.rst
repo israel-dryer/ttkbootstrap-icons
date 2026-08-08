@@ -29,6 +29,36 @@ Called on a pack's class it draws that pack's glyphs and takes the same friendly
 .. versionchanged:: 5.0.0
    ``render_pil`` used to read whichever icon set was initialized most recently, so it drew the right glyphs only if something had already constructed an icon from that pack — and raised in a fresh process. It also took an already-resolved glyph name, which meant a friendly name like ``"house-fill"`` rendered transparent.
 
+Choosing a style
+----------------
+
+``render_pil`` takes ``style`` in the same position and with the same meaning as the constructor:
+
+.. code-block:: python
+
+   from tkinter_icons import FontAwesomeIcon
+
+   FontAwesomeIcon.render_pil("accusoft", size=32, style="brands")
+
+Most names do not need it — a style written into the name is read out of it, and everything else falls back to the pack's default. What needs it is a name that exists **only** outside the default style and does not spell that style out. Font Awesome's brand marks are the clearest case: ``accusoft`` is a real glyph in ``brands``, nothing in the name points there, and the default style is ``solid``. Every one of Devicon, Eva, Font Awesome, Fluent, Material and Typicons has names in that position.
+
+.. code-block:: python
+
+   FontAwesomeIcon.render_pil("accusoft", size=32)                    # transparent
+   FontAwesomeIcon.render_pil("accusoft", size=32, style="brands")    # drawn
+
+Unlike a bare name, an explicit ``style`` is never quietly dropped. Naming a style the pack does not draw that icon in, or one the name itself contradicts, raises rather than returning a blank image — the icon set is chosen before the name is resolved, so ignoring the argument would mean drawing the wrong style rather than drawing nothing:
+
+.. code-block:: python
+
+   FontAwesomeIcon.render_pil("accusoft", style="solid")
+   # ValueError: accusoft not found in lookup for fontawesome in solid style.
+
+It needs a provider to resolve against, so it belongs on a pack's class. Passing it to :class:`~tkinter_icons.Icon`, or alongside an explicit ``icon_set``, raises: that set already fixes the style, and there would be nothing left for the argument to do.
+
+.. versionadded:: 5.1.0
+   ``style`` on ``render_pil``. Before it, a name reachable through ``PackIcon(name, style=...)`` had no equivalent on the headless path, and asking for one by name alone returned a transparent square.
+
 If you already have an icon, :meth:`~tkinter_icons.Icon.to_pil` renders that exact icon:
 
 .. code-block:: python

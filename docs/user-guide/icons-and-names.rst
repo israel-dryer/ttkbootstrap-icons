@@ -55,6 +55,13 @@ When both are given and they disagree, that is an error rather than a silent pre
 
 Omit ``style`` and the pack uses its default — ``outline`` for Bootstrap, ``solid`` for Font Awesome. The Styles column on :doc:`../packs` lists what each pack accepts; several packs have none and take no ``style`` argument at all.
 
+A style carried in the name does not have to be at the end of it. Bootstrap names several glyphs ``shield-fill-check``, ``building-fill-add`` and so on, where the ``fill`` sits in the middle; those are read the same way ``house-fill`` is. What counts is a whole hyphen-separated piece of the name, never part of one and never the first piece — Remix has a ``line`` style *and* a glyph called ``line-chart``, which is a chart rather than a line, and Fluent's ``filled`` is not Bootstrap's ``fill``.
+
+.. versionchanged:: 5.1.0
+   Two places read a style out of a name and did it differently — one matched anywhere in the name, the other only at the end — so which glyph you got could depend on the order a pack happened to declare its styles in. ``shield-fill-check`` was the visible cost: a real Bootstrap glyph the constructor rejected.
+
+Some names live only outside the default style and say nothing about it, so there is no name you can write to reach them. ``style`` is the only way, and it is now on the headless path too — see :doc:`headless-rendering`.
+
 A style is a different drawing of the same idea, not a different icon. Bootstrap's two, on the same six names:
 
 .. pack-preview:: bootstrap

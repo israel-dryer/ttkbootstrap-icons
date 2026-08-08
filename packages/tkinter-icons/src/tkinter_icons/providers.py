@@ -297,16 +297,56 @@ class BaseFontProvider(ABC):
     def format_glyph_name(glyph_name: str) -> str:
         return str(glyph_name).lower()
 
+    def infer_style_from_name(self, name: str) -> Optional[str]:
+        """Return the style `name` encodes, or `None` if it encodes none.
+
+        A style is written into a name as whole hyphen-separated components -
+        `"house-fill"`, `"shield-fill-check"` - so this matches components
+        rather than substrings, and never at the start: Remix ships a `line`
+        style *and* a glyph called `line-chart`, which is a chart, not a line.
+
+        The longest match wins, which is what makes it independent of the
+        order `style_list` happens to be in. Devicon has both `plain` and
+        `plain-wordmark`, so `"aarch64-plain-wordmark"` is a wordmark whichever
+        way round those two are declared.
+
+        Args:
+            name: The name as the caller wrote it.
+
+        Returns:
+            The style encoded in the name, or `None`.
+        """
+        if not self.has_styles:
+            return None
+
+        parts = name.split("-")
+        best: Optional[str] = None
+        for s in self.style_list:
+            tokens = s.split("-")
+            span = len(tokens)
+            for i in range(1, len(parts) - span + 1):
+                if parts[i:i + span] == tokens:
+                    if best is None or len(s) > len(best):
+                        best = s
+                    break
+        return best
+
     def resolve_icon_style(self, name: str, style: Optional[str] = None):
-        """Resolve a user-supplied icon name and style to the actual style"""
+        """Resolve a user-supplied icon name and style to the actual style.
+
+        Args:
+            name: The name as the caller wrote it.
+            style: An explicit style, which wins outright, or `None` to infer
+                one from the name.
+
+        Returns:
+            The style to draw from, or `None` for a provider with no styles.
+        """
         if style is not None:
             return style
 
         if self.has_styles:
-            for s in self.style_list:
-                if f"-{s}" in name:
-                    return s
-            return self.default_style
+            return self.infer_style_from_name(name) or self.default_style
         return None
 
     def resolve_icon_name(self, name: str, style: Optional[str] = None) -> str:
@@ -318,9 +358,9 @@ class BaseFontProvider(ABC):
         - With an explicit `style`, resolution happens within that style only.
           A `name` encoding a conflicting style - `"-fill"` against a requested
           `"outline"` - raises rather than silently preferring one of them.
-        - Without one, the style is inferred from a `"-<style>"` suffix when the
-          name has one, and otherwise falls back to the provider's default
-          style (or `"base"` for a provider with no styles).
+        - Without one, the style is read out of the name by
+          `infer_style_from_name`, and otherwise falls back to the provider's
+          default style (or `"base"` for a provider with no styles).
 
         Args:
             name: The name as the caller wrote it, with or without a style
@@ -338,11 +378,7 @@ class BaseFontProvider(ABC):
             return "none"
 
         if self.has_styles:
-            inferred_style = None
-            for s in self.style_list:
-                if name.endswith(f"-{s}"):
-                    inferred_style = s
-                    break
+            inferred_style = self.infer_style_from_name(name)
 
             if style is not None and inferred_style is not None and style != inferred_style:
                 raise ValueError(
