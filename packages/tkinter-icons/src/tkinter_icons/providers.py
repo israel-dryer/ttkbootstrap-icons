@@ -331,94 +331,178 @@ class BaseFontProvider(ABC):
                     break
         return best
 
-    def resolve_icon_style(self, name: str, style: Optional[str] = None):
-        """Resolve a user-supplied icon name and style to the actual style.
+    def _lookup_within_style(self, name: str, style: str) -> Optional[str]:
+        """Find `name` in one style's table, or return `None`.
+
+        The several spellings a name is accepted in, tried in order: as
+        written, with the style appended, lowercased, and - where the name ends
+        in the style - with that suffix taken off, since not every pack builds
+        the style into its glyph names.
+        """
+        lookup = self._name_lookup.get(style, {})
+        if not lookup:
+            return None
+
+        if name in lookup:
+            return lookup[name]
+        composite = f"{name}-{style}"
+        if composite in lookup:
+            return lookup[composite]
+        formatted = self.format_glyph_name(name)
+        if formatted in lookup:
+            return lookup[formatted]
+
+        suffix = f"-{style}"
+        if name.endswith(suffix):
+            base = name[: -len(suffix)]
+            if base in lookup:
+                return lookup[base]
+            formatted_base = self.format_glyph_name(base)
+            if formatted_base in lookup:
+                return lookup[formatted_base]
+        return None
+
+    def candidate_styles(self, name: str, style: Optional[str] = None) -> tuple[str, ...]:
+        """The styles a name may be drawn from, in the order they are tried.
+
+        - An explicit `style` is the only candidate. Asking for one and getting
+          another would make the argument decorative.
+        - A name that spells a style out is the same: `"house-fill"` is a
+          request for the `fill` cut, not a suggestion.
+        - Otherwise every style is a candidate, default first.
+
+        That last case is the one that changed. The default used to be the only
+        place an unadorned name was looked for, which made it a gate rather
+        than a preference: Font Awesome's `accusoft` is a real glyph in
+        `brands` and nothing in the name points there, so it was unreachable
+        without naming the style. Now the default is only what wins when a name
+        exists in several styles, and the rest of `style_list` is tried after
+        it rather than not at all.
+
+        The default cannot simply be dropped, which is the obvious next
+        thought. It is what settles the 13,658 names that live in more than one
+        style - `MaterialIcon("home")`, `EvaIcon("activity")` - none of which
+        writes a style into the name, so without it each is ambiguous and would
+        have to raise.
 
         Args:
             name: The name as the caller wrote it.
-            style: An explicit style, which wins outright, or `None` to infer
-                one from the name.
+            style: An explicit style, or `None`.
+
+        Returns:
+            Styles to search, in order. Empty for a provider with no styles.
+        """
+        if not self.has_styles:
+            return ()
+        if style is not None:
+            return (style,)
+
+        encoded = self.infer_style_from_name(name)
+        if encoded is not None:
+            return (encoded,)
+
+        default = self.default_style
+        if not default:
+            return self.style_list
+        return (default, *(s for s in self.style_list if s != default))
+
+    def resolve_icon(self, name: str, style: Optional[str] = None) -> tuple[Optional[str], str]:
+        """Resolve a name to the style it draws from and its glyph name.
+
+        `resolve_icon_style` and `resolve_icon_name` are both views of this, so
+        that they cannot answer differently. They used to be separate readings
+        of the name and they did disagree - one matched a style anywhere in the
+        name, the other only at the end - which selected one style's font and
+        then looked the glyph up in another's table. The result drew a blank
+        square with nothing raised anywhere.
+
+        Args:
+            name: The name as the caller wrote it.
+            style: Style to resolve within, or `None` to work it out.
+
+        Returns:
+            `(style, glyph_name)`; the style is `None` for a provider that has
+            none.
+
+        Raises:
+            ValueError: If the name does not resolve, or if it spells out a
+                style that contradicts `style`.
+        """
+        if not self.has_styles:
+            glyph = self._lookup_within_style(name, "base")
+            if glyph is None:
+                raise ValueError(f"'{name}' is not a valid icon for {self.name}.")
+            return None, glyph
+
+        encoded = self.infer_style_from_name(name)
+        if style is not None and encoded is not None and style != encoded:
+            raise ValueError(
+                f"'{name}' is not valid for style '{style}' in {self.name}. Try style '{encoded}' or use an unsuffixed name."
+            )
+
+        candidates = self.candidate_styles(name, style)
+        if not any(self._name_lookup.get(s) for s in candidates):
+            raise ValueError(f"Style '{candidates[0]}' is not valid for {self.name}. Available: {self.style_list}")
+
+        for candidate in candidates:
+            glyph = self._lookup_within_style(name, candidate)
+            if glyph is not None:
+                return candidate, glyph
+
+        raise ValueError(f"{name} not found in lookup for {self.name} in {candidates[0]} style.")
+
+    def resolve_icon_style(self, name: str, style: Optional[str] = None):
+        """Resolve a user-supplied icon name and style to the style it draws from.
+
+        Args:
+            name: The name as the caller wrote it.
+            style: An explicit style, which wins outright, or `None` to work
+                one out.
 
         Returns:
             The style to draw from, or `None` for a provider with no styles.
+            A name that resolves nowhere falls back to the provider's default,
+            so the caller gets a set to apply `on_missing` against rather than
+            an exception from a function that does not otherwise raise.
         """
         if style is not None:
             return style
-
-        if self.has_styles:
-            return self.infer_style_from_name(name) or self.default_style
-        return None
+        if not self.has_styles:
+            return None
+        try:
+            return self.resolve_icon(name)[0]
+        except ValueError:
+            return self.default_style
 
     def resolve_icon_name(self, name: str, style: Optional[str] = None) -> str:
         """Resolve a user-supplied icon name to the actual glyph name.
 
-        A name may carry its own style as a suffix, so the two arguments can
-        disagree; the rules settle which one wins.
+        A name may carry its own style, so the two arguments can disagree; the
+        rules settle which one wins.
 
         - With an explicit `style`, resolution happens within that style only.
-          A `name` encoding a conflicting style - `"-fill"` against a requested
-          `"outline"` - raises rather than silently preferring one of them.
-        - Without one, the style is read out of the name by
-          `infer_style_from_name`, and otherwise falls back to the provider's
-          default style (or `"base"` for a provider with no styles).
+          A `name` spelling out a conflicting style - `"-fill"` against a
+          requested `"outline"` - raises rather than silently preferring one.
+        - A name that spells a style out is resolved within that style, for the
+          same reason.
+        - Otherwise the provider's default style is tried first and the rest
+          after it, so a name that exists only in a non-default style still
+          resolves. See `candidate_styles`.
 
         Args:
-            name: The name as the caller wrote it, with or without a style
-                suffix.
-            style: Style to resolve within, or `None` to infer.
+            name: The name as the caller wrote it, with or without a style.
+            style: Style to resolve within, or `None` to work it out.
 
         Returns:
             The glyph name as it appears in this provider's glyph map.
 
         Raises:
-            ValueError: If the name does not resolve, or if it encodes a style
-                that contradicts `style`.
+            ValueError: If the name does not resolve, or if it spells out a
+                style that contradicts `style`.
         """
         if name == "none":
             return "none"
-
-        if self.has_styles:
-            inferred_style = self.infer_style_from_name(name)
-
-            if style is not None and inferred_style is not None and style != inferred_style:
-                raise ValueError(
-                    f"'{name}' is not valid for style '{style}' in {self.name}. Try style '{inferred_style}' or use an unsuffixed name."
-                )
-
-            lookup_style = style or inferred_style or self.default_style or "base"
-            lookup = self._name_lookup.get(lookup_style, {})
-            if not lookup:
-                raise ValueError(f"Style '{lookup_style}' is not valid for {self.name}. Available: {self.style_list}")
-
-            formatted = self.format_glyph_name(name)
-            if name in lookup:
-                return lookup[name]
-            composite = f"{name}-{lookup_style}"
-            if composite in lookup:
-                return lookup[composite]
-            if formatted in lookup:
-                return lookup[formatted]
-
-            # If we inferred a style from the name suffix, try stripping it
-            # This handles cases where the glyph names don't include style suffixes
-            if inferred_style is not None and name.endswith(f"-{inferred_style}"):
-                base_name = name[:-len(f"-{inferred_style}")]
-                if base_name in lookup:
-                    return lookup[base_name]
-                formatted_base = self.format_glyph_name(base_name)
-                if formatted_base in lookup:
-                    return lookup[formatted_base]
-
-            raise ValueError(f"{name} not found in lookup for {self.name} in {lookup_style} style.")
-
-        # no styles
-        lookup = self._name_lookup.get("base", {})
-        formatted = self.format_glyph_name(name)
-        if name in lookup:
-            return lookup[name]
-        if formatted in lookup:
-            return lookup[formatted]
-        raise ValueError(f"'{name}' is not a valid icon for {self.name}.")
+        return self.resolve_icon(name, style)[1]
 
     def get_icons_names_for_display(self) -> dict[str, dict[str, str]]:
         if self.has_styles:

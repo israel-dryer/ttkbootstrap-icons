@@ -249,20 +249,115 @@ class TestEveryNameIsReachableWithAnExplicitStyle:
                 f"{style!r} style drew any ink through render_pil(style=...)"
             )
 
-    def test_a_name_only_in_a_non_default_style_needs_the_argument(self):
-        """The worked example from the issue, pinned as a pair.
+    def test_a_name_only_in_a_non_default_style_needs_no_argument(self):
+        """The worked example from the issue, both ways round.
 
         Font Awesome's brand marks carry no style token, so nothing in the name
-        can lead a resolver to `brands`. Without `style=` this is the silent
-        transparent square that made 814 names look like typos.
+        can lead a resolver to `brands`. While the default style gated
+        resolution this was the silent transparent square that made 814 names
+        look like typos; now the default is only a preference, and the name
+        finds the one style that has it.
         """
         pack = next((p for p in INSTALLED if p.extra == "fontawesome"), None)
         if pack is None:
             pytest.skip("the fontawesome pack is not installed")
         cls = icon_class(pack)
 
-        assert cls.render_pil("accusoft", size=32).getchannel("A").getbbox() is None
+        assert cls.render_pil("accusoft", size=32).getchannel("A").getbbox() is not None
         assert cls.render_pil("accusoft", size=32, style="brands").getchannel("A").getbbox() is not None
+        assert cls("accusoft", size=32).to_pil().getchannel("A").getbbox() is not None
+
+    @pytest.mark.parametrize("pack", styled_packs(), ids=lambda p: p.extra)
+    def test_no_name_a_pack_ships_is_out_of_reach(self, pack):
+        """The claim the default-as-preference change makes true.
+
+        Every name in every style, resolved with nothing but the name — which
+        is what a user writes. Before, a name absent from the default style and
+        silent about its own was unreachable however it was spelled.
+        """
+        provider = provider_for(pack)
+        sets = {style: get_icon_set(provider, style) for style in provider.style_list}
+
+        unreachable = []
+        for lookup in names_by_style(provider).values():
+            for name in lookup:
+                try:
+                    resolved_style, glyph = provider.resolve_icon(name)
+                except ValueError as exc:
+                    unreachable.append((name, str(exc)))
+                    continue
+                if sets[resolved_style].glyph(glyph) is None:
+                    unreachable.append((name, f"{glyph} absent from {resolved_style}"))
+
+        assert not unreachable, (
+            f"{len(unreachable)} name(s) in {pack.extra} cannot be drawn from the "
+            f"name alone: {unreachable[:5]}"
+        )
+
+
+class TestTheTwoEntryPointsLookNamesUpTheSameWay:
+    """What a user expects, and what #115 was really about.
+
+    `PackIcon(name)` and `PackIcon.render_pil(name)` are two doors onto one
+    library, so a name means the same thing at both. It did not: each read the
+    name with its own rules, and the disagreements were silent — a blank square
+    from one, a `ValueError` from the other, for a name the pack ships.
+
+    Both now go through `BaseFontProvider.resolve_icon`, which returns the
+    style and the glyph together. That is what makes this structural rather
+    than a convention two functions have to keep to.
+
+    Failure is still deliberately different, and only there: an unresolvable
+    name raises from the constructor and applies `on_missing` from
+    `render_pil`. That divergence is documented, tested, and unchanged here.
+    """
+
+    #: Icons rendered per style to compare pixels. Resolution is checked over
+    #: every name — it is dictionary lookups — but rendering all 113,399 would
+    #: cost more than the rest of the suite put together, so the raster check
+    #: is a bounded sample and says so.
+    PIXEL_SAMPLE = 5
+
+    @pytest.mark.parametrize("pack", INSTALLED, ids=lambda p: p.extra)
+    def test_every_name_resolves_identically(self, pack):
+        cls = icon_class(pack)
+        provider = provider_for(pack)
+
+        checked = 0
+        mismatched = []
+        for style in provider.style_list or ("base",):
+            for name in provider._name_lookup.get(style, {}):
+                checked += 1
+                try:
+                    through_constructor = cls(name, 32).name
+                except ValueError:
+                    through_constructor = "<raised>"
+                try:
+                    through_render_pil = provider.resolve_icon(name)[1]
+                except ValueError:
+                    through_render_pil = "<raised>"
+                if through_constructor != through_render_pil:
+                    mismatched.append((name, through_constructor, through_render_pil))
+
+        assert not mismatched, (
+            f"{len(mismatched)} of {checked} name(s) in {pack.extra} mean different "
+            f"things to the constructor and to render_pil: {mismatched[:5]}"
+        )
+        assert checked, f"{pack.extra} offered no names, so this checked nothing"
+
+    @pytest.mark.parametrize("pack", INSTALLED, ids=lambda p: p.extra)
+    def test_they_draw_the_same_pixels(self, pack):
+        cls = icon_class(pack)
+        provider = provider_for(pack)
+
+        for style in provider.style_list or ("base",):
+            for name in list(provider._name_lookup.get(style, {}))[: self.PIXEL_SAMPLE]:
+                through_constructor = cls(name, 32).to_pil()
+                through_render_pil = cls.render_pil(name, 32)
+                assert through_constructor.tobytes() == through_render_pil.tobytes(), (
+                    f"{pack.extra}:{style} {name!r} draws differently depending on "
+                    f"which entry point asked for it"
+                )
 
 
 class TestAnExplicitStyleIsNeverSilentlyDropped:
@@ -291,13 +386,18 @@ class TestAnExplicitStyleIsNeverSilentlyDropped:
         with pytest.raises(ValueError, match="solid"):
             cls.render_pil("accusoft", size=32, style="solid")
 
-    def test_the_same_name_without_a_style_stays_silent(self):
-        """The swallow is unchanged where no style was given."""
+    def test_a_typo_without_a_style_stays_silent(self):
+        """The swallow is unchanged where no style was given.
+
+        Searching every style rather than only the default does not make a
+        typo resolve — it makes it fail against every style instead of one — so
+        `on_missing` still governs, and still defaults to a blank square.
+        """
         pack = next((p for p in INSTALLED if p.extra == "fontawesome"), None)
         if pack is None:
             pytest.skip("the fontawesome pack is not installed")
         cls = icon_class(pack)
-        assert cls.render_pil("accusoft", size=32).getchannel("A").getbbox() is None
+        assert cls.render_pil("accusofft", size=32).getchannel("A").getbbox() is None
 
     def test_a_style_with_no_provider_to_resolve_it_raises(self):
         """`Icon` itself takes resolved glyph names, so it has no style to apply."""

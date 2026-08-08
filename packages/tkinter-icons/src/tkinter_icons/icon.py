@@ -262,22 +262,24 @@ class Icon(StatefulIconMixin, ABC):
 
         if resolving:
             provider = cls.provider_class()
-            icon_set = get_icon_set(provider, provider.resolve_icon_style(name, style))
             try:
-                name = provider.resolve_icon_name(name, style)
+                # One call, so the style the set is built from and the glyph
+                # looked up in it cannot come from two different readings of
+                # the name.
+                resolved_style, name = provider.resolve_icon(name, style)
+                icon_set = get_icon_set(provider, resolved_style)
             except ValueError:
-                # Leave the name as given and let the missing-glyph path below
-                # apply `on_missing`, which is the documented behavior for a
-                # name this set does not have. Letting resolution raise here
-                # would make that policy unreachable from `render_pil`.
-                #
-                # An explicit `style` is the exception, and it is not a
-                # back-compat surface: silently ignoring it would draw the
-                # wrong style rather than nothing, since the set has already
-                # been chosen above and a single-file pack can still find the
-                # unresolved name in it.
+                # An explicit `style` is never swallowed. It is not a
+                # back-compat surface, and dropping it would draw the wrong
+                # style rather than nothing: a single-file pack can still find
+                # an unresolved name in whichever set gets chosen below.
                 if style is not None:
                     raise
+                # Otherwise leave the name as given and let the missing-glyph
+                # path apply `on_missing`, which is the documented behavior for
+                # a name this set does not have. Letting resolution raise here
+                # would make that policy unreachable from `render_pil`.
+                icon_set = get_icon_set(provider, provider.resolve_icon_style(name))
 
         icon_set = icon_set or cls._icon_set_current
         if icon_set is None:
