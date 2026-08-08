@@ -127,9 +127,13 @@ class SimpleIconGrid:
                 self.canvas.tag_bind(img, "<Enter>", lambda e: self.canvas.config(cursor="hand2"))
                 self.canvas.tag_bind(img, "<Leave>", lambda e: self.canvas.config(cursor=""))
             except Exception:
-                txt = self.canvas.create_text(
-                    x, y, text=f"Error\n{name}", width=self.item_w - 10, font=("Arial", 8), fill="red")
-                canvas_items.append(txt)
+                # Draw nothing and leave the cell empty. This is an application,
+                # so a glyph it cannot draw is not the user's problem to read
+                # about - it used to paint a red "Error <name>" tile, which put
+                # a diagnostic in front of someone who can do nothing with it.
+                # An empty cell is what a browser missing one icon should look
+                # like, and every name is checked in the test suite so this is
+                # meant to stay unreachable.
                 icon_obj = None
             self.visible_items[idx] = (canvas_items, icon_obj)
 
@@ -391,7 +395,9 @@ class IconPreviewerApp:
                 self.icon_preview_label.config(image=large_icon.image)
                 self.icon_preview_label.image = large_icon.image
             except Exception:
-                self.icon_preview_label.config(image="", text="✕")
+                # Blank, not a failure mark. "✕" told the user something had
+                # gone wrong without telling them anything they could act on.
+                self.icon_preview_label.config(image="", text="")
 
             self.icon_name_label.config(text=icon_name)
 
@@ -399,12 +405,9 @@ class IconPreviewerApp:
                 icon_set = Icon.initialize_with_provider(provider, style=self.current_style)
                 resolved_name = provider.resolve_icon_name(icon_name, style=self.current_style)
                 glyph = icon_set.glyph(resolved_name)
-                if glyph is not None:
-                    self.icon_code_label.config(text=f"U+{ord(glyph):04X}")
-                else:
-                    self.icon_code_label.config(text="N/A")
+                self.icon_code_label.config(text=f"U+{ord(glyph):04X}" if glyph is not None else "—")
             except Exception:
-                self.icon_code_label.config(text="N/A")
+                self.icon_code_label.config(text="—")
 
             self.copy_button.config(state="normal")
         else:

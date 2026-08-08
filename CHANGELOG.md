@@ -24,9 +24,11 @@ history after the fact and are summaries rather than contemporaneous notes.
 
   The change was not safe to make on its own, which is why it lands with the rest and not before: while 849 real icons were unreachable by name, raising would have failed on names that were not typos at all. They resolve now, so what is left really is a bad name.
 
-  **The icon browser is unaffected.** It is the one shipped consumer of name resolution, and it never used `render_pil`; every icon it builds already sits inside a `try`, so it degrades to an error tile rather than crashing. Checked rather than assumed: all 61,153 names it lists, across every style of all sixteen packs, still resolve, and drawing 1,860 of them in a real window produces no error tiles. Both are now guarded by tests, because a resolution change can degrade the browser without failing anything else.
+  **The icon browser is unaffected.** It is the one shipped consumer of name resolution, and it never used `render_pil`; every icon it builds already sits inside a `try`. Checked rather than assumed: all 61,153 names it lists, across every style of all sixteen packs, still resolve, and drawing 1,860 of them in a real window draws 1,860 icons. Both are now guarded by tests, because a resolution change can degrade the browser without failing anything else.
 
   **`on_missing` is unaffected in the case it was written for.** A name that reaches an icon set without being resolved against it — the base `Icon`, or `render_pil` with an explicit `icon_set` — still applies the policy, and `"transparent"` is still the default. What changed is that a pack's own resolution failures no longer route into it. That restores the scope `docs/user-guide/icons-and-names.rst` described from the start and the code did not honor; #117 deleted the sentence because it was false, and this makes it true instead.
+
+- **The icon browser no longer shows the user its errors.** An icon it could not draw painted a red `Error <name>` tile in the grid and marked the preview `✕`. That is a diagnostic in front of someone who can do nothing with it — the browser is an application, not a library call, so a glyph it cannot render is now simply absent: an empty cell, a blank preview, and `—` for the codepoint. None of it is reachable in a normal install, and it is checked both ways: every name the browser lists resolves, and forcing every resolution to fail leaves the window standing with nothing drawn and no text on screen. (#115)
 
 ### Fixed
 

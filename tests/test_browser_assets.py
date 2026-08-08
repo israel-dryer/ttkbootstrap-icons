@@ -108,16 +108,23 @@ def test_every_name_the_browser_lists_still_resolves(pack):
 
 
 @pytest.mark.gui
-def test_the_browser_degrades_instead_of_raising(root, monkeypatch):
-    """The property that makes it shippable: a broken name must not kill it.
+def test_the_browser_fails_invisibly(root, monkeypatch):
+    """The property that makes it shippable, in the form an app needs.
 
     The checks above say every name currently resolves. This one says it does
-    not matter if that stops being true — the browser is an application a user
-    runs, not a library call, so a name it cannot draw has to become a tile it
-    can, and never a traceback in a terminal.
+    not matter if that stops being true. Two things have to hold, and the
+    second is the one that is easy to get wrong:
+
+    1. Nothing propagates. It is an application a user runs, not a library
+       call, so a name it cannot draw must never become a traceback.
+    2. Nothing is *shown*. The browser used to paint a red "Error <name>" tile
+       and mark the preview "✕", which is a diagnostic in front of someone who
+       can do nothing with it. Surviving is not the same as staying quiet, and
+       an earlier version of this very test asserted the error tiles were
+       drawn — it would have passed against the behavior being removed here.
 
     Forced rather than waited for: every resolution raises, which is worse than
-    any real breakage, and the window has to still be standing afterwards.
+    any plausible breakage.
     """
     from tkinter_icons import browser
     from tkinter_icons.providers import BaseFontProvider
@@ -139,15 +146,16 @@ def test_the_browser_degrades_instead_of_raising(root, monkeypatch):
     root.update_idletasks()
 
     assert root.winfo_exists(), "the window did not survive a resolution failure"
-    tiles = [
-        grid.canvas.itemcget(item, "text")
+
+    drawn = [
+        str(grid.canvas.itemcget(item, "text"))
         for item in grid.canvas.find_all()
         if grid.canvas.type(item) == "text"
-        and str(grid.canvas.itemcget(item, "text")).startswith("Error")
     ]
-    assert len(tiles) == len(names), (
-        f"expected every name to degrade to an error tile, got {len(tiles)} of {len(names)}"
-    )
+    assert not drawn, f"the grid put text on screen for icons it could not draw: {drawn[:5]}"
+
+    images = [item for item in grid.canvas.find_all() if grid.canvas.type(item) == "image"]
+    assert not images, "the grid drew an image for a name that does not resolve"
 
 
 def test_the_browser_chrome_icons_resolve():
