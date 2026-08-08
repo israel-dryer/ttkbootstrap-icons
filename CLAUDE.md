@@ -272,16 +272,53 @@ bumped every time and an existing one means the tag is wrong.
 
 **Janitorial, none of it blocking:** point Read the Docs' Default branch back at `main`; delete `gh-pages` (dead since the move to Read the Docs); delete the merged remote branches — `5.0`, `docs/handoff-post-95`, `docs/legacy-final-release-and-meteocons`, `docs/drop-bootstack-references`, `docs/migration-scope-and-shim-extra`, `docs/ci-badge`, `docs/pack-readmes-generated`, `docs/handoff-after-py314`, `release/finish-5.0.0`, `fix/iconset-style-test-order`, and `fix/release-latest-marker` (that last is #96, closed unmerged and superseded by #97). **Leave `release/ttkbootstrap-icons-packs-final` alone** — it is the only tree where the sixteen old packs still exist.
 
-**A 5.0.1 is planned, scoped around docs fixes.** The candidates as they stand:
+**The follow-up work is milestoned, and the split is deliberate.** The 5.0.0 milestone is closed; what outlived it moved to **5.0.x Fixes and Cleanup** and **5.1.0**.
+
+**5.0.x — one `v5.0.1` tag publishes the base 5.0.1 and `tkinter-icons-gmi` 1.1.1 together**, with the other fifteen packs skipping existing. That is #97 working as designed: distributions carry different version numbers, one tag ships them.
 
 | Issue | What |
 |---|---|
-| #115 | `render_pil` swallows the `ValueError` the constructor raises for an unresolvable name, against what `icons-and-names.rst:72` promises. Settle the open question on the issue first — it decides whether the code or the prose is what changes. |
-| #111 | The `gmi` README claims a `twotone` style; the provider ships four (`baseline`, `outlined`, `round`, `sharp`). Fix in the README's intro paragraph, which is the one hand-written part `generate_pack_readmes.py` preserves — not in the generator. |
-| #87 | The generated renderer figures, still unbuilt. The screenshots and the browser's app icon are done. |
-| #91 | `import tkinter_icons` requires `tkinter` even for `render_pil`. |
+| #118 | The `3.14` classifier is on `main` but frozen out of the published wheel, so the pyversions badge reads up to 3.13. Needs no code change — it needs a release to carry it, and it is the reason the base is in this one. |
+| #111 | `gmi` claims a `twotone` style; the provider ships four. Wrong in **two** frozen places — the README *and* the `description` field in its `pyproject.toml` — so it needs a pack release, not a docs edit. Fix the README's intro paragraph, the one hand-written part `generate_pack_readmes.py` preserves. |
+| #117 | The `on_missing` scope sentence in `icons-and-names.rst:72` describes a case that cannot occur. Docs-only; split out of #115 so it can ship in a patch. |
+| #87 | The generated renderer figures. **Ships on merge via Read the Docs, not with the tag** — it is milestoned here for tracking, not because it needs the release. |
 
-**Remember the base's Python-version metadata is frozen at 5.0.0.** #109 added a `3.14` classifier that is *not* in the published wheel, so the pyversions badge reads up to 3.13 until a new base release ships. A 5.0.1 would carry it — which is a reason to include the base in that release even if only the docs change.
+**5.1.0 — all three touch the same headless/`render_pil` surface**, and are cheaper done together than in three passes over one file.
+
+| Issue | What |
+|---|---|
+| #115 | `render_pil` has no `style=`, so **814 real icon names render blank** — every name that exists only in a non-default style, across six packs. Additive fix. Align `resolve_icon_style` (`f"-{s}" in name`) with `resolve_icon_name` (`name.endswith(f"-{s}")`) at the same time; they agree today only by accident of `style_list` ordering. |
+| #91 | `import tkinter_icons` requires `tkinter` even for `render_pil`, because `__init__.py:30` pulls `icon.py`, which imports `tkinter` at module scope. Making that lazy makes an import succeed that currently raises — additive, so minor rather than patch. |
+| #112 | PySimpleGUI integration, scoped as 5.1 since #71. |
+
+**Do not make `render_pil` raise on an unresolvable name before #115 lands.** It is the obvious reading of the original report and it is the wrong order: it would convert 814 silent blanks into 814 hard failures while the correct call is still awkward to write. The measurement behind that number is on #115 — all 814 fail at *resolution*, and none reach `on_missing` by resolving, which is why the code comment at `icon.py:242` is right and the prose is what is wrong.
+
+### Doing 5.0.x — the plan, in order
+
+**1. Point Read the Docs' Default branch at `main`, before anything else.** It is still on the janitorial list, and until it is done every docs-only change is invisible to visitors — you would do #87 and #89's prose pass and see nothing. One setting, and it unblocks the whole no-release half.
+
+**2. The work that needs no tag.** #87 (the generated renderer figures — `docs/_ext/pack_showcase.py` is the pattern, and it already handles light/dark and the `-W` safety net), #89's prose pass (repetition across pages, and `#0d6efd` Bootstrap blue still in the examples on `index.rst` and `icons-and-names.rst`, on a site whose palette is teal), and #117, whose fix is one sentence. All of it ships on merge. Delete `gh-pages` and the merged branches in the same pass.
+
+**3. Then cut `v5.0.1`.** This is the first tag-driven release — publishers are configured and verified, so pushing the tag is the whole procedure. No manual upload, no `.pypirc`.
+
+**What the tag needs prepared first:**
+
+- **#118 needs no file change.** The classifier is already on `main`; the base version comes from the tag through setuptools-scm. The release exists to carry it.
+- **`gmi` needs two edits and they are coupled.** `version = "1.1.1"` in `packages/tkinter-icons-gmi/pyproject.toml`, **and** a `## [1.1.1]` entry in that pack's changelog. `verify_packages.py`'s `check_changelog` requires the newest changelog entry to *be* the version being shipped, and the release preflight runs `--strict`, so a bump without a changelog entry fails the release rather than shipping quietly. Fix `description` on line 4 at the same time — #111 is wrong there as well as in the README.
+- **The root `CHANGELOG.md` needs a `## [5.0.1] — <short title>` section.** That title becomes the GitHub Release title *verbatim* now that #113 stopped passing the distribution name, so keep it short — "renamed to tkinter-icons, rebuilt around measured glyph ink" was too long even before the prefix stuttered it. Prose **unwrapped**, one line per paragraph.
+- **Read the generated body before tagging**, which is not the same text as the changelog section: `python .github/scripts/release_notes.py CHANGELOG.md 5.0.1 NOTES.md /dev/stdout` — note there is no distribution argument any more.
+
+The other fifteen packs are untouched and skip-existing. One tag ships the base at 5.0.1 and `gmi` at 1.1.1 together.
+
+**Add the guard while doing #111.** A check that each pack's `description` and README intro agree with its provider's real `style_list` would have caught this, and the sweep is already written — it found `gmi` as the only pack claiming a style it does not ship. `fluent-reg` trips a naive version of that check and is a **false positive**: its "Regular" is the pack's identity, not a selectable style, since it deliberately ships one. Any guard has to allow a single-style pack to name its style. This is the "ask what would have caught it, and add that if it is cheap" pattern, and here it is cheap.
+
+**#120 is the bigger version of that finding, and it changes how large 5.0.1 is.** The pack README intros are written in upstream's voice — fifteen of sixteen, thirteen of them from one template: *"An icon provider for the `tkinter-icons` library. &lt;Upstream project&gt; &lt;marketing sentence&gt;."* Two things are wrong beyond the voice. **"Provider" is developer vocabulary** — #79 split that API out precisely because a consumer writes `from tkinter_icons import EvaIcon` and never touches a `BaseFontProvider`, yet it is the first noun on almost every pack's PyPI page. And the trailing sentence carries upstream's facts and upstream's framing, including "a single TTF font", which contradicts the positioning that users should never have to think about the font at all. `gmi`'s `twotone` claim is what that produces when upstream's copy goes stale.
+
+`fluent-reg` is the model to copy — it names the pack's role here, is honest about shipping one style, and points at `[fluent]` for people who want more. `meteocons` is the one intro whose upstream reference is **load-bearing**: the Alessio Atzeni attribution stays, for the licensing reasons under "Meteocons" below. `bs` has no characterisation at all, just a line and an inline badge.
+
+**Decide the scope deliberately rather than by momentum.** Fifteen packs changing means fifteen bumps to 1.1.1, each needing its own `## [1.1.1]` changelog entry, all carried by the one `v5.0.1` tag — mechanically fine, but it is no longer a small patch. The line worth drawing: **`gmi` is publishing a false claim right now; the other fourteen are publishing accurate text in the wrong voice.** Only the first is urgent, and doing `gmi` alone in 5.0.1 with the rest in 5.1.0 is a defensible split.
+
+**Do not touch the 5.1.0 items** — #115's `style=`, #91's lazy imports, #112. They share the `render_pil` surface and are cheaper as one pass; pulling one forward into the patch gets the ordering wrong. And **do not move `v5.0.0`** for any reason; `v5.0.1` is cut normally at the new tip.
 
 **Two lessons from finishing this release, both cheap to forget.** A generated artifact is only as good as the moment you read it: the release body was hard-wrapped and its title stuttered a distribution-name prefix left over from the retired eighteen-tag scheme, and neither was visible until the rendered page was read (#113). And a red CI run on a docs-only PR is worth diagnosing rather than re-running — the one on #110 was a genuine order-dependent test bug that had been passing or failing on entry-point ordering for however long (#114).
 
