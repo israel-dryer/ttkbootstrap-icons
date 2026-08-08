@@ -270,7 +270,11 @@ bumped every time and an existing one means the tag is wrong.
 
 **The next release can be tag-driven, and that path is now proven rather than assumed.** Push `v<version>` and the workflow builds all eighteen, publishes what PyPI does not have, and cuts one GitHub Release. The one caveat is the permanent red run on `v5.0.0` described in Current state, which is specific to that tag.
 
-**Janitorial, none of it blocking:** point Read the Docs' Default branch back at `main`; delete `gh-pages` (dead since the move to Read the Docs); delete the merged remote branches — `5.0`, `docs/handoff-post-95`, `docs/legacy-final-release-and-meteocons`, `docs/drop-bootstack-references`, `docs/migration-scope-and-shim-extra`, `docs/ci-badge`, `docs/pack-readmes-generated`, `docs/handoff-after-py314`, `release/finish-5.0.0`, `fix/iconset-style-test-order`, and `fix/release-latest-marker` (that last is #96, closed unmerged and superseded by #97). **Leave `release/ttkbootstrap-icons-packs-final` alone** — it is the only tree where the sixteen old packs still exist.
+**The janitorial list is done apart from one item, 2026-08-08.** Read the Docs' Default branch is back on `main`, and every merged remote branch is deleted. `origin` now carries only `main`, the branches of whatever is in flight, `gh-pages`, and `release/ttkbootstrap-icons-packs-final` — **leave that last one alone**, it is the only tree where the sixteen old packs still exist.
+
+Two of the ten deleted were not ancestors of `main` and both were checked rather than assumed. `docs/release-complete` carried one commit past its own merge, `05077d4`, whose patch is byte-identical to `491dae8` on `main` — the same work re-applied on `docs/milestone-split` and merged by #119. `fix/release-latest-marker` is #96, closed unmerged and superseded by #97, exactly as recorded. **Verify with `git merge-base --is-ancestor origin/<branch> origin/main` before deleting**, and when it says no, find out why rather than trusting a PR's merged badge — a branch can be merged and then pushed to again.
+
+**`gh-pages` is the one left, and it is waiting on the owner** — see the docs-URL entry under "Deliberate decisions". Pages was still enabled and serving from it as of 2026-08-08, so the branch must not be deleted until the site is unpublished; deleting it first leaves Pages configured against a branch that is gone.
 
 **The follow-up work is milestoned, and the split is deliberate.** The 5.0.0 milestone is closed; what outlived it moved to **5.0.x Fixes and Cleanup** and **5.1.0**.
 
@@ -295,9 +299,19 @@ bumped every time and an existing one means the tag is wrong.
 
 ### Doing 5.0.x — the plan, in order
 
-**1. Point Read the Docs' Default branch at `main`, before anything else.** It is still on the janitorial list, and until it is done every docs-only change is invisible to visitors — you would do #87 and #89's prose pass and see nothing. One setting, and it unblocks the whole no-release half.
+**Steps 1 and 2 are done. Step 3, the tag, is not started.**
 
-**2. The work that needs no tag.** #87 (the generated renderer figures — `docs/_ext/pack_showcase.py` is the pattern, and it already handles light/dark and the `-W` safety net), #89's prose pass (repetition across pages, and `#0d6efd` Bootstrap blue still in the examples on `index.rst` and `icons-and-names.rst`, on a site whose palette is teal), and #117, whose fix is one sentence. All of it ships on merge. Delete `gh-pages` and the merged branches in the same pass.
+**1. Read the Docs' Default branch is back on `main`** — confirmed by the owner 2026-08-08. Docs-only merges are visible again.
+
+**2. The work that needs no tag is written and open for review, as a stack of three.** Review and merge in order; each is based on the one above it and GitHub retargets on merge.
+
+| PR | Base | What |
+|---|---|---|
+| #121 | `main` | `Closes #117` |
+| #122 | #121 | #89's prose pass |
+| #123 | #122 | #87's generated figures |
+
+Do not merge them without being asked to merge that specific PR — see the #80 incident below. **#87 stays open**: this is its generated half only, and the three real-window captures it also asks for are untouched.
 
 **3. Then cut `v5.0.1`.** This is the first tag-driven release — publishers are configured and verified, so pushing the tag is the whole procedure. No manual upload, no `.pypirc`.
 
@@ -340,11 +354,24 @@ Three more, each fixed and each invisible to `pytest`, `sphinx -W` and `verify_p
 
 ### Not blocking, and worth doing next
 
-- **#87's other half.** The five screenshots are retaken and the browser has its own icon, but the *generated* figures are not built: `user-guide/sizing-and-quality` still describes measured ink, padding, oversampling and even-snapping entirely in prose, where every claim is unfalsifiable by the reader and every one of them is a side-by-side render the library could draw at build time. Same for outline-vs-fill on `icons-and-names` and the multi-pack comparison on `choosing-a-pack`. `pack_showcase.py` already does exactly this for the pack previews — the pattern, the light/dark handling and the `-W` safety net all exist.
-- **#89's prose pass.** The pages shipped; the re-read did not. Repetition across pages, and `#0d6efd` — Bootstrap blue — still in the examples on `index.rst` and `icons-and-names.rst`, on a site whose palette is teal. The landing page and both READMEs were fixed; these two were left because changing one of three would have been worse than leaving all three. #89 is closed, so this survives only here — it is a genuine loose end, not a completed item.
+- **#87's remaining third — the three real-window captures.** The generated figures are done in #123 and the five screenshots were retaken earlier, but `getting-started/quickstart`, `integrations/tkinter-ttk` and `integrations/ttkbootstrap` still carry no image. These genuinely need capturing and will need retaking when the UI changes, which is why they were split from the generated half rather than done with it. The last of the three needs a throwaway venv — `ttkbootstrap` is deliberately not installed in this tree.
 - **#91.** `import tkinter_icons` requires `tkinter` even for `render_pil`, which the headless guide had to be softened to admit. Making the Tk imports lazy is a small, contained change and restores the stronger claim. Note that the base `Icon.render_pil` being order-dependent — raising cold, succeeding after any pack icon exists — lives in the same code and is worth folding in.
 
 **The milestone is closed, and #90 with it.** #67–#71, #75, #79 and #89 closed as of #100; #90 closed from #105. The two still open — **#87** and **#91** — are genuine follow-ups that outlive the milestone and block nothing.
+
+### What building the figures found, 2026-08-08
+
+**A page's central claim was backwards, and only drawing it exposed that.** `sizing-and-quality` said `getbbox` "makes full-bleed glyphs slightly too large — they end up with no padding at all, touching the edges". `_place_by_bbox` only ever *shrinks* a glyph that overflows, so a glyph fitted that way lands **inside** the padded box: 73%–96% of it against 94%–103% on the ink path. The touching is real but comes from the other half of the function — vertical centering is against `ascent + descent` rather than against the ink. Census over every glyph in all sixteen packs, each with its own pack's options: **390 of 48,082 overflow on the fallback path, 0 of 48,082 on the measured one.** The same wrong sentence was in `_place_by_bbox`'s own docstring; both are fixed in #123.
+
+**Measure with the options the thing actually uses.** The first subject for that figure was a Font Awesome glyph, picked from a sweep run with the *default* `RenderOptions`. Font Awesome's provider asks for `pad_factor=0.15`, so under its own options the two panels came out nearly identical. A sweep that does not use the real defaults ranks the wrong candidates first.
+
+**And then look at it.** The rejected Font Awesome pair scores a pairwise alpha difference of **0.243**; the Eva pair that replaced it scores **0.185**. A pixel metric ranks them the wrong way round, so `tests/test_render_figures.py` deliberately does not try to judge whether a figure *reads* — its floor is 0.02, which catches panels becoming identical and nothing more. That limit is stated in the test's own docstring rather than left implied.
+
+**A figure that cannot show its claim was drawn and deleted.** Even-snapping is about a half-pixel boundary *at fractional display scaling*, and a PNG in a browser cannot reproduce a 150% Windows scale factor — 15 pixels beside 16 shows two sizes of one icon and nothing about blur. Prefer no figure to a figure that quietly argues against the paragraph beside it.
+
+**`pack_showcase`'s parallel-safety reasoning changed and had to be repaired, not just relied on.** It declared `parallel_read_safe` partly because each preview path was written by exactly one document. Putting `pack-preview:: bootstrap` on `icons-and-names` makes that false — two workers, one path. Every write in both extension modules now goes through `pack_showcase.save_atomic`, which writes beside the target and renames. **If you add a directive that writes an image, route it through that**; the old invariant is gone and the comment asserting it has been replaced.
+
+**Two more stale claims the prose pass caught, both of the "nothing was reading it" kind.** `installation.rst` still said "roughly 17 MB" — the figure #102 found wrong in three files and #104 corrected in two, missed because it was worded differently. And it still said "Tested on 3.10 through 3.13" after #109 added 3.14 to the classifiers *and* the CI matrix, which pin each other and therefore both went green. Guards for both are in #122: `TestTheCostOfInstallingEverythingIsMeasured` sums the installed packs rather than comparing documents, and `test_the_installation_page_names_the_same_range` adds the docs as a third direction on the version range.
 
 **The pack READMEs are generated now, and hand-editing one will be reverted by CI.** `.github/scripts/generate_pack_readmes.py` writes all sixteen from `KNOWN_PACKS`, each live provider, and `pack_showcase.SHOWCASE` — the same table the docs previews use, so a README and its docs page cannot disagree. `--check` runs in CI's docs job; `TestPackReadmesTeachTheExtrasIdiom` covers the install line, the import root and the absence of a bare install on all five platforms without needing `docs/_ext`. The only hand-written part is the intro paragraph under the H1, which regeneration preserves verbatim. If you want to state a fact on one of those pages, add it to the generator.
 
@@ -650,11 +677,32 @@ Each of these looks like a defect in isolation. They aren't.
   safe. Anything passing a name to `generate_metrics` has to import the provider
   to get it — reading the key gives an argument the CLI rejects.
 
-- **Both old docs URLs are dead and that was accepted.** GitHub redirects repo
-  URLs but not project Pages, so `israel-dryer.github.io/ttkbootstrap-icons/`
-  404s — and since the move to Read the Docs,
-  `israel-dryer.github.io/tkinter-icons/` will too. A custom domain was
-  considered and declined. `migrating.rst` tells readers where the docs went.
+- **The old docs URL under the *old* name is dead; the one under the current
+  name was still live, and that was a mistake in this file.** GitHub redirects
+  repo URLs but not project Pages, so `israel-dryer.github.io/ttkbootstrap-icons/`
+  404s. This file then asserted that
+  `israel-dryer.github.io/tkinter-icons/` "will too" — and `migrating.rst:44`
+  shipped that as a statement of fact. It was false. Checked 2026-08-08:
+  `gh api repos/israel-dryer/tkinter-icons/pages` reported
+  `status: built`, source `gh-pages`, and the URL returned **200**, serving the
+  old MkDocs site — `<title>ttkbootstrap-icons</title>`, the pre-rename name
+  sixty-four times on the landing page, and the pre-#69 install idiom that #71
+  exists to have replaced.
+
+  The lesson is the same one the #102 review kept teaching: *check whether a
+  page exists before writing down what it does.* A sentence about a URL costs
+  one `curl` to verify and this one went unverified through a rename, a docs
+  rebuild, and a release.
+
+  **Deleting the branch is not what takes it down, and the order matters.**
+  Pages stays enabled and keeps serving the last build; unpublish first
+  (Settings → Pages → Unpublish site, or
+  `gh api -X DELETE repos/israel-dryer/tkinter-icons/pages`), confirm the API
+  returns 404, then `git push origin --delete gh-pages`. Expect the URL itself
+  to serve 200 from CDN cache for a few minutes after unpublishing; the API is
+  the authority, not `curl`.
+
+  A custom domain was considered and declined.
 
 ---
 
