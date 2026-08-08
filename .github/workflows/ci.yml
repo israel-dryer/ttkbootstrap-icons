@@ -213,3 +213,17 @@ jobs:
       # distribution - so sixteen stale pages cost sixteen extra pack releases.
       - name: Pack READMEs are up to date
         run: python .github/scripts/generate_pack_readmes.py --check
+
+      # Four files quote how the renderer places glyphs - the sizing page, the
+      # `_place_by_bbox` docstring that ships in the wheel, the figures module,
+      # and CLAUDE.md. `tests/test_placement_census.py` checks all four against
+      # `docs/_data/placement-census.json`, but nothing in the test matrix can
+      # check that file against the renderer: it needs all sixteen packs, which
+      # only this job has.
+      #
+      # So this is the half of the guard that catches the renderer moving under
+      # prose that still agrees with a stale census. It is ~20 seconds for
+      # 178,584 renders. Three review rounds ran on hand-measured numbers and
+      # all three found them wrong, twice in fixes for the round before.
+      - name: The placement census still describes the renderer
+        run: python .github/scripts/generate_placement_census.py --check

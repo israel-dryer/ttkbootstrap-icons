@@ -219,10 +219,20 @@ class TestTheCostOfInstallingEverythingIsMeasured:
         )
 
     def test_that_figure_matches_the_installed_packs(self):
-        claimed = next(iter(self._prose_claims()))
+        # Guarded before indexing, and not left to the sibling test. Reaching
+        # straight for `next(iter(...))` raises a bare `StopIteration` when a
+        # rewording drops the last claim — a test *error* with no message,
+        # where the point of this class is that the failure names the number.
+        claims = self._prose_claims()
+        assert len(claims) == 1, (
+            f"expected exactly one size claim to check against the packs, found "
+            f"{claims}. See test_the_prose_states_one_figure for why there is one."
+        )
+        claimed, where = next(iter(claims.items()))
         measured = self._measured_mb()
         assert abs(claimed - measured) <= self.TOLERANCE_MB, (
-            f"the docs say {claimed} MB but the sixteen packs measure {measured:.2f} MB"
+            f"{', '.join(sorted(set(where)))} says {claimed} MB but the sixteen "
+            f"packs measure {measured:.2f} MB"
         )
 
 

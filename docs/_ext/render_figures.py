@@ -105,11 +105,14 @@ class Figure:
 #:   identical. The subjects below are the extremes under each pack's real
 #:   options, censused over the whole glyph map of the style each figure draws:
 #:   Eva fills 79% of the padded box on the fallback path against 100% on the
-#:   measured one, and Weather sits a median 10.0 px off-center at this size.
+#:   measured one, and Weather sits a median 10.0 px off-center at 96 px.
 #: - Those two figures were first written down as 73%/94% and 10.5 px, from a
 #:   400-name sample rather than a census. Sampling is fine for ranking
 #:   candidates and not fine for a number anyone will quote — and the 10.5 then
-#:   contradicted the page's own "up to a median 10 pixels".
+#:   contradicted the page's own "a median 10 pixels". Both now come from
+#:   `.github/scripts/generate_placement_census.py`, which is also where "fill"
+#:   and "off-center" are defined; quoting either without its definition is how
+#:   the same two numbers came to be restated three times and reconciled none.
 #: - The oversampling figure first used Material's `cog`, which is heavy enough
 #:   to survive without oversampling. Bootstrap's `gear` is a hairline and
 #:   turns to grey mush, which is what the claim is about.
@@ -509,7 +512,18 @@ def setup(app):
     app.add_directive("renderer-figure", RendererFigureDirective)
     app.add_directive("pack-comparison", PackComparisonDirective)
     app.connect("env-before-read-docs", check_figures)
-    # Safe for the same reasons `pack_showcase` is: the tables are read-only
-    # constants, and every output path is derived from the figure key or the
-    # (pack, concept) pair, each of which is written by exactly one document.
+    # Safe for the same reasons `pack_showcase` is, and deliberately not for
+    # the reason that module used to give. Read safety holds because nothing
+    # here is mutated across workers: `FIGURES` and `COMPARISON_ROWS` are
+    # read-only constants, and `check_figures` runs on `env-before-read-docs`,
+    # which fires once in the parent.
+    #
+    # Write safety does *not* rest on each path having one writer. That
+    # argument was true of `pack_showcase` until `icons-and-names` started
+    # drawing Bootstrap's styles, and it failed silently — two workers, one
+    # path, no warning. It is not worth re-deriving here for a module whose
+    # figure keys happen to be unique today. Every write in both modules goes
+    # through `save_atomic`, which writes beside the target and renames, so
+    # colliding workers can only produce the same bytes and race the rename.
+    # A new directive that writes an image must use it too.
     return {"version": "1.0", "parallel_read_safe": True, "parallel_write_safe": True}

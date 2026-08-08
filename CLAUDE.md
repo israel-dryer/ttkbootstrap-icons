@@ -290,21 +290,13 @@ bumped every time and an existing one means the tag is wrong.
 **Nothing has yet reviewed round 2's own fixes.** A third pass should weight these:
 
 - `tests/test_install_guidance.py` — the MB guard has now been rewritten twice. It sweeps by paragraph context; check the regex cannot miss a restatement phrased differently, and that excluding `CHANGELOG.md` (frozen history) and `CLAUDE.md` (narrates the wrong number deliberately) is the only exclusion.
-- Every census number in `sizing-and-quality.rst`, `render.py`'s `_place_by_bbox` docstring, `render_figures.FIGURES`' note, and this file. They have been restated twice and must agree with each other and with the reproduction below.
+- Every census number in `sizing-and-quality.rst`, `render.py`'s `_place_by_bbox` docstring, `render_figures.FIGURES`' note, and this file. They have been restated twice and must agree with each other and with the census.
 - `docs/_ext/render_figures.py` — restructured by round 1's fix. The imports from `pack_showcase` are deliberate; `note_self` staying local is deliberate and load-bearing.
 - **`parallel_write_safe` is asserted, not tested.** `save_atomic` is the argument for it. Nobody has run the docs build under contention to prove it.
 
-**To reproduce the census** — iterate `provider.style_list`, not `default_style`, and count only glyphs that draw:
+**The census is a committed artifact now, and that is round 3's answer to why round 2's fixes were themselves wrong.** Three sessions measured it with a throwaway snippet and transcribed the result by hand into four files, and the numbers disagreed every time — including once where a *correct* fix to `padded_box_inset` was never propagated to the prose derived from the old arithmetic. `.github/scripts/generate_placement_census.py` does the measuring, `docs/_data/placement-census.json` holds the result, and `tests/test_placement_census.py` checks all four files against it. Regenerate with the script, never by hand; `--check` runs in CI's docs job and verifies the tree. It is 178,584 renders and takes about 20 seconds, so the reason it is a committed artifact is not cost — it is that it needs all sixteen packs installed, which the test matrix deliberately does not guarantee.
 
-```python
-for style in (provider.style_list or [None]):
-    s = get_icon_set(provider, style)
-    for name, glyph in s.glyphs.items():        # 89,292 entries
-        bb = render_glyph(glyph, 96, "black", ink=..., font_key=s.font_key,
-                          font_bytes=s.font_bytes, options=s.options
-                          ).getchannel("A").getbbox()
-        if bb is None: continue                 # 123 draw nothing; 89,169 remain
-```
+**The definitions are the substance, not the numbers.** Round 3's review reported Weather's off-center as 9.0 px or 9.5 px depending on how it measured, against the documented 10.0 — and all three were defensible readings of an undefined phrase. Fill is now the longer side of the drawn glyph over the renderer's own padded box (`canvas - 2 * int(canvas * pad_factor)`, **not** the float `canvas * (1 - 2 * pad_factor)` — that discrepancy is what produced the impossible "ink fills up to 102%"), and off-center is the distance from the drawn glyph's center to the frame's. Quoting either figure without its definition is what made three rounds of correction possible.
 
 **Settled — decisions, not defects. Do not re-open these:** the even-snapping figure was drawn, looked at, and deleted because a PNG cannot reproduce a 150% display scale; `tests/test_render_figures.py` deliberately refuses to judge whether a figure *reads*, because a pixel metric ranked the rejected subject above its replacement; `icons-and-names` reuses `pack-preview:: bootstrap` rather than growing a second directive; #87 stays open.
 
@@ -418,7 +410,7 @@ Three more, each fixed and each invisible to `pytest`, `sphinx -W` and `verify_p
 
 ### What building the figures found, 2026-08-08
 
-**A page's central claim was backwards, and only drawing it exposed that.** `sizing-and-quality` said `getbbox` "makes full-bleed glyphs slightly too large — they end up with no padding at all, touching the edges". `_place_by_bbox` only ever *shrinks* a glyph that overflows, so a glyph fitted that way lands **inside** the padded box: a per-pack median of 73%–96% of it against 94%–102% on the ink path. The touching is real but comes from the other half of the function — vertical centering is against `ascent + descent` rather than against the ink. Census over every glyph in **every style** of all sixteen packs, each with its own pack's options: **518 of the 89,169 glyphs that draw ink overflow on the fallback path, 0 on the measured one.** The same wrong sentence was in `_place_by_bbox`'s own docstring; both are fixed in #123.
+**A page's central claim was backwards, and only drawing it exposed that.** `sizing-and-quality` said `getbbox` "makes full-bleed glyphs slightly too large — they end up with no padding at all, touching the edges". `_place_by_bbox` only ever *shrinks* a glyph that overflows, so a glyph fitted that way lands **inside** the padded box: a per-pack median of 72%–95% of it against 92%–100% on the ink path. The touching is real but comes from the other half of the function — vertical centering is against `ascent + descent` rather than against the ink. Census over every glyph in **every style** of all sixteen packs, each with its own pack's options: **518 of the 89,169 glyphs that draw ink overflow on the fallback path, 0 on the measured one.** The same wrong sentence was in `_place_by_bbox`'s own docstring; both are fixed in #123.
 
 **That number was wrong once, in the direction that flatters.** The first census iterated each pack's *default* style only — 48,082 glyphs — and the prose said "every glyph in all sixteen packs". It covered a little over half of them, and it excluded exactly the non-default cuts a user reaches through `style=`. **Iterate `provider.style_list`, not just `default_style`**, whenever a claim is about the whole library; the shortcut is easy to write and the resulting sentence is unfalsifiable by a reader.
 
