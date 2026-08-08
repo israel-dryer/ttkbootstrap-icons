@@ -1,7 +1,8 @@
 # tkinter-icons-weather
 
-An icon provider for the `tkinter-icons` library.  
-Weather Icons is a classic set of weather-related glyphs.
+A large weather vocabulary: conditions, moon phases, wind direction and Beaufort codes, with separate day and night variants of most conditions.
+
+Far more specific than a general interface set, which is why it is its own pack.
 
 [![PyPI](https://img.shields.io/pypi/v/tkinter-icons-weather.svg)](https://pypi.org/project/tkinter-icons-weather/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)

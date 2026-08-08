@@ -1,7 +1,8 @@
 # tkinter-icons-fluent
 
-An icon provider for the `tkinter-icons` library.  
-Fluent System Icons by Microsoft provide regular and filled styles across many sizes.
+Microsoft's system icon set, in regular, filled and light weights. The one to reach for when an application should sit visually alongside Windows 11.
+
+If you only ever use the regular weight, `tkinter-icons[fluent-regular]` ships that alone and is a much smaller download.
 
 [![PyPI](https://img.shields.io/pypi/v/tkinter-icons-fluent.svg)](https://pypi.org/project/tkinter-icons-fluent/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)

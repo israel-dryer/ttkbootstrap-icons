@@ -1,7 +1,8 @@
 # tkinter-icons-simple
 
-An icon provider for the `tkinter-icons` library.  
-Simple Icons provides brand logos as a simple, monochrome font.
+Monochrome brand logos, one per company or product.
+
+It carries no general interface glyphs at all, so it is a companion to another pack rather than a replacement for one.
 
 [![PyPI](https://img.shields.io/pypi/v/tkinter-icons-simple.svg)](https://pypi.org/project/tkinter-icons-simple/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)

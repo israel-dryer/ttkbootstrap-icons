@@ -1,7 +1,8 @@
 # tkinter-icons-eva
 
-An icon provider for the `tkinter-icons` library.  
-Eva Icons offers clean outline and filled variants for modern UIs.
+A small, tightly drawn interface set in matched outline and filled cuts.
+
+Worth choosing when consistency across a handful of glyphs matters more than breadth of coverage.
 
 [![PyPI](https://img.shields.io/pypi/v/tkinter-icons-eva.svg)](https://pypi.org/project/tkinter-icons-eva/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)

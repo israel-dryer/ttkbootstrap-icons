@@ -1,7 +1,6 @@
 # tkinter-icons-typicons
 
-An icon provider for the `tkinter-icons` library.  
-Typicons is a versatile pictographic font with filled and outline styles.
+A compact pictographic set in outline and filled cuts, with denser, heavier shapes than the hairline sets here.
 
 [![PyPI](https://img.shields.io/pypi/v/tkinter-icons-typicons.svg)](https://pypi.org/project/tkinter-icons-typicons/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)

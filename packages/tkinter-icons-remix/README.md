@@ -1,7 +1,6 @@
 # tkinter-icons-remix
 
-An icon provider for the `tkinter-icons` library.  
-Remix Icon offers modern, consistent line and filled variants.
+A neutral interface set in matched line and filled cuts, drawn at a consistent weight so glyphs sit evenly beside one another.
 
 [![PyPI](https://img.shields.io/pypi/v/tkinter-icons-remix.svg)](https://pypi.org/project/tkinter-icons-remix/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)

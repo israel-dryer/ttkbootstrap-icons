@@ -1,6 +1,8 @@
 # tkinter-icons-bs
 
-Bootstrap Icons provider for tkinter-icons.
+General-purpose interface icons in matched outline and filled cuts — the set most likely to have a plain, recognisable glyph for a toolbar button or a menu entry.
+
+If you are building on ttkbootstrap you do not need this pack: that project has Bootstrap icons built in. This one is for tkinter without it.
 
 [![PyPI](https://img.shields.io/pypi/v/tkinter-icons-bs.svg)](https://pypi.org/project/tkinter-icons-bs/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)

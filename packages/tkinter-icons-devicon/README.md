@@ -1,7 +1,8 @@
 # tkinter-icons-devicon
 
-An icon provider for the `tkinter-icons` library.  
-Devicon provides brand and technology icons for programming languages and development tools.
+Logos for programming languages, frameworks and developer tools, in plain and original cuts.
+
+Many names also come as a wordmark variant, which sets the product's name beside the mark — useful on a splash screen or an about box, less so on a toolbar.
 
 [![PyPI](https://img.shields.io/pypi/v/tkinter-icons-devicon.svg)](https://pypi.org/project/tkinter-icons-devicon/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)

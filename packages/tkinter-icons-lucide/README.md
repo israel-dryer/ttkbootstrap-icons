@@ -1,7 +1,8 @@
 # tkinter-icons-lucide
 
-An icon provider for the `tkinter-icons` library.  
-Lucide Icons are crisp, outline-based glyphs that work well at various sizes.
+Uniformly stroked hairline outlines, and the lightest-looking set of the sixteen.
+
+A good match for dense interfaces, where heavier glyphs start to dominate the layout.
 
 [![PyPI](https://img.shields.io/pypi/v/tkinter-icons-lucide.svg)](https://pypi.org/project/tkinter-icons-lucide/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)

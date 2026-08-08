@@ -1,7 +1,8 @@
 # tkinter-icons-ion
 
-An icon provider for the `tkinter-icons` library.  
-Ionicons v2 provides a familiar set of UI glyphs as a single TTF font.
+Ionicons v2, the interface set from the Ionic framework.
+
+One style and a small download, with glyph shapes most people will already find familiar.
 
 [![PyPI](https://img.shields.io/pypi/v/tkinter-icons-ion.svg)](https://pypi.org/project/tkinter-icons-ion/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
