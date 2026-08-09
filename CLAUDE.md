@@ -204,7 +204,7 @@ the base branch back at its old SHA, reopening, then retargeting. When merging a
 stack, retarget the child to `5.0` *first*, merge the parent without
 `--delete-branch`, and delete branches at the end.
 
-One open follow-up, not a release blocker: **#91** — reaching the pure-Pillow renderer should not require `tkinter` installed. **#87 closed 2026-08-08 from #130**, which captured the three real-window screenshots; its generated figures landed in #123 and its retaken assets and app icon earlier still. **#90 closed from #105**, which generated the sixteen pack READMEs rather than hand-editing them. #92 did the substance of #89 apart from its prose pass, which is folded into the list under "Next session"; #89 itself closed with #100.
+One open follow-up, not a release blocker: **#91** — reaching the pure-Pillow renderer should not require `tkinter` installed; being done now, see "Next session". **#87 closed 2026-08-08 from #130**, which captured the three real-window screenshots; its generated figures landed in #123 and its retaken assets and app icon earlier still. **#90 closed from #105**, which generated the sixteen pack READMEs rather than hand-editing them. #92 did the substance of #89 apart from its prose pass, which is folded into the list under "Next session"; #89 itself closed with #100.
 
 **#79 shipped as #81, not #80.** #80 was merged into `5.0` prematurely — without
 permission and before review — and `5.0` was reset to drop it. The rollback was
@@ -273,6 +273,35 @@ bumped every time and an existing one means the tag is wrong.
 
 ## Next session — start here
 
+### 5.1.0 is most of the way done — #112 is what is left
+
+**Everything below this subsection is finished work.** 5.0.0 and 5.0.1 both shipped, and so did the bulk of 5.1.0; the sections that follow are kept because they record *how*, not because anything in them is outstanding.
+
+| Issue | State |
+|---|---|
+| #115 | **Closed 2026-08-09**, merged as #135. `style=` on `render_pil`, and one shared `resolve_icon` behind both entry points. |
+| #136 | **Closed 2026-08-09**, merged as #137 then re-landed as #138 — see the retarget trap below. |
+| #117 | Closed earlier, from #121. |
+| #91 | In flight on `fix/tk-not-required-for-render-pil`; `PLAN.md` is its review handoff. |
+| #112 | PySimpleGUI integration, scoped as 5.1 since #71. **Not started, and independent of the rest.** |
+
+**The `render_pil` surface is finished with #91.** #115 and #91 were the two that shared it, and doing them in that order was right — #115 had the measurement behind it. #112 touches none of that code.
+
+**Nothing is waiting on a tag.** `[Unreleased]` in `CHANGELOG.md` holds #115, #136 and #91; whenever 5.1.0 is cut it goes out through the tag-driven path, which is proven as of 5.0.1.
+
+### Two mechanical lessons from landing that stack, 2026-08-09
+
+**A stacked PR merges into its base, not into `main`, and GitHub will let you do it.** #137 was based on `feat/render-pil-style`. When #135 merged to `main`, GitHub did **not** retarget #137 — it retargets on branch *deletion*, which is the one thing you must not do mid-stack. Merging #137 then put the browser work onto `feat/render-pil-style` and nowhere else: `main` never received it, and `Closes #136` was discarded because GitHub only honors it on a merge into the default branch. It looked entirely successful — both PRs showed MERGED. #138 re-landed it from `feat/render-pil-style` → `main`.
+
+So after merging any parent in a stack, **check the child's base before merging it**, and check `main` actually received the code rather than trusting two green badges:
+
+```bash
+gh pr view <child> --json baseRefName          # must say "main"
+git merge-base --is-ancestor origin/<branch> origin/main && echo on-main || echo NOT-on-main
+```
+
+**A branch can be merged and then pushed to again, so a merged PR does not mean a merged branch.** `docs/handoff-5.0.1-released` is exactly this: PR #134 merged 2026-08-08, and `f0c5cbf` was pushed to the branch afterwards and is on `main` nowhere. That commit restructures this file's "Next session" section, and the structure above is its idea, rewritten for a world where #115 is done. **The branch still holds an unmerged commit** — decide whether to land or drop it rather than deleting the branch on the strength of the PR badge. `git log --oneline origin/main..origin/<branch>` is the check, and it is the same one the janitorial sweep already prescribes.
+
 ### The docs stack merged, 2026-08-08 — #121 through #125
 
 **All five are on `main`, the five branches are deleted, and `origin` carries only `main` and `release/ttkbootstrap-icons-packs-final` again.** #117 closed from #121. **#87 stayed open by design at the time** — #123 shipped the generated figures only, and the three real-window captures were split off. Those landed later the same day in #130, which closed it.
@@ -293,7 +322,7 @@ bumped every time and an existing one means the tag is wrong.
 
 ```bash
 .venv-home/Scripts/python.exe -m sphinx docs docs/_build/html -b html -W --keep-going -n -j auto
-.venv-home/Scripts/python.exe -m pytest -q                       # 467 passed
+.venv-home/Scripts/python.exe -m pytest -q                       # 784 total, e.g. 770 passed 14 skipped
 .venv-home/Scripts/python.exe .github/scripts/generate_placement_census.py --check
 .venv-home/Scripts/python.exe .github/scripts/verify_packages.py --strict
 .venv-home/Scripts/python.exe .github/scripts/generate_pack_readmes.py --check
@@ -328,19 +357,13 @@ Two of the eleven were not ancestors of `main` and both were checked rather than
 | #117 | The `on_missing` scope sentence in `icons-and-names.rst:72` describes a case that cannot occur. Docs-only; split out of #115 so it can ship in a patch. |
 | #87 | **Closed 2026-08-08.** The generated renderer figures (#123) and then the three real-window screenshots (#130). Both shipped on merge via Read the Docs rather than with the tag, which is why it never blocked the release. |
 
-**5.1.0 — all three touch the same headless/`render_pil` surface**, and are cheaper done together than in three passes over one file.
+**5.1.0 — moved to the top of this section, since it is the live milestone.** See "5.1.0 is most of the way done" above; #115 and #136 are closed, #91 is in flight, and #112 has not been started.
 
-| Issue | What |
-|---|---|
-| #115 | `render_pil` has no `style=`, so **814 real icon names render blank** — every name that exists only in a non-default style, across six packs. Additive fix. Align `resolve_icon_style` (`f"-{s}" in name`) with `resolve_icon_name` (`name.endswith(f"-{s}")`) at the same time; they agree today only by accident of `style_list` ordering. |
-| #91 | `import tkinter_icons` requires `tkinter` even for `render_pil`, because `__init__.py:30` pulls `icon.py`, which imports `tkinter` at module scope. Making that lazy makes an import succeed that currently raises — additive, so minor rather than patch. |
-| #112 | PySimpleGUI integration, scoped as 5.1 since #71. |
-
-**Do not make `render_pil` raise on an unresolvable name before #115 lands.** It is the obvious reading of the original report and it is the wrong order: it would convert 814 silent blanks into 814 hard failures while the correct call is still awkward to write. The measurement behind that number is on #115 — all 814 fail at *resolution*, and none reach `on_missing` by resolving, which is why the code comment at `icon.py:242` is right and the prose is what is wrong.
+**Two numbers from #115 that this file had wrong, and which are now pinned by a test.** The issue's headline was **814** names rendering blank; the measurement that shipped is **849** newly resolving, over 288,418 combinations — every name once with no style, and once against each style its own pack has. The changelog first said 867 over "365,051 combinations", and neither reproduced; `TestTheDefaultStyleStoppedBeingAGate` now pins the per-pack breakdown against a frozen transcription of the old default-only rule, because a comparison against a moving `main` is not a check anyone can re-run. **Quote neither figure without the population definition** — that omission is what made three wrong versions of it look equally plausible.
 
 ### Doing 5.0.x — the plan, in order
 
-**All three steps are done — 5.0.1 shipped 2026-08-08.** Kept as a record of what a tag-driven release actually takes, since the next one follows the same path. The only item that did not close with a PR is **#118**, because the classifier needed no file change and the release alone carried it; it is still open and wants closing by hand once someone confirms the badge.
+**All three steps are done — 5.0.1 shipped 2026-08-08.** Kept as a record of what a tag-driven release actually takes, since the next one follows the same path. The only item that did not close with a PR was **#118**, because the classifier needed no file change and the release alone carried it; it was closed by hand afterwards. **The 5.0.x milestone is empty — 0 open, 8 closed** — so nothing in this section is outstanding.
 
 **1. Read the Docs' Default branch is back on `main`** — confirmed by the owner 2026-08-08. Docs-only merges are visible again.
 
@@ -375,7 +398,7 @@ Note what neither existing check caught. `generate_pack_readmes.py --check` was 
 
 **The distribution `description` was rewritten alongside the intro, which goes slightly past #120's title.** #120 names the README intros, but the summary line carries the same "provider for tkinter-icons" framing, is frozen at release time in exactly the same way, and is the *first* text on a PyPI page. Fixing one and not the other would have paid the whole cost of a fifteen-pack release for half the result. Every summary now reads `<Set> — an icon pack for tkinter-icons`, with the real styles in parentheses where the old one enumerated them.
 
-**Do not touch the 5.1.0 items** — #115's `style=`, #91's lazy imports, #112. They share the `render_pil` surface and are cheaper as one pass; pulling one forward into the patch gets the ordering wrong. And **do not move `v5.0.0`** for any reason; `v5.0.1` is cut normally at the new tip.
+**Do not touch the 5.1.0 items** — that instruction was for the 5.0.1 patch and is spent: #115 and #91 have both been done since, in that order. It is kept because the reasoning generalizes — items sharing one surface are cheaper as one pass, and pulling one forward into a patch gets the ordering wrong. And **do not move `v5.0.0`** for any reason; `v5.0.1` was cut normally at the new tip.
 
 **Two lessons from finishing this release, both cheap to forget.** A generated artifact is only as good as the moment you read it: the release body was hard-wrapped and its title stuttered a distribution-name prefix left over from the retired eighteen-tag scheme, and neither was visible until the rendered page was read (#113). And a red CI run on a docs-only PR is worth diagnosing rather than re-running — the one on #110 was a genuine order-dependent test bug that had been passing or failing on entry-point ordering for however long (#114).
 
@@ -395,11 +418,9 @@ Three more, each fixed and each invisible to `pytest`, `sphinx -W` and `verify_p
 
 **Two facts a later reader will otherwise rediscover the hard way.** The multi-style packs store `metrics-<style>.json`, not `metrics.json`, so a naive existence probe falsely reports `fluent`, `fontawesome` and `google-material` as shipping no metrics. And all 93 `.. code-block:: python` blocks in the docs now execute cleanly apart from fragments that reference an earlier block on the same page — but two of the headless-rendering examples **write into the current directory**, so run them from a temp cwd or they leave `home.png` and `icons/` in the repo.
 
-### Not blocking, and worth doing next
+**Docs examples are checked now — `tests/test_docs_examples.py`, added 2026-08-09.** It parses every `code-block:: python` with `ast` and resolves each call whose icon name *and* style are string literals, 140 of them, against the live provider. It exists because the block introducing `style=` on `render_pil` shipped `FontAwesomeIcon.render_pil("house", style="regular")` — a name that exists only in `solid`, so the example for the feature the release adds raised for everyone who copied it, with `sphinx -W` green throughout. Examples that fail *on purpose* live in `DELIBERATE_FAILURES` and are asserted to keep raising, and an exemption naming an example nobody shows any more is itself a failure. **It only reads literals** — anything built from a variable or a loop is out of scope, because resolving those means running the block, and two of them write files into the cwd.
 
-- **#91.** `import tkinter_icons` requires `tkinter` even for `render_pil`, which the headless guide had to be softened to admit. Making the Tk imports lazy is a small, contained change and restores the stronger claim. Note that the base `Icon.render_pil` being order-dependent — raising cold, succeeding after any pack icon exists — lives in the same code and is worth folding in.
-
-**The milestone is closed, and #90 with it.** #67–#71, #75, #79 and #89 closed as of #100; #90 closed from #105, #87 from #130. The one still open — **#91** — is a genuine follow-up that outlives the milestone and blocks nothing.
+**The milestone is closed, and #90 with it.** #67–#71, #75, #79 and #89 closed as of #100; #90 closed from #105, #87 from #130. #91 outlived the milestone and is being done now — see the top of this section.
 
 ### What building the figures found, 2026-08-08
 
