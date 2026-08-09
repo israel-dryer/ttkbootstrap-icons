@@ -127,9 +127,13 @@ class SimpleIconGrid:
                 self.canvas.tag_bind(img, "<Enter>", lambda e: self.canvas.config(cursor="hand2"))
                 self.canvas.tag_bind(img, "<Leave>", lambda e: self.canvas.config(cursor=""))
             except Exception:
-                txt = self.canvas.create_text(
-                    x, y, text=f"Error\n{name}", width=self.item_w - 10, font=("Arial", 8), fill="red")
-                canvas_items.append(txt)
+                # Draw nothing and leave the cell empty. This is an application,
+                # so a glyph it cannot draw is not the user's problem to read
+                # about - it used to paint a red "Error <name>" tile, which put
+                # a diagnostic in front of someone who can do nothing with it.
+                # An empty cell is what a browser missing one icon should look
+                # like, and every name is checked in the test suite so this is
+                # meant to stay unreachable.
                 icon_obj = None
             self.visible_items[idx] = (canvas_items, icon_obj)
 
@@ -391,7 +395,9 @@ class IconPreviewerApp:
                 self.icon_preview_label.config(image=large_icon.image)
                 self.icon_preview_label.image = large_icon.image
             except Exception:
-                self.icon_preview_label.config(image="", text="✕")
+                # Blank, not a failure mark. "✕" told the user something had
+                # gone wrong without telling them anything they could act on.
+                self.icon_preview_label.config(image="", text="")
 
             self.icon_name_label.config(text=icon_name)
 
@@ -399,12 +405,9 @@ class IconPreviewerApp:
                 icon_set = Icon.initialize_with_provider(provider, style=self.current_style)
                 resolved_name = provider.resolve_icon_name(icon_name, style=self.current_style)
                 glyph = icon_set.glyph(resolved_name)
-                if glyph is not None:
-                    self.icon_code_label.config(text=f"U+{ord(glyph):04X}")
-                else:
-                    self.icon_code_label.config(text="N/A")
+                self.icon_code_label.config(text=f"U+{ord(glyph):04X}" if glyph is not None else "—")
             except Exception:
-                self.icon_code_label.config(text="N/A")
+                self.icon_code_label.config(text="—")
 
             self.copy_button.config(state="normal")
         else:
@@ -677,11 +680,59 @@ def _set_app_icon(root):
         pass
 
 
+def _silence_callback_errors(root: tk.Misc) -> None:
+    """Stop Tk printing a traceback when a callback raises.
+
+    Tk routes every exception raised inside an event handler to
+    `Tk.report_callback_exception`, whose default implementation writes
+    "Exception in Tkinter callback" and a full traceback to stderr. For a
+    library that is correct. For this, it means someone who typed
+    `tkinter-icons` to look at some icons gets a stack trace in their terminal
+    about a widget they did not know existed.
+
+    Guarding the handlers one at a time cannot achieve this. There are a dozen
+    of them, several do real work outside any `try`, and the next one anybody
+    adds would be unguarded again - the default has to change, not each caller.
+
+    Installed by `main`, which owns the root it creates. It is deliberately not
+    set in `IconPreviewerApp.__init__`: embedding the app in a root somebody
+    else owns must not silence *their* callbacks.
+    """
+    root.report_callback_exception = lambda exc, val, tb: None
+
+
 def main():
-    root = tk.Tk()
-    _set_app_icon(root)
-    IconPreviewerApp(root)
-    root.mainloop()
+    # `tk.Tk()` is inside the guard because it is the *most* likely thing here
+    # to fail for a real user: no display, no X server, a Tk that did not
+    # install. Creating the root outside it left that one case - the only one
+    # someone typing `tkinter-icons` over SSH will ever hit - printing the
+    # traceback everything below exists to suppress.
+    root = None
+    try:
+        root = tk.Tk()
+        _silence_callback_errors(root)
+        _set_app_icon(root)
+        IconPreviewerApp(root)
+        root.mainloop()
+    except tk.TclError:
+        # The display went away - the window was killed, or the session ended
+        # mid-draw. There is nobody left to tell.
+        pass
+    except Exception:
+        # Anything else during startup or teardown. The window never opened, so
+        # a traceback would be the only thing the user ever saw from us.
+        pass
+    finally:
+        # A root left alive after a failed startup is torn down by the
+        # interpreter instead, and Tk failing inside `__del__` prints
+        # "Exception ignored in:" to stderr - the same traceback by a later
+        # route. On the normal path `mainloop` has already returned because the
+        # window was destroyed, so this raises `TclError` and is discarded.
+        if root is not None:
+            try:
+                root.destroy()
+            except Exception:
+                pass
 
 
 if __name__ == "__main__":
