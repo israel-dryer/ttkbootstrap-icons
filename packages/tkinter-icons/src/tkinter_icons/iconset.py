@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
+from functools import cached_property
 from typing import Any, Mapping, Optional, TYPE_CHECKING
 
 from .render import InkBounds, RenderOptions, font_codepoints
@@ -91,6 +92,22 @@ class IconSet:
     def __contains__(self, name: object) -> bool:
         return isinstance(name, str) and self.glyph(name) is not None
 
+    @cached_property
+    def _drawable_count(self) -> int:
+        """How many glyph-map entries the font actually carries, counted once.
+
+        Memoized because every input is fixed for the life of the set: the font
+        bytes and the glyph map are both frozen, and re-parsing the same bytes
+        after `clear_font_cache()` yields the same coverage. Counting costs one
+        `can_draw` per entry — about 5 ms for the largest pack — and answering
+        `len()` or `bool()` is not worth paying that more than once.
+
+        `cached_property` writes straight into `__dict__`, which is why it works
+        on a frozen dataclass where an ordinary attribute assignment would
+        raise. It is not an annotated class attribute, so it is not a field.
+        """
+        return sum(1 for character in self.glyphs.values() if self.can_draw(character))
+
     def __len__(self) -> int:
         """How many names this set can actually draw.
 
@@ -100,7 +117,27 @@ class IconSet:
         advertised map for tooling that wants to compare the two; every shipped
         pack has them equal, which `tests/test_font_coverage.py` asserts.
         """
-        return sum(1 for character in self.glyphs.values() if self.can_draw(character))
+        return self._drawable_count
+
+    def __bool__(self) -> bool:
+        """Whether this set can draw anything at all.
+
+        Exactly `len(self) > 0`, and defined only so it can stop at the first
+        drawable glyph instead of counting them all — without it Python falls
+        back to `__len__`, which is correct but scans the whole map the first
+        time it is asked.
+
+        The shortcut has to be over what the font carries, not over `glyphs`.
+        Stopping at "the map is non-empty" would be faster still and would make
+        a set call itself truthy while `len()` reported 0, which is the same
+        set answering one question two ways — the defect this class keeps
+        having (#115, #140). Both answers come from `can_draw` for that reason.
+
+        Note this does not rescue `icon_set or fallback`: a set that genuinely
+        draws nothing is still falsy, which is why `Icon.render_pil` selects on
+        `is None`. Any `or` over an object with `__len__` is that bug waiting.
+        """
+        return any(self.can_draw(character) for character in self.glyphs.values())
 
 
 _icon_sets: dict[str, IconSet] = {}

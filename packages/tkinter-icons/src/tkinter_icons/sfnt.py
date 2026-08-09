@@ -25,6 +25,16 @@ including them would report coverage of U+0000–U+00FF that has nothing to do
 with the codepoints a glyph map holds. Every recognized subtable is unioned:
 this asks whether a font *can* draw a codepoint, and any subtable that maps it
 is proof that it can.
+
+**A subtable this module cannot read makes the whole font unknown.** Unioning
+the ones it does understand and returning that as the answer would be a
+*partial* read reported as authoritative — the font's remaining coverage would
+come back as "absent", and the caller would blame the pack's glyph map for a
+pack that is fine. That is the same silent-blank failure inverted, so an
+unhandled format raises and the font falls into the `None` path above. The one
+exception is format 14, which maps variation *sequences* onto glyphs another
+subtable already reaches: it carries no coverage of its own, so skipping it
+loses nothing and is not the same thing as failing to read it.
 """
 
 from __future__ import annotations
@@ -77,6 +87,9 @@ def _cmap_codepoints(font_bytes: bytes) -> Optional[frozenset[int]]:
             continue
         parsed = _parse_subtable(font_bytes, cmap_offset + subtable_offset)
         if parsed is None:
+            # A subtable that carries no coverage of its own. It is skipped
+            # without setting `found`, so a font whose only Unicode subtable is
+            # one of these reports unknown rather than an empty set.
             continue
         found = True
         codepoints |= parsed
@@ -108,16 +121,41 @@ def _find_table(font_bytes: bytes, directory: int, tag: bytes) -> Optional[int]:
 def _is_unicode_encoding(platform_id: int, encoding_id: int) -> bool:
     """Whether a subtable addresses glyphs by Unicode codepoint.
 
-    Platform 0 is Unicode by definition. Platform 3 (Windows) is Unicode for
-    every encoding an icon font uses, including encoding 0 — nominally
-    "symbol", where the font's own private-use codepoints are the keys, which
-    is precisely how they are stored in a glyph map.
+    Platform 0 is Unicode by definition, at every encoding. Platform 3
+    (Windows) is Unicode at encoding 0 — nominally "symbol", where the font's
+    own private-use codepoints are the keys, which is precisely how a glyph map
+    stores them — and at encodings 1 and 10, the BMP and the full repertoire.
+
+    Its encodings 2 to 6 are ShiftJIS, PRC, Big5, Wansung and Johab, which
+    address glyphs by legacy multi-byte code value rather than by codepoint.
+    Excluding them is the same call platform 1 gets, for the same reason: their
+    keys are not codepoints, so unioning them would report coverage a glyph map
+    can never ask about. It also keeps them away from the dispatch below, which
+    matters more than it looks — those subtables are format 2 in practice, and
+    an unhandled format now makes the *whole font* unknown. Admitting them
+    would mean a font carrying one legacy table lost the coverage check for
+    every glyph it has.
     """
-    return platform_id in (0, 3)
+    if platform_id == 0:
+        return True
+    return platform_id == 3 and encoding_id in (0, 1, 10)
 
 
 def _parse_subtable(font_bytes: bytes, offset: int) -> Optional[set[int]]:
-    """Dispatch on subtable format. Returns `None` for a format not handled."""
+    """Dispatch on subtable format.
+
+    Returns:
+        The codepoints this subtable maps to a real glyph, or `None` for a
+        subtable that carries no coverage of its own and is deliberately
+        skipped.
+
+    Raises:
+        ValueError: for a format that does carry coverage and is not read here
+            — formats 2 and 13, and anything a later specification adds. The
+            caller turns that into "this font is unknown", because unioning
+            only the subtables that *were* understood would report the font's
+            real coverage as smaller than it is.
+    """
     (subtable_format,) = struct.unpack_from(">H", font_bytes, offset)
     if subtable_format == 4:
         return _parse_format_4(font_bytes, offset)
@@ -127,7 +165,11 @@ def _parse_subtable(font_bytes: bytes, offset: int) -> Optional[set[int]]:
         return _parse_format_6(font_bytes, offset)
     if subtable_format == 0:
         return _parse_format_0(font_bytes, offset)
-    return None
+    if subtable_format == 14:
+        # Unicode Variation Sequences. Every glyph it selects is reachable
+        # through a base subtable, so it adds nothing to a coverage question.
+        return None
+    raise ValueError(f"unhandled cmap subtable format {subtable_format}")
 
 
 def _parse_format_0(font_bytes: bytes, offset: int) -> set[int]:

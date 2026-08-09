@@ -131,7 +131,7 @@ The pack was asked for an icon it does not draw in any style. Nothing about that
 
 121 glyph-map entries were in that state when this was found: 119 across Google Material's ``outlined``, ``round`` and ``sharp`` cuts, and 2 in Material Design Icons. Counted the way the placement census counts — once per name *per style* — that is 123, because Material Design Icons' two styles are drawn from one font and share one glyph map. Both numbers are right; they measure different things, and quoting either without saying which is how a 123-glyph discrepancy once went unexplained for a whole review round.
 
-   The packs' generators were fixed too, so a regeneration cannot reintroduce them. Every pack now advertises exactly what it can draw, which ``tests/test_font_coverage.py`` asserts against every style of every installed pack.
+The packs' generators were fixed too, so a regeneration cannot reintroduce them. Every pack now advertises exactly what it can draw, which ``tests/test_font_coverage.py`` asserts against every style of every installed pack.
 
 Asking for a pack you have not installed
 ----------------------------------------

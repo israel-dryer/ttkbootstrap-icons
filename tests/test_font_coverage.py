@@ -33,6 +33,7 @@ guarantee, so each case skips when its pack is absent.
 from __future__ import annotations
 
 import io
+import struct
 import warnings
 
 import pytest
@@ -40,7 +41,7 @@ import pytest
 from tkinter_icons.icon import Icon
 from tkinter_icons.iconset import IconSet, get_icon_set
 from tkinter_icons.render import RenderOptions, clear_font_cache, font_codepoints
-from tkinter_icons.sfnt import cmap_codepoints
+from tkinter_icons.sfnt import _is_unicode_encoding, cmap_codepoints
 
 
 def reference_codepoints(font_bytes: bytes) -> set[int]:
@@ -81,6 +82,66 @@ def every_installed_style(registry):
 
 def style_ids(registry) -> list[str]:
     return [f"{name}:{style or 'default'}" for name, style, _ in every_installed_style(registry)]
+
+
+def _unicode_subtable_offsets(font_bytes: bytes) -> tuple[int, list[int]]:
+    """Return the `cmap` offset and the distinct offsets of its Unicode subtables.
+
+    Written out here rather than reusing `sfnt`'s own helpers: a parser test
+    that locates its target with the parser under test only proves the parser
+    agrees with itself.
+    """
+    (table_count,) = struct.unpack_from(">H", font_bytes, 4)
+    cmap_offset = None
+    for index in range(table_count):
+        record = 12 + index * 16
+        if font_bytes[record:record + 4] == b"cmap":
+            (cmap_offset,) = struct.unpack_from(">I", font_bytes, record + 8)
+            break
+    assert cmap_offset is not None, "shipped font has no cmap table"
+
+    (subtable_count,) = struct.unpack_from(">H", font_bytes, cmap_offset + 2)
+    offsets: list[int] = []
+    for index in range(subtable_count):
+        platform_id, _, subtable_offset = struct.unpack_from(
+            ">HHI", font_bytes, cmap_offset + 4 + index * 8
+        )
+        # Several records routinely point at one subtable — (0,3) and (3,1)
+        # usually share the format 4 table. Patching by distinct offset is what
+        # makes "the first one only" mean one subtable rather than one record.
+        if platform_id in (0, 3) and cmap_offset + subtable_offset not in offsets:
+            offsets.append(cmap_offset + subtable_offset)
+    return cmap_offset, offsets
+
+
+def _patch_subtable_formats(font_bytes: bytes, new_format: int, first_only: bool = False) -> bytes:
+    """Rewrite the format word of a real font's Unicode `cmap` subtables.
+
+    Every font this project ships uses formats 0, 4, 6 and 12, so the cases
+    below cannot be built from the packs as they are. Editing one field of a
+    real font is a smaller fiction than hand-rolling a font: everything the
+    parser walks to reach the subtable stays exactly as a real font has it.
+    """
+    data = bytearray(font_bytes)
+    _, offsets = _unicode_subtable_offsets(font_bytes)
+    assert offsets, "no Unicode cmap subtable to patch"
+    for offset in offsets[:1] if first_only else offsets:
+        struct.pack_into(">H", data, offset, new_format)
+    return bytes(data)
+
+
+def _a_font_with_two_unicode_subtables(registry) -> bytes:
+    """A shipped font carrying two distinct Unicode subtables, or skip.
+
+    Two is what makes a *partial* read possible at all: one subtable the parser
+    reads and one it does not. Eighteen of the thirty-one shipped styles pair a
+    format 4 for the BMP with a format 12 for the supplementary private-use
+    area, which is exactly the shape the finding describes.
+    """
+    for _, _, icon_set in every_installed_style(registry):
+        if len(_unicode_subtable_offsets(icon_set.font_bytes)[1]) >= 2:
+            return icon_set.font_bytes
+    pytest.skip("no installed pack ships a font with two Unicode cmap subtables")
 
 
 class TestNoPackAdvertisesAGlyphItsFontLacks:
@@ -192,6 +253,54 @@ class TestTheShippedCmapReaderAgreesWithFontTools:
         assert cmap_codepoints(b"not a font at all") is None
         assert cmap_codepoints(b"\x00\x01\x00\x00" + b"\xff" * 64) is None
 
+    def test_a_subtable_it_cannot_read_makes_the_whole_font_unknown(self, registry):
+        """A partial read must not be returned as the answer.
+
+        The parser handles formats 0, 4, 6 and 12, which is every format the
+        sixteen packs use. A font that pairs one of those with a format it does
+        not read — 13 for a supplementary range, say — would have the unread
+        subtable's coverage reported as *absent*, and the caller would tell the
+        user the pack's glyph map is at fault for a pack that is fine. Unknown
+        is the only honest answer, and it fails open.
+        """
+        font_bytes = _a_font_with_two_unicode_subtables(registry)
+        assert cmap_codepoints(font_bytes) is not None
+
+        one_unreadable = _patch_subtable_formats(font_bytes, 13, first_only=True)
+        assert cmap_codepoints(one_unreadable) is None
+
+    def test_a_variation_sequence_table_is_skipped_without_emptying_the_font(self, registry):
+        """Format 14 carries no coverage, which is not the same as being unread.
+
+        It maps variation *sequences* onto glyphs a base subtable already
+        reaches, so skipping it loses nothing — but it must not count as a
+        subtable that reported coverage either. A font whose only Unicode
+        subtables were format 14 has to come back unknown; an empty set would
+        claim the font draws nothing at all, which blanks a whole pack.
+        """
+        font_bytes = _a_font_with_two_unicode_subtables(registry)
+        every_one_skipped = _patch_subtable_formats(font_bytes, 14)
+        assert cmap_codepoints(every_one_skipped) is None
+
+    def test_only_codepoint_addressed_subtables_are_read(self):
+        """Legacy encodings are excluded before the format dispatch, not after.
+
+        Platform 3's encodings 2 to 6 key on multi-byte code values rather than
+        codepoints, so their contents were never meaningful here. What makes
+        the distinction load-bearing rather than tidy is the rule above: an
+        unhandled format makes the whole font unknown, and those subtables are
+        format 2 in practice. Admitting them would mean a font that happens to
+        carry one legacy table silently loses the coverage check for every
+        glyph it has.
+        """
+        assert _is_unicode_encoding(0, 3)
+        assert _is_unicode_encoding(3, 0)   # Windows symbol: PUA keys, as glyph maps store
+        assert _is_unicode_encoding(3, 1)   # Windows BMP
+        assert _is_unicode_encoding(3, 10)  # Windows full repertoire
+        assert not _is_unicode_encoding(1, 0)  # Macintosh, keyed by byte value
+        for legacy in (2, 3, 4, 5, 6):  # ShiftJIS, PRC, Big5, Wansung, Johab
+            assert not _is_unicode_encoding(3, legacy), legacy
+
     def test_coverage_is_parsed_once_per_font(self, registry):
         """The result is cached, so asking before every glyph costs one parse."""
         _, _, icon_set = next(iter(every_installed_style(registry)))
@@ -230,6 +339,41 @@ class TestAFontAbsentCodepointObeysOnMissing:
         assert len(set_that_lies) == 0
         # The raw advertised map still holds it — that gap is the whole finding.
         assert "not-in-the-font" in set_that_lies.glyphs
+
+    def test_truthiness_agrees_with_the_count(self, set_that_lies, registry):
+        """`bool()` and `len()` are one answer, and the fast path must not fork them.
+
+        Truthiness short-circuits at the first drawable glyph instead of
+        counting them all, which is the whole point — but the shortcut has to
+        be over what the font carries, not over the advertised map. A `__bool__`
+        that stopped at "`glyphs` is non-empty" would call this set truthy while
+        `len()` reports 0, and a set disagreeing with itself about what it can
+        draw is what #140 was.
+        """
+        assert bool(set_that_lies) is False
+        assert bool(set_that_lies) == (len(set_that_lies) > 0)
+
+        _, _, real = next(iter(every_installed_style(registry)))
+        assert bool(real) is True
+        assert bool(real) == (len(real) > 0)
+
+    def test_the_count_is_memoized_not_recomputed(self, set_that_lies):
+        """Counting is one `can_draw` per entry, so it happens once per set.
+
+        Every input is frozen for the life of the set, so the second answer is
+        the first one. Without this a `len()` on the largest pack is a 14,894
+        entry scan every time it is asked.
+        """
+        calls = []
+        original = type(set_that_lies).can_draw
+        try:
+            type(set_that_lies).can_draw = lambda self, ch: calls.append(ch) or original(self, ch)
+            len(set_that_lies)
+            after_first = len(calls)
+            len(set_that_lies)
+            assert len(calls) == after_first
+        finally:
+            type(set_that_lies).can_draw = original
 
     def test_transparent_is_still_the_default(self, set_that_lies):
         image = Icon.render_pil("not-in-the-font", icon_set=set_that_lies)
