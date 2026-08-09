@@ -457,7 +457,19 @@ class BaseFontProvider(ABC):
 
         candidates = self.candidate_styles(name, style)
         if not any(self._name_lookup.get(s) for s in candidates):
-            raise ValueError(f"Style '{candidates[0]}' is not valid for {self.name}. Available: {self.style_list}")
+            # Name what was actually searched, for the same reason the sibling
+            # below does. With no explicit style `candidates` is every style
+            # the pack has, default first, so quoting `candidates[0]` accused
+            # the *default* of being invalid while listing it as available:
+            # `Style 'outline' is not valid for bootstrap. Available: ('fill',
+            # 'outline')`. One candidate means the caller named it or wrote it
+            # into the name, and then it is the right thing to quote.
+            available = ", ".join(self.style_list)
+            if len(candidates) == 1:
+                raise ValueError(f"Style '{candidates[0]}' is not valid for {self.name}. Available: {available}.")
+            raise ValueError(
+                f"No style of {self.name} has any glyphs to resolve against; tried {', '.join(candidates)}."
+            )
 
         for candidate in candidates:
             glyph = self._lookup_within_style(name, candidate)

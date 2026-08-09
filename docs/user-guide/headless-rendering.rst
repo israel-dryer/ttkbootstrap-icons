@@ -49,8 +49,8 @@ Reach for ``style`` when a name exists in several styles and you want one that i
 
 .. code-block:: python
 
-   FontAwesomeIcon.render_pil("house", size=32)                    # solid, the default
-   FontAwesomeIcon.render_pil("house", size=32, style="regular")
+   FontAwesomeIcon.render_pil("address-book", size=32)                  # solid, the default
+   FontAwesomeIcon.render_pil("address-book", size=32, style="regular") # the outlined cut
 
 Unlike a bare name, an explicit ``style`` is never quietly dropped. Naming a style the pack does not draw that icon in, or one the name itself contradicts, raises rather than returning a blank image — the icon set is chosen from the style, so ignoring the argument would mean drawing the wrong style rather than drawing nothing:
 

@@ -199,7 +199,7 @@ class TestTheTwoResolversReadANameTheSameWay:
 class TestEveryNameIsReachableWithAnExplicitStyle:
     """The claim `style=` exists to make true.
 
-    867 names across seven packs could not be reached by name at all, and the
+    849 names across seven packs could not be reached by name at all, and the
     ones in a non-default style had no headless spelling either. The census
     runs over every style rather than each pack's default, because the names in
     question are by definition the ones outside the default — measuring over
@@ -255,7 +255,7 @@ class TestEveryNameIsReachableWithAnExplicitStyle:
 
         Font Awesome's brand marks carry no style token, so nothing in the name
         can lead a resolver to `brands`. While the default style gated
-        resolution this was the silent transparent square that made 867 real
+        resolution this was the silent transparent square that made 849 real
         icons look like typos; now the default is only a preference, and the
         name finds the one style that has it.
         """
@@ -472,3 +472,105 @@ class TestTheConstructorTakesTheNamesThePackShips:
 
         icon = icon_class(pack)("aarch64-plain-wordmark", size=32)
         assert icon.to_pil().getchannel("A").getbbox() is not None
+
+
+#: What each pack gained when the default style stopped being a gate, keyed by
+#: provider name. Measured against the rule `main` shipped — reproduced in
+#: `resolves_under_the_default_only_rule` below rather than imported, because
+#: the code it describes is gone and a comparison against a moving `main` is
+#: not a check anything can re-run.
+NEWLY_REACHABLE_BY_NAME = {
+    "fontawesome": 489,
+    "fluent": 185,
+    "mat": 102,
+    "bootstrap": 35,
+    "devicon": 28,
+    "typicons": 8,
+    "eva": 2,
+}
+
+
+def resolves_under_the_default_only_rule(provider, name):
+    """Whether `main`'s resolver reached `name` with no style argument.
+
+    The old rule in the one case that changed: infer a style from a `-<suffix>`
+    at the end of the name, fall back to the pack's default, and look in that
+    one style and nowhere else. Frozen on purpose — it is a historical rule, so
+    it is transcribed here instead of being diffed against a branch.
+    """
+    if not provider.has_styles:
+        return name in provider._name_lookup.get("base", {})
+
+    inferred = next((s for s in provider.style_list if name.endswith(f"-{s}")), None)
+    lookup_style = inferred or provider.default_style or "base"
+    lookup = provider._name_lookup.get(lookup_style, {})
+    if not lookup:
+        return False
+
+    formatted = provider.format_glyph_name(name)
+    if name in lookup or f"{name}-{lookup_style}" in lookup or formatted in lookup:
+        return True
+    if inferred is not None:
+        base = name[: -len(f"-{inferred}")]
+        if base in lookup or provider.format_glyph_name(base) in lookup:
+            return True
+    return False
+
+
+class TestTheDefaultStyleStoppedBeingAGate:
+    """The size of the change, pinned per pack.
+
+    The changelog and `docs/user-guide/icons-and-names.rst` both quote this
+    total, and it was quoted wrong once — from a measurement taken against an
+    earlier version of the inference rule and never retaken, which put Devicon
+    at 45 against a real 28 and the total at 867 against a real 849. Those
+    numbers are frozen into the GitHub Release body at tag time, so nothing
+    downstream can correct them. Hence a test rather than a note.
+    """
+
+    @pytest.mark.parametrize("pack", INSTALLED, ids=lambda p: p.extra)
+    def test_the_count_each_pack_gained_is_what_is_published(self, pack):
+        provider = provider_for(pack)
+        styles = list(provider.style_list) if provider.has_styles else ["base"]
+        names = set()
+        for style in styles:
+            names |= set(provider._name_lookup.get(style, {}))
+
+        gained = 0
+        for name in names:
+            if resolves_under_the_default_only_rule(provider, name):
+                continue
+            try:
+                provider.resolve_icon(name, None)
+            except ValueError:
+                continue
+            gained += 1
+
+        expected = NEWLY_REACHABLE_BY_NAME.get(provider.name, 0)
+        assert gained == expected, (
+            f"{pack.extra} now reaches {gained} names by name alone that the default-only "
+            f"rule could not; the published figure is {expected}"
+        )
+
+    def test_nothing_the_old_rule_reached_was_lost(self):
+        """The other half of "purely additive", which is the load-bearing half.
+
+        A name gained is a feature; a name lost is a break in a released pack,
+        so this sweeps every name of every installed pack rather than trusting
+        the totals above.
+        """
+        lost = []
+        for pack in INSTALLED:
+            provider = provider_for(pack)
+            styles = list(provider.style_list) if provider.has_styles else ["base"]
+            names = set()
+            for style in styles:
+                names |= set(provider._name_lookup.get(style, {}))
+            for name in names:
+                if not resolves_under_the_default_only_rule(provider, name):
+                    continue
+                try:
+                    provider.resolve_icon(name, None)
+                except ValueError:
+                    lost.append((pack.extra, name))
+        assert not lost, f"{len(lost)} name(s) stopped resolving: {lost[:5]}"

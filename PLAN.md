@@ -21,7 +21,7 @@ Three things stood in the way, all in `BaseFontProvider`:
    `PackIcon(name, style=...)` had no headless spelling.
 2. The default style **gated** resolution. A name with no style written into it
    was looked for in the default style and nowhere else, so a name existing only
-   in another style resolved nowhere. 867 real icons were in that position.
+   in another style resolved nowhere. 849 real icons were in that position.
 3. `resolve_icon_style` and `resolve_icon_name` read a style out of a name by
    different rules — substring-anywhere versus suffix-only. They agreed on most
    names by accident of each pack's style declaration order.
@@ -59,8 +59,10 @@ These are the things a change here must not break. Each is asserted by a test;
 where a number is quoted it was measured against `3ee00f1` (the merge base).
 
 - **No successful resolution changes.** Over all 94,964 names of all sixteen
-  packs against every style each pack has (365,051 combinations): 867 newly
-  resolve, 0 stop resolving, 0 resolve to a *different* glyph.
+  packs, once with no style and once against each style its own pack has
+  (288,418 combinations): 849 newly resolve, 0 stop resolving, 0 resolve to a
+  *different* glyph. `TestTheDefaultStyleStoppedBeingAGate` pins the per-pack
+  breakdown, so the figure cannot drift out of the changelog again.
 - **The two entry points agree.** Constructor and `render_pil` resolve all
   113,399 name-and-style entries identically and draw identical pixels.
 - **Every name a pack lists is reachable**, including from the browser, whose
@@ -73,6 +75,15 @@ where a number is quoted it was measured against `3ee00f1` (the merge base).
 - **The default style cannot be removed.** All 13,658 names that exist in more
   than one style write no style into the name, so with nothing to prefer each
   becomes ambiguous. Removing it breaks 13,640 names that work today.
+- **Every icon a docs example names is one its pack ships.** Added in review,
+  after the block introducing `style=` on `render_pil` was found to call
+  `FontAwesomeIcon.render_pil("house", style="regular")` — a name that exists
+  only in `solid`, so the example for the feature this branch adds raised for
+  anyone who copied it. `tests/test_docs_examples.py` parses the `code-block`
+  bodies with `ast` and resolves every call whose name and style are string
+  literals: 140 of them today, across every page. Examples that fail *on
+  purpose* are listed in `DELIBERATE_FAILURES` and asserted to keep raising,
+  and an exemption naming an example nobody shows any more is itself a failure.
 
 ---
 
@@ -80,7 +91,7 @@ where a number is quoted it was measured against `3ee00f1` (the merge base).
 
 - **`PackIcon.render_pil` raises `ValueError`** on a name the pack cannot
   resolve, where it returned a transparent image. Callers tolerating blanks must
-  catch it. Sequenced *after* the resolution fixes on purpose: while 867 real
+  catch it. Sequenced *after* the resolution fixes on purpose: while 849 real
   icons were unreachable, raising would have failed on names that were not
   typos.
 - **`on_missing` no longer sees pack resolution failures.** It still governs a
@@ -119,9 +130,11 @@ where a number is quoted it was measured against `3ee00f1` (the merge base).
 - `candidate_styles` assumes `default_style` is a member of `style_list`.
   `BaseFontProvider.__init__` enforces that, but the dedup in the last line
   would silently produce a wrong candidate order if it ever were not.
-- The "Style X is not valid" error names `candidates[0]`, which is the default
-  when several styles were searched. The *unresolvable name* error was changed
-  to list every style searched; that one was not.
+- ~~The "Style X is not valid" error names `candidates[0]`, which is the default
+  when several styles were searched.~~ Fixed in review: it accused the default
+  of being invalid while listing it under "Available". One candidate means the
+  caller named it or wrote it into the name and is still quoted; several means
+  no style of the pack has a lookup at all, which is now what it says.
 - `resolve_icon_style` returning the default on failure means a caller cannot
   distinguish "resolved to default" from "did not resolve". Only `render_pil`'s
   fallback path relies on this.
