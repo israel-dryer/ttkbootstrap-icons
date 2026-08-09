@@ -141,3 +141,64 @@ where a number is quoted it was measured against `3ee00f1` (the merge base).
 - `_lookup_within_style` strips a trailing `-{style}` suffix. The old code
   stripped only when the style had been *inferred* from the name. These
   coincide today; whether they must is not proven.
+
+---
+
+# PLAN — the browser never shows an error (#136)
+
+Branch `fix/browser-never-shows-errors`, PR #137, **stacked on #135**. Review
+scope for round 1 is `git diff feat/render-pil-style..fix/browser-never-shows-errors`
+— the section above is #135's and is reviewed separately.
+
+## What this is supposed to do
+
+`tkinter-icons` is a console script someone runs to look at icons. There is no
+circumstance in which a diagnostic belongs on their screen. Two paths produced
+one.
+
+**Displaying caught errors.** `SimpleIconGrid._render_visible` painted a red
+`Error <name>` tile for an icon it could not build; the detail panel marked the
+preview `✕` and the codepoint `N/A`. Intent: a glyph that cannot be rendered is
+absent — empty cell, blank preview, `—` for the codepoint, matching the
+placeholder already used for "nothing selected".
+
+**Tk's own traceback path.** Every exception raised inside an event handler goes
+to `Tk.report_callback_exception`, which writes `Exception in Tkinter callback`
+and a stack trace to stderr. Intent: nothing reaches stderr or stdout.
+
+## Why the interception point rather than the call sites
+
+Of the twelve callbacks, one has its whole body inside a `try`. `_on_configure`,
+`_on_mousewheel`, `_copy_icon_name` (clipboard), `_on_icon_set_change` and
+`_on_style_change` have none; `main` guarded nothing. Wrapping all twelve leaves
+the thirteenth anybody adds unguarded, so the default is replaced instead.
+
+## Invariants
+
+- Nothing propagates out of `main`, and nothing is written to stderr or stdout.
+- With every resolution forced to raise: window alive, zero canvas items, blank
+  preview label.
+- In normal operation: 1,860 icons drawn across all sixteen packs and every
+  style, zero text items on the canvas.
+- Nothing is logged. There is no reader for it.
+
+## Structure notes
+
+- `_silence_callback_errors` is installed by `main`, which owns the root it
+  creates. Deliberately **not** in `IconPreviewerApp.__init__`: embedding the
+  app in a root somebody else owns must not silence *their* callbacks.
+- `main` catches `tk.TclError` separately from `Exception` only to document the
+  display-went-away case; both do nothing.
+
+## Known-weak spots — worth a reviewer's attention
+
+- Swallowing every callback exception hides real defects during development.
+  There is no debug escape hatch (no env var, no `--verbose`).
+- `_set_app_icon` catches `(OSError, ModuleNotFoundError, tk.TclError)` only. It
+  is now called inside `main`'s guard, so anything else is caught one level up,
+  but the narrow tuple is no longer doing what it looks like it does.
+- `test_main_never_lets_an_error_escape` stubs `mainloop` and must destroy the
+  root `main` creates. Failing to do so breaks lifecycle tests in *another* file,
+  because Tk 8.6 cannot reliably create a second interpreter per process.
+- The empty grid cell leaves a gap in the layout rather than reflowing. Names
+  are not filtered up front; that would cost a resolution pass per pack switch.
