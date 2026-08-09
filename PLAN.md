@@ -1,214 +1,64 @@
-# PLAN — name resolution (#115)
+# PLAN — Tk is not required to render (#91)
 
-Branch `feat/render-pil-style`, PR #135. Review scope for round 1 is
-`git diff 3ee00f1..feat/render-pil-style`.
+Branch `fix/tk-not-required-for-render-pil`, off `main`. Review scope is `git diff main..fix/tk-not-required-for-render-pil`.
 
-Written for the reviewing session. It states what the code is meant to do and
-what must hold, so that a finding can be checked against intent rather than
-guessed at.
+Written for the reviewing session. It states what the code is meant to do and what must hold, so a finding can be checked against intent rather than guessed at.
+
+The two previous sections here — #115's resolution plan and #136's browser plan — are gone rather than archived. Both shipped, and their findings are recorded where they belong: in `CHANGELOG.md`, in the tests that guard them, and in `CLAUDE.md`. A plan kept past its merge is a second copy of the truth, which is how the placement numbers drifted through three review rounds.
 
 ---
 
 ## What this is supposed to do
 
-A pack's icon class and `Icon.render_pil` are two doors onto one library. A name
-must mean the same thing at both, and every icon a pack ships must be reachable
-by name.
+The drawing core is pure Pillow and has never had a Tkinter import. But `__init__.py` imports `icon.py`, and `icon.py` imported `tkinter` at module scope, so `import tkinter_icons` raised `ImportError` on any machine without Tk — putting Tk in front of a renderer that never touches it.
 
-Three things stood in the way, all in `BaseFontProvider`:
+This is not theoretical. On Linux `tkinter` is a distribution package (`python3-tk`) rather than part of a pip install, so the environments the headless guide names — a slim CI image, `python:3.12-slim`, a thumbnail worker — are exactly the ones that lack it.
 
-1. `render_pil` took no `style`, so a name reachable through
-   `PackIcon(name, style=...)` had no headless spelling.
-2. The default style **gated** resolution. A name with no style written into it
-   was looked for in the default style and nowhere else, so a name existing only
-   in another style resolved nowhere. 849 real icons were in that position.
-3. `resolve_icon_style` and `resolve_icon_name` read a style out of a name by
-   different rules — substring-anywhere versus suffix-only. They agreed on most
-   names by accident of each pack's style declaration order.
+**Three import sites, not one.** Finding only the first is the trap:
 
-The intended end state: one resolution function, three ordered rules, used
-everywhere.
+| site | what | why it counts |
+|---|---|---|
+| `icon.py` | `import tkinter` | the one the issue names |
+| `icon.py` | `from PIL.ImageTk import PhotoImage` | **`PIL.ImageTk` does `import tkinter` itself**, so fixing the first alone changes nothing |
+| `stateful_icon_mixin.py` | `from tkinter.ttk import Style, Widget` | `icon.py` imports this module, so it is on the same path |
 
 ---
 
-## The rules, in order
+## The shape of the fix, and why it is not `TYPE_CHECKING`
 
-Implemented by `BaseFontProvider.candidate_styles`.
+Each import stays at module scope inside `try: ... except ImportError:`, and every *runtime* use re-imports at the point of use.
 
-1. **An explicit `style` is the only candidate.** Asking for one and getting
-   another would make the argument decorative.
-2. **A style written into the name is the only candidate.** `"house-fill"` is a
-   request, not a hint.
-3. **Otherwise: the default style first, then every other style.**
+**`TYPE_CHECKING` was the first attempt and it broke the documentation.** `from __future__ import annotations` makes every hint a string, and `typing.get_type_hints` — which Sphinx autodoc calls — resolves those strings against the module's globals. A name imported only under `TYPE_CHECKING` is not there at runtime, so resolution raises `NameError`. That failure is **per module, not per name**: hiding `PhotoImage` also cost `MissingPolicy`, `StateMapMode`, `IconStateSpec` and `Widget` their cross-references, and `sphinx -W` went from clean to six errors.
 
-Name parsing is `infer_style_from_name`: a style must match whole
-hyphen-separated components, never starting at component 0, longest match wins.
+Importing eagerly wherever Tk exists keeps every annotation resolvable, so machines with Tk — the docs build, CI, any desktop — behave exactly as before. Only a genuinely Tk-less machine takes the degraded path, and nothing introspects annotations there.
 
-| rule detail | the pack that forces it |
-|---|---|
-| whole components | Fluent's `filled` is not Bootstrap's `fill` |
-| never the first component | Remix has a `line` style *and* a `line-chart` glyph, which is a chart |
-| longest match wins | Devicon has both `plain` and `plain-wordmark` |
-| mid-name matches count | Bootstrap ships `shield-fill-check` in the `fill` style |
+The `except ImportError` is narrow on purpose. It tolerates Tk being absent and nothing else; a `PIL` broken some other way still raises, from the point-of-use import, where the message names what actually failed.
 
 ---
 
 ## Invariants
 
-These are the things a change here must not break. Each is asserted by a test;
-where a number is quoted it was measured against `3ee00f1` (the merge base).
-
-- **No successful resolution changes.** Over all 94,964 names of all sixteen
-  packs, once with no style and once against each style its own pack has
-  (288,418 combinations): 849 newly resolve, 0 stop resolving, 0 resolve to a
-  *different* glyph. `TestTheDefaultStyleStoppedBeingAGate` pins the per-pack
-  breakdown, so the figure cannot drift out of the changelog again.
-- **The two entry points agree.** Constructor and `render_pil` resolve all
-  113,399 name-and-style entries identically and draw identical pixels.
-- **Every name a pack lists is reachable**, including from the browser, whose
-  names are the lookup's *values* rather than its keys.
-- **`resolve_icon_style` and `resolve_icon_name` cannot disagree.** They are
-  views of `resolve_icon`, which returns the style and glyph together. This is
-  structural: it is not enough for the two rules to match.
-- **`"none"` is a sentinel, not a name.** It means "deliberately no icon", is
-  passed through unresolved by both entry points, and renders transparent.
-- **The default style cannot be removed.** All 13,658 names that exist in more
-  than one style write no style into the name, so with nothing to prefer each
-  becomes ambiguous. Removing it breaks 13,640 names that work today.
-- **Every icon a docs example names is one its pack ships.** Added in review,
-  after the block introducing `style=` on `render_pil` was found to call
-  `FontAwesomeIcon.render_pil("house", style="regular")` — a name that exists
-  only in `solid`, so the example for the feature this branch adds raised for
-  anyone who copied it. `tests/test_docs_examples.py` parses the `code-block`
-  bodies with `ast` and resolves every call whose name and style are string
-  literals: 140 of them today, across every page. Examples that fail *on
-  purpose* are listed in `DELIBERATE_FAILURES` and asserted to keep raising,
-  and an exemption naming an example nobody shows any more is itself a failure.
+- **`import tkinter_icons` works with no `tkinter` installed**, and so do `render_glyph`, `Icon.render_pil`, and saving the result to a PNG.
+- **Nothing imports `tkinter` as a side effect.** Each test asserts `"tkinter" not in sys.modules` after the fact, not merely that no exception was raised.
+- **The widget path still fails, and fails legibly.** Reaching `.image` without Tk raises `ImportError` naming `tkinter` — not `AttributeError`, not `NameError` from a deferred import site, and not a `TypeError` from calling the `Any` placeholder.
+- **Constructing an icon is still free of Tk.** `PackIcon("house", size=32)` renders nothing until `.image`, which is what makes the point above reachable at all.
+- **`sphinx -W --keep-going -n` stays clean**, which is the check that caught the `TYPE_CHECKING` attempt.
 
 ---
 
-## Behavior changes (deliberate)
+## How it is tested
 
-- **`PackIcon.render_pil` raises `ValueError`** on a name the pack cannot
-  resolve, where it returned a transparent image. Callers tolerating blanks must
-  catch it. Sequenced *after* the resolution fixes on purpose: while 849 real
-  icons were unreachable, raising would have failed on names that were not
-  typos.
-- **`on_missing` no longer sees pack resolution failures.** It still governs a
-  name that reaches an icon set without being resolved against it — the base
-  `Icon`, or `render_pil` with an explicit `icon_set` — and still defaults to
-  `"transparent"`. Its documented scope ("the set's data is inconsistent",
-  not "you made a typo") is now true of the code; #117 had deleted that sentence
-  because it was not.
-- **An explicit `style` is never swallowed.** A style the pack does not draw
-  that icon in, or one the name contradicts, raises. Dropping it would draw the
-  wrong style rather than nothing, since the icon set follows the style.
+`tests/test_headless_without_tkinter.py`, in a **subprocess**. Blocking `tkinter` in-process would mean unimporting `tkinter`, `PIL.ImageTk` and every `tkinter_icons` module and letting them reload under the block, in a suite whose Tk tests are already order-sensitive. A child interpreter is a truer simulation and cannot break a later test.
 
----
+The blocker matches `tkinter` exactly or as a dotted prefix, **never as a string prefix**. `tkinter_icons` starts with `tkinter`, so `startswith("tkinter")` would block the package under test and "pass" by failing for the wrong reason — the same shape as the `.git`/`.github` bug this project has already been bitten by. `test_the_blocker_does_not_block_the_library` is that floor, and the blocker also proves itself by importing `tkinter` and requiring the failure before any assertion runs.
 
-## Structure notes
-
-- `resolve_icon` is the single resolution path. `resolve_icon_style` and
-  `resolve_icon_name` project one element each out of it. `render_pil` calls
-  `resolve_icon` once so the set and the glyph cannot come from two readings.
-- `_lookup_within_style` holds the name spellings accepted within one style: as
-  written, with the style appended, lowercased, and with a trailing style
-  suffix stripped.
-- `resolve_icon_style` swallows `ValueError` and falls back to the default. It
-  is a non-raising accessor; callers use it to pick a set to apply `on_missing`
-  against.
-- The `"none"` sentinel computes its style inline. Routing it through
-  `resolve_icon_style` recurses, because that delegates back to `resolve_icon`.
-- The sixteen pack `__init__` methods were **not** modified. They call
-  `resolve_icon_style` then `resolve_icon_name`, which are now consistent by
-  construction.
+Verified against the old code both ways: collapsing the tolerant import back to a hard `import tkinter` fails these tests with the exact `ImportError` from the issue.
 
 ---
 
 ## Known-weak spots — worth a reviewer's attention
 
-- `candidate_styles` assumes `default_style` is a member of `style_list`.
-  `BaseFontProvider.__init__` enforces that, but the dedup in the last line
-  would silently produce a wrong candidate order if it ever were not.
-- ~~The "Style X is not valid" error names `candidates[0]`, which is the default
-  when several styles were searched.~~ Fixed in review: it accused the default
-  of being invalid while listing it under "Available". One candidate means the
-  caller named it or wrote it into the name and is still quoted; several means
-  no style of the pack has a lookup at all, which is now what it says.
-- `resolve_icon_style` returning the default on failure means a caller cannot
-  distinguish "resolved to default" from "did not resolve". Only `render_pil`'s
-  fallback path relies on this.
-- `_lookup_within_style` strips a trailing `-{style}` suffix. The old code
-  stripped only when the style had been *inferred* from the name. These
-  coincide today; whether they must is not proven.
-
----
-
-# PLAN — the browser never shows an error (#136)
-
-Branch `fix/browser-never-shows-errors`, PR #137, **stacked on #135**. Review
-scope for round 1 is `git diff feat/render-pil-style..fix/browser-never-shows-errors`
-— the section above is #135's and is reviewed separately.
-
-## What this is supposed to do
-
-`tkinter-icons` is a console script someone runs to look at icons. There is no
-circumstance in which a diagnostic belongs on their screen. Two paths produced
-one.
-
-**Displaying caught errors.** `SimpleIconGrid._render_visible` painted a red
-`Error <name>` tile for an icon it could not build; the detail panel marked the
-preview `✕` and the codepoint `N/A`. Intent: a glyph that cannot be rendered is
-absent — empty cell, blank preview, `—` for the codepoint, matching the
-placeholder already used for "nothing selected".
-
-**Tk's own traceback path.** Every exception raised inside an event handler goes
-to `Tk.report_callback_exception`, which writes `Exception in Tkinter callback`
-and a stack trace to stderr. Intent: nothing reaches stderr or stdout.
-
-## Why the interception point rather than the call sites
-
-Of the twelve callbacks, one has its whole body inside a `try`. `_on_configure`,
-`_on_mousewheel`, `_copy_icon_name` (clipboard), `_on_icon_set_change` and
-`_on_style_change` have none; `main` guarded nothing. Wrapping all twelve leaves
-the thirteenth anybody adds unguarded, so the default is replaced instead.
-
-## Invariants
-
-- Nothing propagates out of `main`, and nothing is written to stderr or stdout.
-- With every resolution forced to raise: window alive, zero canvas items, blank
-  preview label.
-- In normal operation: every cell the grid reaches draws an icon, across all
-  sixteen packs and every style, with zero text items on the canvas. Asserted
-  per cell rather than against a total — the grid is virtualized, so a count
-  would describe the test's viewport rather than the browser.
-- Nothing is logged. There is no reader for it.
-
-## Structure notes
-
-- `_silence_callback_errors` is installed by `main`, which owns the root it
-  creates. Deliberately **not** in `IconPreviewerApp.__init__`: embedding the
-  app in a root somebody else owns must not silence *their* callbacks.
-- `main` catches `tk.TclError` separately from `Exception` only to document the
-  display-went-away case; both do nothing.
-- `tk.Tk()` is *inside* the guard. It was outside in the first draft, which left
-  the likeliest real failure — no display, no X server, a Tk that did not
-  install — printing the traceback the rest of the function exists to suppress.
-- `main` destroys the root in a `finally`. Without it a failed startup left the
-  root for interpreter shutdown, where Tk raising inside `__del__` prints
-  "Exception ignored in:" to stderr — the same traceback by a later route.
-
-## Known-weak spots — worth a reviewer's attention
-
-- Swallowing every callback exception hides real defects during development.
-  There is no debug escape hatch (no env var, no `--verbose`).
-- `_set_app_icon` catches `(OSError, ModuleNotFoundError, tk.TclError)` only. It
-  is now called inside `main`'s guard, so anything else is caught one level up,
-  but the narrow tuple is no longer doing what it looks like it does.
-- `test_main_never_lets_an_error_escape` stubs `mainloop`, so nothing closes the
-  window; `main`'s own `finally` now destroys it, and the test still captures
-  and tears down the root as a belt-and-braces. Leaving a root alive breaks
-  lifecycle tests in *another* file, because Tk 8.6 cannot reliably create a
-  second interpreter per process.
-- The empty grid cell leaves a gap in the layout rather than reflowing. Names
-  are not filtered up front; that would cost a resolution pass per pack switch.
+- `PhotoImage = Any` and `Style = Any` are placeholders that exist only so annotations resolve. Nothing should ever *call* them — the point-of-use imports shadow them — but nothing enforces that beyond the tests, and calling `Any(...)` gives a poor message.
+- `tkinter = None` on the fallback path means an annotation like `tkinter.Misc` would raise `AttributeError` rather than `NameError` if anything resolved hints on a Tk-less machine. Nothing does, and there is no test for it because there is no caller to write one against.
+- The subprocess tests cost about a second in total. If the suite grows more of them, they should share one child rather than one each.
+- `browser.py` still imports Tk at module scope, correctly — it is the console script. Nothing checks that it stays off `__init__.py`'s import path, though `test_importing_the_package_does_not_need_tkinter` would fail if it ever landed there.

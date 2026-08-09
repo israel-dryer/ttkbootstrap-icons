@@ -11,17 +11,51 @@ Image caching is scoped to the Tk interpreter that created the images. A
 globally hands out dead handles once a root is destroyed and another is created
 — which is what happens in test suites and in apps that use more than one root.
 Each interpreter gets its own cache, dropped when its root is destroyed.
+
+**Tk's absence is tolerated, and every real use imports at the point of use.**
+`__init__.py` imports this module, so an unguarded `import tkinter` made
+`import tkinter_icons` fail outright wherever Tk is absent — and on Linux
+`tkinter` is a distro package (`python3-tk`) rather than part of a pip install,
+so the environments the headless guide is written for are exactly the ones that
+lack it. That put Tk in front of `render_glyph` and `Icon.render_pil`, neither
+of which touches it. `PIL.ImageTk` does `import tkinter` itself, so guarding
+`tkinter` alone would have achieved nothing.
+
+Everything Tk-facing still fails the same way it always did, just later:
+`.image` needs a root and says so, and on a machine with no Tk the point-of-use
+imports raise `ImportError` naming `tkinter` rather than the program dying on
+its first line.
 """
 
 from __future__ import annotations
 
-import tkinter
 import warnings
 from abc import ABC
 from typing import Any, ClassVar, Literal, Mapping, Optional
 
 from PIL import Image
-from PIL.ImageTk import PhotoImage
+
+try:
+    # Imported eagerly *when Tk is present* rather than hidden behind
+    # `TYPE_CHECKING`, so that the names stay introspectable. `from __future__
+    # import annotations` makes every hint a string, and anything that resolves
+    # them - `typing.get_type_hints`, which is what Sphinx autodoc calls - looks
+    # them up in this module's globals. A `TYPE_CHECKING`-only import leaves
+    # them undefined at runtime, so that lookup raises `NameError` and the
+    # resolution fails for the *whole module*: the docs then lost `MissingPolicy`
+    # and the ttk aliases too, not just the Tk names.
+    #
+    # Narrow on purpose. Only the absence of Tk is tolerated here; a `PIL`
+    # broken some other way still raises, from the point-of-use imports below,
+    # where the message names what actually failed.
+    import tkinter
+    from PIL.ImageTk import PhotoImage
+except ImportError:  # pragma: no cover - exercised in a subprocess, see tests
+    # No Tk on this machine. Nothing on the pure-PIL path needs these; they
+    # stand in for annotations so the module still imports, and every real use
+    # re-imports at the point of use and raises there.
+    tkinter = None  # type: ignore[assignment]
+    PhotoImage = Any  # type: ignore[misc, assignment]
 
 from .iconset import IconSet, clear_icon_sets, get_icon_set, icon_set_id
 from .providers import BaseFontProvider
@@ -75,6 +109,8 @@ class _InterpreterCache:
             if event.widget is _root:
                 Icon._retire_interpreter(_interp_id(_root))
 
+        import tkinter
+
         try:
             root.bind("<Destroy>", _on_destroy, add=True)
         except tkinter.TclError:  # pragma: no cover - root already going away
@@ -87,7 +123,14 @@ def _interp_id(widget: tkinter.Misc) -> int:
 
 
 def _require_root() -> tkinter.Misc:
-    """Return the current default Tk root, or explain why there isn't one."""
+    """Return the current default Tk root, or explain why there isn't one.
+
+    The `import` is here rather than at module scope so that reaching the
+    pure-PIL path never needs Tk installed. This function is on the widget
+    path only — every caller is about to make a `PhotoImage`.
+    """
+    import tkinter
+
     root = tkinter._default_root  # type: ignore[attr-defined]
     if root is None:
         raise RuntimeError(
@@ -395,6 +438,8 @@ class Icon(StatefulIconMixin, ABC):
     @classmethod
     def _get_transparent(cls, size: int) -> PhotoImage:
         """Return a cached transparent placeholder for the current interpreter."""
+        from PIL.ImageTk import PhotoImage
+
         root = _require_root()
         cache = cls._cache_for(root)
         photo = cache.transparent.get(size)
@@ -405,6 +450,8 @@ class Icon(StatefulIconMixin, ABC):
 
     def _render(self) -> PhotoImage:
         """Render this icon, reusing an identical image when one exists."""
+        from PIL.ImageTk import PhotoImage
+
         root = _require_root()
         cache = Icon._cache_for(root)
 

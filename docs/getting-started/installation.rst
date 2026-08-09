@@ -44,7 +44,7 @@ Requirements
    * - Python 3.10+
      - Tested on 3.10 through 3.14.
    * - Tk 8.6+
-     - Ships with CPython on Windows and macOS.
+     - Ships with CPython on Windows and macOS. Needed only to show icons in a widget — rendering to a Pillow image does not require it.
    * - Pillow
      - Installed for you; it is what does the rendering.
 
@@ -55,7 +55,7 @@ On Linux, Tk usually comes from your distribution rather than from pip:
    sudo apt install python3-tk        # Debian, Ubuntu
    sudo dnf install python3-tkinter   # Fedora
 
-You do **not** need a display to render icons. Tk still has to be installed, but nothing has to be shown — :doc:`../user-guide/headless-rendering` covers rendering with no display, no root window, and no event loop.
+You do **not** need a display to render icons, and since 5.1.0 you do not need Tk either — :doc:`../user-guide/headless-rendering` covers rendering with no display, no root window, no event loop, and no ``tkinter`` installed. Tk is what turns a rendered image into something a widget can show, so install it when you are building a GUI and skip it when you are generating files.
 
 Checking what you have
 ----------------------

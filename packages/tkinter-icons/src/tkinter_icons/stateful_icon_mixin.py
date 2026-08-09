@@ -35,10 +35,24 @@ Nuances:
 
 from __future__ import annotations
 
-from tkinter.ttk import Style, Widget
-from typing import Literal, Optional, ClassVar
+from typing import Any, Literal, Optional, ClassVar
 import weakref
 import hashlib
+
+try:
+    # `icon.py` imports this module and `__init__.py` imports that, so a plain
+    # module-scope `from tkinter.ttk import ...` put Tk in front of the whole
+    # package - including the pure-PIL renderer, which never touches a widget.
+    # Tolerating its absence is what lets `import tkinter_icons` work without
+    # Tk installed; importing it when it *is* there keeps the annotations
+    # resolvable, which Sphinx needs. See the longer note in `icon.py`.
+    #
+    # `Style` and `Widget` are hints everywhere except one `Style()` in `map`,
+    # which imports it there - anything reaching that line has a live widget.
+    from tkinter.ttk import Style, Widget
+except ImportError:  # pragma: no cover - exercised in a subprocess, see tests
+    Style = Any  # type: ignore[misc, assignment]
+    Widget = Any  # type: ignore[misc, assignment]
 
 StateMapMode = Literal["replace", "merge"]
 # Accepted statespec entries:
@@ -343,6 +357,8 @@ class StatefulIconMixin:
                 existing map and applies only the states given, plus the
                 fallback.
         """
+        from tkinter.ttk import Style
+
         style = Style()
         parent_style = self._parent_style_for(widget)
 
