@@ -428,6 +428,21 @@ class BaseFontProvider(ABC):
             ValueError: If the name does not resolve, or if it spells out a
                 style that contradicts `style`.
         """
+        if name == "none":
+            # The sentinel for "deliberately no icon". No pack has a glyph
+            # called this, so it is not resolved but passed through, and the
+            # caller draws nothing. It has to live here rather than in
+            # `resolve_icon_name` alone: `render_pil` calls this directly, so a
+            # sentinel handled one level up would raise on the headless path
+            # while the constructor accepted it - the exact split this method
+            # exists to close.
+            #
+            # The style is worked out inline rather than through
+            # `resolve_icon_style`, which delegates back here and would recurse.
+            if not self.has_styles:
+                return None, "none"
+            return style or self.default_style, "none"
+
         if not self.has_styles:
             glyph = self._lookup_within_style(name, "base")
             if glyph is None:

@@ -387,6 +387,29 @@ class TestAnExplicitStyleIsNeverSilentlyDropped:
         with pytest.raises(ValueError, match="solid"):
             cls.render_pil("accusoft", size=32, style="solid")
 
+    @pytest.mark.parametrize("pack", INSTALLED, ids=lambda p: p.extra)
+    def test_the_none_sentinel_draws_nothing_rather_than_raising(self, pack):
+        """`"none"` means "deliberately no icon", and is not a name to resolve.
+
+        No pack has a glyph called this; it is passed through so the caller
+        draws an empty square. It nearly broke when `render_pil` started
+        raising: the sentinel lived in `resolve_icon_name`, one level above the
+        `resolve_icon` that `render_pil` now calls, so the constructor kept
+        accepting it while the headless path raised on it — reintroducing the
+        exact split this work exists to close, on the one name guaranteed not
+        to be a typo.
+        """
+        cls = icon_class(pack)
+        provider = provider_for(pack)
+
+        assert provider.resolve_icon_name("none") == "none"
+        assert provider.resolve_icon("none")[1] == "none"
+        assert cls("none", size=16).name == "none"
+
+        image = cls.render_pil("none", size=16)
+        assert image.size == (16, 16)
+        assert image.getchannel("A").getbbox() is None, "the sentinel drew ink"
+
     def test_a_typo_raises_whether_or_not_a_style_was_named(self):
         """Searching every style makes a typo fail against all of them.
 
