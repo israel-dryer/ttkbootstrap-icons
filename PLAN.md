@@ -29,6 +29,13 @@ Written after the work, before the review. The plan below is unchanged; this sec
 
 **Metrics were already correct and were not regenerated.** `generate_metrics --all --check` is clean both before and after the data change.
 
+**Two invariants were added by the fix round that follows round 1's review, and are not in the plan below.** They are listed here rather than in `REVIEW.md` because they are statements of what must hold, not records of what was wrong:
+
+- **A `cmap` this module cannot fully read makes the whole font unknown, never partially known.** An unhandled subtable format returns `None` for the font rather than a union of the subtables that were understood. Format 14 is the sole exception and is skipped without marking the font as read.
+- **`len()`, `bool()`, `__contains__` and `glyph()` are one answer.** All four derive from `can_draw`; a set may not report truthy while counting zero, or count an entry it will not draw.
+
+**The plan's third "known-weak spot" — measure the cmap cost rather than assuming it is negligible — was measured.** Parse is 3.5 ms for `mat` and 6.6 ms for `fluent`, once per font and cached; the per-glyph check is 0.45 µs, 0.42% of a 145 µs `render_pil`; codepoint sets hold 0.47 MB for `mat` against 1.31 MB of font bytes already resident.
+
 ---
 
 ## What this is supposed to do
