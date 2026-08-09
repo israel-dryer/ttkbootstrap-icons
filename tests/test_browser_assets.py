@@ -9,11 +9,14 @@ a screenshot months later.
 
 The browser is also the one shipped consumer of name resolution, so a change to
 the resolution rules can degrade it without failing anything else. It catches
-broadly enough not to crash — every icon it builds sits inside a `try` — but a
-name that stops resolving becomes a red "Error" tile in the grid, an "✕" in the
-preview, and "N/A" for the codepoint. That is a silent-in-CI regression of
-exactly the kind this project keeps finding by eye, so the names it puts on
-screen are checked here.
+broadly enough not to crash — every icon it builds sits inside a `try` — and a
+name it cannot draw now leaves an empty cell in the grid, a blank preview, and
+"—" for the codepoint. That is the whole problem: the failure is invisible by
+design, so nothing about it is visible in CI either. It used to be a red "Error"
+tile and an "✕", which was at least loud; quieting it for the user is what makes
+checking it here necessary rather than optional. Both directions are covered —
+that every name it lists resolves, and that a name which stops resolving still
+reaches nobody.
 """
 
 from __future__ import annotations
@@ -105,6 +108,70 @@ def test_every_name_the_browser_lists_still_resolves(pack):
         f"draw as an error tile: {broken[:5]}"
     )
     assert checked, f"the browser would list no names at all for {pack.extra}"
+
+
+@pytest.mark.gui
+def test_the_browser_draws_every_icon_it_puts_on_screen(root):
+    """The positive half: resolution succeeding is not the same as an icon.
+
+    `test_every_name_the_browser_lists_still_resolves` checks resolution
+    directly, which is one step short of what the user sees — a name can
+    resolve and still draw nothing, because `_render_visible` builds the `Icon`
+    and hands its `.image` to the canvas inside the same `try` that swallows a
+    resolution failure. Anything raised in that second half produces exactly
+    what a bad name produces: an empty cell, silently.
+
+    Asserted per cell the grid actually attempted rather than against a total.
+    The grid is virtualized, so how many cells it reaches depends on the
+    viewport, and a count quoted here would be a property of this test's window
+    size rather than of the browser.
+
+    Every pack runs against **one** root rather than the file's usual
+    parametrize-per-pack, which would ask Tk 8.6 for sixteen interpreters in
+    one process — the thing it cannot reliably do. Failures name the pack and
+    style instead, so the parametrize buys nothing here.
+    """
+    from tkinter_icons import browser
+
+    failures = []
+    attempted = 0
+    for pack in INSTALLED:
+        provider = provider_for(pack)
+        for style, names in provider.build_display_index()["names_by_style"].items():
+            lookup_style = None if style == "base" else style
+            frame = tk.Frame(root)
+            frame.pack()
+            try:
+                grid = browser.SimpleIconGrid(
+                    frame, provider, list(names), icon_size=32, icon_style=lookup_style
+                )
+                grid.canvas.configure(width=700, height=400)
+                root.update_idletasks()
+                grid._render_visible()
+
+                cells = len(grid.visible_items)
+                blank = [
+                    grid.filtered[idx]
+                    for idx, (items, _icon) in grid.visible_items.items()
+                    if not items
+                ]
+                if blank:
+                    failures.append(
+                        f"{pack.extra}/{style}: {len(blank)} of {cells} cells empty {blank[:3]}"
+                    )
+                text = [
+                    item for item in grid.canvas.find_all() if grid.canvas.type(item) == "text"
+                ]
+                if text:
+                    failures.append(f"{pack.extra}/{style}: {len(text)} text item(s) on screen")
+                if not cells:
+                    failures.append(f"{pack.extra}/{style}: drew nothing at all")
+                attempted += cells
+            finally:
+                frame.destroy()
+
+    assert not failures, f"{len(failures)} pack/style combination(s) failed: {failures[:5]}"
+    assert attempted, "the browser drew nothing for any pack"
 
 
 @pytest.mark.gui
@@ -236,6 +303,32 @@ def test_main_never_lets_an_error_escape(monkeypatch, capsys):
 
     captured = capsys.readouterr()
     assert "Traceback" not in captured.err, f"a traceback reached the user: {captured.err[:300]}"
+    assert captured.out == ""
+
+
+def test_no_display_is_not_a_traceback(monkeypatch, capsys):
+    """The one failure a real user actually hits, and the one left uncovered.
+
+    Everything else here is unreachable in a working install. This is not: run
+    `tkinter-icons` over SSH, or on a box where Tk was never installed, and
+    `tk.Tk()` itself raises. It sat outside the `try` in the first draft, so the
+    single most likely way for this command to fail was the one way it still
+    printed a stack trace.
+
+    Needs no display of its own — the failure is simulated, which is the point.
+    """
+    from tkinter_icons import browser
+
+    def no_display(*args, **kwargs):
+        raise tk.TclError('no display name and no $DISPLAY environment variable')
+
+    monkeypatch.setattr(tk, "Tk", no_display)
+
+    browser.main()  # must not raise
+
+    captured = capsys.readouterr()
+    assert "Traceback" not in captured.err, f"a traceback reached the user: {captured.err[:300]}"
+    assert captured.err == ""
     assert captured.out == ""
 
 

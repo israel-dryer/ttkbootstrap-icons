@@ -702,9 +702,15 @@ def _silence_callback_errors(root: tk.Misc) -> None:
 
 
 def main():
-    root = tk.Tk()
-    _silence_callback_errors(root)
+    # `tk.Tk()` is inside the guard because it is the *most* likely thing here
+    # to fail for a real user: no display, no X server, a Tk that did not
+    # install. Creating the root outside it left that one case - the only one
+    # someone typing `tkinter-icons` over SSH will ever hit - printing the
+    # traceback everything below exists to suppress.
+    root = None
     try:
+        root = tk.Tk()
+        _silence_callback_errors(root)
         _set_app_icon(root)
         IconPreviewerApp(root)
         root.mainloop()
@@ -716,6 +722,17 @@ def main():
         # Anything else during startup or teardown. The window never opened, so
         # a traceback would be the only thing the user ever saw from us.
         pass
+    finally:
+        # A root left alive after a failed startup is torn down by the
+        # interpreter instead, and Tk failing inside `__del__` prints
+        # "Exception ignored in:" to stderr - the same traceback by a later
+        # route. On the normal path `mainloop` has already returned because the
+        # window was destroyed, so this raises `TclError` and is discarded.
+        if root is not None:
+            try:
+                root.destroy()
+            except Exception:
+                pass
 
 
 if __name__ == "__main__":

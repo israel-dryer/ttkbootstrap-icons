@@ -178,8 +178,10 @@ the thirteenth anybody adds unguarded, so the default is replaced instead.
 - Nothing propagates out of `main`, and nothing is written to stderr or stdout.
 - With every resolution forced to raise: window alive, zero canvas items, blank
   preview label.
-- In normal operation: 1,860 icons drawn across all sixteen packs and every
-  style, zero text items on the canvas.
+- In normal operation: every cell the grid reaches draws an icon, across all
+  sixteen packs and every style, with zero text items on the canvas. Asserted
+  per cell rather than against a total — the grid is virtualized, so a count
+  would describe the test's viewport rather than the browser.
 - Nothing is logged. There is no reader for it.
 
 ## Structure notes
@@ -189,6 +191,12 @@ the thirteenth anybody adds unguarded, so the default is replaced instead.
   app in a root somebody else owns must not silence *their* callbacks.
 - `main` catches `tk.TclError` separately from `Exception` only to document the
   display-went-away case; both do nothing.
+- `tk.Tk()` is *inside* the guard. It was outside in the first draft, which left
+  the likeliest real failure — no display, no X server, a Tk that did not
+  install — printing the traceback the rest of the function exists to suppress.
+- `main` destroys the root in a `finally`. Without it a failed startup left the
+  root for interpreter shutdown, where Tk raising inside `__del__` prints
+  "Exception ignored in:" to stderr — the same traceback by a later route.
 
 ## Known-weak spots — worth a reviewer's attention
 
@@ -197,8 +205,10 @@ the thirteenth anybody adds unguarded, so the default is replaced instead.
 - `_set_app_icon` catches `(OSError, ModuleNotFoundError, tk.TclError)` only. It
   is now called inside `main`'s guard, so anything else is caught one level up,
   but the narrow tuple is no longer doing what it looks like it does.
-- `test_main_never_lets_an_error_escape` stubs `mainloop` and must destroy the
-  root `main` creates. Failing to do so breaks lifecycle tests in *another* file,
-  because Tk 8.6 cannot reliably create a second interpreter per process.
+- `test_main_never_lets_an_error_escape` stubs `mainloop`, so nothing closes the
+  window; `main`'s own `finally` now destroys it, and the test still captures
+  and tears down the root as a belt-and-braces. Leaving a root alive breaks
+  lifecycle tests in *another* file, because Tk 8.6 cannot reliably create a
+  second interpreter per process.
 - The empty grid cell leaves a gap in the layout rather than reflowing. Names
   are not filtered up front; that would cost a resolution pass per pack switch.
