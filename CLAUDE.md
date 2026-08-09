@@ -204,7 +204,7 @@ the base branch back at its old SHA, reopening, then retargeting. When merging a
 stack, retarget the child to `5.0` *first*, merge the parent without
 `--delete-branch`, and delete branches at the end.
 
-One open follow-up, not a release blocker: **#91** — reaching the pure-Pillow renderer should not require `tkinter` installed; being done now, see "Next session". **#87 closed 2026-08-08 from #130**, which captured the three real-window screenshots; its generated figures landed in #123 and its retaken assets and app icon earlier still. **#90 closed from #105**, which generated the sixteen pack READMEs rather than hand-editing them. #92 did the substance of #89 apart from its prose pass, which is folded into the list under "Next session"; #89 itself closed with #100.
+Formerly an open follow-up: **#91** — reaching the pure-Pillow renderer should not require `tkinter` installed — **closed 2026-08-09 from #139**. **#87 closed 2026-08-08 from #130**, which captured the three real-window screenshots; its generated figures landed in #123 and its retaken assets and app icon earlier still. **#90 closed from #105**, which generated the sixteen pack READMEs rather than hand-editing them. #92 did the substance of #89 apart from its prose pass, which is folded into the list under "Next session"; #89 itself closed with #100.
 
 **#79 shipped as #81, not #80.** #80 was merged into `5.0` prematurely — without
 permission and before review — and `5.0` was reset to drop it. The rollback was
@@ -273,21 +273,30 @@ bumped every time and an existing one means the tag is wrong.
 
 ## Next session — start here
 
-### 5.1.0 is most of the way done — #112 is what is left
+### Do #140 next — `PLAN.md` is written for it
 
-**Everything below this subsection is finished work.** 5.0.0 and 5.0.1 both shipped, and so did the bulk of 5.1.0; the sections that follow are kept because they record *how*, not because anything in them is outstanding.
+**Everything below this subsection is finished work.** 5.0.0 and 5.0.1 both shipped, and so did most of 5.1.0; the sections that follow are kept because they record *how*, not because anything in them is outstanding.
 
 | Issue | State |
 |---|---|
 | #115 | **Closed 2026-08-09**, merged as #135. `style=` on `render_pil`, and one shared `resolve_icon` behind both entry points. |
 | #136 | **Closed 2026-08-09**, merged as #137 then re-landed as #138 — see the retarget trap below. |
 | #117 | Closed earlier, from #121. |
-| #91 | In flight on `fix/tk-not-required-for-render-pil`; `PLAN.md` is its review handoff. |
-| #112 | PySimpleGUI integration, scoped as 5.1 since #71. **Not started, and independent of the rest.** |
+| #91 | **Closed 2026-08-09**, merged as #139. Tk is no longer needed to import the library or to render. |
+| #140 | **Open, and the next thing to do.** A glyph the font does not carry renders blank with no error. `PLAN.md` is the full plan; root cause is on the issue. |
+| #112 | PySimpleGUI integration, scoped as 5.1 since #71. **Not started, and independent of everything else.** |
 
-**The `render_pil` surface is finished with #91.** #115 and #91 were the two that shared it, and doing them in that order was right — #115 had the measurement behind it. #112 touches none of that code.
+**#140 in one paragraph, so the next session does not have to re-derive it.** `on_missing` guards the glyph *map*; nothing guards the *font*. A name that is in a pack's glyph map but whose codepoint the font does not carry draws a fully transparent image with no exception and no warning — not even under `on_missing="raise"`, because from the glyph map's point of view nothing is missing. 123 glyphs are in this state, all in `google-material` (43 outlined, 38 round, 38 sharp) and `material` (2 outline, 2 fill). They are advertised by the packs' own `build_name_lookup()` and drawn as empty tiles by the shipped browser.
 
-**Nothing is waiting on a tag.** `[Unreleased]` in `CHANGELOG.md` holds #115, #136 and #91; whenever 5.1.0 is cut it goes out through the tag-driven path, which is proven as of 5.0.1.
+**The root cause is two generators, not bad data.** `gmi`'s `generate_assets.py:132-136` writes one downloaded *baseline* codepoints file to all four style glyphmaps, under a comment asserting the styles share codepoints — they do not. `mat`'s writes one shared `glyphmap.json` from a single font for both styles. Scrubbing the data without fixing the generators means the next regeneration reintroduces all 123.
+
+**It explains a discrepancy already on record.** The committed census reads `glyphmap_entries = 89292` and `drawing = 89169`; the difference is exactly these 123 — the unexplained 123-glyph discrepancy from round 2 of the #121–#125 docs review. It was never a counting error. Fixing the data takes that delta to zero, which means re-running `generate_placement_census.py` and updating the four files `tests/test_placement_census.py` checks. **Do that before writing 5.1.0 release prose, not after.**
+
+**Scale it honestly.** 123 of 89,292 entries, 0.14%, two of sixteen packs, and every pack's default style is already clean — so it is only reachable by explicitly choosing a non-default style. Nothing crashes. It is worth fixing because the silence violates the rule that a missing icon should say so, not because it is urgent.
+
+**Nothing is waiting on a tag.** `[Unreleased]` in `CHANGELOG.md` holds #115, #136 and #91; whenever 5.1.0 is cut it goes out through the tag-driven path, which is proven as of 5.0.1. If #140 lands first the same tag carries the `gmi` and `material` pack bumps alongside the base, which is #97 working as designed.
+
+**One lesson from #91's review worth keeping, because it is the same trap as #140.** A test hand-rolled the four steps `render_pil` encapsulates and dropped `icon_set.glyph(name)`, so it drew the *name* `"house"` as text rather than the icon. It passed: no pack's font maps ASCII, every letter renders `.notdef`, and Bootstrap's `.notdef` is a tofu box, so five boxes satisfied an ink assertion. **`resolve_icon` returns a glyph name; `render_glyph` takes a character.** And the deeper point — asserting on ink is necessary but not sufficient, because `.notdef` is ink. Three `assert "tkinter" not in sys.modules` lines were removed in the same pass for the opposite reason: they could never fail, since the import machinery drops a failed import from `sys.modules`.
 
 ### Two mechanical lessons from landing that stack, 2026-08-09
 
@@ -357,7 +366,7 @@ Two of the eleven were not ancestors of `main` and both were checked rather than
 | #117 | The `on_missing` scope sentence in `icons-and-names.rst:72` describes a case that cannot occur. Docs-only; split out of #115 so it can ship in a patch. |
 | #87 | **Closed 2026-08-08.** The generated renderer figures (#123) and then the three real-window screenshots (#130). Both shipped on merge via Read the Docs rather than with the tag, which is why it never blocked the release. |
 
-**5.1.0 — moved to the top of this section, since it is the live milestone.** See "5.1.0 is most of the way done" above; #115 and #136 are closed, #91 is in flight, and #112 has not been started.
+**5.1.0 — moved to the top of this section, since it is the live milestone.** See "Do #140 next" above; #115, #136 and #91 are closed, #140 is the next thing to do, and #112 has not been started.
 
 **Two numbers from #115 that this file had wrong, and which are now pinned by a test.** The issue's headline was **814** names rendering blank; the measurement that shipped is **849** newly resolving, over 288,418 combinations — every name once with no style, and once against each style its own pack has. The changelog first said 867 over "365,051 combinations", and neither reproduced; `TestTheDefaultStyleStoppedBeingAGate` now pins the per-pack breakdown against a frozen transcription of the old default-only rule, because a comparison against a moving `main` is not a check anyone can re-run. **Quote neither figure without the population definition** — that omission is what made three wrong versions of it look equally plausible.
 
@@ -420,7 +429,7 @@ Three more, each fixed and each invisible to `pytest`, `sphinx -W` and `verify_p
 
 **Docs examples are checked now — `tests/test_docs_examples.py`, added 2026-08-09.** It parses every `code-block:: python` with `ast` and resolves each call whose icon name *and* style are string literals, 140 of them, against the live provider. It exists because the block introducing `style=` on `render_pil` shipped `FontAwesomeIcon.render_pil("house", style="regular")` — a name that exists only in `solid`, so the example for the feature the release adds raised for everyone who copied it, with `sphinx -W` green throughout. Examples that fail *on purpose* live in `DELIBERATE_FAILURES` and are asserted to keep raising, and an exemption naming an example nobody shows any more is itself a failure. **It only reads literals** — anything built from a variable or a loop is out of scope, because resolving those means running the block, and two of them write files into the cwd.
 
-**The milestone is closed, and #90 with it.** #67–#71, #75, #79 and #89 closed as of #100; #90 closed from #105, #87 from #130. #91 outlived the milestone and is being done now — see the top of this section.
+**The milestone is closed, and #90 with it.** #67–#71, #75, #79 and #89 closed as of #100; #90 closed from #105, #87 from #130. #91 outlived the milestone and closed 2026-08-09 from #139.
 
 ### What building the figures found, 2026-08-08
 
