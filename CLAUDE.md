@@ -363,7 +363,7 @@ Two of the eleven were not ancestors of `main` and both were checked rather than
 
 ### Doing 5.0.x — the plan, in order
 
-**All three steps are done — 5.0.1 shipped 2026-08-08.** Kept as a record of what a tag-driven release actually takes, since the next one follows the same path. The only item that did not close with a PR is **#118**, because the classifier needed no file change and the release alone carried it; it is still open and wants closing by hand once someone confirms the badge.
+**All three steps are done — 5.0.1 shipped 2026-08-08.** Kept as a record of what a tag-driven release actually takes, since the next one follows the same path. The only item that did not close with a PR was **#118**, because the classifier needed no file change and the release alone carried it; it was closed by hand afterwards. **The 5.0.x milestone is empty — 0 open, 8 closed** — so nothing in this section is outstanding.
 
 **1. Read the Docs' Default branch is back on `main`** — confirmed by the owner 2026-08-08. Docs-only merges are visible again.
 
