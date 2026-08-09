@@ -28,9 +28,17 @@ from .providers import BaseFontProvider
 from .render import RenderOptions, clear_font_cache, render_glyph, snap_size
 from .stateful_icon_mixin import StatefulIconMixin
 
-#: What to do when an icon name is not in its set. Providers normally raise
-#: during name resolution, so this only catches glyphs that resolve but are
-#: absent from the loaded glyphmap.
+#: What to do when a name reaches an icon set that has no glyph for it.
+#:
+#: This is a data-integrity policy, not a typo policy. A name a pack cannot
+#: resolve raises from every entry point, so what gets here is a name that was
+#: handed straight to a set without being resolved — the base `Icon`, or
+#: `render_pil` with an explicit `icon_set` — or a set whose glyph map really
+#: is inconsistent with the names built from it.
+#:
+#: That distinction is what `icons-and-names` described from the start and the
+#: code did not honor, which is why #117 had to delete the sentence. #115 built
+#: the behavior instead, so the original scope is true again.
 MissingPolicy = Literal["transparent", "warn", "raise"]
 
 _CacheKey = tuple[str, str, int, str, int]
@@ -204,6 +212,7 @@ class Icon(StatefulIconMixin, ABC):
         name: str,
         size: int = 24,
         color: str = "black",
+        style: Optional[str] = None,
         *,
         icon_set: Optional[IconSet] = None,
         options: Optional[RenderOptions] = None,
@@ -216,8 +225,16 @@ class Icon(StatefulIconMixin, ABC):
         Called on a pack's icon class this needs nothing set up first — the
         pack supplies its own provider, so `MaterialIcon.render_pil("home")`
         draws a Material icon in a fresh process and takes the same friendly
-        names the constructor does. Called on `Icon` itself, or with an
-        explicit `icon_set`, `name` must already be a glyph name.
+        names and the same `style` the constructor does. Called on `Icon`
+        itself, or with an explicit `icon_set`, `name` must already be a glyph
+        name and there is no provider to resolve a style against.
+
+        Two different failures live here, and they are answered differently.
+        A name the pack cannot resolve is the caller's mistake, so it raises,
+        exactly as the constructor does. A name that resolves — or is handed
+        straight to a set, which is what `Icon` and an explicit `icon_set` do —
+        and then turns out to have no glyph means the set's data is
+        inconsistent, and that is what `on_missing` is the policy for.
 
         Args:
             name: Icon name. Resolved through the pack's provider when called
@@ -225,28 +242,44 @@ class Icon(StatefulIconMixin, ABC):
                 an already-resolved glyph name.
             size: Pixel size.
             color: Foreground color.
+            style: Which of the pack's styles to draw from, or `None` to work
+                it out from the name — see
+                `BaseFontProvider.candidate_styles`.
             icon_set: Which set to draw from. Defaults to the pack's own, then
                 to the active one.
             options: Overrides of the set's render options.
 
         Returns:
-            A square RGBA image; fully transparent if `name` is not in the set.
+            A square RGBA image. Fully transparent if the name reached a set
+            that has no glyph for it and `on_missing` is `"transparent"`.
 
         Raises:
             RuntimeError: If no icon set is given, the class has no provider,
                 and none is initialized.
+            ValueError: If the pack cannot resolve `name`, if `name`
+                contradicts `style`, or if `style` is given where there is no
+                provider to resolve it against.
+            KeyError: If the name reaches a set with no glyph for it and
+                `on_missing` is `"raise"`.
         """
-        if icon_set is None and cls.provider_class is not None:
+        resolving = icon_set is None and cls.provider_class is not None
+        if style is not None and not resolving:
+            raise ValueError(
+                f"style={style!r} needs a provider to resolve against. Call render_pil on a "
+                f"pack's icon class without an explicit icon_set, e.g. "
+                f"MaterialIcon.render_pil(name, style={style!r})."
+            )
+
+        if resolving:
             provider = cls.provider_class()
-            icon_set = get_icon_set(provider, provider.resolve_icon_style(name))
-            try:
-                name = provider.resolve_icon_name(name)
-            except ValueError:
-                # Leave the name as given and let the missing-glyph path below
-                # apply `on_missing`, which is the documented behavior for a
-                # name this set does not have. Letting resolution raise here
-                # would make that policy unreachable from `render_pil`.
-                pass
+            # One call, so the style the set is built from and the glyph looked
+            # up in it cannot come from two different readings of the name.
+            # A `ValueError` from here propagates: an unresolvable name means
+            # this pack has no such icon under any style, which is the same
+            # mistake the constructor raises on and not something `on_missing`
+            # was written to paper over.
+            resolved_style, name = provider.resolve_icon(name, style)
+            icon_set = get_icon_set(provider, resolved_style)
 
         icon_set = icon_set or cls._icon_set_current
         if icon_set is None:

@@ -1,17 +1,32 @@
-"""The icon browser's window icon ships with the base package.
+"""What the shipped icon browser depends on, and must keep working.
 
-It used to be borrowed from `[bootstrap]` inside a bare `except ImportError`,
-which meant a default install — the base package ships no glyphs — got no icon
-at all, silently. These tests guard the replacement: the mark is package data of
-`tkinter_icons` itself, so it is present on every install, and a build that drops
-it fails here rather than in a screenshot months later.
+The window icon ships with the base package. It used to be borrowed from
+`[bootstrap]` inside a bare `except ImportError`, which meant a default install
+— the base package ships no glyphs — got no icon at all, silently. These tests
+guard the replacement: the mark is package data of `tkinter_icons` itself, so it
+is present on every install, and a build that drops it fails here rather than in
+a screenshot months later.
+
+The browser is also the one shipped consumer of name resolution, so a change to
+the resolution rules can degrade it without failing anything else. It catches
+broadly enough not to crash — every icon it builds sits inside a `try` — but a
+name that stops resolving becomes a red "Error" tile in the grid, an "✕" in the
+preview, and "N/A" for the codepoint. That is a silent-in-CI regression of
+exactly the kind this project keeps finding by eye, so the names it puts on
+screen are checked here.
 """
 
 from __future__ import annotations
 
+import importlib
 from importlib.resources import files
 
 import pytest
+
+from tkinter_icons.iconset import get_icon_set
+from tkinter_icons.packs import KNOWN_PACKS
+
+INSTALLED = [pack for pack in KNOWN_PACKS if pack.is_installed]
 
 # The sizes `_set_app_icon` asks for. Tk picks per use: 32 for the title bar,
 # 64 for the taskbar and Alt-Tab.
@@ -46,3 +61,65 @@ def test_browser_does_not_borrow_a_pack_glyph_for_its_icon():
     assert not any(
         isinstance(c, str) and c.startswith("tkinter_icons_") for c in source
     ), "the window icon must not depend on an icon pack being installed"
+
+
+def provider_for(pack):
+    module = importlib.import_module(f"{pack.module}.provider")
+    for name, obj in vars(module).items():
+        if name.endswith("FontProvider") and name != "BaseFontProvider":
+            return obj()
+    raise LookupError(f"no provider class in {pack.module}.provider")
+
+
+@pytest.mark.parametrize("pack", INSTALLED, ids=lambda p: p.extra)
+def test_every_name_the_browser_lists_still_resolves(pack):
+    """The browser's own call, on its own names, for every style it offers.
+
+    `BrowserGrid._draw` and the detail panel both do exactly this — take a name
+    out of `build_display_index()["names_by_style"]` and resolve it against the
+    style it was listed under. Those are *glyph* names, the values of the
+    lookup rather than its keys, which is a different population from the one
+    the resolution tests sweep; a rule that handles friendly names perfectly
+    could still strand these.
+    """
+    provider = provider_for(pack)
+
+    checked = 0
+    broken = []
+    for style, names in provider.build_display_index()["names_by_style"].items():
+        lookup_style = None if style == "base" else style
+        icon_set = get_icon_set(provider, lookup_style)
+        for name in names:
+            checked += 1
+            try:
+                resolved = provider.resolve_icon_name(name, style=lookup_style)
+            except ValueError as exc:
+                broken.append((style, name, str(exc)))
+                continue
+            if icon_set.glyph(resolved) is None:
+                broken.append((style, name, f"{resolved} absent from the set"))
+
+    assert not broken, (
+        f"{len(broken)} of {checked} name(s) the browser lists for {pack.extra} would "
+        f"draw as an error tile: {broken[:5]}"
+    )
+    assert checked, f"the browser would list no names at all for {pack.extra}"
+
+
+def test_the_browser_chrome_icons_resolve():
+    """The two glyphs the browser draws itself, rather than from its catalog.
+
+    Both sit in a `try`, so a failure is invisible: the link simply loses its
+    icon. Bootstrap only, and skipped when it is absent, which is also the
+    condition under which the browser does without them.
+    """
+    pack = next((p for p in INSTALLED if p.extra == "bootstrap"), None)
+    if pack is None:
+        pytest.skip("the bootstrap pack is not installed")
+    provider = provider_for(pack)
+
+    for name in ("house", "file-earmark-text"):
+        resolved = provider.resolve_icon_name(name, style="fill")
+        assert get_icon_set(provider, "fill").glyph(resolved) is not None, (
+            f"the browser's {name!r} link icon no longer resolves"
+        )

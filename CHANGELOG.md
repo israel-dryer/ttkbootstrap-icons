@@ -12,6 +12,30 @@ history after the fact and are summaries rather than contemporaneous notes.
 
 <!-- release-notes-start -->
 
+## [Unreleased]
+
+### Added
+
+- **`render_pil` takes `style`.** Same position, same meaning as the constructor's, so anything a pack can draw is reachable headlessly and the two entry points resolve a name identically. Naming a style the pack does not draw that icon in, or one the name contradicts, raises rather than returning a blank image. (#115)
+
+### Changed
+
+- **`PackIcon.render_pil` raises on a name the pack cannot resolve, where it used to return a transparent image.** This is a behavior change: code that rendered a list of names and tolerated blanks now needs to catch `ValueError`. It is deliberate. `render_pil` is the headless path — build steps, export scripts, test suites — which is exactly where a blank PNG is least likely to be noticed, and it produced one for a plain misspelling while the constructor raised on the same name. This is the failure mode 5.0.0's own changelog called out for the PyInstaller hooks: *"a glyph with no font renders transparent, so the application started normally and drew nothing."* (#115)
+
+  The change was not safe to make on its own, which is why it lands with the rest and not before: while 849 real icons were unreachable by name, raising would have failed on names that were not typos at all. They resolve now, so what is left really is a bad name.
+
+  **The icon browser is unaffected.** It is the one shipped consumer of name resolution, and it never used `render_pil`; every icon it builds already sits inside a `try`, so it degrades to an error tile rather than crashing. Checked rather than assumed: all 61,153 names it lists, across every style of all sixteen packs, still resolve, and drawing 1,860 of them in a real window produces no error tiles. Both are now guarded by tests, because a resolution change can degrade the browser without failing anything else.
+
+  **`on_missing` is unaffected in the case it was written for.** A name that reaches an icon set without being resolved against it — the base `Icon`, or `render_pil` with an explicit `icon_set` — still applies the policy, and `"transparent"` is still the default. What changed is that a pack's own resolution failures no longer route into it. That restores the scope `docs/user-guide/icons-and-names.rst` described from the start and the code did not honor; #117 deleted the sentence because it was false, and this makes it true instead.
+
+### Fixed
+
+- **The default style is a preference, not a gate.** A name with no style written into it used to be looked for in the pack's default style *and nowhere else*, so a name that exists only in some other style resolved nowhere. Font Awesome's brand marks are the clearest case; `accusoft` is a genuine glyph in `brands`, nothing in the name points there, and the default is `solid`, so `FontAwesomeIcon("accusoft")` raised and `render_pil("accusoft")` drew a transparent square. The default is now tried first and the pack's other styles after it, so it still settles which icon you get when a name exists several ways — which it must, because all 13,658 names that exist in more than one style would otherwise be ambiguous. (#115)
+
+- **The two entry points look a name up the same way.** `resolve_icon_style` matched `-<style>` anywhere in a name while `resolve_icon_name` matched it only at the end, so they agreed on most names by accident of the order each pack declared its styles in. Where they disagreed the failure was silent in both directions: Bootstrap's `shield-fill-check` is a real glyph the `fill` style ships, and the constructor rejected it, while `render_pil` drew it only because Bootstrap keeps every style in one font file and the unresolved name happened to be a glyph name. Both are now views of one `BaseFontProvider.resolve_icon`, which returns the style and the glyph together, so they cannot answer differently. The name rule matches whole hyphen-separated components, never the first, longest match winning — which is what makes it independent of declaration order. 35 Bootstrap names start constructing. (#115)
+
+  Measured against `main` by resolving every one of the 94,964 names of all sixteen packs once with no style and once against each style its own pack has — 288,418 combinations — the resolution change is purely additive: **849 names newly resolve, none stopped resolving, and not one resolved to a different glyph.** Every one of the 849 was previously unreachable by name alone: 489 in Font Awesome, 185 in Fluent, 102 in Material, 35 in Bootstrap, 28 in Devicon, 8 in Typicons, 2 in Eva. All 849 are gained in the no-style column; naming a style explicitly resolves exactly what it always did. Constructor and `render_pil` agree on all 113,399 name-and-style entries across all sixteen packs, and draw identical pixels.
+
 ## [5.0.1] — updated metadata and docs
 
 A patch release with no executable code change. Every source edit in the eighteen distributions is a comment or a docstring; what moved is text and metadata that PyPI freezes at release time, and therefore could not be corrected without shipping a version.

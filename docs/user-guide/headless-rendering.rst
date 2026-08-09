@@ -22,12 +22,47 @@ Rendering to a Pillow image
    image = MaterialIcon.render_pil("home", size=64, color="#0F766E")
    image.save("home.png")
 
-The return is a square RGBA :class:`PIL.Image.Image`. Any name this set cannot draw — including a plain typo, which the constructor would have raised on — comes back fully transparent rather than raising, subject to the ``on_missing`` policy described in :doc:`icons-and-names`.
+The return is a square RGBA :class:`PIL.Image.Image`. A name the pack cannot resolve raises :class:`ValueError`, exactly as the constructor does — see :doc:`icons-and-names`, which also covers ``on_missing``, the policy for the different case where a name reaches an icon set that has no glyph for it.
+
+.. versionchanged:: 5.1.0
+   A name the pack could not resolve used to come back as a transparent image rather than raising. It is the headless path — build steps, export scripts, test suites — which is exactly where a blank PNG is least likely to be noticed and most likely to be committed.
 
 Called on a pack's class it draws that pack's glyphs and takes the same friendly names the constructor takes, so nothing has to be set up first. Called on :class:`~tkinter_icons.Icon` itself there is no pack to draw from, and you have to say which set to use — see :ref:`explicit-icon-sets` below.
 
 .. versionchanged:: 5.0.0
    ``render_pil`` used to read whichever icon set was initialized most recently, so it drew the right glyphs only if something had already constructed an icon from that pack — and raised in a fresh process. It also took an already-resolved glyph name, which meant a friendly name like ``"house-fill"`` rendered transparent.
+
+Choosing a style
+----------------
+
+``render_pil`` takes ``style`` in the same position and with the same meaning as the constructor, and looks names up exactly the same way — see :ref:`how-a-name-finds-its-style`. Anything you can construct, you can render headlessly, and it resolves to the same glyph:
+
+.. code-block:: python
+
+   from tkinter_icons import FontAwesomeIcon
+
+   FontAwesomeIcon("accusoft", size=32)                            # a brand mark
+   FontAwesomeIcon.render_pil("accusoft", size=32)                 # the same glyph
+   FontAwesomeIcon.render_pil("accusoft", size=32, style="brands") # said explicitly
+
+Reach for ``style`` when a name exists in several styles and you want one that is not the pack's default:
+
+.. code-block:: python
+
+   FontAwesomeIcon.render_pil("address-book", size=32)                  # solid, the default
+   FontAwesomeIcon.render_pil("address-book", size=32, style="regular") # the outlined cut
+
+Unlike a bare name, an explicit ``style`` is never quietly dropped. Naming a style the pack does not draw that icon in, or one the name itself contradicts, raises rather than returning a blank image — the icon set is chosen from the style, so ignoring the argument would mean drawing the wrong style rather than drawing nothing:
+
+.. code-block:: python
+
+   FontAwesomeIcon.render_pil("accusoft", style="solid")
+   # ValueError: accusoft not found in lookup for fontawesome in solid style.
+
+It needs a provider to resolve against, so it belongs on a pack's class. Passing it to :class:`~tkinter_icons.Icon`, or alongside an explicit ``icon_set``, raises: that set already fixes the style, and there would be nothing left for the argument to do.
+
+.. versionadded:: 5.1.0
+   ``style`` on ``render_pil``. Before it, a name reachable through ``PackIcon(name, style=...)`` had no equivalent on the headless path.
 
 If you already have an icon, :meth:`~tkinter_icons.Icon.to_pil` renders that exact icon:
 
