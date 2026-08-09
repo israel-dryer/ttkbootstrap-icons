@@ -8,21 +8,26 @@ The previous section here — #91's plan for making Tk optional — is gone rath
 
 ---
 
-## Amendments made while building it
+## Amendments to this plan
 
-Written after the work, before the review. The plan below is left as it was — these are the places the implementation departs from it, so a finding can be checked against what was actually intended rather than against a guess that did not survive contact with the code.
+Written after the work, before the review. The plan below is unchanged; this section records where it was **wrong** or **left something open**, so the review measures the diff against what the code was actually meant to do.
 
-**`mat`'s root cause below is wrong.** The plan says its generator "builds the mapping with `glyphmap_from_ttf` from one font and writes a single shared `glyphmap.json` used by both `outline` and `fill`", and calls that "one style's truth published as every style's". Neither half holds. `mat`'s two styles are one font split by a name predicate — `_is_outline_style` tests for the `-outline` suffix — so a single shared glyph map is *correct* there, not a defect. And `glyphmap_from_ttf` is only the fallback: the mapping comes from upstream's **CSS** whenever one is available, and it was. The real fault is that MDI's stylesheet declares `mdi-blank` at U+F68C as a deliberately empty placeholder that the webfont has no codepoint for. So `mat` contributes **one icon under two names**, not four glyphs. The shape of the fix — intersect with the font before writing — was right anyway.
+**Corrections and decisions only.** The reasoning behind each choice is deliberately not here, and is not in any file the review needs. A reviewer who reads why an approach seemed sound tends to agree with it instead of testing it.
 
-**The counts need their definition attached, and the plan quotes only one of the two.** 121 glyph-map entries were removed; the census counts 123 because it counts once per name *per style* and `mat`'s two styles share one map. The plan's "123 glyphs across two packs" and "123 of 89,292 entries" are the per-style figure applied to an entry-count denominator. Both numbers appear in the shipped prose, each with the definition that makes it true.
+**`mat`'s root cause below is wrong, in both halves.** The plan says its generator "builds the mapping with `glyphmap_from_ttf` from one font and writes a single shared `glyphmap.json` used by both `outline` and `fill`", and calls that "one style's truth published as every style's". In fact `mat`'s two styles are one font split by a name predicate — `_is_outline_style` tests for the `-outline` suffix — so one shared glyph map is what that pack is supposed to have. And `glyphmap_from_ttf` is only the fallback; the mapping comes from upstream's **CSS** whenever one is available, and one was. The fault is that MDI's stylesheet declares `mdi-blank` at U+F68C as a placeholder the webfont has no codepoint for. `mat` therefore contributes **one icon under two names**, not four glyphs.
 
-**The guard went into `IconSet.glyph`, not "beside the existing lookup at `icon.py:331`" as the plan says.** That line is `render_pil`'s. The Tk widget path has its own lookup at `icon.py:470`, and the plan's own invariant — "the browser shows no blank tiles" — is about *that* path. One shared answer covers both, which is also what #115 concluded about two entry points resolving a name.
+**Two counts, not one, and the plan quotes only the second.** 121 glyph-map entries were removed. The placement census reports 123, counting once per name *per style*, because `mat`'s two styles share one map. The plan's "123 glyphs across two packs" and "123 of 89,292 entries" apply the per-style figure to an entry-count denominator. Both numbers appear in the shipped prose, each stated with the definition that makes it true.
 
-**That change made a pre-existing bug reachable, and it is fixed here rather than deferred.** Once `__len__` counts drawable glyphs, an `IconSet` that can draw nothing is falsy, and `render_pil` chose its set with `icon_set or cls._icon_set_current` — silently discarding the caller's set for whichever loaded last. It selects on `is None` now. It is in scope because this branch is what made it reachable.
+**The guard is in `IconSet.glyph`, not "beside the existing lookup at `icon.py:331`" as the plan directs.** `icon.py:331` is `render_pil`'s lookup. The Tk widget path has a second one at `icon.py:470`, and this plan's own invariant — "the browser shows no blank tiles" — is a claim about that second path.
 
-**The data fix is a local transform, which the plan flags as a real decision.** Decided: run the generators' new `restrict_to_font` step against the committed data rather than regenerating from upstream. `gmi`'s generator downloads from `master`, so a regeneration would silently move the pack off its pinned `icon_version` 0.14.15 and mix unrelated upstream drift into a bug-fix diff. `write_glyphmap` was confirmed to reproduce all five committed files byte-identically first, so the diff is 121 removed lines and nothing else.
+**In scope beyond what the plan describes**, both consequences of the line above:
 
-**Metrics needed no regeneration**, which the plan does not predict either way. They were already correct — ink measurement skips a glyph with no ink, so `metrics-outlined.json` had held 2,191 entries against a map advertising 2,234 since the pack was built. `generate_metrics --all --check` is clean before and after.
+- `IconSet.__len__` and `__contains__` now report what the set can draw rather than what its map advertises. `IconSet.glyphs` is unchanged and still exposes the raw map.
+- `render_pil` selected its icon set with `icon_set or cls._icon_set_current`. A sized object that can draw nothing is falsy, so the caller's set could be replaced by whichever loaded last. It selects on `is None` now.
+
+**The open decision at "Known-weak spots" was decided: filter the committed data locally, do not regenerate from upstream.** The generators' new `restrict_to_font` step was run against the tree as committed. `write_glyphmap` was first confirmed to reproduce all five committed files byte-identically, so the data diff is 121 removed lines and nothing else.
+
+**Metrics were already correct and were not regenerated.** `generate_metrics --all --check` is clean both before and after the data change.
 
 ---
 
