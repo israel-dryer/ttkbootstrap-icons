@@ -101,7 +101,7 @@ The pack was asked for an icon it does not draw in any style. Nothing about that
 .. versionchanged:: 5.1.0
    ``render_pil`` used to swallow this and return a transparent square, so the same typo raised one way and drew nothing the other. That was defensible while 849 real icons were also unreachable by name, because raising would have failed on names that were not typos at all. Both halves are fixed together: those names resolve now, so what is left really is a bad name.
 
-**A name that reaches an icon set with no glyph for it applies a policy instead.** This is the other failure: the set's data is inconsistent with the names built from it, or you passed a glyph name straight to the base :class:`~tkinter_icons.Icon`, or to ``render_pil`` with an explicit ``icon_set``, neither of which resolves anything. Nobody necessarily made a mistake, so ``on_missing`` decides, and by default that is a transparent square:
+**A name that reaches an icon set which cannot draw it applies a policy instead.** This is the other failure: the set's data is inconsistent with the names built from it, or you passed a glyph name straight to the base :class:`~tkinter_icons.Icon`, or to ``render_pil`` with an explicit ``icon_set``, neither of which resolves anything. Nobody necessarily made a mistake, so ``on_missing`` decides, and by default that is a transparent square:
 
 .. code-block:: python
 
@@ -122,7 +122,16 @@ The pack was asked for an icon it does not draw in any style. Nothing about that
    * - ``"raise"``
      - Raise :class:`KeyError`.
 
-``"warn"`` is what turns that blank square into something you can see without stopping the run, which suits a test suite or a bulk export: nothing breaks, but nothing passes silently either. Reach for it if you build icon sets yourself, or pass glyph names straight to :class:`~tkinter_icons.Icon`; a pack's own names never land here, because they are resolved first.
+``"warn"`` is what turns that blank square into something you can see without stopping the run, which suits a test suite or a bulk export: nothing breaks, but nothing passes silently either. Reach for it if you build icon sets yourself, or pass glyph names straight to :class:`~tkinter_icons.Icon`.
+
+**A pack's own name can land here too, and until 5.1.0 it could not.** Two things have to be true for an icon to draw: the name has to be in the pack's glyph map, and the glyph map's codepoint has to be in the pack's font. Only the first was ever checked. A name the map advertised at a codepoint the font had never carried resolved, looked up, and drew nothing at all — no exception, no warning, not even under ``"raise"``, because from the glyph map's point of view nothing was missing.
+
+.. versionchanged:: 5.1.0
+   A codepoint the font does not contain is now the same kind of failure as a name the glyph map does not have, and ``on_missing`` governs both. The two are reported differently, because a user who mistyped and a user who hit a broken pack need different answers: the message for this case names the codepoint and says the fault is in the pack's data rather than in the name you asked for.
+
+121 glyph-map entries were in that state when this was found: 119 across Google Material's ``outlined``, ``round`` and ``sharp`` cuts, and 2 in Material Design Icons. Counted the way the placement census counts — once per name *per style* — that is 123, because Material Design Icons' two styles are drawn from one font and share one glyph map. Both numbers are right; they measure different things, and quoting either without saying which is how a 123-glyph discrepancy once went unexplained for a whole review round.
+
+   The packs' generators were fixed too, so a regeneration cannot reintroduce them. Every pack now advertises exactly what it can draw, which ``tests/test_font_coverage.py`` asserts against every style of every installed pack.
 
 Asking for a pack you have not installed
 ----------------------------------------

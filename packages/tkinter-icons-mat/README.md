@@ -7,7 +7,7 @@ Broad enough that it usually has a glyph for a specific domain concept, not only
 [![PyPI](https://img.shields.io/pypi/v/tkinter-icons-mat.svg)](https://pypi.org/project/tkinter-icons-mat/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
 
-**Material Design Icons** — 14,896 icons, upstream v7.4.47. One of sixteen icon packs for [`tkinter-icons`](https://pypi.org/project/tkinter-icons/).
+**Material Design Icons** — 14,894 icons, upstream v7.4.47. One of sixteen icon packs for [`tkinter-icons`](https://pypi.org/project/tkinter-icons/).
 
 ---
 

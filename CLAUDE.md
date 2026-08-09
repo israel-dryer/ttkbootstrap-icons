@@ -273,9 +273,9 @@ bumped every time and an existing one means the tag is wrong.
 
 ## Next session — start here
 
-### Do #140 next — `PLAN.md` is written for it
+### 5.1.0 is ready to cut — #112 is the only 5.1 item not done
 
-**Everything below this subsection is finished work.** 5.0.0 and 5.0.1 both shipped, and so did most of 5.1.0; the sections that follow are kept because they record *how*, not because anything in them is outstanding.
+**Everything below this subsection is finished work.** 5.0.0 and 5.0.1 both shipped, and so has all of 5.1.0 except #112; the sections that follow are kept because they record *how*, not because anything in them is outstanding.
 
 | Issue | State |
 |---|---|
@@ -283,18 +283,22 @@ bumped every time and an existing one means the tag is wrong.
 | #136 | **Closed 2026-08-09**, merged as #137 then re-landed as #138 — see the retarget trap below. |
 | #117 | Closed earlier, from #121. |
 | #91 | **Closed 2026-08-09**, merged as #139. Tk is no longer needed to import the library or to render. |
-| #140 | **Open, and the next thing to do.** A glyph the font does not carry renders blank with no error. `PLAN.md` is the full plan; root cause is on the issue. |
+| #140 | **Done 2026-08-09** on `fix/glyphmap-advertises-glyphs-the-font-lacks`. A glyph the font does not carry no longer renders blank in silence. |
 | #112 | PySimpleGUI integration, scoped as 5.1 since #71. **Not started, and independent of everything else.** |
 
-**#140 in one paragraph, so the next session does not have to re-derive it.** `on_missing` guards the glyph *map*; nothing guards the *font*. A name that is in a pack's glyph map but whose codepoint the font does not carry draws a fully transparent image with no exception and no warning — not even under `on_missing="raise"`, because from the glyph map's point of view nothing is missing. 123 glyphs are in this state, all in `google-material` (43 outlined, 38 round, 38 sharp) and `material` (2 outline, 2 fill). They are advertised by the packs' own `build_name_lookup()` and drawn as empty tiles by the shipped browser.
+**What #140 turned out to be, since the plan had one half of it wrong.** `on_missing` guarded the glyph *map*; nothing guarded the *font*. A name in a pack's glyph map whose codepoint the font does not carry drew a fully transparent image with no exception and no warning — not even under `on_missing="raise"`, because from the glyph map's point of view nothing was missing. **121 glyph-map entries** were in that state: 119 in `gmi` (43 outlined, 38 round, 38 sharp) and 2 in `mat`. Counted per name *per style*, the way the placement census counts, that is **123** — `mat`'s two styles share one glyph map, so its 2 entries are counted twice. Both numbers are correct and they measure different things; quote neither without saying which.
 
-**The root cause is two generators, not bad data.** `gmi`'s `generate_assets.py:132-136` writes one downloaded *baseline* codepoints file to all four style glyphmaps, under a comment asserting the styles share codepoints — they do not. `mat`'s writes one shared `glyphmap.json` from a single font for both styles. Scrubbing the data without fixing the generators means the next regeneration reintroduces all 123.
+**The two root causes are different, and `PLAN.md` guessed the second one wrong.** `gmi` was as described: one downloaded *baseline* codepoints file written verbatim to all four style glyphmaps, under a comment asserting the styles share codepoints. `mat` was **not** "one style's truth published as every style's" — its two styles are genuinely one font split by a name predicate, so one shared glyph map is correct. Its actual fault is that the map is scraped from upstream's **CSS**, and MDI's CSS declares `mdi-blank` at U+F68C as a deliberately empty placeholder the webfont has no codepoint for. `glyphmap_from_ttf` is only the fallback there and was never reached. **Read the generator before trusting a written-down root cause** — the shape of the fix survived, but the mechanism did not.
 
-**It explains a discrepancy already on record.** The committed census reads `glyphmap_entries = 89292` and `drawing = 89169`; the difference is exactly these 123 — the unexplained 123-glyph discrepancy from round 2 of the #121–#125 docs review. It was never a counting error. Fixing the data takes that delta to zero, which means re-running `generate_placement_census.py` and updating the four files `tests/test_placement_census.py` checks. **Do that before writing 5.1.0 release prose, not after.**
+**The fix has two halves, and one shared helper.** `tooling.restrict_to_font` intersects any assembled mapping with the real font's cmap and both generators now call it, so a regeneration cannot reintroduce this. The committed data was fixed by running that same code path locally rather than by re-downloading: `gmi`'s generator pulls fonts from `master`, so a regeneration would have silently moved the pack off its pinned 0.14.15. `write_glyphmap` reproduces the committed files byte-identically, which was checked first, so the data diff is 121 removed lines and nothing else.
 
-**Scale it honestly.** 123 of 89,292 entries, 0.14%, two of sixteen packs, and every pack's default style is already clean — so it is only reachable by explicitly choosing a non-default style. Nothing crashes. It is worth fixing because the silence violates the rule that a missing icon should say so, not because it is urgent.
+**Three separate instruments had been reporting this all along and nobody had pointed them at it.** The census recorded `glyphmap_entries` 123 above `drawing` — the unexplained 123-glyph discrepancy from round 2 of the #121–#125 docs review, which was never a counting error. `without_metrics` was *also* exactly 123. And `metrics-outlined.json` had always held 2,191 entries against a glyph map advertising 2,234, because ink measurement skips a glyph with no ink. All three go to zero now. **When two generated artifacts disagree by a constant, that constant is a finding.**
 
-**Nothing is waiting on a tag.** `[Unreleased]` in `CHANGELOG.md` holds #115, #136 and #91; whenever 5.1.0 is cut it goes out through the tag-driven path, which is proven as of 5.0.1. If #140 lands first the same tag carries the `gmi` and `material` pack bumps alongside the base, which is #97 working as designed.
+**The runtime guard reads the font's cmap without adding a dependency.** Pillow cannot report a font's coverage — it draws `.notdef` and says nothing — so `tkinter_icons/sfnt.py` parses the `cmap` table directly rather than making `fontTools` a third runtime dependency. It is checked against `fontTools` on all 31 font/style combinations the project ships, which between them cover subtable formats 0, 4, 6 and 12 and both the BMP and the supplementary PUA that MDI lives in. **Every failure path returns `None`, meaning unknown, never an empty set** — an empty set would claim the font carries nothing and blank an entire pack. Parsed once per font and cached; ≤8 ms for the largest pack.
+
+**The check lives in `IconSet.glyph`, not at the call sites.** That is what makes it reach the Tk widget path as well as `render_pil` — the browser drawing blank tiles was this bug's most visible symptom, and `_render` has its own lookup. Duplicating the check at both sites would have set up the next #115. Consequence worth knowing: `len(icon_set)` and `name in icon_set` now mean "can be drawn" rather than "is in the map", and **that made a latent bug reachable** — `render_pil` selected its set with `icon_set or cls._icon_set_current`, and an `IconSet` is sized, so a set that can draw nothing is falsy and the caller's set was silently replaced by whichever loaded last. It selects on `is None` now. Any `or` over an object with `__len__` is that bug waiting.
+
+**Nothing is waiting on a tag.** `[Unreleased]` in `CHANGELOG.md` holds #115, #136, #91 and #140; whenever 5.1.0 is cut it goes out through the tag-driven path, which is proven as of 5.0.1. The one tag carries the base plus `gmi` and `mat` at **1.1.2**, with the other fourteen packs skipping existing — which is #97 working as designed.
 
 **One lesson from #91's review worth keeping, because it is the same trap as #140.** A test hand-rolled the four steps `render_pil` encapsulates and dropped `icon_set.glyph(name)`, so it drew the *name* `"house"` as text rather than the icon. It passed: no pack's font maps ASCII, every letter renders `.notdef`, and Bootstrap's `.notdef` is a tofu box, so five boxes satisfied an ink assertion. **`resolve_icon` returns a glyph name; `render_glyph` takes a character.** And the deeper point — asserting on ink is necessary but not sufficient, because `.notdef` is ink. Three `assert "tkinter" not in sys.modules` lines were removed in the same pass for the opposite reason: they could never fail, since the import machinery drops a failed import from `sys.modules`.
 
@@ -606,6 +610,7 @@ everything behind mutable class state on `Icon`.
 | Module | Role |
 |---|---|
 | `render.py` | Drawing core. Pure PIL, **no Tkinter** — runs without a display. `RenderOptions` carries all the knobs. |
+| `sfnt.py` | Reads a font's `cmap` straight out of its bytes, because Pillow cannot say which codepoints a font carries and `fontTools` is not a runtime dependency. Unparseable returns `None` — unknown, never empty. |
 | `iconset.py` | One immutable `IconSet` per (provider, style): font bytes, glyphs, metrics, options. |
 | `icon.py` | Tk-facing layer only. `Icon.render_pil()` is the headless entry point. |
 | `packs.py` | The pack catalog — single source of truth for every install message and the lazy import root. |

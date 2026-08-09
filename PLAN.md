@@ -8,6 +8,24 @@ The previous section here — #91's plan for making Tk optional — is gone rath
 
 ---
 
+## Amendments made while building it
+
+Written after the work, before the review. The plan below is left as it was — these are the places the implementation departs from it, so a finding can be checked against what was actually intended rather than against a guess that did not survive contact with the code.
+
+**`mat`'s root cause below is wrong.** The plan says its generator "builds the mapping with `glyphmap_from_ttf` from one font and writes a single shared `glyphmap.json` used by both `outline` and `fill`", and calls that "one style's truth published as every style's". Neither half holds. `mat`'s two styles are one font split by a name predicate — `_is_outline_style` tests for the `-outline` suffix — so a single shared glyph map is *correct* there, not a defect. And `glyphmap_from_ttf` is only the fallback: the mapping comes from upstream's **CSS** whenever one is available, and it was. The real fault is that MDI's stylesheet declares `mdi-blank` at U+F68C as a deliberately empty placeholder that the webfont has no codepoint for. So `mat` contributes **one icon under two names**, not four glyphs. The shape of the fix — intersect with the font before writing — was right anyway.
+
+**The counts need their definition attached, and the plan quotes only one of the two.** 121 glyph-map entries were removed; the census counts 123 because it counts once per name *per style* and `mat`'s two styles share one map. The plan's "123 glyphs across two packs" and "123 of 89,292 entries" are the per-style figure applied to an entry-count denominator. Both numbers appear in the shipped prose, each with the definition that makes it true.
+
+**The guard went into `IconSet.glyph`, not "beside the existing lookup at `icon.py:331`" as the plan says.** That line is `render_pil`'s. The Tk widget path has its own lookup at `icon.py:470`, and the plan's own invariant — "the browser shows no blank tiles" — is about *that* path. One shared answer covers both, which is also what #115 concluded about two entry points resolving a name.
+
+**That change made a pre-existing bug reachable, and it is fixed here rather than deferred.** Once `__len__` counts drawable glyphs, an `IconSet` that can draw nothing is falsy, and `render_pil` chose its set with `icon_set or cls._icon_set_current` — silently discarding the caller's set for whichever loaded last. It selects on `is None` now. It is in scope because this branch is what made it reachable.
+
+**The data fix is a local transform, which the plan flags as a real decision.** Decided: run the generators' new `restrict_to_font` step against the committed data rather than regenerating from upstream. `gmi`'s generator downloads from `master`, so a regeneration would silently move the pack off its pinned `icon_version` 0.14.15 and mix unrelated upstream drift into a bug-fix diff. `write_glyphmap` was confirmed to reproduce all five committed files byte-identically first, so the diff is 121 removed lines and nothing else.
+
+**Metrics needed no regeneration**, which the plan does not predict either way. They were already correct — ink measurement skips a glyph with no ink, so `metrics-outlined.json` had held 2,191 entries against a map advertising 2,234 since the pack was built. `generate_metrics --all --check` is clean before and after.
+
+---
+
 ## What this is supposed to do
 
 A name that is in a pack's glyph map but whose codepoint the pack's own font does not carry renders as a fully transparent image, with no exception and no warning — **not even under `on_missing="raise"`**. 123 glyphs across two packs are in this state, they are advertised by the packs' own `build_name_lookup()`, and the shipped icon browser draws them as empty tiles.

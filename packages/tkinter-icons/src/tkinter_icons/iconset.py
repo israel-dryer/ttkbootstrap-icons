@@ -16,7 +16,7 @@ import json
 from dataclasses import dataclass, field
 from typing import Any, Mapping, Optional, TYPE_CHECKING
 
-from .render import InkBounds, RenderOptions
+from .render import InkBounds, RenderOptions, font_codepoints
 
 if TYPE_CHECKING:
     from .providers import BaseFontProvider
@@ -30,7 +30,10 @@ class IconSet:
         id: Stable identity, `"<provider>:<style>"`. Used as the cache key and
             as part of every rendered-image cache key.
         font_bytes: The raw font file backing this style.
-        glyphs: Icon name to the single character that draws it.
+        glyphs: Icon name to the single character that draws it, exactly as the
+            provider's glyphmap file declares it. Ask `glyph()` rather than
+            reading this directly unless you specifically want the advertised
+            map — an entry here is not proof the font carries the codepoint.
         metrics: Icon name to normalized ink bounds, from the provider's
             `metrics.json`. Empty when the provider ships none, in which case
             the renderer measures at draw time.
@@ -49,18 +52,55 @@ class IconSet:
         return self.id
 
     def glyph(self, name: str) -> Optional[str]:
-        """Return the character for `name`, or `None` if it is not in this set."""
-        return self.glyphs.get(name)
+        """Return the character that draws `name`, or `None` if this set cannot draw it.
+
+        A name is undrawable two ways, and both answer `None` so that callers
+        apply one policy rather than two. Either the glyph map has no entry for
+        it, or the entry points at a codepoint **the font does not contain** —
+        which used to render as a silent blank square, because Pillow draws
+        `.notdef` for an absent codepoint and in most icon fonts `.notdef` is
+        empty (#140).
+
+        This is the single place that question is answered. `Icon.render_pil`
+        and the Tk render path both come through here, and the reason they do
+        is #115: the same name answered two different ways by two entry points
+        is the defect that keeps recurring in this library.
+        """
+        character = self.glyphs.get(name)
+        if character is None or not self.can_draw(character):
+            return None
+        return character
+
+    def can_draw(self, character: str) -> bool:
+        """Whether this set's font contains every codepoint in `character`.
+
+        Returns `True` when the font's character map cannot be read, which is
+        the deliberate fail-open: an unparseable font is one this check knows
+        nothing about, and a guard that cannot read a font must not be the
+        thing that stops it rendering.
+        """
+        codepoints = font_codepoints(self.font_key, self.font_bytes)
+        if codepoints is None:
+            return True
+        return all(ord(char) in codepoints for char in character)
 
     def ink(self, name: str) -> Optional[InkBounds]:
         """Return precomputed ink bounds for `name`, or `None` to measure live."""
         return self.metrics.get(name)
 
     def __contains__(self, name: object) -> bool:
-        return name in self.glyphs
+        return isinstance(name, str) and self.glyph(name) is not None
 
     def __len__(self) -> int:
-        return len(self.glyphs)
+        """How many names this set can actually draw.
+
+        Not `len(self.glyphs)`. Membership, `glyph()` and this count all mean
+        the same thing on purpose — a set that reports a name it cannot draw is
+        the bug this class was changed to prevent. `glyphs` is still the raw
+        advertised map for tooling that wants to compare the two; every shipped
+        pack has them equal, which `tests/test_font_coverage.py` asserts.
+        """
+        return sum(1 for character in self.glyphs.values() if self.can_draw(character))
 
 
 _icon_sets: dict[str, IconSet] = {}

@@ -7,6 +7,8 @@ from tkinter_icons.tools.tooling import (
     download_to,
     load_text,
     glyphmap_from_ttf,
+    report_dropped,
+    restrict_to_font,
     write_glyphmap,
     ensure_dir,
 )
@@ -129,12 +131,35 @@ def main(argv=None):
     if not mapping:
         raise SystemExit("Parsed codepoints mapping is empty.")
 
-    # Write separate glyphmap files for each style
-    # Material Icons use the same codepoints across all styles
-    for style in ["baseline", "outlined", "round", "sharp"]:
+    # Write a separate glyphmap for each style, restricted to what that style's
+    # own font actually carries.
+    #
+    # This used to write `mapping` verbatim to all four, under a comment saying
+    # Material Icons use the same codepoints across all styles. They do not. The
+    # codepoints file downloaded above is the *baseline* one, and baseline
+    # carries 43 codepoints `outlined` lacks, 38 `round` lacks, and 38 `sharp`
+    # lacks. All four styles reporting an identical name count was the visible
+    # symptom; 119 names that drew an empty square with no error was the cost
+    # (#140). Each style is now checked against the font it will be drawn from.
+    style_fonts = {
+        "baseline": base_font,
+        "outlined": outlined_font,
+        "round": round_font,
+        "sharp": sharp_font,
+    }
+    print("\nChecking each style's names against its own font:")
+    for style, font_path in style_fonts.items():
+        if font_path is None:
+            raise SystemExit(
+                f"The {style} font was not downloaded, so its glyph map cannot be checked "
+                f"against it. Refusing to write a glyph map that may advertise glyphs the "
+                f"font does not carry."
+            )
+        style_mapping, dropped = restrict_to_font(mapping, font_path)
+        report_dropped(style, dropped)
         glyphmap_path = pkg_root / f"glyphmap-{style}.json"
-        write_glyphmap(glyphmap_path, mapping)
-        print(f"Wrote: {glyphmap_path}")
+        write_glyphmap(glyphmap_path, style_mapping)
+        print(f"Wrote: {glyphmap_path} ({len(style_mapping)} names)")
 
     print("\nDownloaded fonts:")
     for label, p in (

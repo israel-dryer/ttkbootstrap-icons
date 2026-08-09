@@ -10,6 +10,8 @@ from tkinter_icons.tools.tooling import (
     glyphmap_from_metadata,
     glyphmap_from_ttf,
     glyphmap_from_css,
+    report_dropped,
+    restrict_to_font,
     write_glyphmap,
     ensure_dir,
 )
@@ -111,8 +113,17 @@ def main(argv=None):
                 "Failed to derive glyphmap from TTF and CSS. Provide a CSS file via --css-file or --css-url."
             ) from e
 
+    # The mapping above comes from the stylesheet whenever one is available,
+    # and a stylesheet is not a font. MDI's CSS declares `mdi-blank` at U+F68C
+    # as a deliberately empty placeholder, and the webfont has no such
+    # codepoint — so the pack advertised an icon that drew nothing and raised
+    # nothing (#140). Only the font can settle which names are real.
+    print("Checking names against the font:")
+    mapping, dropped = restrict_to_font(mapping, font_path)
+    report_dropped("mdi", dropped)
+
     write_glyphmap(pkg_root / "glyphmap.json", mapping)
-    print(f"Wrote: {pkg_root / 'glyphmap.json'}")
+    print(f"Wrote: {pkg_root / 'glyphmap.json'} ({len(mapping)} names)")
     print(f"Font at: {font_path}")
 
 

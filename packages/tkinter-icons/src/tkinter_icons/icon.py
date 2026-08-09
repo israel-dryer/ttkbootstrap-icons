@@ -300,7 +300,9 @@ class Icon(StatefulIconMixin, ABC):
 
         Returns:
             A square RGBA image. Fully transparent if the name reached a set
-            that has no glyph for it and `on_missing` is `"transparent"`.
+            that cannot draw it and `on_missing` is `"transparent"` — either
+            because the set's glyph map has no entry for it, or because the
+            entry names a codepoint the set's font does not contain.
 
         Raises:
             RuntimeError: If no icon set is given, the class has no provider,
@@ -308,7 +310,7 @@ class Icon(StatefulIconMixin, ABC):
             ValueError: If the pack cannot resolve `name`, if `name`
                 contradicts `style`, or if `style` is given where there is no
                 provider to resolve it against.
-            KeyError: If the name reaches a set with no glyph for it and
+            KeyError: If the name reaches a set that cannot draw it and
                 `on_missing` is `"raise"`.
         """
         resolving = icon_set is None and cls.provider_class is not None
@@ -330,7 +332,11 @@ class Icon(StatefulIconMixin, ABC):
             resolved_style, name = provider.resolve_icon(name, style)
             icon_set = get_icon_set(provider, resolved_style)
 
-        icon_set = icon_set or cls._icon_set_current
+        # `is None`, not `or`. An `IconSet` is sized, so a set that can draw
+        # nothing is falsy, and `or` would quietly discard the caller's set and
+        # fall back to whichever one loaded last.
+        if icon_set is None:
+            icon_set = cls._icon_set_current
         if icon_set is None:
             raise RuntimeError("No icon set available. Initialize a provider first.")
 
@@ -433,10 +439,31 @@ class Icon(StatefulIconMixin, ABC):
 
     @classmethod
     def _report_missing(cls, name: str, icon_set: IconSet) -> None:
-        """Apply the `on_missing` policy for a name absent from `icon_set`."""
+        """Apply the `on_missing` policy for a name `icon_set` cannot draw.
+
+        Both reasons land here, but they say different things. A name the glyph
+        map never had is a name; a name the map advertises at a codepoint the
+        font does not contain is a fault in the pack's own data, and saying so
+        is the difference between a user checking their spelling and a user
+        filing the bug that is actually there.
+        """
         if cls.on_missing == "transparent":
             return
-        message = f"Icon '{name}' is not in icon set '{icon_set.id}'."
+        character = icon_set.glyphs.get(name)
+        if character:
+            # Every codepoint is spelled out rather than just the first. A glyph
+            # map yields one character per name, but an `IconSet` built by hand
+            # is free to hold more, and a diagnostic must not itself raise.
+            codepoints = " ".join(f"U+{ord(char):04X}" for char in character)
+            message = (
+                f"Icon '{name}' is mapped to {codepoints} in icon set "
+                f"'{icon_set.id}', but that set's font does not contain "
+                f"{'that codepoint' if len(character) == 1 else 'all of those codepoints'}, "
+                f"so there is nothing to draw. This is a fault in the icon pack's "
+                f"glyph map rather than in the name you asked for."
+            )
+        else:
+            message = f"Icon '{name}' is not in icon set '{icon_set.id}'."
         if cls.on_missing == "raise":
             raise KeyError(message)
         warnings.warn(message, stacklevel=3)
