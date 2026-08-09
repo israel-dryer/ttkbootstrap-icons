@@ -20,6 +20,17 @@ prefix: `tkinter_icons` starts with `tkinter`, and a blocker written with
 `startswith("tkinter")` would block the package under test and "pass" by
 failing for entirely the wrong reason. `test_the_blocker_does_not_block_the_library`
 is that check.
+
+**Do not add `assert "tkinter" not in sys.modules` to these bodies.** Three of
+them carried it and none could ever fail: the blocker raises from `find_spec`,
+and the import machinery drops a failed import from `sys.modules`, so under
+this harness the name is unreachable there whatever the library does. It reads
+like the invariant being checked and is the same shape as the `.git`/`.github`
+prefix bug this project has already been bitten by — a check that cannot fail
+is indistinguishable from a check that passed. The invariant is enforced twice
+already, and both can genuinely fail: `BLOCK_TKINTER` exits non-zero if
+`import tkinter` succeeds, and any library import of `tkinter` raises inside
+the child, which `check` catches on the return code.
 """
 
 from __future__ import annotations
@@ -105,13 +116,23 @@ def test_importing_the_package_does_not_need_tkinter():
         """
         import tkinter_icons
         from tkinter_icons import Icon, RenderOptions, render_glyph, measure_ink_bounds
-        assert "tkinter" not in sys.modules, "something imported tkinter after all"
         """
     )
 
 
 def test_render_glyph_draws_without_tkinter():
-    """The lower-level entry point, which never had a reason to need Tk."""
+    """The lower-level entry point, which never had a reason to need Tk.
+
+    This reaches past `render_pil` on purpose, to prove the drawing primitive
+    itself is Tk-free rather than proving it through the layer above. The cost
+    is that the four steps `render_pil` encapsulates have to be spelled out
+    here — resolve, get the set, **look the glyph up**, draw — and the third is
+    easy to drop, because `resolve_icon` returns a glyph *name* while
+    `render_glyph` takes the character. Dropping it draws the name as text: no
+    pack's font maps ASCII, so every letter renders `.notdef`, and a font whose
+    `.notdef` is a tofu box then satisfies an ink assertion with a row of
+    boxes. Assert on the character, never on "something was drawn".
+    """
     pack = next((p for p in INSTALLED if p.extra == "bootstrap"), None)
     if pack is None:
         pytest.skip("the bootstrap pack is not installed")
@@ -127,17 +148,18 @@ def test_render_glyph_draws_without_tkinter():
             obj() for name, obj in vars(module).items()
             if name.endswith("FontProvider") and name != "BaseFontProvider"
         )
-        style, glyph = provider.resolve_icon("house", None)
+        style, icon_name = provider.resolve_icon("house", None)
         icon_set = get_icon_set(provider, style)
+        glyph = icon_set.glyph(icon_name)     # the character; `icon_name` is not one
+        assert glyph is not None, f"the bootstrap set has no glyph for {{icon_name!r}}"
         img = render_glyph(
             glyph, 32, "#000000",
             font_key=icon_set.font_key,
             font_bytes=icon_set.font_bytes,
-            ink=icon_set.ink(glyph),
+            ink=icon_set.ink(icon_name),      # ink is keyed by name, not by character
             options=icon_set.options,
         )
         assert img.getchannel("A").getbbox() is not None, "render_glyph drew nothing"
-        assert "tkinter" not in sys.modules
 """
     )
 
@@ -154,7 +176,6 @@ def test_render_pil_draws_without_tkinter():
 
         img = {pack.icon_class}.render_pil("house", size=32, color="#000000")
         assert img.getchannel("A").getbbox() is not None, "render_pil drew nothing"
-        assert "tkinter" not in sys.modules
         """
     )
 
@@ -174,7 +195,6 @@ def test_saving_a_png_works_without_tkinter():
             out = pathlib.Path(tmp) / "house.png"
             {pack.icon_class}.render_pil("house", size=64).save(out)
             assert out.stat().st_size > 0, "wrote an empty file"
-        assert "tkinter" not in sys.modules
         """
     )
 

@@ -45,17 +45,23 @@ try:
     # resolution fails for the *whole module*: the docs then lost `MissingPolicy`
     # and the ttk aliases too, not just the Tk names.
     #
-    # Narrow on purpose. Only the absence of Tk is tolerated here; a `PIL`
-    # broken some other way still raises, from the point-of-use imports below,
-    # where the message names what actually failed.
+    # Narrow on purpose, and the `else` is what makes it narrow. Only the
+    # absence of Tk is tolerated here; a `PIL` broken some other way still
+    # raises, from this import or from the point-of-use imports below, where
+    # the message names what actually failed. Sharing one `try` would set
+    # `tkinter = None` for a Pillow built without a usable `ImageTk` — a
+    # machine that *has* Tk — and the fallback would then be lying about which
+    # dependency is missing.
     import tkinter
-    from PIL.ImageTk import PhotoImage
 except ImportError:  # pragma: no cover - exercised in a subprocess, see tests
     # No Tk on this machine. Nothing on the pure-PIL path needs these; they
     # stand in for annotations so the module still imports, and every real use
-    # re-imports at the point of use and raises there.
+    # re-imports at the point of use and raises there. `PIL.ImageTk` imports
+    # `tkinter` itself, so it cannot load either and there is nothing to try.
     tkinter = None  # type: ignore[assignment]
     PhotoImage = Any  # type: ignore[misc, assignment]
+else:
+    from PIL.ImageTk import PhotoImage
 
 from .iconset import IconSet, clear_icon_sets, get_icon_set, icon_set_id
 from .providers import BaseFontProvider

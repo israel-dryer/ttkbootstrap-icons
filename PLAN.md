@@ -39,7 +39,7 @@ The `except ImportError` is narrow on purpose. It tolerates Tk being absent and 
 ## Invariants
 
 - **`import tkinter_icons` works with no `tkinter` installed**, and so do `render_glyph`, `Icon.render_pil`, and saving the result to a PNG.
-- **Nothing imports `tkinter` as a side effect.** Each test asserts `"tkinter" not in sys.modules` after the fact, not merely that no exception was raised.
+- **Nothing imports `tkinter` as a side effect.** Enforced by the harness rather than per-test: `BLOCK_TKINTER` exits non-zero if `import tkinter` succeeds, and any library import of `tkinter` raises inside the child, which `check` catches on the return code. This bullet used to claim each test asserted `"tkinter" not in sys.modules` "after the fact, not merely that no exception was raised" — three did, and none of them could ever fail, because a failed import is dropped from `sys.modules` by the import machinery. They are gone; see the module docstring for why they must not come back.
 - **The widget path still fails, and fails legibly.** Reaching `.image` without Tk raises `ImportError` naming `tkinter` — not `AttributeError`, not `NameError` from a deferred import site, and not a `TypeError` from calling the `Any` placeholder.
 - **Constructing an icon is still free of Tk.** `PackIcon("house", size=32)` renders nothing until `.image`, which is what makes the point above reachable at all.
 - **`sphinx -W --keep-going -n` stays clean**, which is the check that caught the `TYPE_CHECKING` attempt.
