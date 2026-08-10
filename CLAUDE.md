@@ -273,9 +273,13 @@ bumped every time and an existing one means the tag is wrong.
 
 ## Next session — start here
 
-### 5.1.0 is ready to cut — #112 is the only 5.1 item not done
+### Next action: review round 3 of #140, scope `77a0b7b..550f5ed`
 
-**Everything below this subsection is finished work.** 5.0.0 and 5.0.1 both shipped, and so has all of 5.1.0 except #112; the sections that follow are kept because they record *how*, not because anything in them is outstanding.
+**5.1.0 is not ready to cut, and this heading said it was.** #140 is written and pushed but unmerged, and its third review round has not run. `REVIEW.md` carries the settled findings from rounds 1 and 2, every scope pinned to a SHA, and a "Notes for round 3" list naming what to attack first. `PLAN.md` carries the intent, including the two changes that were never in the plan. **A session that arrives here reviews; it does not merge, and it does not cut a tag.**
+
+The one thing worth reading before anything else: round 3's diff contains a **public behavior change** — `on_missing` now defaults to `"raise"` — which is the owner's call and not a review finding. What the review is for is the second-order question. Flipping it already turned up one silent dependency, the `"none"` sentinel, which drew a blank only by falling through the missing-name path and had therefore been raising all along for anyone who set `"raise"`. That was found by a test failing, not by anyone reasoning about it, which is exactly why the same question needs asking again by someone who did not write the change.
+
+**Everything from "What #140 turned out to be" down is finished work.** 5.0.0 and 5.0.1 both shipped, and so has all of 5.1.0 except #140 and #112; the sections that follow are kept because they record *how*, not because anything in them is outstanding.
 
 | Issue | State |
 |---|---|
@@ -283,7 +287,7 @@ bumped every time and an existing one means the tag is wrong.
 | #136 | **Closed 2026-08-09**, merged as #137 then re-landed as #138 — see the retarget trap below. |
 | #117 | Closed earlier, from #121. |
 | #91 | **Closed 2026-08-09**, merged as #139. Tk is no longer needed to import the library or to render. |
-| #140 | **Done 2026-08-09** on `fix/glyphmap-advertises-glyphs-the-font-lacks`. A glyph the font does not carry no longer renders blank in silence. |
+| #140 | **Written and pushed, not merged, and round 3 of its review has not run.** Branch `fix/glyphmap-advertises-glyphs-the-font-lacks`, tip `550f5ed`. A glyph the font does not carry no longer renders blank in silence. |
 | #112 | PySimpleGUI integration, scoped as 5.1 since #71. **Not started, and independent of everything else.** |
 
 **What #140 turned out to be, since the plan had one half of it wrong.** `on_missing` guarded the glyph *map*; nothing guarded the *font*. A name in a pack's glyph map whose codepoint the font does not carry drew a fully transparent image with no exception and no warning — not even under `on_missing="raise"`, because from the glyph map's point of view nothing was missing. **121 glyph-map entries** were in that state: 119 in `gmi` (43 outlined, 38 round, 38 sharp) and 2 in `mat`. Counted per name *per style*, the way the placement census counts, that is **123** — `mat`'s two styles share one glyph map, so its 2 entries are counted twice. Both numbers are correct and they measure different things; quote neither without saying which.
@@ -376,7 +380,7 @@ Two of the eleven were not ancestors of `main` and both were checked rather than
 | #117 | The `on_missing` scope sentence in `icons-and-names.rst:72` describes a case that cannot occur. Docs-only; split out of #115 so it can ship in a patch. |
 | #87 | **Closed 2026-08-08.** The generated renderer figures (#123) and then the three real-window screenshots (#130). Both shipped on merge via Read the Docs rather than with the tag, which is why it never blocked the release. |
 
-**5.1.0 — moved to the top of this section, since it is the live milestone.** See "Do #140 next" above; #115, #136 and #91 are closed, #140 is the next thing to do, and #112 has not been started.
+**5.1.0 — moved to the top of this section, since it is the live milestone.** #115, #136 and #91 are closed. #140 is written and pushed but **not merged and not finished being reviewed** — see the table at the top of this section. #112 has not been started.
 
 **Two numbers from #115 that this file had wrong, and which are now pinned by a test.** The issue's headline was **814** names rendering blank; the measurement that shipped is **849** newly resolving, over 288,418 combinations — every name once with no style, and once against each style its own pack has. The changelog first said 867 over "365,051 combinations", and neither reproduced; `TestTheDefaultStyleStoppedBeingAGate` now pins the per-pack breakdown against a frozen transcription of the old default-only rule, because a comparison against a moving `main` is not a check anyone can re-run. **Quote neither figure without the population definition** — that omission is what made three wrong versions of it look equally plausible.
 

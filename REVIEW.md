@@ -2,7 +2,15 @@
 
 Findings and resolutions, newest round last. Read `PLAN.md` for what the branch is meant to do.
 
-**Round 2 scope is `git diff b8817c0..HEAD` — the fix diff only, not the branch.** Round 1 reviewed `main..b8817c0` and its findings are settled below; re-reviewing the whole branch relitigates them.
+**Round 3 scope is `git diff 77a0b7b..550f5ed` — three commits, not the branch.** Rounds 1 and 2 are settled below; re-reviewing the whole branch relitigates them.
+
+Every scope in this file is pinned to explicit SHAs rather than written `..HEAD`. `HEAD` was correct in each round for about a day and then silently named the wrong range — a review file is read by a session that arrives after the tip has moved, which is the one condition under which `..HEAD` is guaranteed to mislead.
+
+| Round | Scope | Tip when it ran |
+|---|---|---|
+| 1 | `main..b8817c0` | `b8817c0` |
+| 2 | `b8817c0..77a0b7b` | `77a0b7b` |
+| 3 | `77a0b7b..550f5ed` | `550f5ed`, pushed, unmerged |
 
 ---
 
@@ -66,7 +74,7 @@ Deferred: requires a malformed font, and fonts arrive as fixed bytes inside a pa
 
 ## Notes for round 2
 
-- **Scope is `git diff b8817c0..HEAD`.** Findings 5, 6 and 7 above were triaged and deliberately left; re-raising them is duplicate unless the fix diff changed their reachability.
+- **Scope is `git diff b8817c0..77a0b7b`.** Findings 5, 6 and 7 above were triaged and deliberately left; re-raising them is duplicate unless the fix diff changed their reachability.
 - Findings 1 and 2 are coupled — 2 exists because of 1, and the pair is only correct together.
 - The fix step was performed by the session that wrote the branch, which is a protocol deviation the owner asked for explicitly. Its own pass caught finding 2's re-ranking and one false claim in a docstring it had just written; treat the whole fix diff as unreviewed regardless.
 - `sfnt.py` is not covered by the `fontTools` parity test for any case above, since no shipped font exercises them. The parity reference in `tests/test_font_coverage.py` still admits platform 3 at every encoding, so it and `_is_unicode_encoding` would disagree on a font carrying a legacy subtable. No shipped font does. Left as-is deliberately: narrowing the reference to match the implementation would make the independent check a mirror.
@@ -74,7 +82,7 @@ Deferred: requires a malformed font, and fonts arrive as fixed bytes inside a pa
 
 ---
 
-## Round 2 — `b8817c0..HEAD`
+## Round 2 — `b8817c0..77a0b7b`
 
 Seven findings, one medium and six low. Verification alongside them was green — 787 passed / 14 skipped, `sphinx -W -n -j auto`, census, pack READMEs and `verify_packages --strict` all clean — so none of them moved a check. The data change was independently re-derived and holds: 43/38/38 for `gmi` with round and sharp identical and both subsets of outlined, all 43 still in `baseline`, the seven named substitutes present in all three cuts, `mat` losing `blank`/`mdi-blank` only, every metrics file now matching its glyph map exactly, and none of the 45 removed names referenced by `pack_showcase.SHOWCASE`, the docs examples or any script.
 
@@ -120,7 +128,7 @@ The lead said a pack's own name can land in the policy; four paragraphs later th
 
 ### Notes for round 3
 
-- **Scope is `git diff <this round's base>..HEAD`.** Rounds 1 and 2 are settled above.
+- **Scope is `git diff 77a0b7b..550f5ed`.** Rounds 1 and 2 are settled above.
 - The behavior change is the thing to review hardest: `on_missing` defaulting to `"raise"` is the owner's call, but *what else was silently depending on the old default* is a review question. One such dependency was found and fixed during the change — the `"none"` sentinel drew a blank only by falling through the missing-name path, so it already raised for anyone who set `on_missing="raise"`. Look for others.
 - `Coverage` is a new public class in `sfnt.py` and `render.font_codepoints` was renamed to `font_coverage`. Neither has ever been released, so nothing external can depend on the old shape.
 - The fix step was again performed by the session that ran the review, at the owner's direction.

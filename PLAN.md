@@ -34,7 +34,23 @@ Written after the work, before the review. The plan below is unchanged; this sec
 - **A `cmap` this module cannot fully read makes the whole font unknown, never partially known.** An unhandled subtable format returns `None` for the font rather than a union of the subtables that were understood. Format 14 is the sole exception and is skipped without marking the font as read.
 - **`len()`, `bool()`, `__contains__` and `glyph()` are one answer.** All four derive from `can_draw`; a set may not report truthy while counting zero, or count an entry it will not draw.
 
-**The plan's third "known-weak spot" — measure the cmap cost rather than assuming it is negligible — was measured.** Parse is 3.5 ms for `mat` and 6.6 ms for `fluent`, once per font and cached; the per-glyph check is 0.45 µs, 0.42% of a 145 µs `render_pil`; codepoint sets hold 0.47 MB for `mat` against 1.31 MB of font bytes already resident.
+**The plan's third "known-weak spot" — measure the cmap cost rather than assuming it is negligible — was measured.** Parse is 3.5 ms for `mat` and 6.6 ms for `fluent`, once per font and cached; the per-glyph check is 0.45 µs, 0.42% of a 145 µs `render_pil`. The memory half of that sentence used to read "codepoint sets hold 0.47 MB for `mat` against 1.31 MB of font bytes already resident", which was true of the representation at the time and is not any more — see the amendment below.
+
+---
+
+## Amendments after round 2's review — two changes the plan never contemplated
+
+Both were directed by the owner during the fix round rather than found by a review, and neither appears anywhere in the plan below. They are recorded here so round 3 measures the diff against what the code was actually meant to do, which is the whole reason this file exists.
+
+**`on_missing` now defaults to `"raise"` rather than `"transparent"`.** The plan treated the policy's default as fixed background and reasoned only about which *cases* route into it. The owner's instruction was that the library should raise for a glyph that does not exist. Most of that was already true — a pack class raises `ValueError` for an unresolvable name at both entry points — so what changed is the one remaining silent path, a name handed straight to an icon set. `"warn"` and `"transparent"` survive as opt-ins.
+
+The invariant this adds: **a name that cannot be drawn stops the caller, unless the caller has asked for something else.** And the consequence the plan could not have anticipated, because it is the kind of thing only a flip exposes — **the `"none"` sentinel was relying on the old default.** It drew a blank by falling through the missing-name path, so it had always raised for anyone who set `on_missing="raise"`. It is `providers.NO_ICON` now and is handled before the policy. Round 3 should assume there are others and go looking; this one surfaced from a failing test, not from anyone reasoning about it.
+
+**Font coverage is stored as sorted ranges rather than as a set of codepoints.** The plan's cost analysis concluded the memory was acceptable; the owner's instruction was not to spend much on checking at all. Measured across the thirty-one shipped styles, the set form held 5,792 KB and the range form holds 17.4 KB, a factor of 333, at 0.18 µs per membership test against 0.04 µs. `cmap_codepoints` became `cmap_coverage` returning a `Coverage`, and `render.font_codepoints` became `font_coverage`; neither name has ever been released.
+
+The invariant: **`Coverage` and the `frozenset` it replaced answer identically for every codepoint.** Checked against `fontTools` on all thirty-one shipped styles, and separately on every covered codepoint plus both of its neighbors. A second invariant worth stating because nothing else in the suite can see it: **the retained size does not grow with the codepoint count**, which is what `Coverage.nbytes` and `TestCoverageIsCheapToKeep` exist to pin.
+
+This also closed two of round 1's deferred nits — format 0 truncation, and the unbounded format 12 enumeration, which the range form removes outright by emitting groups rather than walking them.
 
 ---
 
