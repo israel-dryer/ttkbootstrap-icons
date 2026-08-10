@@ -220,3 +220,53 @@ The number is right and the definition is under-specified, in a file whose own r
 Both readings were reproduced before writing anything down — 5,791.7 KB and 6,399.7 KB — and `git show 77a0b7b:…/sfnt.py` confirms the pre-change code accumulated into `codepoints: set[int]` and returned `frozenset(codepoints)`, so "as the old code built it" is a fact rather than a guess. Fixed in all four places plus the changelog, each naming the construction and the 6,400 KB figure the other reading gives, since a definition that does not say what the *wrong* answer looks like is hard to check against.
 
 `CLAUDE.md`'s copy records that this paragraph has now been wrong twice for the same reason — first measuring the array object rather than the buffer, now the freeze — and draws the general rule: "state the definition" means one someone can execute, not a phrase that sounds specific.
+
+---
+
+## Round 4 — `550f5ed..0bf7cf2` (plus `bb093b4`, which is handoff prose only)
+
+Four findings, none in the source change. Verification alongside them was green — 796 passed / 14 skipped, `sphinx -W -n -j auto` clean, `verify_packages.py --strict` all clear, `generate_placement_census.py --check` current — so once again none of them moved a check.
+
+**The `on_missing` removal itself came through clean.** `NO_ICON` is short-circuited ahead of the lookup on both entry points, `_render` and `render_pil` build an identical message from one module-level `_missing_glyph_error` with no class state left for two call sites to read differently, and no remaining consumer — the browser, the stateful mixin, the sixteen packs, the shim, both docs extensions, the scripts — depended on the removed policy. Round 3's blocking finding is closed by construction rather than by a fix that could drift again. Also checked and cleared: the new `TestBothEntryPointsAnswerAMissingNameIdentically` really does run (the `gui` marker is declared in `pytest.ini` and never deselected in `ci.yml`); the monkeypatched dispatch test's `calls.append(offset) or parser(data, offset)` is correct regardless of the parser's return value, and `_parse_subtable` resolves parsers through module globals at call time so the patch is reached; `coverage.nbytes == range_count * 2 * itemsize` and the 10× aggregate floor both hold on the installed set at 73,990 codepoints / 2,231 ranges / 33.16×; and dropping `Icon.on_missing = "raise"` from `conftest._reset_state` leaves nothing that can pollute `test_there_is_no_policy_left_to_read`.
+
+All four findings are in prose and artifacts, which is where rounds 2 and 3 also landed.
+
+### 1. `docs/user-guide/icons-and-names.rst:110` — the canonical example for the new behavior cannot produce the output it shows — **should-fix** — FIXED
+
+Root cause: the block opens `from tkinter_icons import Icon` and calls `Icon.render_pil("hoome")`, which reads as standalone, and annotates the result `# KeyError: "Icon 'hoome' is not in icon set 'mat:outline'."` There is no state in which that comment is right.
+
+**The review reported this as "raises `RuntimeError` in a fresh interpreter", and the owner's reading narrowed it usefully: both outcomes are valid behavior, and the real defect is the set id.** Installation is not the discriminator, which is the part worth writing down — `mat` is installed in the working venv and a cold process still raises `RuntimeError: No icon set available`, because `Icon._icon_set_current` is set only by `initialize_with_provider` and nothing calls it at import time. The trigger is whether a pack icon has been *constructed* in this process, which is the same cold-process trap the #102 review recorded for "`Icon` itself still raises".
+
+Read as a continuation of the page — the only reading that reaches a `KeyError` at all — the id is `mat:default`, not `mat:outline`. Replaying every block on the page in order confirms it. And `mat:outline` is not merely absent from the page, it is unreachable from the constructor: `icon_set_id` is `f"{provider.name}:{style or 'default'}"` and the constructor calls `initialize_with_provider(prov)` with no style, so even `BootstrapIcon("house", style="fill")` leaves the active set at `bootstrap:default`. Producing `mat:outline` takes an explicit `Icon.initialize_with_provider(provider, "outline")`, which appears in no example.
+
+`tests/test_docs_examples.py` cannot catch this: it resolves only calls whose class is a pack class in `INSTALLED`, and `Icon` is not one.
+
+Fixed by warming the block explicitly — `MaterialIcon("home")` ahead of the call, with the id corrected to `mat:default` — and by a sentence saying that first line is not decoration, since the cold-interpreter `RuntimeError` is exactly what a reader copying the block will hit. The corrected block was run verbatim and reproduces the annotated `KeyError` character for character.
+
+### 2. `CHANGELOG.md:25` — a round-3 resolution claims a fix the shipping file never received — **low** — FIXED
+
+Root cause: round 3 finding 6 recorded the under-specified "5,792 KB" as "Fixed in all four places plus the changelog", and singled the changelog out as mattering most because it ships to the GitHub Release page. `sfnt.py:17`, `CLAUDE.md:307`, `PLAN.md:53` and `tests/test_font_coverage.py:469` all carry the "`frozenset` built from a `set` as the old code built it" gloss; `CHANGELOG.md:25` still read bare, leaving the reader the 333×/368× ambiguity the finding existed to close.
+
+Worth noting what this is: not a wrong number, but a fix that stopped one file short of the one place it was justified by. Fixed by carrying the same definition into the changelog, including the 6,400 KB the other construction gives.
+
+### 3. `tests/test_font_coverage.py:515` — a new comment is measurably wrong and contradicts the docstring three lines above it — **low** — FIXED
+
+Root cause: the comment justifying the weak per-style assertion said "The tightest shipped style clears this by a single range, hence the aggregate check below as well." Measured across all 31 installed styles the tightest is `fontawesome:regular` at 436 codepoints in 213 ranges — a margin of 223 ranges, ratio 2.05× — which is what the docstring immediately above already states. The comment also gave the wrong reason for the aggregate check: it exists because 2.05× per style will not support a floor derived from the 33× aggregate, not because the per-style margin is thin.
+
+The same "measured figure against transcribed prose" pattern this branch has been correcting since round 1, this time inside the fix for round 3's finding 2. Fixed by stating the real ratio, the style it belongs to, and the actual reason the aggregate assertion is the one that carries weight.
+
+### 4. `CHANGELOG.md:49` — a released public export is removed with no entry — **low** — FIXED
+
+Root cause: `MissingPolicy` was in `__all__` of `tkinter_icons.icon` in both published releases — confirmed against `git show v5.0.1:…/icon.py`, line 399 — and this diff deletes it. The `[Unreleased]` entry documents `Icon.on_missing` at length, down to telling readers to delete the line if they set it, and never names the type alias. So `from tkinter_icons.icon import MissingPolicy`, which worked in 5.0.1 and is the natural way to annotate a variable holding the policy, starts raising `ImportError` with nothing in the release notes pointing at it. `REVIEW.md` recorded the removal; the document users actually read did not.
+
+Fixed by naming it in the same entry, tied back to the line the paragraph above already tells them to delete.
+
+### Round 4's resolutions, and whether the branch is done
+
+All four fixed. Verification after the fixes: 796 passed / 15 skipped, `sphinx -W -n -j auto` clean.
+
+**The rounds went 7 → 7 → 6 → 4, and the composition changed more than the count.** Rounds 1 through 3 each found at least one live behavior defect; round 4 found none, and cleared the removal on every axis it was checked on — the two entry points, the sentinel, the consumers, the new tests. What is left is a docs example, two transcription errors, and one omission from the changelog.
+
+**Three of the four are the same failure this branch has produced in every round: prose that was true when written, or true of one file, drifting from a measurement nobody re-ran.** Round 3 named the remedy — make the instrument report what it did — and findings 2 and 3 are what it looks like when the remedy is applied to code but not to the sentences around it. Finding 2 is the sharper case, because the resolution text asserted the fix had reached a file it had not reached; a claim in `REVIEW.md` is not a check either.
+
+**Round 4's own fix diff is four prose edits and one docs example, with no source change.** By the protocol it is unreviewed, and the argument that carried rounds 2 and 3 — that each round's fixes produced the next round's findings — is weaker here than it has ever been: nothing in this diff touches behavior, and the docs example was executed verbatim rather than reasoned about. The remaining decisions are the owner's.

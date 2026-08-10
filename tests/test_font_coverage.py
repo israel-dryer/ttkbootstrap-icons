@@ -512,8 +512,11 @@ class TestCoverageIsCheapToKeep:
             where = f"{pack}:{style or 'default'}"
 
             # Strictly fewer, so one-range-per-codepoint fails here rather than
-            # passing as it did before. The tightest shipped style clears this
-            # by a single range, hence the aggregate check below as well.
+            # passing as it did before. It stays this weak because the tightest
+            # shipped style clears it by only 2.05× — Font Awesome's `regular`,
+            # 436 codepoints in 213 ranges — which is nowhere near the 33× the
+            # installed set averages, so the ratio worth asserting is the
+            # aggregate one below and not this.
             assert coverage.range_count < len(coverage), where
             assert coverage.nbytes == coverage.range_count * 2 * array("I").itemsize, where
 

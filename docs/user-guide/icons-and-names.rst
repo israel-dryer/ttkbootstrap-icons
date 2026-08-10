@@ -105,10 +105,13 @@ The pack was asked for an icon it does not draw in any style. Nothing about that
 
 .. code-block:: python
 
-   from tkinter_icons import Icon
+   from tkinter_icons import Icon, MaterialIcon
 
+   MaterialIcon("home")   # the base class has no set of its own; this makes mat's default the active one
    Icon.render_pil("hoome")
-   # KeyError: "Icon 'hoome' is not in icon set 'mat:outline'."
+   # KeyError: "Icon 'hoome' is not in icon set 'mat:default'."
+
+The first line is not decoration. :class:`~tkinter_icons.Icon` draws from whichever set was initialized last, and constructing a pack icon is what initializes one — so in a fresh interpreter, before any pack icon exists, the second line raises :class:`RuntimeError` naming the missing set rather than the missing icon. Installing a pack is not enough; something has to have used it.
 
 The two are different exceptions on purpose — :class:`ValueError` for a name the pack cannot resolve, :class:`KeyError` for one that reached a set with no glyph for it — because they point at different faults, and a program that wants to tell them apart can. Catch both if you only care that the icon did not draw. What they have in common is the part that matters: neither hands you an image.
 
