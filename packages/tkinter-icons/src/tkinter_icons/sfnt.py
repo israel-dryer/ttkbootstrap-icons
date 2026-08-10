@@ -15,8 +15,11 @@ is a small, well-specified job.
 the same information and the ranges hold it about 333 times smaller: across the
 thirty-one styles this project ships, 17.4 KB of bounds against 5,792 KB of
 codepoint sets. (Ranges are `Coverage.nbytes`, the bounds buffer; sets are the
-`frozenset` this used to return plus its int objects. Neither figure means much
-without saying which.) A font's coverage is overwhelmingly contiguous — 73,990
+`frozenset` this used to return plus its int objects, and the `frozenset` has
+to be built from a `set` as the old code built it — freezing a *list* of the
+same codepoints presizes differently and gives 6,400 KB, a 10% disagreement
+with the figure printed beside it. Neither number means much without saying
+which.) A font's coverage is overwhelmingly contiguous — 73,990
 codepoints fall into 2,231 ranges — so the set form was paying an int object per
 codepoint to hold what a pair of bounds already says.
 

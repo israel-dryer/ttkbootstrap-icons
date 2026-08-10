@@ -132,3 +132,91 @@ The lead said a pack's own name can land in the policy; four paragraphs later th
 - The behavior change is the thing to review hardest: `on_missing` defaulting to `"raise"` is the owner's call, but *what else was silently depending on the old default* is a review question. One such dependency was found and fixed during the change — the `"none"` sentinel drew a blank only by falling through the missing-name path, so it already raised for anyone who set `on_missing="raise"`. Look for others.
 - `Coverage` is a new public class in `sfnt.py` and `render.font_codepoints` was renamed to `font_coverage`. Neither has ever been released, so nothing external can depend on the old shape.
 - The fix step was again performed by the session that ran the review, at the owner's direction.
+
+---
+
+## Round 3 — `77a0b7b..550f5ed`
+
+Six findings, one blocking and the rest smaller. Verification alongside them was green — 797 passed / 14 skipped, `sphinx -W -n -j auto` clean — so again none of them moved a check.
+
+Every figure in the round's prose was independently reproduced: 17.4 KB of bounds across 31 styles, 73,990 codepoints in 2,231 ranges, `fluent:filled` at 741 KB as a set against 16 bytes in two ranges, `fontawesome:solid` at 709 ranges and 5,672 bytes, and 5,792 KB total as sets — that last one with the caveat in finding 6. Nothing in the core round-3 work was found wrong: `Coverage` membership is correct at both range edges, `_merge` and `_runs` are order-independent as documented, format 12's `.notdef` trimming is sound because group glyph ids are consecutive and non-negative, `NO_ICON` short-circuits ahead of the policy on both entry points under all three settings, and the `__bool__` cache read agrees with `__len__` including at zero.
+
+**The behavior change was reviewed as round 2's note asked, and it turned up one more thing that was depending on the old default — finding 1.**
+
+### 1. `icon.py:537` — the policy is per-class on one path and hardcoded on the other — **blocking** — FIXED, by removing the policy
+
+Root cause: `_render` calls `Icon._report_missing(...)` with the base class named literally, while `render_pil` calls `cls._report_missing(...)`. `_report_missing` reads `cls.on_missing`, so a policy set on a pack subclass is honored headlessly and ignored by the Tk widget path, which reads the base class's setting instead.
+
+Demonstrated live: with `BootstrapIcon.on_missing = "transparent"`, `BootstrapIcon.render_pil("definitely-not", icon_set=…)` returns a blank image while `BootstrapIcon("definitely-not").image` raises `KeyError: "Icon 'definitely-not' is not in icon set 'bootstrap:default'."`
+
+This is the second dependency on the old default, and it is the damaging kind. While the default was `"transparent"` the two paths agreed by accident — the hardcoded class and the caller's class had the same setting, so nothing diverged. Flipping the default to `"raise"` makes a user who scopes `on_missing` to their own pack class to keep a UI drawing blanks get an unhandled `KeyError` inside a Tk callback instead. It is also exactly the "two entry points answer one question two ways" defect of #115 and #140, reintroduced in the file that closes it.
+
+Minimal change as reported: `type(self)._report_missing(...)` at that call site, plus a test that sets the policy on a subclass and exercises both paths.
+
+**Fixed differently, at the owner's direction: `on_missing` is removed entirely and a name that cannot be drawn always raises.** The reported fix would have made the two call sites agree about a policy whose existence was the real defect. Reading the history settled that — `on_missing` was introduced by the #67 renderer rework (`e1063b8`, 2026-07-30) and was not a designed feature: 4.0.x's `_render` returned `Icon._get_transparent(self.size)` for any name its map lacked, with no option and no warning, and the rework preserved that as the default while adding `"warn"` and `"raise"` as ways out of it. The option existed to escape the old behavior, and its default carried the old behavior into 5.0.0 and 5.0.1.
+
+The justification for keeping `"transparent"` and `"warn"` — bulk renderers that must not stop at the first bad name — does not survive checking. Nothing in this repository sets the policy: not the browser, not the placement census over 178,584 renders, not the two docs extensions that render every pack's previews. They cannot reach it, because they iterate names taken from the glyph map and so cannot produce one the map lacks. The cited caller is hypothetical, and a real one writes `try`/`except`.
+
+What removal changes, beyond deleting the divergence: `MissingPolicy`, the `on_missing` `ClassVar` and `_report_missing` are gone; the message-building moved to a module-level `_missing_glyph_error` that *returns* the exception, so there is no class state left for two call sites to read differently and no `cls` for one of them to hardcode. `NO_ICON` is answered before the lookup on both paths rather than by failing one. Tests: `TestAGlyphThatCannotBeDrawnRaises` and `TestBothEntryPointsAnswerAMissingNameIdentically`, the latter pinning that the widget path and the headless path raise the same message — the behavior, not the refactor, since it is the behavior that has now regressed twice.
+
+**One residual sharp edge, stated rather than fixed.** `Icon.on_missing = "transparent"` still assigns cleanly, because `__slots__` governs instances and not the class, so a line left over from 5.0.x is inert rather than loud. Catching it means a metaclass — `Icon` is already `ABC`, so an `ABCMeta` subclass — which is more machinery than the setting ever justified. The changelog tells readers to delete the line. The first draft of that changelog entry claimed the assignment would "fail loudly", which was simply false and was caught by trying it.
+
+### 2. `tests/test_font_coverage.py:472` — an assertion that cannot fail — **should-fix** — FIXED
+
+Root cause: `assert coverage.range_count <= len(coverage)` is a tautology, since every range covers at least one codepoint by construction. The test is named `test_coverage_is_ranges_rather_than_codepoints` and its docstring says the ranges are far fewer than the codepoints they stand for, but a regression to one range per codepoint passes it unchanged. Only the `nbytes` assertion on the next line does any work.
+
+Same shape as round 1's dead `Panel.size` finding in the docs stack: a test whose name claims the property the representation change exists for, and which no longer checks it. Note the `nbytes` assertion also hardcodes an itemsize of 4 where `sfnt.py:77` only asserts `>= 4`.
+
+**The suggested minimal change was wrong, and measuring it is what showed that.** `range_count * 8 < len(coverage)` fails outright: 33× is the *aggregate* — 73,990 codepoints over 2,231 ranges across everything installed — and no single style comes close to it. The tightest is `fontawesome:regular` at 2.05×, 436 codepoints in 213 ranges, because a nearly-contiguous coverage and a badly scattered one compress by completely different amounts. Deriving a per-style floor from an aggregate figure is the same error as quoting the placement census's per-name and per-style counts interchangeably, which is the thing this branch already documents twice.
+
+Fixed with three assertions instead of one: strict `range_count < len(coverage)` per style, which the degenerate one-range-per-codepoint case fails and the old `<=` did not; `nbytes == range_count * 2 * array("I").itemsize`, no longer hardcoding 4; and the 33× compression asserted as an **aggregate** with a floor of 10×, which is the form the number is actually true in and is what the module docstring and the changelog both quote. The docstring states both populations and the 2.05× tightest case, so the next person does not re-derive the same wrong floor.
+
+### 3. `tests/test_font_coverage.py:386` — the test named for both formats reaches only one — **should-fix** — FIXED
+
+Root cause: `test_both_are_reachable_through_the_public_entry_point` patches a subtable to format 6 and nothing to format 0. Instrumenting `_parse_subtable` across the full suite records `{4: 872, 6: 2, 12: 454, 13: 1, 14: 4}` and no format 0 at all, so the dispatch arm at `sfnt.py:309` still has zero coverage — which is the precise gap round 2's finding 1 was raised to close, in the test written to close it.
+
+Minimal change: patch a second copy to format 0, padding the subtable to 256 glyph ids first since `_parse_format_0` now raises on a short table; or rename the test to say it covers format 6 only. The first is preferable — a name that overstates its coverage is how this gap survived round 2.
+
+Fixed by parametrizing over both formats. No padding was needed: the patch rewrites one field of a real font, and a real format 4 subtable is far longer than the 262 bytes `_parse_format_0` reads, so the truncation guard is never reached.
+
+**The dispatch is now counted rather than inferred.** The test asserted only that `cmap_coverage` returned non-`None`, which is why it could name two formats while exercising one — nothing in it could tell the difference. It monkeypatches the parser and asserts the call was made, so a wrong parametrization fails here instead of silently testing format 6 twice. That is the same instrument round 2 used to *find* this class of defect, now standing in the test rather than in a throwaway script.
+
+### 4. `sfnt.py:376` — format 6 accepts a run that runs past U+FFFF — **should-fix as reported, DECLINED**
+
+Root cause: `_parse_format_6` does not check `first_code + entry_count - 1 <= 0xFFFF`. Format 6 addresses characters as `uint16`, so such a table is structurally impossible, and the rule this same diff states in the module docstring and applies to formats 4 and 12 is that an impossible entry makes the whole font unknown.
+
+The direction is the unsafe one. Instead of returning `None`, it yields coverage claiming codepoints the font cannot address, so `IconSet.can_draw` returns `True`, the guard passes, and Pillow draws `.notdef` — the silent blank the branch exists to prevent, reached through the branch's own guard. Reachable only through a third-party provider's font, which is exactly the population these two parsers were given tests for in round 2.
+
+Minimal change: raise `ValueError` when the run overflows, matching the two neighboring parsers.
+
+**Declined by the owner, 2026-08-10, and the reasoning generalizes past this finding.** It takes two things that do not co-occur: a third-party provider shipping its own font, *and* that font carrying a format 6 subtable no font toolchain emits. Consistency with the neighboring parsers is the whole argument for changing it, and symmetry is not a reason to edit a shipped parser. Round 1's findings 5 and 6 were deferred on the same ground and 6 still is; what changed is that this one had been re-ranked up to should-fix on the strength of the module's stated rule, which is an argument about tidiness rather than about anything that can happen.
+
+Note the distinction the owner drew, because it decides the rest of this round: a defect that requires a font nobody has is hypothetical, while findings 2, 3 and 6 are wrong in artifacts that exist today.
+
+### 5. `docs/user-guide/icons-and-names.rst:104` — two exception types described as one — **should-fix** — FIXED
+
+Root cause: "That also raises by default, so both routes into the library answer a name they cannot draw the same way" is true of the policy and false of the type. The same page shows `ValueError` at line 97 and `KeyError` in the table at line 119. A reader who takes "the same way" literally and wraps a render loop in `except ValueError` will not catch the policy path.
+
+Minimal change: name both exceptions in that sentence. This is the same class of defect as round 2's finding 7 — a section that is correct about mechanism and misleading about what to write.
+
+Fixed as part of finding 1's removal, since that section was mostly about the policy. It now names `ValueError` and `KeyError`, says why they differ, and tells a reader who only cares that the icon did not draw to catch both. `headless-rendering.rst:28` carried the same conflation and is fixed with it.
+
+### Round 3's resolutions, and what the round is worth carrying forward
+
+All six are settled: 1 and 5 fixed by removing `on_missing`, 2, 3 and 6 fixed after, 4 declined as unreachable.
+
+**Two of the six were defects in round 2's own fixes, and both were of the same kind — an instrument whose name overstated what it measured.** Round 2 found the parity test claiming formats it never ran; the test written to close that named formats 0 and 6 and exercised only 6. Round 2 introduced `Coverage` and a test named for the representation whose only live assertion was arithmetic about itself. Neither is sloppiness in the fix — both fixes were correct — and both are the specific failure this repository keeps producing: the check gets written, the name gets written optimistically, and nothing compares the two. The remedy that worked here is the same one the placement census landed on: **make the instrument report what it did** — count the dispatch, assert the aggregate you actually quoted — rather than asserting that nothing raised.
+
+**And one number was wrong in the finding rather than in the code.** The suggested per-style floor for finding 2 was derived from an aggregate ratio and fails on the shipped fonts. Measuring before fixing is what caught it, which is the same discipline the finding itself was about.
+
+**Convergence.** Round 1 found seven, round 2 seven, round 3 six — but round 3's are markedly smaller: one behavior defect, three instruments, one docs sentence, one declined. The fix diff is also the first that *deleted* public surface rather than adding to it. That is the shape of a branch approaching done rather than one still growing.
+
+### 6. `sfnt.py:17` — the definition beside the number admits a 10% wrong answer — **nit** — FIXED
+
+Root cause: the 5,792 KB figure is glossed as "the `frozenset` this used to return plus its int objects", which is not enough to reproduce it. Measuring `getsizeof(frozenset(list_of_codepoints))` plus the ints gives 6,399.7 KB and a factor of 368×; only `frozenset(set(...))` — what the pre-change code actually built, and which CPython presizes differently — gives 5,791.7 KB and 333×.
+
+The number is right and the definition is under-specified, in a file whose own rule is to state the definition with the number. The same sentence is in `CHANGELOG.md:25`, which ships to the GitHub Release page, and in `CLAUDE.md`, `PLAN.md` and the test docstring. Adding "built from a `set`, as the old code did" pins it.
+
+Both readings were reproduced before writing anything down — 5,791.7 KB and 6,399.7 KB — and `git show 77a0b7b:…/sfnt.py` confirms the pre-change code accumulated into `codepoints: set[int]` and returned `frozenset(codepoints)`, so "as the old code built it" is a fact rather than a guess. Fixed in all four places plus the changelog, each naming the construction and the 6,400 KB figure the other reading gives, since a definition that does not say what the *wrong* answer looks like is hard to check against.
+
+`CLAUDE.md`'s copy records that this paragraph has now been wrong twice for the same reason — first measuring the array object rather than the buffer, now the freeze — and draws the general rule: "state the definition" means one someone can execute, not a phrase that sounds specific.

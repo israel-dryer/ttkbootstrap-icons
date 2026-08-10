@@ -25,7 +25,7 @@ Rendering to a Pillow image
    image = MaterialIcon.render_pil("home", size=64, color="#0F766E")
    image.save("home.png")
 
-The return is a square RGBA :class:`PIL.Image.Image`. A name the pack cannot resolve raises :class:`ValueError`, exactly as the constructor does — see :doc:`icons-and-names`, which also covers ``on_missing``, the policy for the different case where a name reaches an icon set that has no glyph for it. That case raises too, by default.
+The return is a square RGBA :class:`PIL.Image.Image`. A name the pack cannot resolve raises :class:`ValueError`, exactly as the constructor does; a name that reaches an icon set with no glyph for it raises :class:`KeyError`. Neither returns an image — see :doc:`icons-and-names` for what separates the two.
 
 .. versionchanged:: 5.1.0
    A name the pack could not resolve used to come back as a transparent image rather than raising, and so did a name handed straight to an icon set. It is the headless path — build steps, export scripts, test suites — which is exactly where a blank PNG is least likely to be noticed and most likely to be committed.

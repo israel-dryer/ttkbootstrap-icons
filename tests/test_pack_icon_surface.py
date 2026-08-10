@@ -115,32 +115,26 @@ class TestRenderPilNeedsNoWarmUp:
         assert image.getchannel("A").getbbox() is not None
 
     def test_a_name_the_pack_cannot_resolve_raises(self):
-        """A typo is the caller's mistake, and `on_missing` is not for it.
+        """A typo is the caller's mistake, and it stops them.
 
         This asserted the opposite until #115: a name no style of the pack has
         came back as a transparent square, so a misspelling in a build script
-        or an export loop produced a blank PNG and exited zero. The policy is
-        for a set whose glyph map is inconsistent with the names built from it,
-        which is a different thing and is still covered below.
+        or an export loop produced a blank PNG and exited zero.
         """
         pack = next((p for p in INSTALLED if p.extra == "bootstrap"), None)
         if pack is None:
             pytest.skip("the bootstrap pack is not installed")
-        cls = icon_class(pack)
-        original = Icon.on_missing
-        try:
-            Icon.on_missing = "transparent"
-            with pytest.raises(ValueError, match="not-a-real-icon-name"):
-                cls.render_pil("not-a-real-icon-name", size=16)
-        finally:
-            Icon.on_missing = original
+        with pytest.raises(ValueError, match="not-a-real-icon-name"):
+            icon_class(pack).render_pil("not-a-real-icon-name", size=16)
 
-    def test_on_missing_still_governs_a_set_asked_for_a_glyph_it_lacks(self):
-        """The case the policy was written for, still reachable.
+    def test_a_set_asked_for_a_glyph_it_lacks_raises_too(self):
+        """The second door, which was the silent one until 5.1.0.
 
         Handing a name straight to a set skips resolution entirely, so nothing
         has vouched for it — that is where a glyph can be absent without anyone
-        having made a typo, and where `on_missing` applies.
+        having made a typo. It used to return a blank under the `on_missing`
+        default; the two doors now answer alike, differing only in type
+        because one failed to resolve a name and the other failed to find it.
         """
         pack = next((p for p in INSTALLED if p.extra == "bootstrap"), None)
         if pack is None:
@@ -148,17 +142,8 @@ class TestRenderPilNeedsNoWarmUp:
         from tkinter_icons.iconset import get_icon_set
 
         icon_set = get_icon_set(icon_class(pack).provider_class(), "outline")
-        original = Icon.on_missing
-        try:
-            Icon.on_missing = "transparent"
-            image = Icon.render_pil("not-a-real-icon-name", size=16, icon_set=icon_set)
-            assert image.getchannel("A").getbbox() is None
-
-            Icon.on_missing = "raise"
-            with pytest.raises(KeyError, match="not-a-real-icon-name"):
-                Icon.render_pil("not-a-real-icon-name", size=16, icon_set=icon_set)
-        finally:
-            Icon.on_missing = original
+        with pytest.raises(KeyError, match="not-a-real-icon-name"):
+            Icon.render_pil("not-a-real-icon-name", size=16, icon_set=icon_set)
 
     def test_both_entry_points_reject_the_same_name(self):
         """The asymmetry `icons-and-names` used to teach, now gone.

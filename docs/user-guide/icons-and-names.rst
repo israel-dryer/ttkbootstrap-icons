@@ -101,38 +101,28 @@ The pack was asked for an icon it does not draw in any style. Nothing about that
 .. versionchanged:: 5.1.0
    ``render_pil`` used to swallow this and return a transparent square, so the same typo raised one way and drew nothing the other. That was defensible while 849 real icons were also unreachable by name, because raising would have failed on names that were not typos at all. Both halves are fixed together: those names resolve now, so what is left really is a bad name.
 
-**A name that reaches an icon set which cannot draw it applies a policy instead.** This is the other failure: the set's data is inconsistent with the names built from it, or you passed a glyph name straight to the base :class:`~tkinter_icons.Icon`, or to ``render_pil`` with an explicit ``icon_set``, neither of which resolves anything. That also raises by default, so both routes into the library answer a name they cannot draw the same way — but here it is a policy, and you can choose otherwise:
+**A name that reaches an icon set which cannot draw it raises as well.** This is the other failure: the set's data is inconsistent with the names built from it, or you passed a glyph name straight to the base :class:`~tkinter_icons.Icon`, or to ``render_pil`` with an explicit ``icon_set``, neither of which resolves anything.
 
 .. code-block:: python
 
    from tkinter_icons import Icon
 
-   Icon.on_missing = "warn"      # or "transparent", or the default "raise"
+   Icon.render_pil("hoome")
+   # KeyError: "Icon 'hoome' is not in icon set 'mat:outline'."
 
-.. list-table::
-   :header-rows: 1
-   :widths: 20 80
-
-   * - Value
-     - Behavior
-   * - ``"raise"``
-     - Raise :class:`KeyError`. The default.
-   * - ``"warn"``
-     - Draw an empty square of the right size and emit a :class:`UserWarning`.
-   * - ``"transparent"``
-     - Draw the empty square and say nothing.
+The two are different exceptions on purpose — :class:`ValueError` for a name the pack cannot resolve, :class:`KeyError` for one that reached a set with no glyph for it — because they point at different faults, and a program that wants to tell them apart can. Catch both if you only care that the icon did not draw. What they have in common is the part that matters: neither hands you an image.
 
 .. versionchanged:: 5.1.0
-   The default was ``"transparent"``. A pack class had always raised :class:`ValueError` for a name it could not resolve, so the library answered one question two ways depending on which door you came in by — and the silent half was the one that wrote blank PNGs to disk. ``"transparent"`` is still there for callers who want it; it is now something you ask for.
+   This path used to be governed by ``Icon.on_missing``, a class-level policy with the values ``"transparent"``, ``"warn"`` and ``"raise"``, defaulting to ``"transparent"``. The policy is gone and the attribute with it. It was never a designed feature — 4.0.x drew a silent blank square for any name it could not find, and the policy preserved that as the default while offering two ways out of it. A blank square is indistinguishable from an icon that rendered, which is exactly how the glyph-map bug below survived two releases undetected.
 
-``"warn"`` is what turns that blank square into something you can see without stopping the run, which suits a test suite or a bulk export: every bad name is reported and the run still finishes, rather than stopping at the first. Reach for it if you build icon sets yourself, or pass glyph names straight to :class:`~tkinter_icons.Icon`.
+If you are rendering a whole set of names and cannot stop at the first bad one — a bulk export, a test sweep — wrap the call in ``try``/``except`` and record what failed. That is one line, and unlike the old policy it leaves you holding the list of names that did not draw rather than a directory of blank PNGs.
 
-``"none"`` is not affected by any of this. It is the sentinel for *deliberately* no icon, so it draws a blank under every policy, including ``"raise"``.
+``"none"`` is not affected by any of this. It is the sentinel for *deliberately* no icon, and it is answered before the lookup rather than by failing one, so it still draws a blank of the right size.
 
-**The mechanism now applies to a pack's own names too, and until 5.1.0 it could not.** Two things have to be true for an icon to draw: the name has to be in the pack's glyph map, and the glyph map's codepoint has to be in the pack's font. Only the first was ever checked. A name the map advertised at a codepoint the font had never carried resolved, looked up, and drew nothing at all — no exception, no warning, not even under ``"raise"``, because from the glyph map's point of view nothing was missing. No shipped pack is in that state now, and the rest of this section is about how it is kept that way.
+**The check now covers a pack's own names too, and until 5.1.0 it could not.** Two things have to be true for an icon to draw: the name has to be in the pack's glyph map, and the glyph map's codepoint has to be in the pack's font. Only the first was ever checked. A name the map advertised at a codepoint the font had never carried resolved, looked up, and drew nothing at all — no exception and no warning, because from the glyph map's point of view nothing was missing. No shipped pack is in that state now, and the rest of this section is about how it is kept that way.
 
 .. versionchanged:: 5.1.0
-   A codepoint the font does not contain is now the same kind of failure as a name the glyph map does not have, and ``on_missing`` governs both. The two are reported differently, because a user who mistyped and a user who hit a broken pack need different answers: the message for this case names the codepoint and says the fault is in the pack's data rather than in the name you asked for.
+   A codepoint the font does not contain is now the same kind of failure as a name the glyph map does not have. The two are reported differently, because a user who mistyped and a user who hit a broken pack need different answers: the message for this case names the codepoint and says the fault is in the pack's data rather than in the name you asked for.
 
 121 glyph-map entries were in that state when this was found: 119 across Google Material's ``outlined``, ``round`` and ``sharp`` cuts, and 2 in Material Design Icons. Counted the way the placement census counts — once per name *per style* — that is 123, because Material Design Icons' two styles are drawn from one font and share one glyph map. Both numbers are right; they measure different things, and quoting either without saying which is how a 123-glyph discrepancy once went unexplained for a whole review round.
 

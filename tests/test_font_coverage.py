@@ -1,12 +1,12 @@
 """No pack advertises a glyph its own font cannot draw.
 
-`on_missing` guards the glyph *map*: a name that reaches a set with no entry
-for it is handled by a documented policy. Nothing guarded the *font*. A name
-the map advertises at a codepoint the font never carried resolved fine, looked
-up fine, and drew `.notdef` — which in these fonts is empty, so it produced a
-blank square with no exception and no warning, not even under
-`on_missing="raise"`. 123 entries across `gmi` and `mat` were in that state
-(#140).
+The lookup guarded the glyph *map*: a name that reaches a set with no entry for
+it was reported. Nothing guarded the *font*. A name the map advertises at a
+codepoint the font never carried resolved fine, looked up fine, and drew
+`.notdef` — which in these fonts is empty, so it produced a blank square with
+no exception and no warning, not even for a caller who had asked to be told
+about names that could not be drawn. 123 entries across `gmi` and `mat` were in
+that state (#140).
 
 The counts are deliberately not asserted here. A frozen "123" stops meaning
 anything the moment the data is fixed, and the whole point is that it is now
@@ -35,10 +35,11 @@ from __future__ import annotations
 import io
 import struct
 import warnings
+from array import array
 
 import pytest
 
-from tkinter_icons import iconset
+from tkinter_icons import iconset, sfnt
 from tkinter_icons.icon import Icon
 from tkinter_icons.iconset import IconSet, get_icon_set, registered_icon_sets
 from tkinter_icons.render import RenderOptions, clear_font_cache, font_coverage
@@ -383,21 +384,41 @@ class TestTheFormatsNoShippedFontReaches:
         assert 0xE002 not in coverage  # the .notdef entry in the middle
         assert coverage.range_count == 2
 
-    def test_both_are_reachable_through_the_public_entry_point(self, registry):
+    @pytest.mark.parametrize("subtable_format", [0, 6])
+    def test_both_are_reachable_through_the_public_entry_point(
+        self, registry, monkeypatch, subtable_format
+    ):
         """Not just callable — actually dispatched to, on a real font.
 
-        The point of the finding was that these two are unreachable in practice,
-        so a unit test that calls them directly would leave the dispatch itself
-        unproven. Rewriting a shipped font's format 4 subtable into a format 6
-        one over the same bytes is nonsense as a font, but it is a real file
-        walked by the real table directory, and it proves `_parse_subtable`
-        routes format 6 somewhere that answers.
+        The point of the finding was that these two are unreachable in
+        practice, so a unit test that calls them directly would leave the
+        dispatch itself unproven. Rewriting a shipped font's format 4 subtable
+        into a format 0 or 6 one over the same bytes is nonsense as a font, but
+        it is a real file walked by the real table directory, so it proves
+        `_parse_subtable` routes that format somewhere that answers.
+
+        The dispatch is *observed* rather than inferred from the absence of an
+        exception. This test named both formats while only ever patching one of
+        them, so the format 0 arm still had zero coverage and the name said
+        otherwise — the same defect one level down from the parity claim this
+        whole class was written to correct. Counting the call is what makes the
+        name checkable: a wrong parametrization now fails here instead of
+        quietly testing format 6 twice.
         """
         font_bytes = _a_font_with_two_unicode_subtables(registry)
-        as_format_6 = _patch_subtable_formats(font_bytes, 6, first_only=True)
-        # It reads *something* rather than raising, which is all this asserts:
-        # the bytes underneath were laid out for a different format.
-        assert cmap_coverage(as_format_6) is not None
+        parser = getattr(sfnt, f"_parse_format_{subtable_format}")
+        calls = []
+        monkeypatch.setattr(
+            sfnt,
+            f"_parse_format_{subtable_format}",
+            lambda data, offset: calls.append(offset) or parser(data, offset),
+        )
+
+        patched = _patch_subtable_formats(font_bytes, subtable_format, first_only=True)
+        # It reads *something* rather than raising, which is all the result
+        # asserts: the bytes underneath were laid out for a different format.
+        assert cmap_coverage(patched) is not None
+        assert calls, f"_parse_subtable never dispatched format {subtable_format}"
 
 
 class TestAMalformedSubtableMakesTheFontUnknown:
@@ -445,7 +466,9 @@ class TestCoverageIsCheapToKeep:
     Coverage is held as sorted ranges rather than as a set of codepoints, and
     every test above passes either way — which is exactly why a guard is worth
     having. Measured across all thirty-one shipped styles: 17.4 KB of bounds
-    against 5,792 KB of codepoint sets. The largest single bounds array is
+    against 5,792 KB of codepoint sets, that second figure being the `frozenset`
+    built from a `set` as the old code built it, plus its int objects. The
+    largest single bounds array is
     `fontawesome:solid` at 5,672 bytes, whose 1,966 codepoints are unusually
     scattered; `fluent:filled` is the largest as a set, 741 KB against 16 bytes
     here. The ceilings below are generous multiples of those, so they fail on a
@@ -466,15 +489,48 @@ class TestCoverageIsCheapToKeep:
         assert total < 256 * 1024, f"all installed styles together keep {total} bytes"
 
     def test_coverage_is_ranges_rather_than_codepoints(self, registry):
-        """The ranges are far fewer than the codepoints they stand for."""
+        """The ranges are far fewer than the codepoints they stand for.
+
+        This asserted `range_count <= len(coverage)`, which cannot fail: every
+        range covers at least one codepoint by construction, so a regression to
+        one range per codepoint satisfied it and the test named for the whole
+        representation change checked nothing but its own arithmetic.
+
+        **The 33× compression is an aggregate and is not true of any single
+        style.** It is 73,990 codepoints over 2,231 ranges across everything
+        installed; per style the ratio runs as tight as 2.05× on Font Awesome's
+        `regular`, 436 codepoints in 213 ranges, because a nearly-contiguous
+        block and a badly scattered one compress by wildly different amounts.
+        A per-style floor derived from the aggregate figure fails immediately —
+        which is the same trap as quoting the placement census's per-name and
+        per-style counts interchangeably, so both floors here are measured and
+        each says which population it is about.
+        """
+        total_codepoints = total_ranges = 0
         for pack, style, icon_set in every_installed_style(registry):
             coverage = font_coverage(icon_set.font_key, icon_set.font_bytes)
-            assert coverage.range_count <= len(coverage), f"{pack}:{style or 'default'}"
-            assert coverage.nbytes == coverage.range_count * 2 * 4
+            where = f"{pack}:{style or 'default'}"
+
+            # Strictly fewer, so one-range-per-codepoint fails here rather than
+            # passing as it did before. The tightest shipped style clears this
+            # by a single range, hence the aggregate check below as well.
+            assert coverage.range_count < len(coverage), where
+            assert coverage.nbytes == coverage.range_count * 2 * array("I").itemsize, where
+
+            total_codepoints += len(coverage)
+            total_ranges += coverage.range_count
+
+        # The number the module docstring and the changelog both quote. Ten is
+        # a floor well under the measured 33×, so a pack gaining glyphs does
+        # not fail it and abandoning ranges does.
+        assert total_codepoints > total_ranges * 10, (
+            f"{total_codepoints} codepoints in {total_ranges} ranges across the installed "
+            f"styles — the representation claims roughly 33x, so this is not ranges any more"
+        )
 
 
-class TestAFontAbsentCodepointObeysOnMissing:
-    """Case 3 joins the existing policy rather than growing a new one.
+class TestAFontAbsentCodepointFailsLikeAMissingName:
+    """Case 3 joins the existing failure rather than growing a new one.
 
     Built by hand, because after the data fix no shipped pack is in this state
     any more — which is the point, and also why this cannot be written against
@@ -536,26 +592,16 @@ class TestAFontAbsentCodepointObeysOnMissing:
         finally:
             type(set_that_lies).can_draw = original
 
-    def test_raising_is_the_default(self, set_that_lies):
+    def test_a_codepoint_the_font_lacks_raises(self, set_that_lies):
         with pytest.raises(KeyError):
-            Icon.render_pil("not-in-the-font", icon_set=set_that_lies)
-
-    def test_transparent_still_returns_a_blank(self, set_that_lies):
-        Icon.on_missing = "transparent"
-        image = Icon.render_pil("not-in-the-font", icon_set=set_that_lies)
-        assert image.getbbox() is None
-
-    def test_warn_actually_warns(self, set_that_lies):
-        Icon.on_missing = "warn"
-        with pytest.warns(UserWarning):
             Icon.render_pil("not-in-the-font", icon_set=set_that_lies)
 
     def test_the_message_names_the_font_rather_than_the_name(self, set_that_lies):
         """A user who mistyped and a user who hit a broken pack need different answers.
 
-        Both reasons reach `_report_missing`, and reporting them identically
-        sends someone to check their spelling when the spelling is right and
-        the pack's data is wrong.
+        Both reasons reach `_missing_glyph_error`, and reporting them
+        identically sends someone to check their spelling when the spelling is
+        right and the pack's data is wrong.
         """
         with pytest.raises(KeyError) as absent_from_font:
             Icon.render_pil("not-in-the-font", icon_set=set_that_lies)
@@ -579,12 +625,7 @@ class TestAFontAbsentCodepointObeysOnMissing:
 
         Both branches are exercised, because a message is exactly the kind of
         thing that rots when only one side of its conditional is ever read.
-
-        The policy is set explicitly rather than relied on: this is a test about
-        what the message says, and it should not start passing or failing
-        because the default changed underneath it.
         """
-        Icon.on_missing = "raise"
         with pytest.raises(KeyError) as hand_built:
             Icon.render_pil("not-in-the-font", icon_set=set_that_lies)
         assert "this icon set's glyph map" in str(hand_built.value)

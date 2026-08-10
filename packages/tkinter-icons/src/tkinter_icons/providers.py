@@ -41,11 +41,10 @@ class FontProviderOptions(TypedDict):
 #: passed through resolution untouched and the renderer produces a blank of the
 #: right size for it.
 #:
-#: It is a named constant because `on_missing` defaults to `"raise"`. Until
+#: It is a named constant because a name that cannot be drawn now raises. Until
 #: 5.1.0 the sentinel worked by *falling through* to the missing-name path and
-#: relying on that path's default being `"transparent"` — so a caller who set
-#: `on_missing="raise"` had `"none"` raise on them, and flipping the default
-#: made that everyone. Drawing nothing on purpose and failing to find a glyph
+#: relying on that path returning a blank, which is not something it can be
+#: asked to do any more. Drawing nothing on purpose and failing to find a glyph
 #: are different events and no longer share a code path.
 NO_ICON = "none"
 
@@ -521,8 +520,9 @@ class BaseFontProvider(ABC):
         Returns:
             The style to draw from, or `None` for a provider with no styles.
             A name that resolves nowhere falls back to the provider's default,
-            so the caller gets a set to apply `on_missing` against rather than
-            an exception from a function that does not otherwise raise.
+            so the caller gets a set to look the name up in — and the error
+            comes from that lookup rather than from a function that does not
+            otherwise raise.
         """
         if style is not None:
             return style
