@@ -420,6 +420,19 @@ class BaseFontProvider(ABC):
             name: The name as the caller wrote it.
             style: Style to resolve within, or `None` to work it out.
 
+        Resolution reads glyph *maps* only, and deliberately does not consult
+        the fonts. A candidate style is chosen because its map has the name;
+        whether that style's font carries the codepoint is checked later, by
+        `IconSet.glyph`. The two can disagree in principle — a name mapped in
+        several styles, absent from the first candidate's font and present in a
+        later one's, resolves to the style that cannot draw it and then raises.
+        Closing that would mean loading and parsing every candidate style's font
+        during resolution, which is most of the work of rendering, to fix a case
+        no shipped pack can reach: `tests/test_font_coverage.py` asserts every
+        style's map against its own font, and the generators intersect the two
+        before writing. If that invariant is ever relaxed, this is the second
+        place that has to change.
+
         Returns:
             `(style, glyph_name)`; the style is `None` for a provider that has
             none.

@@ -567,6 +567,37 @@ class TestAFontAbsentCodepointObeysOnMissing:
         assert "U+10FFFD" in str(absent_from_font.value)
         assert "font does not contain" not in str(absent_from_map.value)
 
+    def test_the_message_blames_a_pack_only_when_a_pack_is_involved(
+        self, set_that_lies, monkeypatch
+    ):
+        """`set_that_lies` is hand-built, and the diagnostic has to know that.
+
+        "A fault in the icon pack's glyph map" is the right thing to say about a
+        set `get_icon_set` built from a provider, and the wrong thing to say
+        about one the caller assembled and passed as `icon_set=` — which
+        `render_pil` documents as supported. Saying it anyway sends someone to
+        file a bug against a pack that never appeared in the call.
+
+        Both branches are exercised, because a message is exactly the kind of
+        thing that rots when only one side of its conditional is ever read.
+
+        The policy is set explicitly rather than relied on: this is a test about
+        what the message says, and it should not start passing or failing
+        because the default changed underneath it.
+        """
+        Icon.on_missing = "raise"
+        with pytest.raises(KeyError) as hand_built:
+            Icon.render_pil("not-in-the-font", icon_set=set_that_lies)
+        assert "this icon set's glyph map" in str(hand_built.value)
+        assert "icon pack" not in str(hand_built.value)
+
+        # The same set, now one the registry hands out, is a pack's data.
+        monkeypatch.setitem(iconset._icon_sets, set_that_lies.id, set_that_lies)
+        assert registered_icon_sets().get(set_that_lies.id) is set_that_lies
+        with pytest.raises(KeyError) as from_a_pack:
+            Icon.render_pil("not-in-the-font", icon_set=set_that_lies)
+        assert "the icon pack's glyph map" in str(from_a_pack.value)
+
     def test_a_real_glyph_in_the_same_set_still_draws(self, registry, set_that_lies):
         """The guard rejects one entry, not the font it came from."""
         _, _, real = next(iter(every_installed_style(registry)))

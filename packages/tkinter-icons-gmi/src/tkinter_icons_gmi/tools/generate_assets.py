@@ -147,14 +147,20 @@ def main(argv=None):
         "round": round_font,
         "sharp": sharp_font,
     }
+    # Every font is checked before anything is written. Refusing partway through
+    # would leave the styles already written regenerated beside the rest stale,
+    # which is a worse tree than the one this started with — and the download
+    # most likely to fail is the last one attempted as readily as the first.
+    undownloaded = [style for style, font_path in style_fonts.items() if font_path is None]
+    if undownloaded:
+        raise SystemExit(
+            f"The {', '.join(undownloaded)} font(s) were not downloaded, so their glyph maps "
+            f"cannot be checked against them. Refusing to write any glyph map, since a glyph "
+            f"map that advertises glyphs its font does not carry is what this guards against."
+        )
+
     print("\nChecking each style's names against its own font:")
     for style, font_path in style_fonts.items():
-        if font_path is None:
-            raise SystemExit(
-                f"The {style} font was not downloaded, so its glyph map cannot be checked "
-                f"against it. Refusing to write a glyph map that may advertise glyphs the "
-                f"font does not carry."
-            )
         style_mapping, dropped = restrict_to_font(mapping, font_path)
         report_dropped(style, dropped)
         glyphmap_path = pkg_root / f"glyphmap-{style}.json"

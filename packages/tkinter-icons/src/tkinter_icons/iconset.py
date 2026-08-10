@@ -136,7 +136,16 @@ class IconSet:
         Note this does not rescue `icon_set or fallback`: a set that genuinely
         draws nothing is still falsy, which is why `Icon.render_pil` selects on
         `is None`. Any `or` over an object with `__len__` is that bug waiting.
+
+        The shortcut is only worth taking when nothing has counted yet. Once
+        `__len__` has run, `_drawable_count` is the answer already and scanning
+        again would be slower than reading it — and slowest in exactly the case
+        the shortcut was written for, a set that draws nothing, where there is
+        no first drawable glyph to stop at and `any` walks the whole map.
         """
+        counted = self.__dict__.get("_drawable_count")
+        if counted is not None:
+            return counted > 0
         return any(self.can_draw(character) for character in self.glyphs.values())
 
 

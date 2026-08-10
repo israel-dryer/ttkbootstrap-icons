@@ -63,7 +63,13 @@ except ImportError:  # pragma: no cover - exercised in a subprocess, see tests
 else:
     from PIL.ImageTk import PhotoImage
 
-from .iconset import IconSet, clear_icon_sets, get_icon_set, icon_set_id
+from .iconset import (
+    IconSet,
+    clear_icon_sets,
+    get_icon_set,
+    icon_set_id,
+    registered_icon_sets,
+)
 from .providers import BaseFontProvider
 from .render import RenderOptions, clear_font_cache, render_glyph, snap_size
 from .stateful_icon_mixin import StatefulIconMixin
@@ -391,8 +397,6 @@ class Icon(StatefulIconMixin, ABC):
     @classmethod
     def cache_info(cls) -> Mapping[str, int]:
         """Return current cache sizes, for debugging and tests."""
-        from .iconset import registered_icon_sets
-
         return {
             "interpreters": len(cls._caches),
             "images": sum(len(c.images) for c in cls._caches.values()),
@@ -443,9 +447,15 @@ class Icon(StatefulIconMixin, ABC):
 
         Both reasons land here, but they say different things. A name the glyph
         map never had is a name; a name the map advertises at a codepoint the
-        font does not contain is a fault in the pack's own data, and saying so
-        is the difference between a user checking their spelling and a user
-        filing the bug that is actually there.
+        font does not contain is a fault in the data, and saying so is the
+        difference between a user checking their spelling and a user filing the
+        bug that is actually there.
+
+        Which data, though, depends on where the set came from. Blaming "the
+        icon pack" is right for a set `get_icon_set` built from a provider and
+        wrong for one the caller assembled and passed as `icon_set=` — a case
+        `render_pil`'s own docstring anticipates — where it would send someone
+        to file a bug against a pack that was never involved.
         """
         if cls.on_missing == "transparent":
             return
@@ -455,12 +465,17 @@ class Icon(StatefulIconMixin, ABC):
             # map yields one character per name, but an `IconSet` built by hand
             # is free to hold more, and a diagnostic must not itself raise.
             codepoints = " ".join(f"U+{ord(char):04X}" for char in character)
+            source = (
+                "the icon pack's glyph map"
+                if registered_icon_sets().get(icon_set.id) is icon_set
+                else "this icon set's glyph map"
+            )
             message = (
                 f"Icon '{name}' is mapped to {codepoints} in icon set "
                 f"'{icon_set.id}', but that set's font does not contain "
                 f"{'that codepoint' if len(character) == 1 else 'all of those codepoints'}, "
-                f"so there is nothing to draw. This is a fault in the icon pack's "
-                f"glyph map rather than in the name you asked for."
+                f"so there is nothing to draw. This is a fault in {source} "
+                f"rather than in the name you asked for."
             )
         else:
             message = f"Icon '{name}' is not in icon set '{icon_set.id}'."
