@@ -71,3 +71,56 @@ Deferred: requires a malformed font, and fonts arrive as fixed bytes inside a pa
 - The fix step was performed by the session that wrote the branch, which is a protocol deviation the owner asked for explicitly. Its own pass caught finding 2's re-ranking and one false claim in a docstring it had just written; treat the whole fix diff as unreviewed regardless.
 - `sfnt.py` is not covered by the `fontTools` parity test for any case above, since no shipped font exercises them. The parity reference in `tests/test_font_coverage.py` still admits platform 3 at every encoding, so it and `_is_unicode_encoding` would disagree on a font carrying a legacy subtable. No shipped font does. Left as-is deliberately: narrowing the reference to match the implementation would make the independent check a mirror.
 - Full-suite skip count oscillates between 14 and 15 across identical runs (`test_browser_assets.py:177`, no display). That is the Tk-ordering flake `CLAUDE.md` documents, not a regression.
+
+---
+
+## Round 2 — `b8817c0..HEAD`
+
+Seven findings, one medium and six low. Verification alongside them was green — 787 passed / 14 skipped, `sphinx -W -n -j auto`, census, pack READMEs and `verify_packages --strict` all clean — so none of them moved a check. The data change was independently re-derived and holds: 43/38/38 for `gmi` with round and sharp identical and both subsets of outlined, all 43 still in `baseline`, the seven named substitutes present in all three cuts, `mat` losing `blank`/`mdi-blank` only, every metrics file now matching its glyph map exactly, and none of the 45 removed names referenced by `pack_showcase.SHOWCASE`, the docs examples or any script.
+
+**All seven are fixed, together with round 1's deferred findings 5 and 7.** Two changes the owner directed landed in the same pass and are not review findings: `on_missing` now defaults to `"raise"`, and coverage is stored as ranges rather than as a set of codepoints.
+
+### 1. `tests/test_font_coverage.py:234` — the parity test claimed formats it never runs — **medium** — FIXED
+
+Root cause: the shipped fonts carry sixteen format 0 and three format 6 subtables, but every one is on platform 1, which `_is_unicode_encoding` rejects before the dispatch. The formats actually parsed across all 31 styles are 4 and 12 only; instrumenting `_parse_format_0` and `_parse_format_6` and running the full suite recorded zero calls to each. So two parsers shipped with no coverage at all, and they are exactly the ones only a third-party font can reach — the population the fail-open exists for. Round 1's own finding 5 recorded that format 0 is unreachable, so the fact was known and the claim was not corrected. The same sentence was in `CHANGELOG.md`, which ships to the GitHub Release page, and in `CLAUDE.md`.
+
+Fixed both ways: the claim now says formats 4 and 12 are what `fontTools` verifies, and `TestTheFormatsNoShippedFontReaches` covers 0 and 6 against constructed subtables with hand-computed expectations. That is a weaker instrument than the parity test and the test's own docstring says so.
+
+### 2. `sfnt.py:248` — a malformed format 12 group was skipped while the font still reported success — **low** — FIXED
+
+Root cause: exactly round 1's finding 1 one level down. `continue` on a backwards or out-of-range group left `found` already `True`, so the union came back missing that group's coverage and presented as authoritative. `_parse_format_4` had the same shape. Both raise now, which `cmap_coverage` converts to `None`, and the module docstring states the rule for entries as well as for formats. Test: `TestAMalformedSubtableMakesTheFontUnknown`.
+
+### 3. `packages/tkinter-icons-gmi/.../generate_assets.py:152` — partial write before refusing — **low** — FIXED
+
+Root cause: the `font_path is None` guard sat inside the write loop, so a download failure on `sharp` exited after baseline, outlined and round had already been rewritten — three regenerated maps beside one stale one. The check is hoisted above the loop and names every missing font at once.
+
+### 4. `providers.py:474` — style resolution does not consult the font — **low** — NOT FIXED, documented
+
+Root cause: `resolve_icon` picks the first candidate style whose glyph map has the name; the font check runs afterwards in `IconSet.glyph`. A name mapped in several styles, absent from the first candidate's font and present in a later one's, resolves to the style that cannot draw it.
+
+Deferred deliberately, and the reasoning is now in `resolve_icon`'s docstring rather than only here. Closing it means loading and parsing every candidate style's font during resolution — most of the work of rendering, on every name — to fix a case no shipped pack can reach, since `test_font_coverage.py` asserts every style's map against its own font and both generators intersect the two before writing. The docstring names this as the second place to change if that invariant is ever relaxed.
+
+### 5. `iconset.py:140` — `__bool__` ignored the memoized count — **low** — FIXED
+
+`_drawable_count` is a `cached_property` and `__bool__` re-scanned regardless. Harmless for a healthy set, which stops at the first drawable glyph, and worst for a set that draws nothing — the one case the short-circuit was written for. It now reads the cache when `__len__` has populated it and falls back to `any` otherwise.
+
+### 6. `icon.py:462` — the diagnostic blamed a pack for a hand-built set — **low** — FIXED
+
+"A fault in the icon pack's glyph map" was emitted for any `IconSet`, including one the caller assembled and passed as `icon_set=` — which `render_pil`'s docstring explicitly supports. The message now distinguishes the two by asking whether the registry hands out that exact object, and `test_the_message_blames_a_pack_only_when_a_pack_is_involved` exercises both branches, because a message with one unread branch is what rots.
+
+### 7. `docs/user-guide/icons-and-names.rst:127` — the section contradicted itself — **low** — FIXED
+
+The lead said a pack's own name can land in the policy; four paragraphs later the same section said every pack advertises exactly what it can draw. Both were defensible readings of mechanism versus current data. The lead is now scoped to the mechanism and says plainly that no shipped pack is in that state.
+
+### Round 1's deferrals, revisited
+
+- **Finding 5 (format 0 truncates silently) — now FIXED.** It stopped being unreachable-in-principle the moment finding 1 above gave the two parsers real tests; `_parse_format_0` raises on a short table.
+- **Finding 7 (format 12 enumeration unbounded) — now FIXED, by the representation change.** Round 1 named the two options as "a cap on total codepoints, or storing ranges rather than members"; the second is what shipped, for the memory reason rather than this one. Groups are emitted as ranges without being walked, so a group spanning a plane costs one pair of bounds instead of 1.1M iterations and ~50 MB. Measured on the shipped styles: 17.4 KB of bounds against 5,792 KB of codepoint sets, membership 0.18 µs against 0.04 µs.
+- **Finding 6 (U+FFFF excluded) — still NOT FIXED.** Unchanged reasoning: U+FFFF is a noncharacter and real fonts do not map it.
+
+### Notes for round 3
+
+- **Scope is `git diff <this round's base>..HEAD`.** Rounds 1 and 2 are settled above.
+- The behavior change is the thing to review hardest: `on_missing` defaulting to `"raise"` is the owner's call, but *what else was silently depending on the old default* is a review question. One such dependency was found and fixed during the change — the `"none"` sentinel drew a blank only by falling through the missing-name path, so it already raised for anyone who set `on_missing="raise"`. Look for others.
+- `Coverage` is a new public class in `sfnt.py` and `render.font_codepoints` was renamed to `font_coverage`. Neither has ever been released, so nothing external can depend on the old shape.
+- The fix step was again performed by the session that ran the review, at the owner's direction.

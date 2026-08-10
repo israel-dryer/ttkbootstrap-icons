@@ -70,7 +70,7 @@ from .iconset import (
     icon_set_id,
     registered_icon_sets,
 )
-from .providers import BaseFontProvider
+from .providers import NO_ICON, BaseFontProvider
 from .render import RenderOptions, clear_font_cache, render_glyph, snap_size
 from .stateful_icon_mixin import StatefulIconMixin
 
@@ -178,7 +178,20 @@ class Icon(StatefulIconMixin, ABC):
 
     __slots__ = ("name", "size", "color", "_img", "_icon_set", "_options")
 
-    on_missing: ClassVar[MissingPolicy] = "transparent"
+    #: What to do about a name that reaches an icon set the set cannot draw.
+    #:
+    #: `"raise"` is the default, and it is the default so that this path agrees
+    #: with the one almost every user is on. A pack class already raises
+    #: `ValueError` for a name it cannot resolve — `MaterialIcon("nope")` has
+    #: never returned a blank square — but a name handed straight to a set,
+    #: which is what the base `Icon` and an explicit `icon_set=` do, used to
+    #: come back fully transparent. Two entry points answering one question two
+    #: ways is the defect this class keeps having (#115, #140), and a silent
+    #: blank is the half of it that nothing reports.
+    #:
+    #: `"warn"` and `"transparent"` remain for callers that must keep going
+    #: across a whole set of names rather than stop at the first bad one.
+    on_missing: ClassVar[MissingPolicy] = "raise"
 
     #: The provider a pack's icon class draws from, set by that class. It is
     #: what lets `render_pil` work as a classmethod on a pack: without it,
@@ -305,10 +318,12 @@ class Icon(StatefulIconMixin, ABC):
             options: Overrides of the set's render options.
 
         Returns:
-            A square RGBA image. Fully transparent if the name reached a set
-            that cannot draw it and `on_missing` is `"transparent"` — either
-            because the set's glyph map has no entry for it, or because the
-            entry names a codepoint the set's font does not contain.
+            A square RGBA image. Fully transparent only if the name reached a
+            set that cannot draw it and `on_missing` has been set to
+            `"transparent"` or `"warn"` — either because the set's glyph map
+            has no entry for it, or because the entry names a codepoint the
+            set's font does not contain. Under the default policy that case
+            raises instead.
 
         Raises:
             RuntimeError: If no icon set is given, the class has no provider,
@@ -316,8 +331,8 @@ class Icon(StatefulIconMixin, ABC):
             ValueError: If the pack cannot resolve `name`, if `name`
                 contradicts `style`, or if `style` is given where there is no
                 provider to resolve it against.
-            KeyError: If the name reaches a set that cannot draw it and
-                `on_missing` is `"raise"`.
+            KeyError: If the name reaches a set that cannot draw it, under the
+                default `on_missing` of `"raise"`.
         """
         resolving = icon_set is None and cls.provider_class is not None
         if style is not None and not resolving:
@@ -346,9 +361,14 @@ class Icon(StatefulIconMixin, ABC):
         if icon_set is None:
             raise RuntimeError("No icon set available. Initialize a provider first.")
 
-        glyph = icon_set.glyph(name)
+        glyph = None if name == NO_ICON else icon_set.glyph(name)
         if glyph is None:
-            cls._report_missing(name, icon_set)
+            # `NO_ICON` is a blank on purpose and never a missing name, so it
+            # skips the policy rather than passing through it. It used to reach
+            # `_report_missing` and come back transparent only because that was
+            # the default; the sentinel raised for anyone who set `"raise"`.
+            if name != NO_ICON:
+                cls._report_missing(name, icon_set)
             snapped = snap_size(size, snap_even=(options or icon_set.options).snap_even)
             return Image.new("RGBA", (snapped, snapped), (0, 0, 0, 0))
 
@@ -508,6 +528,10 @@ class Icon(StatefulIconMixin, ABC):
         cached = cache.images.get(key)
         if cached is not None:
             return cached
+
+        if self.name == NO_ICON:
+            # Deliberately blank, not missing — as in `render_pil`.
+            return Icon._get_transparent(self.rendered_size)
 
         if icon_set.glyph(self.name) is None:
             Icon._report_missing(self.name, icon_set)

@@ -49,7 +49,12 @@ class TestRenderPil:
         assert img.size == (24, 24)
         assert img.getchannel("A").getbbox() is not None
 
-    def test_unknown_name_gives_a_transparent_square(self, icon_set):
+    def test_unknown_name_raises(self, icon_set):
+        with pytest.raises(KeyError, match="definitely-not-an-icon"):
+            Icon.render_pil("definitely-not-an-icon", 24, "#000000")
+
+    def test_unknown_name_gives_a_transparent_square_when_asked_to(self, icon_set):
+        Icon.on_missing = "transparent"
         img = Icon.render_pil("definitely-not-an-icon", 24, "#000000")
         assert img.size == (24, 24)
         assert img.getchannel("A").getbbox() is None
@@ -69,14 +74,24 @@ class TestRenderPil:
 
 
 class TestMissingPolicy:
-    def test_transparent_is_the_default(self, icon_set):
-        assert Icon.on_missing == "transparent"
-        Icon.render_pil("nope", 16, "#000000")  # no raise, no warning
+    def test_raising_is_the_default(self, icon_set):
+        """A name that cannot be drawn stops the caller, without being asked to.
 
-    def test_raise_policy(self, icon_set):
-        Icon.on_missing = "raise"
+        This asserted the opposite until 5.1.0. The default was `"transparent"`,
+        so handing a set a name it did not have produced a blank square and said
+        nothing — while a pack class, which is how nearly everyone reaches the
+        library, had always raised `ValueError` for the same mistake. One
+        library answering one question two ways is the shape of both #115 and
+        #140, and this is the half that was silent.
+        """
+        assert Icon.on_missing == "raise"
         with pytest.raises(KeyError, match="nope"):
             Icon.render_pil("nope", 16, "#000000")
+
+    def test_transparent_policy(self, icon_set):
+        Icon.on_missing = "transparent"
+        image = Icon.render_pil("nope", 16, "#000000")  # no raise, no warning
+        assert image.getchannel("A").getbbox() is None
 
     def test_warn_policy(self, icon_set):
         Icon.on_missing = "warn"

@@ -101,13 +101,13 @@ The pack was asked for an icon it does not draw in any style. Nothing about that
 .. versionchanged:: 5.1.0
    ``render_pil`` used to swallow this and return a transparent square, so the same typo raised one way and drew nothing the other. That was defensible while 849 real icons were also unreachable by name, because raising would have failed on names that were not typos at all. Both halves are fixed together: those names resolve now, so what is left really is a bad name.
 
-**A name that reaches an icon set which cannot draw it applies a policy instead.** This is the other failure: the set's data is inconsistent with the names built from it, or you passed a glyph name straight to the base :class:`~tkinter_icons.Icon`, or to ``render_pil`` with an explicit ``icon_set``, neither of which resolves anything. Nobody necessarily made a mistake, so ``on_missing`` decides, and by default that is a transparent square:
+**A name that reaches an icon set which cannot draw it applies a policy instead.** This is the other failure: the set's data is inconsistent with the names built from it, or you passed a glyph name straight to the base :class:`~tkinter_icons.Icon`, or to ``render_pil`` with an explicit ``icon_set``, neither of which resolves anything. That also raises by default, so both routes into the library answer a name they cannot draw the same way — but here it is a policy, and you can choose otherwise:
 
 .. code-block:: python
 
    from tkinter_icons import Icon
 
-   Icon.on_missing = "raise"     # or "warn", or the default "transparent"
+   Icon.on_missing = "warn"      # or "transparent", or the default "raise"
 
 .. list-table::
    :header-rows: 1
@@ -115,16 +115,21 @@ The pack was asked for an icon it does not draw in any style. Nothing about that
 
    * - Value
      - Behavior
-   * - ``"transparent"``
-     - Draw an empty square of the right size. The default.
-   * - ``"warn"``
-     - Draw the empty square and emit a :class:`UserWarning`.
    * - ``"raise"``
-     - Raise :class:`KeyError`.
+     - Raise :class:`KeyError`. The default.
+   * - ``"warn"``
+     - Draw an empty square of the right size and emit a :class:`UserWarning`.
+   * - ``"transparent"``
+     - Draw the empty square and say nothing.
 
-``"warn"`` is what turns that blank square into something you can see without stopping the run, which suits a test suite or a bulk export: nothing breaks, but nothing passes silently either. Reach for it if you build icon sets yourself, or pass glyph names straight to :class:`~tkinter_icons.Icon`.
+.. versionchanged:: 5.1.0
+   The default was ``"transparent"``. A pack class had always raised :class:`ValueError` for a name it could not resolve, so the library answered one question two ways depending on which door you came in by — and the silent half was the one that wrote blank PNGs to disk. ``"transparent"`` is still there for callers who want it; it is now something you ask for.
 
-**A pack's own name can land here too, and until 5.1.0 it could not.** Two things have to be true for an icon to draw: the name has to be in the pack's glyph map, and the glyph map's codepoint has to be in the pack's font. Only the first was ever checked. A name the map advertised at a codepoint the font had never carried resolved, looked up, and drew nothing at all — no exception, no warning, not even under ``"raise"``, because from the glyph map's point of view nothing was missing.
+``"warn"`` is what turns that blank square into something you can see without stopping the run, which suits a test suite or a bulk export: every bad name is reported and the run still finishes, rather than stopping at the first. Reach for it if you build icon sets yourself, or pass glyph names straight to :class:`~tkinter_icons.Icon`.
+
+``"none"`` is not affected by any of this. It is the sentinel for *deliberately* no icon, so it draws a blank under every policy, including ``"raise"``.
+
+**The mechanism now applies to a pack's own names too, and until 5.1.0 it could not.** Two things have to be true for an icon to draw: the name has to be in the pack's glyph map, and the glyph map's codepoint has to be in the pack's font. Only the first was ever checked. A name the map advertised at a codepoint the font had never carried resolved, looked up, and drew nothing at all — no exception, no warning, not even under ``"raise"``, because from the glyph map's point of view nothing was missing. No shipped pack is in that state now, and the rest of this section is about how it is kept that way.
 
 .. versionchanged:: 5.1.0
    A codepoint the font does not contain is now the same kind of failure as a name the glyph map does not have, and ``on_missing`` governs both. The two are reported differently, because a user who mistyped and a user who hit a broken pack need different answers: the message for this case names the codepoint and says the fault is in the pack's data rather than in the name you asked for.

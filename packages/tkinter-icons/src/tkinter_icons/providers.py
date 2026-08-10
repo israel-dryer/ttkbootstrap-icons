@@ -36,6 +36,20 @@ class FontProviderOptions(TypedDict):
     snap_even: NotRequired[bool]
 
 
+#: The name that means "deliberately no icon here". It is resolved by every
+#: provider and drawn by nobody: no pack has a glyph called this, so it is
+#: passed through resolution untouched and the renderer produces a blank of the
+#: right size for it.
+#:
+#: It is a named constant because `on_missing` defaults to `"raise"`. Until
+#: 5.1.0 the sentinel worked by *falling through* to the missing-name path and
+#: relying on that path's default being `"transparent"` — so a caller who set
+#: `on_missing="raise"` had `"none"` raise on them, and flipping the default
+#: made that everyone. Drawing nothing on purpose and failing to find a glyph
+#: are different events and no longer share a code path.
+NO_ICON = "none"
+
+
 class BaseFontProvider(ABC):
     """Base class for icon providers with class-level caches."""
 
@@ -441,20 +455,18 @@ class BaseFontProvider(ABC):
             ValueError: If the name does not resolve, or if it spells out a
                 style that contradicts `style`.
         """
-        if name == "none":
-            # The sentinel for "deliberately no icon". No pack has a glyph
-            # called this, so it is not resolved but passed through, and the
-            # caller draws nothing. It has to live here rather than in
-            # `resolve_icon_name` alone: `render_pil` calls this directly, so a
-            # sentinel handled one level up would raise on the headless path
-            # while the constructor accepted it - the exact split this method
-            # exists to close.
+        if name == NO_ICON:
+            # The sentinel for "deliberately no icon" — see `NO_ICON`. It has to
+            # live here rather than in `resolve_icon_name` alone: `render_pil`
+            # calls this directly, so a sentinel handled one level up would
+            # raise on the headless path while the constructor accepted it - the
+            # exact split this method exists to close.
             #
             # The style is worked out inline rather than through
             # `resolve_icon_style`, which delegates back here and would recurse.
             if not self.has_styles:
-                return None, "none"
-            return style or self.default_style, "none"
+                return None, NO_ICON
+            return style or self.default_style, NO_ICON
 
         if not self.has_styles:
             glyph = self._lookup_within_style(name, "base")
@@ -547,8 +559,8 @@ class BaseFontProvider(ABC):
             ValueError: If the name does not resolve, or if it spells out a
                 style that contradicts `style`.
         """
-        if name == "none":
-            return "none"
+        if name == NO_ICON:
+            return NO_ICON
         return self.resolve_icon(name, style)[1]
 
     def get_icons_names_for_display(self) -> dict[str, dict[str, str]]:

@@ -536,14 +536,14 @@ class TestAFontAbsentCodepointObeysOnMissing:
         finally:
             type(set_that_lies).can_draw = original
 
-    def test_transparent_is_still_the_default(self, set_that_lies):
-        image = Icon.render_pil("not-in-the-font", icon_set=set_that_lies)
-        assert image.getbbox() is None
-
-    def test_raise_actually_raises(self, set_that_lies):
-        Icon.on_missing = "raise"
+    def test_raising_is_the_default(self, set_that_lies):
         with pytest.raises(KeyError):
             Icon.render_pil("not-in-the-font", icon_set=set_that_lies)
+
+    def test_transparent_still_returns_a_blank(self, set_that_lies):
+        Icon.on_missing = "transparent"
+        image = Icon.render_pil("not-in-the-font", icon_set=set_that_lies)
+        assert image.getbbox() is None
 
     def test_warn_actually_warns(self, set_that_lies):
         Icon.on_missing = "warn"
@@ -557,7 +557,6 @@ class TestAFontAbsentCodepointObeysOnMissing:
         sends someone to check their spelling when the spelling is right and
         the pack's data is wrong.
         """
-        Icon.on_missing = "raise"
         with pytest.raises(KeyError) as absent_from_font:
             Icon.render_pil("not-in-the-font", icon_set=set_that_lies)
         with pytest.raises(KeyError) as absent_from_map:
