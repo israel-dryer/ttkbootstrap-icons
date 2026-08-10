@@ -610,7 +610,7 @@ everything behind mutable class state on `Icon`.
 | Module | Role |
 |---|---|
 | `render.py` | Drawing core. Pure PIL, **no Tkinter** — runs without a display. `RenderOptions` carries all the knobs. |
-| `sfnt.py` | Reads a font's `cmap` straight out of its bytes, because Pillow cannot say which codepoints a font carries and `fontTools` is not a runtime dependency. Unparseable returns `None` — unknown, never empty. |
+| `sfnt.py` | Reads a font's `cmap` straight out of its bytes, because Pillow cannot say which codepoints a font carries and `fontTools` is not a runtime dependency. Returns a `Coverage` of sorted ranges, not a codepoint set. Unparseable returns `None` — unknown, never empty. |
 | `iconset.py` | One immutable `IconSet` per (provider, style): font bytes, glyphs, metrics, options. |
 | `icon.py` | Tk-facing layer only. `Icon.render_pil()` is the headless entry point. |
 | `packs.py` | The pack catalog — single source of truth for every install message and the lazy import root. |

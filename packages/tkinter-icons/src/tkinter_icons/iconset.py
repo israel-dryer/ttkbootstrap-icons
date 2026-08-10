@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 from functools import cached_property
 from typing import Any, Mapping, Optional, TYPE_CHECKING
 
-from .render import InkBounds, RenderOptions, font_codepoints
+from .render import InkBounds, RenderOptions, font_coverage
 
 if TYPE_CHECKING:
     from .providers import BaseFontProvider
@@ -80,10 +80,10 @@ class IconSet:
         nothing about, and a guard that cannot read a font must not be the
         thing that stops it rendering.
         """
-        codepoints = font_codepoints(self.font_key, self.font_bytes)
-        if codepoints is None:
+        coverage = font_coverage(self.font_key, self.font_bytes)
+        if coverage is None:
             return True
-        return all(ord(char) in codepoints for char in character)
+        return all(ord(char) in coverage for char in character)
 
     def ink(self, name: str) -> Optional[InkBounds]:
         """Return precomputed ink bounds for `name`, or `None` to measure live."""

@@ -28,7 +28,7 @@ from typing import Optional, Sequence
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-from .sfnt import cmap_codepoints
+from .sfnt import Coverage, cmap_coverage
 
 try:
     _RESAMPLE_LANCZOS = Image.Resampling.LANCZOS  # Pillow >= 9.1.0
@@ -56,7 +56,7 @@ _font_cache: "OrderedDict[tuple[str, int], ImageFont.FreeTypeFont]" = OrderedDic
 # Keyed by font_key alone — a font's coverage does not vary with render size.
 # `None` is a cached answer like any other: a font that could not be parsed
 # will not parse next time either.
-_codepoint_cache: "OrderedDict[str, Optional[frozenset[int]]]" = OrderedDict()
+_coverage_cache: "OrderedDict[str, Optional[Coverage]]" = OrderedDict()
 
 
 @dataclass(frozen=True)
@@ -169,12 +169,15 @@ def load_font(font_key: str, font_bytes: bytes, size: int) -> ImageFont.FreeType
     return font
 
 
-def font_codepoints(font_key: str, font_bytes: bytes) -> Optional[frozenset[int]]:
-    """Return the codepoints `font_bytes` can draw, or `None` if unreadable.
+def font_coverage(font_key: str, font_bytes: bytes) -> Optional[Coverage]:
+    """Return what `font_bytes` can draw, or `None` if it is unreadable.
 
     Parsed once per font and cached, because the answer is a property of the
     file. The parse costs a few milliseconds for the largest pack and nothing
-    thereafter — it is why a caller can afford to ask before every glyph.
+    thereafter — it is why a caller can afford to ask before every glyph. What
+    is retained is small enough that the cache holding 128 of them is not worth
+    thinking about: the largest coverage this project ships is 5,672 bytes, and
+    all thirty-one styles together are 17.4 KB. See `sfnt.Coverage`.
 
     Args:
         font_key: Stable identity for this font file, used as the cache key,
@@ -183,25 +186,25 @@ def font_codepoints(font_key: str, font_bytes: bytes) -> Optional[frozenset[int]
         font_bytes: The raw font file.
 
     Returns:
-        The set of codepoints the font maps to a real glyph, or `None` when its
-        character map cannot be read. `None` is "unknown", never "empty": see
-        `sfnt.cmap_codepoints`.
+        A `Coverage` over the codepoints the font maps to a real glyph, or
+        `None` when its character map cannot be read. `None` is "unknown",
+        never "empty": see `sfnt.cmap_coverage`.
     """
-    if font_key in _codepoint_cache:
-        _codepoint_cache.move_to_end(font_key)
-        return _codepoint_cache[font_key]
+    if font_key in _coverage_cache:
+        _coverage_cache.move_to_end(font_key)
+        return _coverage_cache[font_key]
 
-    codepoints = cmap_codepoints(font_bytes)
-    _codepoint_cache[font_key] = codepoints
-    while len(_codepoint_cache) > _FONT_CACHE_MAX:
-        _codepoint_cache.popitem(last=False)
-    return codepoints
+    coverage = cmap_coverage(font_bytes)
+    _coverage_cache[font_key] = coverage
+    while len(_coverage_cache) > _FONT_CACHE_MAX:
+        _coverage_cache.popitem(last=False)
+    return coverage
 
 
 def clear_font_cache() -> None:
     """Drop every cached `FreeTypeFont` and every parsed character map."""
     _font_cache.clear()
-    _codepoint_cache.clear()
+    _coverage_cache.clear()
 
 
 def measure_ink_bounds(
@@ -395,7 +398,7 @@ __all__ = [
     "RenderOptions",
     "auto_oversample",
     "clear_font_cache",
-    "font_codepoints",
+    "font_coverage",
     "load_font",
     "measure_ink_bounds",
     "render_glyph",

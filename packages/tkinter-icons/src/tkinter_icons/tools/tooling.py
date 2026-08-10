@@ -247,7 +247,7 @@ def restrict_to_font(mapping: Dict[str, int], ttf_path: Path) -> Tuple[Dict[str,
     never had renders as an empty square with no error at all, which is #140.
     So every generator passes its mapping through here before writing it.
 
-    The coverage test is `tkinter_icons.sfnt.cmap_codepoints`, deliberately the
+    The coverage test is `tkinter_icons.sfnt.cmap_coverage`, deliberately the
     same one the renderer applies at draw time. Asking the question here with
     the answer the library will give later is what makes the output correct by
     construction rather than correct by coincidence.
@@ -270,9 +270,9 @@ def restrict_to_font(mapping: Dict[str, int], ttf_path: Path) -> Tuple[Dict[str,
             wrong font was paired with the mapping, which is worth stopping for
             rather than writing an empty glyph map.
     """
-    from tkinter_icons.sfnt import cmap_codepoints
+    from tkinter_icons.sfnt import cmap_coverage
 
-    codepoints = cmap_codepoints(Path(ttf_path).read_bytes())
+    codepoints = cmap_coverage(Path(ttf_path).read_bytes())
     if codepoints is None:
         raise RuntimeError(
             f"Could not read a Unicode character map from {ttf_path}, so the glyph map "

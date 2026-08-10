@@ -22,7 +22,7 @@ cost a reviewer time as an unexplained discrepancy. Neither was a counting
 error; both were this bug, reported by instruments nobody had pointed at it.
 
 Coverage is checked with `fontTools`, not with the parser the library ships.
-The shipped `sfnt.cmap_codepoints` is what the guard rests on, so verifying the
+The shipped `sfnt.cmap_coverage` is what the guard rests on, so verifying the
 data with it would only prove the parser agrees with itself. `fontTools` is the
 independent reading, and one test below holds the two against each other.
 
@@ -38,10 +38,18 @@ import warnings
 
 import pytest
 
+from tkinter_icons import iconset
 from tkinter_icons.icon import Icon
-from tkinter_icons.iconset import IconSet, get_icon_set
-from tkinter_icons.render import RenderOptions, clear_font_cache, font_codepoints
-from tkinter_icons.sfnt import _is_unicode_encoding, cmap_codepoints
+from tkinter_icons.iconset import IconSet, get_icon_set, registered_icon_sets
+from tkinter_icons.render import RenderOptions, clear_font_cache, font_coverage
+from tkinter_icons.sfnt import (
+    Coverage,
+    _is_unicode_encoding,
+    _parse_format_0,
+    _parse_format_6,
+    _parse_format_12,
+    cmap_coverage,
+)
 
 
 def reference_codepoints(font_bytes: bytes) -> set[int]:
@@ -230,17 +238,26 @@ class TestTheShippedCmapReaderAgreesWithFontTools:
     cannot report which codepoints a font carries — it draws `.notdef` and says
     nothing. So `sfnt.py` parses the `cmap` table directly rather than adding a
     third runtime dependency. That parser is worth holding against the library
-    that does this properly, across every font the project ships: between them
-    the packs cover subtable formats 0, 4, 6 and 12, and both the BMP and the
-    supplementary private-use area that Material Design Icons lives in.
+    that does this properly, across every font the project ships.
+
+    **What that exercises is formats 4 and 12, and only those.** The shipped
+    fonts do carry format 0 and format 6 subtables — sixteen and three of them
+    — but every one sits on platform 1 (Macintosh), which `_is_unicode_encoding`
+    rejects before the dispatch is reached, so no shipped font reaches those two
+    parsers. Enumerating the subtables of all thirty-one styles gives
+    `(0,3,fmt4)`, `(0,4,fmt12)`, `(3,1,fmt4)` and `(3,10,fmt12)` on the Unicode
+    platforms and nothing else. Saying "the packs cover formats 0, 4, 6 and 12"
+    was true of what the files contain and false of what this test reads, which
+    left two parsers shipping with no coverage at all. They are covered
+    separately below, against constructed subtables.
     """
 
     def test_the_parser_reproduces_fonttools_on_every_shipped_font(self, registry):
         for pack, style, icon_set in every_installed_style(registry):
             where = f"{pack}:{style or 'default'}"
-            parsed = cmap_codepoints(icon_set.font_bytes)
+            parsed = cmap_coverage(icon_set.font_bytes)
             assert parsed is not None, f"{where}: no readable cmap"
-            assert parsed == reference_codepoints(icon_set.font_bytes), where
+            assert set(parsed) == reference_codepoints(icon_set.font_bytes), where
 
     def test_an_unreadable_font_reports_unknown_rather_than_empty(self):
         """The fail-open, which is the difference between a guard and an outage.
@@ -249,9 +266,9 @@ class TestTheShippedCmapReaderAgreesWithFontTools:
         would blank or raise on every icon in the pack. `None` says the check
         learned nothing, and callers draw the glyph as they always did.
         """
-        assert cmap_codepoints(b"") is None
-        assert cmap_codepoints(b"not a font at all") is None
-        assert cmap_codepoints(b"\x00\x01\x00\x00" + b"\xff" * 64) is None
+        assert cmap_coverage(b"") is None
+        assert cmap_coverage(b"not a font at all") is None
+        assert cmap_coverage(b"\x00\x01\x00\x00" + b"\xff" * 64) is None
 
     def test_a_subtable_it_cannot_read_makes_the_whole_font_unknown(self, registry):
         """A partial read must not be returned as the answer.
@@ -264,10 +281,10 @@ class TestTheShippedCmapReaderAgreesWithFontTools:
         is the only honest answer, and it fails open.
         """
         font_bytes = _a_font_with_two_unicode_subtables(registry)
-        assert cmap_codepoints(font_bytes) is not None
+        assert cmap_coverage(font_bytes) is not None
 
         one_unreadable = _patch_subtable_formats(font_bytes, 13, first_only=True)
-        assert cmap_codepoints(one_unreadable) is None
+        assert cmap_coverage(one_unreadable) is None
 
     def test_a_variation_sequence_table_is_skipped_without_emptying_the_font(self, registry):
         """Format 14 carries no coverage, which is not the same as being unread.
@@ -280,7 +297,7 @@ class TestTheShippedCmapReaderAgreesWithFontTools:
         """
         font_bytes = _a_font_with_two_unicode_subtables(registry)
         every_one_skipped = _patch_subtable_formats(font_bytes, 14)
-        assert cmap_codepoints(every_one_skipped) is None
+        assert cmap_coverage(every_one_skipped) is None
 
     def test_only_codepoint_addressed_subtables_are_read(self):
         """Legacy encodings are excluded before the format dispatch, not after.
@@ -304,12 +321,156 @@ class TestTheShippedCmapReaderAgreesWithFontTools:
     def test_coverage_is_parsed_once_per_font(self, registry):
         """The result is cached, so asking before every glyph costs one parse."""
         _, _, icon_set = next(iter(every_installed_style(registry)))
-        first = font_codepoints(icon_set.font_key, icon_set.font_bytes)
-        assert first is font_codepoints(icon_set.font_key, icon_set.font_bytes)
+        first = font_coverage(icon_set.font_key, icon_set.font_bytes)
+        assert first is font_coverage(icon_set.font_key, icon_set.font_bytes)
 
         clear_font_cache()
-        rebuilt = font_codepoints(icon_set.font_key, icon_set.font_bytes)
+        rebuilt = font_coverage(icon_set.font_key, icon_set.font_bytes)
         assert rebuilt is not first and rebuilt == first
+
+
+def _format_0_subtable(glyph_ids: bytes) -> bytes:
+    """A format 0 byte-encoding subtable over exactly 256 glyph ids."""
+    assert len(glyph_ids) == 256
+    return struct.pack(">HHH", 0, 6 + 256, 0) + glyph_ids
+
+
+def _format_6_subtable(first_code: int, glyph_ids: list[int]) -> bytes:
+    """A format 6 trimmed-mapping subtable over one contiguous run."""
+    head = struct.pack(">HHHHH", 6, 10 + len(glyph_ids) * 2, 0, first_code, len(glyph_ids))
+    return head + b"".join(struct.pack(">H", glyph) for glyph in glyph_ids)
+
+
+class TestTheFormatsNoShippedFontReaches:
+    """Formats 0 and 6, which the parity test above cannot reach.
+
+    Both parsers exist because a third-party provider may ship a font this
+    project does not — which is the same population the fail-open is written
+    for — and until now both shipped with **zero** coverage. Instrumenting them
+    and running the whole suite recorded no calls at all. The shipped fonts do
+    carry such subtables, sixteen format 0 and three format 6, but every one is
+    on platform 1 and is filtered out before the dispatch.
+
+    So they are checked against constructed subtables with hand-computed
+    expectations rather than against `fontTools`. That is a weaker instrument
+    than the parity test — it proves the parser matches the specification as
+    read here, not that it matches an independent implementation — and saying
+    so is better than the previous arrangement, which claimed the parity test
+    covered these and was believed.
+    """
+
+    def test_format_0_maps_byte_values_and_drops_notdef(self):
+        glyph_ids = bytearray(256)
+        glyph_ids[0x41] = 7      # 'A' -> a real glyph
+        glyph_ids[0x42] = 8      # 'B' -> a real glyph, contiguous with it
+        glyph_ids[0x50] = 9      # 'P' -> a real glyph, in its own range
+        glyph_ids[0x51] = 0      # explicitly .notdef, so not covered
+
+        coverage = Coverage(_parse_format_0(_format_0_subtable(bytes(glyph_ids)), 0))
+
+        assert set(coverage) == {0x41, 0x42, 0x50}
+        assert coverage.range_count == 2  # 0x41..0x42 and 0x50
+        assert 0x51 not in coverage and 0 not in coverage
+
+    def test_format_0_refuses_a_truncated_table(self):
+        with pytest.raises(ValueError):
+            _parse_format_0(struct.pack(">HHH", 0, 262, 0) + bytes(100), 0)
+
+    def test_format_6_maps_a_contiguous_run_from_its_first_code(self):
+        coverage = Coverage(_parse_format_6(_format_6_subtable(0xE000, [5, 6, 0, 8]), 0))
+
+        assert set(coverage) == {0xE000, 0xE001, 0xE003}
+        assert 0xE002 not in coverage  # the .notdef entry in the middle
+        assert coverage.range_count == 2
+
+    def test_both_are_reachable_through_the_public_entry_point(self, registry):
+        """Not just callable — actually dispatched to, on a real font.
+
+        The point of the finding was that these two are unreachable in practice,
+        so a unit test that calls them directly would leave the dispatch itself
+        unproven. Rewriting a shipped font's format 4 subtable into a format 6
+        one over the same bytes is nonsense as a font, but it is a real file
+        walked by the real table directory, and it proves `_parse_subtable`
+        routes format 6 somewhere that answers.
+        """
+        font_bytes = _a_font_with_two_unicode_subtables(registry)
+        as_format_6 = _patch_subtable_formats(font_bytes, 6, first_only=True)
+        # It reads *something* rather than raising, which is all this asserts:
+        # the bytes underneath were laid out for a different format.
+        assert cmap_coverage(as_format_6) is not None
+
+
+class TestAMalformedSubtableMakesTheFontUnknown:
+    """The rule the module states, applied inside a subtable and not only to it.
+
+    An unhandled *format* already made the whole font unknown. A structurally
+    impossible entry inside a format that is handled used to be skipped with
+    `continue` while the parse carried on reporting success — so the font's
+    coverage came back smaller than it is, presented as authoritative, and the
+    caller would blame the pack's glyph map for a pack that is fine. That is the
+    same failure the format rule exists to prevent, one level down.
+    """
+
+    def test_a_backwards_format_12_group_is_not_silently_skipped(self):
+        good = struct.pack(">HHIII", 12, 0, 0, 0, 1) + struct.pack(">III", 0xF0000, 0xF0002, 1)
+        assert _parse_format_12(good, 0) == [(0xF0000, 0xF0002)]
+
+        backwards = struct.pack(">HHIII", 12, 0, 0, 0, 1) + struct.pack(">III", 0xF0002, 0xF0000, 1)
+        with pytest.raises(ValueError):
+            _parse_format_12(backwards, 0)
+
+        out_of_range = struct.pack(">HHIII", 12, 0, 0, 0, 1) + struct.pack(">III", 0, 0x110000, 1)
+        with pytest.raises(ValueError):
+            _parse_format_12(out_of_range, 0)
+
+    def test_a_format_12_group_starting_at_notdef_loses_only_that_codepoint(self):
+        """The one glyph id that can be zero in a group is the first one.
+
+        Ids run consecutively from `startGlyphID` and nothing is negative, so
+        `startGlyphID + offset` is zero only when both are — the group's first
+        codepoint, and only when the group starts at glyph 0. Emitting the group
+        as a range and trimming that one codepoint is what lets this skip
+        walking a span that may legitimately cover a whole plane.
+        """
+        starts_at_notdef = struct.pack(">HHIII", 12, 0, 0, 0, 1) + struct.pack(">III", 0xF0000, 0xF0002, 0)
+        assert _parse_format_12(starts_at_notdef, 0) == [(0xF0001, 0xF0002)]
+
+        single = struct.pack(">HHIII", 12, 0, 0, 0, 1) + struct.pack(">III", 0xF0000, 0xF0000, 0)
+        assert _parse_format_12(single, 0) == []
+
+
+class TestCoverageIsCheapToKeep:
+    """The representation, pinned. Correctness tests cannot see this.
+
+    Coverage is held as sorted ranges rather than as a set of codepoints, and
+    every test above passes either way — which is exactly why a guard is worth
+    having. Measured across all thirty-one shipped styles: 17.4 KB of bounds
+    against 5,792 KB of codepoint sets. The largest single bounds array is
+    `fontawesome:solid` at 5,672 bytes, whose 1,966 codepoints are unusually
+    scattered; `fluent:filled` is the largest as a set, 741 KB against 16 bytes
+    here. The ceilings below are generous multiples of those, so they fail on a
+    change of representation and not on a pack gaining glyphs.
+    """
+
+    def test_every_installed_font_keeps_kilobytes_not_megabytes(self, registry):
+        total = 0
+        for pack, style, icon_set in every_installed_style(registry):
+            coverage = font_coverage(icon_set.font_key, icon_set.font_bytes)
+            assert coverage is not None, f"{pack}:{style or 'default'}"
+            total += coverage.nbytes
+            assert coverage.nbytes < 64 * 1024, (
+                f"{pack}:{style or 'default'} keeps {coverage.nbytes} bytes of coverage; "
+                f"the largest shipped one is 5,672 bytes as ranges, and the largest "
+                f"font is 741 KB as a set"
+            )
+        assert total < 256 * 1024, f"all installed styles together keep {total} bytes"
+
+    def test_coverage_is_ranges_rather_than_codepoints(self, registry):
+        """The ranges are far fewer than the codepoints they stand for."""
+        for pack, style, icon_set in every_installed_style(registry):
+            coverage = font_coverage(icon_set.font_key, icon_set.font_bytes)
+            assert coverage.range_count <= len(coverage), f"{pack}:{style or 'default'}"
+            assert coverage.nbytes == coverage.range_count * 2 * 4
 
 
 class TestAFontAbsentCodepointObeysOnMissing:
@@ -325,7 +486,7 @@ class TestAFontAbsentCodepointObeysOnMissing:
         """A set whose map advertises a codepoint its font does not carry."""
         _, _, real = next(iter(every_installed_style(registry)))
         absent = 0x10FFFD  # a supplementary private-use codepoint no icon font maps
-        assert absent not in (cmap_codepoints(real.font_bytes) or set())
+        assert absent not in (cmap_coverage(real.font_bytes) or set())
         return IconSet(
             id="lies:default",
             font_bytes=real.font_bytes,
