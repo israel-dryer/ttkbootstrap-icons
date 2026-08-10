@@ -1,7 +1,7 @@
 Packaging an application
 ========================
 
-Icons are font files and JSON living inside installed packages. Freezing tools find code by following imports, and data only by being told about it — so a frozen application that looked correct in development can start up with no icons at all, and start up *quietly*, since a glyph the renderer cannot find draws as transparent.
+Icons are font files and JSON living inside installed packages. Freezing tools find code by following imports, and data only by being told about it — so a frozen application that looked correct in development can start up with no icons at all, and whatever it does instead happens at run time on a user's machine rather than at build time on yours.
 
 This package ships PyInstaller hooks that collect that data, and registers them so PyInstaller finds them.
 
@@ -59,13 +59,7 @@ Missing data shows up only in the frozen application, and it shows up as absence
    ./dist/your_app        # Linux, macOS
    .\dist\your_app.exe    # Windows
 
-If icons are missing, check that the pack is installed in the environment you built *from*. To turn the silence into a failure while you debug, make a missing glyph raise:
-
-.. code-block:: python
-
-   from tkinter_icons import Icon
-
-   Icon.on_missing = "raise"
+If icons are missing, check that the pack is installed in the environment you built *from*. A missing glyph raises by default, so a frozen build that draws nothing is usually a pack the freezer did not bundle rather than a name the library rejected quietly — see :doc:`icons-and-names` for the policy and for the two cases it distinguishes.
 
 Keeping the bundle small
 ------------------------

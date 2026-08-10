@@ -53,7 +53,6 @@ def sample_name(icon_set) -> str:
 def _reset_state():
     """Keep cache state from leaking between tests."""
     yield
-    Icon.on_missing = "transparent"
     Icon.cleanup()
     clear_icon_sets()
     clear_font_cache()

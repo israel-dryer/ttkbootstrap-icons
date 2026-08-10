@@ -238,6 +238,68 @@ def glyphmap_from_css(css_text: str, class_prefixes: Iterable[str] = ("ion-ios-"
     return mapping
 
 
+def restrict_to_font(mapping: Dict[str, int], ttf_path: Path) -> Tuple[Dict[str, int], Dict[str, int]]:
+    """Split a glyph map into the entries a font can draw and the ones it cannot.
+
+    A glyph map is assembled from whatever upstream publishes — a codepoints
+    text file, a stylesheet, metadata JSON — and none of those are the font.
+    When they disagree, the font wins: a name mapped to a codepoint the font
+    never had renders as an empty square with no error at all, which is #140.
+    So every generator passes its mapping through here before writing it.
+
+    The coverage test is `tkinter_icons.sfnt.cmap_coverage`, deliberately the
+    same one the renderer applies at draw time. Asking the question here with
+    the answer the library will give later is what makes the output correct by
+    construction rather than correct by coincidence.
+
+    Unlike the renderer, this **fails loudly on a font it cannot parse**. The
+    renderer's job when it cannot read a font is to draw anyway; a generator's
+    job is to refuse to write data it was unable to check.
+
+    Args:
+        mapping: Icon name to codepoint, as any `glyphmap_from_*` returns.
+        ttf_path: The font the glyph map is meant to be drawn from.
+
+    Returns:
+        `(kept, dropped)` — the entries the font can draw, and the ones it
+        cannot, both name-to-codepoint.
+
+    Raises:
+        RuntimeError: If the font has no readable character map, or if it can
+            draw none of the mapping at all. The latter almost always means the
+            wrong font was paired with the mapping, which is worth stopping for
+            rather than writing an empty glyph map.
+    """
+    from tkinter_icons.sfnt import cmap_coverage
+
+    codepoints = cmap_coverage(Path(ttf_path).read_bytes())
+    if codepoints is None:
+        raise RuntimeError(
+            f"Could not read a Unicode character map from {ttf_path}, so the glyph map "
+            f"cannot be checked against it. Refusing to write unchecked data."
+        )
+
+    kept = {name: code for name, code in mapping.items() if code in codepoints}
+    dropped = {name: code for name, code in mapping.items() if code not in codepoints}
+    if mapping and not kept:
+        raise RuntimeError(
+            f"{ttf_path} can draw none of the {len(mapping)} mapped names. This usually "
+            f"means the mapping and the font come from different sources or different "
+            f"releases; pairing them would produce a glyph map that draws nothing."
+        )
+    return kept, dropped
+
+
+def report_dropped(label: str, dropped: Dict[str, int]) -> None:
+    """Print what `restrict_to_font` removed, so a regeneration is reviewable."""
+    if not dropped:
+        print(f"  {label}: all names present in the font")
+        return
+    sample = ", ".join(sorted(dropped)[:8])
+    print(f"  {label}: dropped {len(dropped)} name(s) the font does not carry: {sample}"
+          + (" ..." if len(dropped) > 8 else ""))
+
+
 def write_glyphmap(path: Path, mapping: Dict[str, int]) -> None:
     # Write as a flat dict of name -> hex codepoint string
     data = {name: f"{code:04x}" for name, code in sorted(mapping.items())}

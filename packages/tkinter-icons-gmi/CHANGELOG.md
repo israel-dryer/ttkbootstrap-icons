@@ -12,6 +12,22 @@ git history after the fact and are summaries rather than contemporaneous notes.
 
 <!-- release-notes-start -->
 
+## [1.1.2] — three styles stop advertising glyphs their fonts do not have
+
+No font change and no metrics change. What changed is the glyph maps for `outlined`, `round` and `sharp`, which listed names those fonts never carried.
+
+### Changed
+
+- **43 names are gone from `outlined`, and 38 each from `round` and `sharp`.** They never drew anything: each one was mapped to a codepoint its style's font does not contain, so asking for it produced a fully transparent image with no exception and no warning. Asking for one now raises `ValueError` from the constructor, and `render_pil` raises the same — which is the intended improvement, but it is a behavior change for anyone who was calling one of these and accepting the blank. **All 43 still draw in `baseline`**, which is this pack's default style and was never affected. Seven have a plain spelling the affected style does carry, so `info_outline` is `info` there, and likewise `drive_file_move`, `label`, `label_important`, `lightbulb`, `lock` and `workspaces`. The other 36 have no substitute in these three styles at all. (#140)
+
+  The 43 distinct names, across the three styles: `add_call`, `assignment_add`, `assistant_navigation`, `barcode_reader`, `block_flipped`, `cloudy_snowing`, `conveyor_belt`, `dew_point`, `drive_file_move_outline`, `edit_document`, `edit_square`, `file_upload_off`, `filter_list_alt`, `fire_hydrant`, `foggy`, `forklift`, `format_list_bulleted_add`, `front_loader`, `goat`, `home_filled`, `info_outline`, `keyboard_command`, `keyboard_option`, `label_important_outline`, `label_outline`, `lightbulb_outline`, `location_pin`, `lock_outline`, `movie_edit`, `no_meals_ouline`, `outgoing_mail`, `pallet`, `pie_chart_outlined`, `rebase_edit`, `shelves`, `snowing`, `sunny`, `sunny_snowing`, `trolley`, `volume_down_alt`, `wb_twighlight`, `workspaces_filled`, `workspaces_outline`. 38 of them were absent from all three styles. The remaining five are `_outline` spellings — `info_outline`, `label_important_outline`, `label_outline`, `lightbulb_outline`, `lock_outline` — and only `outlined` was advertising them: the `round` and `sharp` fonts do carry those five, and the `outlined` font is the one cut where a separate outlined variant of an icon would be redundant.
+
+  All four styles reporting an identical name count was the visible symptom, and it had been true since the pack was first built.
+
+### Fixed
+
+- **The generator no longer publishes one style's codepoints as every style's.** It downloaded the *baseline* codepoints file and wrote it verbatim to all four glyph maps, under a comment asserting that Material Icons use the same codepoints across all styles. They do not. Each style's glyph map is now built against the font that style is actually drawn from, so a regeneration cannot reintroduce this. (#140)
+
 ## [1.1.1] — corrected style list, and an intro in this library's voice
 
 No glyph, font or metrics change: this release exists to correct text that PyPI freezes at release time.

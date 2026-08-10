@@ -29,9 +29,8 @@ its first line.
 
 from __future__ import annotations
 
-import warnings
 from abc import ABC
-from typing import Any, ClassVar, Literal, Mapping, Optional
+from typing import Any, ClassVar, Mapping, Optional
 
 from PIL import Image
 
@@ -42,8 +41,8 @@ try:
     # them - `typing.get_type_hints`, which is what Sphinx autodoc calls - looks
     # them up in this module's globals. A `TYPE_CHECKING`-only import leaves
     # them undefined at runtime, so that lookup raises `NameError` and the
-    # resolution fails for the *whole module*: the docs then lost `MissingPolicy`
-    # and the ttk aliases too, not just the Tk names.
+    # resolution fails for the *whole module*: the docs then lost the ttk
+    # aliases and every other annotated name too, not just the Tk ones.
     #
     # Narrow on purpose, and the `else` is what makes it narrow. Only the
     # absence of Tk is tolerated here; a `PIL` broken some other way still
@@ -63,23 +62,16 @@ except ImportError:  # pragma: no cover - exercised in a subprocess, see tests
 else:
     from PIL.ImageTk import PhotoImage
 
-from .iconset import IconSet, clear_icon_sets, get_icon_set, icon_set_id
-from .providers import BaseFontProvider
+from .iconset import (
+    IconSet,
+    clear_icon_sets,
+    get_icon_set,
+    icon_set_id,
+    registered_icon_sets,
+)
+from .providers import NO_ICON, BaseFontProvider
 from .render import RenderOptions, clear_font_cache, render_glyph, snap_size
 from .stateful_icon_mixin import StatefulIconMixin
-
-#: What to do when a name reaches an icon set that has no glyph for it.
-#:
-#: This is a data-integrity policy, not a typo policy. A name a pack cannot
-#: resolve raises from every entry point, so what gets here is a name that was
-#: handed straight to a set without being resolved — the base `Icon`, or
-#: `render_pil` with an explicit `icon_set` — or a set whose glyph map really
-#: is inconsistent with the names built from it.
-#:
-#: That distinction is what `icons-and-names` described from the start and the
-#: code did not honor, which is why #117 had to delete the sentence. #115 built
-#: the behavior instead, so the original scope is true again.
-MissingPolicy = Literal["transparent", "warn", "raise"]
 
 _CacheKey = tuple[str, str, int, str, int]
 
@@ -152,6 +144,49 @@ def create_transparent_icon(size: int = 16) -> PhotoImage:
     return Icon._get_transparent(size)
 
 
+def _missing_glyph_error(name: str, icon_set: IconSet) -> KeyError:
+    """Build the error for a name `icon_set` cannot draw.
+
+    A function rather than a method, and it builds the error rather than
+    raising it, so that neither entry point can answer this differently from
+    the other. That divergence is the defect this class keeps having — #115
+    was `render_pil` raising where the constructor did not, #140 was the font
+    check reaching one lookup and not the other, and the policy this replaced
+    was read off `cls`, which one of the two call sites named literally.
+
+    Both reasons land here, but they say different things. A name the glyph
+    map never had is a name; a name the map advertises at a codepoint the font
+    does not contain is a fault in the data, and saying so is the difference
+    between a user checking their spelling and a user filing the bug that is
+    actually there.
+
+    Which data, though, depends on where the set came from. Blaming "the icon
+    pack" is right for a set `get_icon_set` built from a provider and wrong for
+    one the caller assembled and passed as `icon_set=` — a case `render_pil`'s
+    own docstring anticipates — where it would send someone to file a bug
+    against a pack that was never involved.
+    """
+    character = icon_set.glyphs.get(name)
+    if character:
+        # Every codepoint is spelled out rather than just the first. A glyph
+        # map yields one character per name, but an `IconSet` built by hand
+        # is free to hold more, and a diagnostic must not itself raise.
+        codepoints = " ".join(f"U+{ord(char):04X}" for char in character)
+        source = (
+            "the icon pack's glyph map"
+            if registered_icon_sets().get(icon_set.id) is icon_set
+            else "this icon set's glyph map"
+        )
+        return KeyError(
+            f"Icon '{name}' is mapped to {codepoints} in icon set "
+            f"'{icon_set.id}', but that set's font does not contain "
+            f"{'that codepoint' if len(character) == 1 else 'all of those codepoints'}, "
+            f"so there is nothing to draw. This is a fault in {source} "
+            f"rather than in the name you asked for."
+        )
+    return KeyError(f"Icon '{name}' is not in icon set '{icon_set.id}'.")
+
+
 class Icon(StatefulIconMixin, ABC):
     """A font glyph rendered to a Tk-compatible image.
 
@@ -167,12 +202,9 @@ class Icon(StatefulIconMixin, ABC):
         size: Requested pixel size. The rendered image may be one pixel larger
             when odd sizes are snapped even — see `RenderOptions.snap_even`.
         color: Foreground color.
-        on_missing: Class-level policy for names absent from the icon set.
     """
 
     __slots__ = ("name", "size", "color", "_img", "_icon_set", "_options")
-
-    on_missing: ClassVar[MissingPolicy] = "transparent"
 
     #: The provider a pack's icon class draws from, set by that class. It is
     #: what lets `render_pil` work as a classmethod on a pack: without it,
@@ -278,12 +310,13 @@ class Icon(StatefulIconMixin, ABC):
         itself, or with an explicit `icon_set`, `name` must already be a glyph
         name and there is no provider to resolve a style against.
 
-        Two different failures live here, and they are answered differently.
-        A name the pack cannot resolve is the caller's mistake, so it raises,
+        Two different failures live here, and both stop the caller. A name the
+        pack cannot resolve is the caller's mistake and raises `ValueError`,
         exactly as the constructor does. A name that resolves — or is handed
         straight to a set, which is what `Icon` and an explicit `icon_set` do —
         and then turns out to have no glyph means the set's data is
-        inconsistent, and that is what `on_missing` is the policy for.
+        inconsistent, and raises `KeyError`. Neither returns an image, because
+        an icon nobody can see is not a result anyone asked for.
 
         Args:
             name: Icon name. Resolved through the pack's provider when called
@@ -299,8 +332,8 @@ class Icon(StatefulIconMixin, ABC):
             options: Overrides of the set's render options.
 
         Returns:
-            A square RGBA image. Fully transparent if the name reached a set
-            that has no glyph for it and `on_missing` is `"transparent"`.
+            A square RGBA image. Fully transparent only for `providers.NO_ICON`,
+            which asks for a blank rather than failing to find one.
 
         Raises:
             RuntimeError: If no icon set is given, the class has no provider,
@@ -308,8 +341,9 @@ class Icon(StatefulIconMixin, ABC):
             ValueError: If the pack cannot resolve `name`, if `name`
                 contradicts `style`, or if `style` is given where there is no
                 provider to resolve it against.
-            KeyError: If the name reaches a set with no glyph for it and
-                `on_missing` is `"raise"`.
+            KeyError: If the name reaches a set that cannot draw it — either
+                because the set's glyph map has no entry for it, or because the
+                entry names a codepoint the set's font does not contain.
         """
         resolving = icon_set is None and cls.provider_class is not None
         if style is not None and not resolving:
@@ -325,20 +359,29 @@ class Icon(StatefulIconMixin, ABC):
             # up in it cannot come from two different readings of the name.
             # A `ValueError` from here propagates: an unresolvable name means
             # this pack has no such icon under any style, which is the same
-            # mistake the constructor raises on and not something `on_missing`
-            # was written to paper over.
+            # mistake the constructor raises on.
             resolved_style, name = provider.resolve_icon(name, style)
             icon_set = get_icon_set(provider, resolved_style)
 
-        icon_set = icon_set or cls._icon_set_current
+        # `is None`, not `or`. An `IconSet` is sized, so a set that can draw
+        # nothing is falsy, and `or` would quietly discard the caller's set and
+        # fall back to whichever one loaded last.
+        if icon_set is None:
+            icon_set = cls._icon_set_current
         if icon_set is None:
             raise RuntimeError("No icon set available. Initialize a provider first.")
 
-        glyph = icon_set.glyph(name)
-        if glyph is None:
-            cls._report_missing(name, icon_set)
+        # `NO_ICON` is the one blank anybody asks for, so it is answered before
+        # the lookup rather than by failing one. Everything else that cannot be
+        # drawn raises: a transparent square is indistinguishable from an icon
+        # that rendered, which is how #140 stayed invisible for two releases.
+        if name == NO_ICON:
             snapped = snap_size(size, snap_even=(options or icon_set.options).snap_even)
             return Image.new("RGBA", (snapped, snapped), (0, 0, 0, 0))
+
+        glyph = icon_set.glyph(name)
+        if glyph is None:
+            raise _missing_glyph_error(name, icon_set)
 
         return render_glyph(
             glyph, size, color,
@@ -385,8 +428,6 @@ class Icon(StatefulIconMixin, ABC):
     @classmethod
     def cache_info(cls) -> Mapping[str, int]:
         """Return current cache sizes, for debugging and tests."""
-        from .iconset import registered_icon_sets
-
         return {
             "interpreters": len(cls._caches),
             "images": sum(len(c.images) for c in cls._caches.values()),
@@ -432,16 +473,6 @@ class Icon(StatefulIconMixin, ABC):
             cache.clear()
 
     @classmethod
-    def _report_missing(cls, name: str, icon_set: IconSet) -> None:
-        """Apply the `on_missing` policy for a name absent from `icon_set`."""
-        if cls.on_missing == "transparent":
-            return
-        message = f"Icon '{name}' is not in icon set '{icon_set.id}'."
-        if cls.on_missing == "raise":
-            raise KeyError(message)
-        warnings.warn(message, stacklevel=3)
-
-    @classmethod
     def _get_transparent(cls, size: int) -> PhotoImage:
         """Return a cached transparent placeholder for the current interpreter."""
         from PIL.ImageTk import PhotoImage
@@ -467,9 +498,12 @@ class Icon(StatefulIconMixin, ABC):
         if cached is not None:
             return cached
 
-        if icon_set.glyph(self.name) is None:
-            Icon._report_missing(self.name, icon_set)
+        if self.name == NO_ICON:
+            # Deliberately blank, not missing — as in `render_pil`.
             return Icon._get_transparent(self.rendered_size)
+
+        if icon_set.glyph(self.name) is None:
+            raise _missing_glyph_error(self.name, icon_set)
 
         photo = PhotoImage(image=self.to_pil())
         cache.images[key] = photo
@@ -482,4 +516,4 @@ class Icon(StatefulIconMixin, ABC):
         return str(self.image)
 
 
-__all__ = ["Icon", "MissingPolicy", "create_transparent_icon"]
+__all__ = ["Icon", "create_transparent_icon"]

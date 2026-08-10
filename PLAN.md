@@ -8,6 +8,56 @@ The previous section here — #91's plan for making Tk optional — is gone rath
 
 ---
 
+## Amendments to this plan
+
+Written after the work, before the review. The plan below is unchanged; this section records where it was **wrong** or **left something open**, so the review measures the diff against what the code was actually meant to do.
+
+**Corrections and decisions only.** The reasoning behind each choice is deliberately not here, and is not in any file the review needs. A reviewer who reads why an approach seemed sound tends to agree with it instead of testing it.
+
+**`mat`'s root cause below is wrong, in both halves.** The plan says its generator "builds the mapping with `glyphmap_from_ttf` from one font and writes a single shared `glyphmap.json` used by both `outline` and `fill`", and calls that "one style's truth published as every style's". In fact `mat`'s two styles are one font split by a name predicate — `_is_outline_style` tests for the `-outline` suffix — so one shared glyph map is what that pack is supposed to have. And `glyphmap_from_ttf` is only the fallback; the mapping comes from upstream's **CSS** whenever one is available, and one was. The fault is that MDI's stylesheet declares `mdi-blank` at U+F68C as a placeholder the webfont has no codepoint for. `mat` therefore contributes **one icon under two names**, not four glyphs.
+
+**Two counts, not one, and the plan quotes only the second.** 121 glyph-map entries were removed. The placement census reports 123, counting once per name *per style*, because `mat`'s two styles share one map. The plan's "123 glyphs across two packs" and "123 of 89,292 entries" apply the per-style figure to an entry-count denominator. Both numbers appear in the shipped prose, each stated with the definition that makes it true.
+
+**The guard is in `IconSet.glyph`, not "beside the existing lookup at `icon.py:331`" as the plan directs.** `icon.py:331` is `render_pil`'s lookup. The Tk widget path has a second one at `icon.py:470`, and this plan's own invariant — "the browser shows no blank tiles" — is a claim about that second path.
+
+**In scope beyond what the plan describes**, both consequences of the line above:
+
+- `IconSet.__len__` and `__contains__` now report what the set can draw rather than what its map advertises. `IconSet.glyphs` is unchanged and still exposes the raw map.
+- `render_pil` selected its icon set with `icon_set or cls._icon_set_current`. A sized object that can draw nothing is falsy, so the caller's set could be replaced by whichever loaded last. It selects on `is None` now.
+
+**The open decision at "Known-weak spots" was decided: filter the committed data locally, do not regenerate from upstream.** The generators' new `restrict_to_font` step was run against the tree as committed. `write_glyphmap` was first confirmed to reproduce all five committed files byte-identically, so the data diff is 121 removed lines and nothing else.
+
+**Metrics were already correct and were not regenerated.** `generate_metrics --all --check` is clean both before and after the data change.
+
+**Two invariants were added by the fix round that follows round 1's review, and are not in the plan below.** They are listed here rather than in `REVIEW.md` because they are statements of what must hold, not records of what was wrong:
+
+- **A `cmap` this module cannot fully read makes the whole font unknown, never partially known.** An unhandled subtable format returns `None` for the font rather than a union of the subtables that were understood. Format 14 is the sole exception and is skipped without marking the font as read.
+- **`len()`, `bool()`, `__contains__` and `glyph()` are one answer.** All four derive from `can_draw`; a set may not report truthy while counting zero, or count an entry it will not draw.
+
+**The plan's third "known-weak spot" — measure the cmap cost rather than assuming it is negligible — was measured.** Parse is 3.5 ms for `mat` and 6.6 ms for `fluent`, once per font and cached; the per-glyph check is 0.45 µs, 0.42% of a 145 µs `render_pil`. The memory half of that sentence used to read "codepoint sets hold 0.47 MB for `mat` against 1.31 MB of font bytes already resident", which was true of the representation at the time and is not any more — see the amendment below.
+
+---
+
+## Amendments after round 2's review — two changes the plan never contemplated
+
+Both were directed by the owner during the fix round rather than found by a review, and neither appears anywhere in the plan below. They are recorded here so round 3 measures the diff against what the code was actually meant to do, which is the whole reason this file exists.
+
+**`on_missing` now defaults to `"raise"` rather than `"transparent"`.** The plan treated the policy's default as fixed background and reasoned only about which *cases* route into it. The owner's instruction was that the library should raise for a glyph that does not exist. Most of that was already true — a pack class raises `ValueError` for an unresolvable name at both entry points — so what changed is the one remaining silent path, a name handed straight to an icon set. `"warn"` and `"transparent"` survive as opt-ins.
+
+The invariant this adds: **a name that cannot be drawn stops the caller, unless the caller has asked for something else.** And the consequence the plan could not have anticipated, because it is the kind of thing only a flip exposes — **the `"none"` sentinel was relying on the old default.** It drew a blank by falling through the missing-name path, so it had always raised for anyone who set `on_missing="raise"`. It is `providers.NO_ICON` now and is handled before the policy. Round 3 should assume there are others and go looking; this one surfaced from a failing test, not from anyone reasoning about it.
+
+**Superseded after round 3, and the invariant loses its second clause: `on_missing` is removed.** The owner's decision, 2026-08-10, on reading that the policy was 4.0.x's silent blank preserved as a default rather than a designed feature. **A name that cannot be drawn stops the caller, full stop** — there is no longer anything to ask for something else with. `"warn"` and `"transparent"` are gone with the attribute, and the "bulk renderer" case they were kept for is served by `try`/`except`. `NO_ICON` is unaffected in behavior and simpler in mechanism: it is answered before the lookup on both paths rather than by failing one.
+
+Round 3 did find another thing depending on the policy, exactly as this section predicted — the widget path read it off `Icon` with the class named literally while `render_pil` read it off `cls`, so a policy scoped to a pack subclass was honored on one path and ignored on the other. That is REVIEW.md round 3 finding 1, and removing the policy is what fixed it.
+
+**Font coverage is stored as sorted ranges rather than as a set of codepoints.** The plan's cost analysis concluded the memory was acceptable; the owner's instruction was not to spend much on checking at all. Measured across the thirty-one shipped styles, the set form held 5,792 KB — the `frozenset` built from a `set`, as the old code built it, plus its int objects — and the range form holds 17.4 KB, a factor of 333, at 0.18 µs per membership test against 0.04 µs. `cmap_codepoints` became `cmap_coverage` returning a `Coverage`, and `render.font_codepoints` became `font_coverage`; neither name has ever been released.
+
+The invariant: **`Coverage` and the `frozenset` it replaced answer identically for every codepoint.** Checked against `fontTools` on all thirty-one shipped styles, and separately on every covered codepoint plus both of its neighbors. A second invariant worth stating because nothing else in the suite can see it: **the retained size does not grow with the codepoint count**, which is what `Coverage.nbytes` and `TestCoverageIsCheapToKeep` exist to pin.
+
+This also closed two of round 1's deferred nits — format 0 truncation, and the unbounded format 12 enumeration, which the range form removes outright by emitting groups rather than walking them.
+
+---
+
 ## What this is supposed to do
 
 A name that is in a pack's glyph map but whose codepoint the pack's own font does not carry renders as a fully transparent image, with no exception and no warning — **not even under `on_missing="raise"`**. 123 glyphs across two packs are in this state, they are advertised by the packs' own `build_name_lookup()`, and the shipped icon browser draws them as empty tiles.

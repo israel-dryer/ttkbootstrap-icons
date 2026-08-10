@@ -308,9 +308,9 @@ class TestTheTwoEntryPointsLookNamesUpTheSameWay:
     style and the glyph together. That is what makes this structural rather
     than a convention two functions have to keep to.
 
-    Failure matches too: a name the pack cannot resolve raises from both.
-    `on_missing` keeps the case it was written for, where a name reaches a set
-    without having been resolved against it — see `test_pack_icon_surface`.
+    Failure matches too: a name the pack cannot resolve raises from both, and
+    so does a name that reaches a set without having been resolved against it
+    — see `test_pack_icon_surface`.
     """
 
     #: Icons rendered per style to compare pixels. Resolution is checked over

@@ -7,7 +7,7 @@ For the community-maintained Material Design Icons, install `tkinter-icons[mater
 [![PyPI](https://img.shields.io/pypi/v/tkinter-icons-gmi.svg)](https://pypi.org/project/tkinter-icons-gmi/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#license-and-attribution)
 
-**Google Material Icons** — 8,936 icons, upstream v0.14.15. One of sixteen icon packs for [`tkinter-icons`](https://pypi.org/project/tkinter-icons/).
+**Google Material Icons** — 8,817 icons, upstream v0.14.15. One of sixteen icon packs for [`tkinter-icons`](https://pypi.org/project/tkinter-icons/).
 
 ---
 

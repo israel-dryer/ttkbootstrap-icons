@@ -110,7 +110,7 @@ CLAIMS = (
     ),
     Claim(
         "the glyph-map total and the count that draws nothing",
-        {"docstring": r"hold " + COUNT + r" entries; the " + COUNT + r" that render nothing"},
+        {"docstring": r"of the " + COUNT + r" glyph-map entries draws ink; " + COUNT + r" render\b"},
         lambda c: (c["totals"]["glyphmap_entries"], c["totals"]["blank"]),
         tolerance=0,
     ),

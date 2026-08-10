@@ -12,6 +12,18 @@ git history after the fact and are summaries rather than contemporaneous notes.
 
 <!-- release-notes-start -->
 
+## [1.1.2] — drops a placeholder name the font never had a glyph for
+
+No font change and no metrics change. Two glyph-map entries are gone, both spellings of one name.
+
+### Changed
+
+- **`blank` and `mdi-blank` are gone.** Upstream's stylesheet declares `mdi-blank` at U+F68C as a deliberately empty placeholder, and the webfont has no such codepoint — so the pack advertised an icon that drew nothing, raised nothing, and warned nothing in either style. Asking for either spelling now raises `ValueError`. Anyone using it as a spacer wants a transparent image rather than an icon; `create_transparent_icon` is that, and it does not depend on a font carrying an empty glyph. (#140)
+
+### Fixed
+
+- **The generator checks the stylesheet's names against the font before writing them.** The glyph map is scraped from upstream's CSS whenever one is available, and a stylesheet is not a font: `mdi-blank` was in the CSS and never in the TTF. Only the font can settle which names are real, so the mapping is now filtered against it and a regeneration cannot reintroduce this. (#140)
+
 ## [1.1.1] — an intro in this library's voice
 
 No glyph, font or metrics change: this release exists to correct text that PyPI freezes at release time.

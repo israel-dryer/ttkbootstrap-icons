@@ -28,6 +28,8 @@ from typing import Optional, Sequence
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
+from .sfnt import Coverage, cmap_coverage
+
 try:
     _RESAMPLE_LANCZOS = Image.Resampling.LANCZOS  # Pillow >= 9.1.0
 except AttributeError:  # pragma: no cover - older Pillow fallback
@@ -50,6 +52,11 @@ MEASURE_PRECISION = 5
 _FONT_CACHE_MAX = 128
 
 _font_cache: "OrderedDict[tuple[str, int], ImageFont.FreeTypeFont]" = OrderedDict()
+
+# Keyed by font_key alone — a font's coverage does not vary with render size.
+# `None` is a cached answer like any other: a font that could not be parsed
+# will not parse next time either.
+_coverage_cache: "OrderedDict[str, Optional[Coverage]]" = OrderedDict()
 
 
 @dataclass(frozen=True)
@@ -162,9 +169,42 @@ def load_font(font_key: str, font_bytes: bytes, size: int) -> ImageFont.FreeType
     return font
 
 
+def font_coverage(font_key: str, font_bytes: bytes) -> Optional[Coverage]:
+    """Return what `font_bytes` can draw, or `None` if it is unreadable.
+
+    Parsed once per font and cached, because the answer is a property of the
+    file. The parse costs a few milliseconds for the largest pack and nothing
+    thereafter — it is why a caller can afford to ask before every glyph. What
+    is retained is small enough that the cache holding 128 of them is not worth
+    thinking about: the largest coverage this project ships is 5,672 bytes, and
+    all thirty-one styles together are 17.4 KB. See `sfnt.Coverage`.
+
+    Args:
+        font_key: Stable identity for this font file, used as the cache key,
+            with the same contract as `load_font` — two calls with the same key
+            must pass equivalent `font_bytes`.
+        font_bytes: The raw font file.
+
+    Returns:
+        A `Coverage` over the codepoints the font maps to a real glyph, or
+        `None` when its character map cannot be read. `None` is "unknown",
+        never "empty": see `sfnt.cmap_coverage`.
+    """
+    if font_key in _coverage_cache:
+        _coverage_cache.move_to_end(font_key)
+        return _coverage_cache[font_key]
+
+    coverage = cmap_coverage(font_bytes)
+    _coverage_cache[font_key] = coverage
+    while len(_coverage_cache) > _FONT_CACHE_MAX:
+        _coverage_cache.popitem(last=False)
+    return coverage
+
+
 def clear_font_cache() -> None:
-    """Drop every cached `FreeTypeFont`."""
+    """Drop every cached `FreeTypeFont` and every parsed character map."""
     _font_cache.clear()
+    _coverage_cache.clear()
 
 
 def measure_ink_bounds(
@@ -321,9 +361,10 @@ def _place_by_bbox(
     set whose glyphs sit off the font's baseline rides high in the frame: over
     every style of all sixteen packs, 518 of the 89,169 glyphs that draw any
     ink run past the edge of the frame on this path, and 0 of them do on the
-    ink path. (The glyph maps hold 89,292 entries; the 123 that render nothing
-    are excluded, since an empty image cannot overflow.) Regenerate the
-    provider's metrics to take the accurate path.
+    ink path. (Every one of the 89,169 glyph-map entries draws ink; 0 render
+    nothing. The maps held 123 more until #140 — names whose codepoints their
+    own fonts never carried, which drew empty squares in silence.) Regenerate
+    the provider's metrics to take the accurate path.
 
     Every figure above is measured, not estimated: see
     `.github/scripts/generate_placement_census.py` for the definitions and
@@ -357,6 +398,7 @@ __all__ = [
     "RenderOptions",
     "auto_oversample",
     "clear_font_cache",
+    "font_coverage",
     "load_font",
     "measure_ink_bounds",
     "render_glyph",
