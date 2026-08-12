@@ -186,6 +186,10 @@ the rest:
   `ttkbootstrap-icons-*` packs, cut from `v4.0.0`. Merges nowhere. See
   `RELEASE.md`.
 
+  **No tag covers its tip, and that is the thing to know before touching it.** Checked 2026-08-12: `b53b528` is one commit past `v4.0.0` and is reachable from no tag at all, so that branch ref is the only thing keeping it alive — delete the branch and the source of a published release leaves the repository, recoverable only from a clone or from the PyPI sdists. It also cannot be merged, because its tree carries the *old* `packages/ttkbootstrap-icons-*` directory names that the rename replaced, so merging would resurrect seventeen directories.
+
+  **A tag would express this better than a branch, and the owner tabled that on 2026-08-12** — raised, and explicitly deferred rather than declined. If it is ever done: tag first and verify reachability, delete the branch second, and update both this bullet and `RELEASE.md:40`, which names the branch. The tag must **not** start with `v` — the base package's `describe_command` matches only `v[0-9]*`, so a `v`-prefixed name here could be picked up by setuptools-scm and renumber a base wheel.
+
 `gh-pages` used to be listed alongside it. It is **gone as of 2026-08-08**, along
 with GitHub Pages itself — but it was not dead when this file said it was, and
 the entry under "Deliberate decisions" records what that cost.
@@ -281,17 +285,15 @@ bumped every time and an existing one means the tag is wrong.
 
 ## Next session — start here
 
-### Next action: decide whether to cut `v5.1.0`. There is no queued work — the repository has no open issues
+### Nothing is queued. No open issues, no open milestone work, nothing in flight
 
-**#112 merged 2026-08-12 as PR #146, and it was the last one.** Both milestones are complete — 5.1.0 at seven closed and none open, 5.0.x at eight — and `gh issue list --state open` returns nothing at all. `origin` carries `main` and `release/ttkbootstrap-icons-packs-final` and no other head. So the next action is a decision rather than a task, and it is the owner's.
+**5.1.0 is released — 2026-08-12 — and it went out through the tag-driven path.** `tkinter-icons` 5.1.0 is on PyPI with `gmi` and `mat` at 1.1.2; the other fourteen packs skipped existing at 1.1.1, and the shim stayed at 5.0.0. All three release jobs passed, and the versions were confirmed against `pypi.org/pypi/<name>/json` rather than read off the workflow log. The GitHub Release is published, not a draft.
 
-**5.1.0 is still uncut, and that was a decision rather than an omission** — the owner's call on 2026-08-10, made with #140's merge: the milestone was not ready to tag. What made it not ready was #112, and #112 has now landed, so the question genuinely reopens rather than staying settled. Whenever it is cut it goes out through the tag-driven path, which is proven as of 5.0.1: push `v5.1.0` and the workflow builds all eighteen distributions, publishes the ones PyPI does not already have, and cuts one GitHub Release. The tag carries the base at 5.1.0 with the fourteen unchanged packs skipping existing.
+**#112 merged the same day as PR #146, and it was the last open issue.** Both milestones are complete — 5.1.0 at seven closed, 5.0.x at eight — and `gh issue list --state open` returns nothing at all. `origin` carries `main` and `release/ttkbootstrap-icons-packs-final` and no other head. So the next session is picking up new work, not continuing something.
 
-**Two things need preparing before that tag, and neither is optional.** `[Unreleased]` in `CHANGELOG.md` needs a `## [5.1.0] — <title>` heading, and the title wants to be short, because `release_notes.py` lifts it verbatim. And the generated body has to be *read* before the tag goes up — it is not the same text as the changelog section, and the last two releases both shipped something visible that only appeared in the rendered form:
+**This was the second tag-driven release, and the first that actually proved the pack publishers.** 5.0.1 failed at `mat` with `403 OIDC scoped token is not valid`, and every pack that "succeeded" in that run was already on PyPI, so `--skip-existing` made those uploads no-ops that tested nothing. `gmi` and `mat` both uploading new versions cleanly here is the first real evidence for those two. The remaining fourteen still have not been exercised by a genuinely new version — do not read this release as proving all eighteen.
 
-```bash
-python .github/scripts/release_notes.py CHANGELOG.md 5.1.0 NOTES.md gh-output.txt
-```
+**Two loose ends, both deliberately left.** The `release/ttkbootstrap-icons-packs-final` branch was raised and tabled by the owner on 2026-08-12; the one thing worth carrying is that **no tag covers `b53b528`**, so that branch ref is the only thing keeping a published release's source reachable — see the entry under "Deliberate decisions" before touching it. And a courtesy note to PySimpleGUI's maintainer about the integration is the owner's to send; the changelog links the project and names 6.3, which is the attribution part, and no `@` mention was used.
 
 **#112 was verified on both platforms, and the second pass is the reason that is worth saying.** Windows throughout, then WSL2 under Xvfb on 2026-08-12. Three of the branch's tests were written against Windows behavior and failed off Windows against code that was correct; `HANDOFF-LINUX.md` was the checklist for that pass and is deleted now the pass is done. What outlived it is the symbolic-color entry under "Known gotchas", which carries both rejected repairs and why each fails — it is the finding a later session is most likely to re-litigate. The `tk::ButtonEnter` split is why the public state vocabulary is `hover` / `pressed` / `disabled` rather than either toolkit's words.
 

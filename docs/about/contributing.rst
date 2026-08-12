@@ -204,6 +204,10 @@ These regenerate assets into a *source tree*, so they do nothing from an install
 Pull requests
 -------------
 
-Branch from ``5.0`` while 5.0.0 is in flight, and target it. Name the issue the change closes; the whole branch merges to ``main`` once, at release, which is when those issues close.
+Branch from ``main`` and target ``main``. Name the issue the change closes with ``Closes #n``, which takes effect the moment the pull request merges.
+
+This changed after 5.0.0. That release was assembled on a long-lived ``5.0`` branch, so its pull requests targeted that branch and their issues stayed open until the whole thing merged at release. The branch is gone and there is no integration branch now.
+
+Stack dependent pull requests on each other rather than waiting, but note that GitHub does **not** retarget a child when its parent merges — it retargets when the parent branch is *deleted*, and deleting a base closes any pull request still pointing at it. So merge each parent without deleting its branch, retarget the child by hand, and delete branches at the end.
 
 Releasing is tag-driven through Trusted Publishing, and publish order is load-bearing — the packs first, then the base package, then the shim. ``RELEASE.md`` has the details.
