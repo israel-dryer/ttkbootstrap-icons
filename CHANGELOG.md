@@ -14,26 +14,6 @@ history after the fact and are summaries rather than contemporaneous notes.
 
 ## [5.1.0] — icons on PySimpleGUI, and no more silent blanks
 
-### Removed
-
-- **`Icon.on_missing` is removed, and a name that cannot be drawn now always raises.** The attribute is gone rather than re-defaulted. A name a pack cannot resolve raises `ValueError`; a name that reaches an icon set with no glyph for it raises `KeyError`. Neither returns an image.
-
-  **Delete the line if you set it.** `Icon.on_missing = "transparent"` still assigns without complaint — Python does not stop you creating a class attribute nobody reads — and it now has no effect at all, so code carrying it will raise where it used to draw a blank. There is no deprecation period: the setting's whole purpose was to keep a failure quiet, and warning about it would have meant leaving the quiet behavior in place for another release to warn from.
-
-  **`MissingPolicy` is removed with it**, so `from tkinter_icons.icon import MissingPolicy` now raises `ImportError`. The type alias described the values of the attribute that is gone, and anything importing it was annotating a variable holding the policy — which is the same line the paragraph above says to delete.
-
-  It was never a designed feature. 4.0.x returned a transparent square for any name its glyph map did not have — no option, no warning — and 5.0.0's renderer rework kept that behavior as the default while adding `"warn"` and `"raise"` as ways out of it. What the default produced was a transparent square indistinguishable from an icon that rendered, which is how the glyph-map fault described under Added went unnoticed across two releases. A caller who genuinely needs to continue past a bad name can write `try`/`except`, which ends with the list of names that failed rather than a directory of blank PNGs.
-
-  **The `"none"` sentinel is not a missing name and no longer behaves like one.** It means "deliberately no icon here", and it used to work by falling through to the missing-name path and relying on that path returning a blank — so it already raised for anyone who had set `on_missing="raise"`. It is answered before the lookup now, so it still draws a blank of the right size.
-
-### Changed
-
-- **`PackIcon.render_pil` raises on a name the pack cannot resolve, where it used to return a transparent image.** This is a behavior change: code that rendered a list of names and tolerated blanks now needs to catch `ValueError`. `render_pil` is the headless path — build steps, export scripts, test suites — which is exactly where a blank PNG is least likely to be noticed, and it produced one for a plain misspelling while the constructor raised on the same name. (#115)
-
-- **An icon set reports what it can draw, rather than what its glyph map claims.** `len(icon_set)`, `name in icon_set` and `IconSet.glyph(name)` now all mean the same thing — that the set can actually produce an image — where the first two used to read the raw glyph map. `IconSet.glyphs` is still the advertised map for tooling that wants to compare the two; every shipped pack has them equal, and `tests/test_font_coverage.py` asserts it. (#140)
-
-- **The icon browser never shows the user an error.** It is an application someone runs to look at icons, so there is no circumstance in which a diagnostic belongs on their screen, and it had two ways of producing one. An icon it could not draw painted a red `Error <name>` tile in the grid and marked the preview `✕`; a glyph it cannot render is now simply absent — an empty cell, a blank preview, `—` for the codepoint. And any exception raised inside a Tk event handler reached the terminal as `Exception in Tkinter callback` plus a full stack trace, which no amount of guarding individual call sites prevents: `main` now replaces `report_callback_exception` on the root it owns, and stops anything escaping startup. Neither is reachable in a normal install; both are checked by forcing the failure. (#136)
-
 ### Added
 
 - **Icons on [PySimpleGUI](https://github.com/PySimpleGUI/PySimpleGUI), through a new `tkinter_icons.extensions` namespace.** `from tkinter_icons.extensions.psg import IconButton` gives a button whose icon sits beside its text and follows what the button is doing; everything else PySimpleGUI draws an image on — `sg.Image`, `sg.Tab`, the window icon, icon-only buttons — takes `Icon.to_data()` bytes with no bridge at all. Built and tested against PySimpleGUI 6.3, the LGPL-3.0 version 6 released in 2026. **PySimpleGUI is not a dependency and nothing from it is redistributed**: it stays a separate installable, and asking for `IconButton` without it raises an `ImportError` naming the install command. There is deliberately no `[psg]` extra, because in this project an extra means an icon pack. (#112)
@@ -64,6 +44,14 @@ history after the fact and are summaries rather than contemporaneous notes.
 
   Nothing about the widget path changed except when it fails. Reaching `.image` on a machine without Tk now raises `ImportError` naming `tkinter`, instead of the import failing at the top of the program.
 
+### Changed
+
+- **`PackIcon.render_pil` raises on a name the pack cannot resolve, where it used to return a transparent image.** This is a behavior change: code that rendered a list of names and tolerated blanks now needs to catch `ValueError`. `render_pil` is the headless path — build steps, export scripts, test suites — which is exactly where a blank PNG is least likely to be noticed, and it produced one for a plain misspelling while the constructor raised on the same name. (#115)
+
+- **An icon set reports what it can draw, rather than what its glyph map claims.** `len(icon_set)`, `name in icon_set` and `IconSet.glyph(name)` now all mean the same thing — that the set can actually produce an image — where the first two used to read the raw glyph map. `IconSet.glyphs` is still the advertised map for tooling that wants to compare the two; every shipped pack has them equal, and `tests/test_font_coverage.py` asserts it. (#140)
+
+- **The icon browser never shows the user an error.** It is an application someone runs to look at icons, so there is no circumstance in which a diagnostic belongs on their screen, and it had two ways of producing one. An icon it could not draw painted a red `Error <name>` tile in the grid and marked the preview `✕`; a glyph it cannot render is now simply absent — an empty cell, a blank preview, `—` for the codepoint. And any exception raised inside a Tk event handler reached the terminal as `Exception in Tkinter callback` plus a full stack trace, which no amount of guarding individual call sites prevents: `main` now replaces `report_callback_exception` on the root it owns, and stops anything escaping startup. Neither is reachable in a normal install; both are checked by forcing the failure. (#136)
+
 ### Fixed
 
 - **A per-state icon on a multi-style pack is drawn from the style the icon was built with.** `Icon.map` renders one image per state, and it used to get them from a rebuild — `type(icon)(name, size, color)` — a constructor call with nowhere to carry the `style` or the `options` the icon already had. So a `FontAwesomeIcon("heart", style="regular")` mapped onto a button kept its outline glyph at rest and switched to the *solid* one the moment the pointer touched it, which reads as the wrong icon rather than as a wrong color. State images now render through the same path `.image` uses, at the icon's own options, and pick the set per name — so the style is kept without breaking a `statespec` that deliberately reaches another style, which is how a Font Awesome brand mark sits beside a solid icon.
@@ -77,6 +65,18 @@ history after the fact and are summaries rather than contemporaneous notes.
 - **The two entry points look a name up the same way.** `resolve_icon_style` matched `-<style>` anywhere in a name while `resolve_icon_name` matched it only at the end, so they agreed on most names by accident of the order each pack declared its styles in. Where they disagreed the failure was silent in both directions: Bootstrap's `shield-fill-check` is a real glyph the `fill` style ships, and the constructor rejected it, while `render_pil` drew it only because Bootstrap keeps every style in one font file and the unresolved name happened to be a glyph name. Both are now views of one `BaseFontProvider.resolve_icon`, which returns the style and the glyph together, so they cannot answer differently. The name rule matches whole hyphen-separated components, never the first longest match winning — which is what makes it independent of declaration order. (#115)
 
   Measured by resolving every one of the 94,841 names of all sixteen packs once with no style and once against each style its own pack has — 287,811 combinations — the resolution change is purely additive: **849 names newly resolve, none stopped resolving, and not one resolved to a different glyph.** Every one of the 849 was previously unreachable by name alone: 489 in Font Awesome, 185 in Fluent, 102 in Material, 35 in Bootstrap, 28 in Devicon, 8 in Typicons, 2 in Eva. All 849 are gained in the no-style column; naming a style explicitly resolves exactly what it always did. Constructor and `render_pil` agree on all 113,157 name-and-style entries across all sixteen packs, and draw identical pixels.
+
+### Removed
+
+- **`Icon.on_missing` is removed, and a name that cannot be drawn now always raises.** The attribute is gone rather than re-defaulted. A name a pack cannot resolve raises `ValueError`; a name that reaches an icon set with no glyph for it raises `KeyError`. Neither returns an image.
+
+  **Delete the line if you set it.** `Icon.on_missing = "transparent"` still assigns without complaint — Python does not stop you creating a class attribute nobody reads — and it now has no effect at all, so code carrying it will raise where it used to draw a blank. There is no deprecation period: the setting's whole purpose was to keep a failure quiet, and warning about it would have meant leaving the quiet behavior in place for another release to warn from.
+
+  **`MissingPolicy` is removed with it**, so `from tkinter_icons.icon import MissingPolicy` now raises `ImportError`. The type alias described the values of the attribute that is gone, and anything importing it was annotating a variable holding the policy — which is the same line the paragraph above says to delete.
+
+  It was never a designed feature. 4.0.x returned a transparent square for any name its glyph map did not have — no option, no warning — and 5.0.0's renderer rework kept that behavior as the default while adding `"warn"` and `"raise"` as ways out of it. What the default produced was a transparent square indistinguishable from an icon that rendered, which is how the glyph-map fault described under Added went unnoticed across two releases. A caller who genuinely needs to continue past a bad name can write `try`/`except`, which ends with the list of names that failed rather than a directory of blank PNGs.
+
+  **The `"none"` sentinel is not a missing name and no longer behaves like one.** It means "deliberately no icon here", and it used to work by falling through to the missing-name path and relying on that path returning a blank — so it already raised for anyone who had set `on_missing="raise"`. It is answered before the lookup now, so it still draws a blank of the right size.
 
 ## [5.0.1] — updated metadata and docs
 

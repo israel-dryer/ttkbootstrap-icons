@@ -865,6 +865,12 @@ Each of these looks like a defect in isolation. They aren't.
   Format follows bootstack: `## [<version>] — <descriptive title>`, which drives
   the GitHub Release title and body via `release_notes.py`.
   See `D:\Development\bootstack\.github\scripts\release_notes.py`.
+
+  **Sections go `Added`, then `Changed`, then `Removed`**, with `Fixed` alongside the middle group — the owner's rule, stated 2026-08-12. A release announcement leads with what the reader gained, not with what breaks. 5.1.0 shipped the other way round, on the reasoning that `release_notes.py` freezes this text into the GitHub Release so the first screen should carry the breaking changes; that reasoning is overruled, and it was also wrong on its own terms, since this file's header claims Keep a Changelog — whose order is Added, Changed, Deprecated, Removed — and 5.0.0 ran `Added` → `Changed` → `Fixed` → `Removed`. Keep the actionable sentence early **within** its entry instead: "Delete the line if you set it" sits in the second paragraph of 5.1.0's `Removed` entry, which is what makes leading with `Added` cost nothing.
+
+  **The exact order is `Added` → `Changed` → `Fixed` → `Removed`,** which is what 5.0.0 used. `Fixed` in the middle rather than after `Removed` is a deliberate departure from Keep a Changelog's canonical sequence, and it is this repository's own precedent.
+
+  **A published release's notes are editable after the fact, and 5.1.0 was edited.** `release_notes.py` freezes the body into the GitHub Release at tag time, but `gh release edit v5.1.0 --notes-file` replaces it — so a section reordered in the file can be pushed to the published release rather than left to disagree with it. Reordering after publication is therefore a choice rather than a constraint. What is *not* editable is the PyPI side: the version, the wheels and the frozen `description` metadata are immutable, which is the trap this file warns about elsewhere.
 - **Versions:** base `5.0.0`; all sixteen packs `1.1.0`, requiring
   `tkinter-icons>=5.0.0`.
 
