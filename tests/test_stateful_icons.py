@@ -7,6 +7,8 @@ reuses) and pruned only when a theme change happened to notice a dead weakref.
 
 from __future__ import annotations
 
+import sys
+
 import pytest
 
 from tkinter_icons.icon import Icon
@@ -164,6 +166,27 @@ class TestStateImagesComeFromTheIconsOwnSet:
 class TestColorsReadOffAStyle:
     """A style's color is not necessarily a color Pillow can draw with."""
 
+    def test_a_name_a_theme_configures_is_resolved_to_hex(self, root, button, icon_set, sample_name):
+        """A theme configures a colour *name*, and Pillow does not take every name Tk does.
+
+        This is the portable half of the translation, and the only half that
+        can be asserted off Windows. Every stock X11 theme — `clam`, `alt`,
+        `default`, `classic` — configures a button foreground of `black` or
+        `#000000`, so this is the value the function really meets there.
+
+        It still has teeth: untranslated, the style hands back the name, and
+        the assertion below is that a hex comes out instead.
+        """
+        assert Icon._drawable_color(button, "black") == "#000000"
+        assert Icon._drawable_color(button, "#000000") == "#000000"
+
+    @pytest.mark.skipif(
+        sys.platform != "win32",
+        reason=(
+            "SystemWindowText names a Windows system setting rather than a colour; "
+            "Tk elsewhere raises `unknown color name` and has nothing to resolve it to"
+        ),
+    )
     def test_a_symbolic_system_color_is_translated(self, root, button, icon_set, sample_name):
         """The native Windows themes configure `SystemWindowText`, not a hex.
 
@@ -171,6 +194,11 @@ class TestColorsReadOffAStyle:
         state it cannot render — including the fallback — so the button was
         left with no reactive states *and* an untinted resting icon, on the
         three themes Windows ships as its own defaults.
+
+        Windows-only by nature, not by convenience: the symbolic names exist
+        only in Tk's Windows build, so there is no portable value that
+        reproduces this integration. The translation itself is covered
+        everywhere by the test above.
         """
         from tkinter import ttk
 
