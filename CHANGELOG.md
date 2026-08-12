@@ -16,6 +16,12 @@ history after the fact and are summaries rather than contemporaneous notes.
 
 ### Added
 
+- **An icon can now be handed over as bytes, for toolkits that take an encoded image rather than pixels.** `Icon.render_data()` is `render_pil()` with the image already encoded — same arguments, same name resolution, same failures, PNG bytes instead of a Pillow image — and `Icon.to_data()` is the instance form, standing to it exactly as `to_pil()` stands to `render_pil()`. Neither needs a Tk root, so an interface that is declared before its window exists can carry real icons. Tk's own `PhotoImage(data=...)` is where the name comes from, and toolkits layered on Tk inherit the parameter. (#144)
+
+  **The bytes are raw PNG, not base64.** Tk's PNG reader takes binary data directly, so encoding it would cost about a third more — 1,064 bytes against 796 for a 24 px icon — to buy portability to Tk 8.5 alone, which cannot read PNG at all. PNG rather than GIF because every glyph here is antialiased against transparency, which GIF cannot carry.
+
+  Nothing is cached, matching `render_pil`. Encoding is cheap beside rendering, and the expensive part — loading and sizing the font — is already cached.
+
 - **A glyph map that points at a codepoint its own font does not carry is now a reported failure rather than a blank square.** Two things have to be true for an icon to draw — the name has to be in the icon set's glyph map, and that glyph map's codepoint has to be in the set's font — and only the first was ever checked. A name that failed the second resolved, looked up, and handed Pillow a codepoint the font had never had, which draws `.notdef`; in these fonts `.notdef` is empty, so the result was a fully transparent image with no exception and no warning — **not even for a caller who had explicitly asked to be told about names that could not be drawn**, because from the glyph map's point of view nothing was missing. It is now the same kind of failure as a name the glyph map does not have, and both raise. (#140)
 
   The two are reported differently, because a user who mistyped and a user who hit a broken pack need different answers. A name the map never had still says so; a name the map advertises at a codepoint the font lacks names the codepoint and says the fault is in the pack's data rather than in the name you asked for.

@@ -1,150 +1,55 @@
-# PLAN — a glyph the font does not carry renders blank with no error (#140)
+# PLAN — an icon as PNG bytes (#144)
 
-Branch `fix/glyphmap-advertises-glyphs-the-font-lacks`, off `main`. Not created yet — this plan is written before the work, and the reviewing session's scope will be `git diff main..fix/glyphmap-advertises-glyphs-the-font-lacks`.
+Branch `feat/icon-to-data`, off `main`. The reviewing session's scope is `git diff main..feat/icon-to-data`.
 
 Written for the session that does the work and the session that reviews it. It states what the code is meant to do and what must hold, so a finding can be checked against intent rather than guessed at.
 
-The previous section here — #91's plan for making Tk optional — is gone rather than archived. It shipped in #139, and its findings are recorded where they belong: in `CHANGELOG.md`, in `tests/test_headless_without_tkinter.py`, and in `CLAUDE.md`. A plan kept past its merge is a second copy of the truth, which is how the placement numbers drifted through three review rounds.
+The previous section here — #140's plan for the glyph-map/font mismatch — is gone rather than archived. It shipped in #141, and its findings live where they belong: in `CHANGELOG.md`, in `tests/test_font_coverage.py`, and in `CLAUDE.md`. A plan kept past its merge is a second copy of the truth, which is how the placement numbers drifted through three review rounds. `REVIEW.md` was reset with it, for the same reason.
 
 ---
 
-## Amendments to this plan
+## The gap
 
-Written after the work, before the review. The plan below is unchanged; this section records where it was **wrong** or **left something open**, so the review measures the diff against what the code was actually meant to do.
+An icon can only reach a widget as a Tk `PhotoImage`, so it can only reach a widget that takes one. `render_pil` has produced the image without Tk since #139, so the missing piece is an encode step and nothing more.
 
-**Corrections and decisions only.** The reasoning behind each choice is deliberately not here, and is not in any file the review needs. A reviewer who reads why an approach seemed sound tends to agree with it instead of testing it.
+The consumer that motivated it is #112: PySimpleGUI declares its whole interface before a window exists, and several of its elements take an encoded image rather than a widget image. This must land first so that work consumes it instead of carrying a private copy of four lines.
 
-**`mat`'s root cause below is wrong, in both halves.** The plan says its generator "builds the mapping with `glyphmap_from_ttf` from one font and writes a single shared `glyphmap.json` used by both `outline` and `fill`", and calls that "one style's truth published as every style's". In fact `mat`'s two styles are one font split by a name predicate — `_is_outline_style` tests for the `-outline` suffix — so one shared glyph map is what that pack is supposed to have. And `glyphmap_from_ttf` is only the fallback; the mapping comes from upstream's **CSS** whenever one is available, and one was. The fault is that MDI's stylesheet declares `mdi-blank` at U+F68C as a placeholder the webfont has no codepoint for. `mat` therefore contributes **one icon under two names**, not four glyphs.
+## What was built
 
-**Two counts, not one, and the plan quotes only the second.** 121 glyph-map entries were removed. The placement census reports 123, counting once per name *per style*, because `mat`'s two styles share one map. The plan's "123 glyphs across two packs" and "123 of 89,292 entries" apply the per-style figure to an entry-count denominator. Both numbers appear in the shipped prose, each stated with the definition that makes it true.
+Two methods on `Icon`, mirroring the pair already there so the naming stays predictable:
 
-**The guard is in `IconSet.glyph`, not "beside the existing lookup at `icon.py:331`" as the plan directs.** `icon.py:331` is `render_pil`'s lookup. The Tk widget path has a second one at `icon.py:470`, and this plan's own invariant — "the browser shows no blank tiles" — is a claim about that second path.
+| new | existing it mirrors | returns |
+|---|---|---|
+| `Icon.render_data(...)` classmethod | `render_pil` | `bytes` |
+| `Icon.to_data()` instance | `to_pil` | `bytes` |
 
-**In scope beyond what the plan describes**, both consequences of the line above:
+`render_data` delegates to `render_pil` and encodes the result. It adds no resolution logic, no new failure, and no new argument — the signature is `render_pil`'s exactly. That is the point: two entry points that answer the same question two different ways is the defect shape behind #115, #140 and the `on_missing` removal, and the cheapest way not to repeat it is to have only one implementation of the question.
 
-- `IconSet.__len__` and `__contains__` now report what the set can draw rather than what its map advertises. `IconSet.glyphs` is unchanged and still exposes the raw map.
-- `render_pil` selected its icon set with `icon_set or cls._icon_set_current`. A sized object that can draw nothing is falsy, so the caller's set could be replaced by whichever loaded last. It selects on `is None` now.
+`data` is not borrowed vocabulary. It is the parameter name in `tk.PhotoImage(data=...)`, which is where every toolkit layered on Tk inherits it from. Naming for what consumes it is the rule `to_pil` already follows.
 
-**The open decision at "Known-weak spots" was decided: filter the committed data locally, do not regenerate from upstream.** The generators' new `restrict_to_font` step was run against the tree as committed. `write_glyphmap` was first confirmed to reproduce all five committed files byte-identically, so the data diff is 121 removed lines and nothing else.
+## What must hold
 
-**Metrics were already correct and were not regenerated.** `generate_metrics --all --check` is clean both before and after the data change.
+- **The bytes decode to exactly what `render_pil` drew.** The encode is lossless or the two entry points disagree, which is the whole failure this design is shaped to avoid.
+- **Raw PNG, not base64.** Tk reads binary PNG data directly. Base64 costs about a third more (1,064 B against 796 B at 24 px) and buys portability only to Tk 8.5, which cannot read PNG at all.
+- **PNG, not GIF.** Every glyph is antialiased against transparency; GIF carries one transparent index and would fringe every icon.
+- **Failures are `render_pil`'s, unchanged.** `ValueError` for a name a pack cannot resolve, `KeyError` for one that reaches a set with no drawable glyph, `RuntimeError` with no set at all. `NO_ICON` still encodes a blank rather than raising, because it is the one blank anybody asks for.
+- **No Tk.** Nothing on this path may import or require `tkinter`.
+- **Size follows `render_pil`**, including even-snapping: `size=15` encodes a 16×16 PNG.
 
-**Two invariants were added by the fix round that follows round 1's review, and are not in the plan below.** They are listed here rather than in `REVIEW.md` because they are statements of what must hold, not records of what was wrong:
+## Decisions
 
-- **A `cmap` this module cannot fully read makes the whole font unknown, never partially known.** An unhandled subtable format returns `None` for the font rather than a union of the subtables that were understood. Format 14 is the sole exception and is skipped without marking the font as read.
-- **`len()`, `bool()`, `__contains__` and `glyph()` are one answer.** All four derive from `can_draw`; a set may not report truthy while counting zero, or count an entry it will not draw.
+**Nothing is cached, and the issue proposed otherwise.** #144 called an `lru_cache` "the obvious answer". Consistency won instead: `render_pil` does not cache, so a caching sibling would make the two behave differently under repetition for no stated reason. The expensive part is already cached — `render.py` keeps an `OrderedDict` of loaded fonts — and encoding is cheap beside rendering. A caller looping over one icon should hold the result, as with any other render.
 
-**The plan's third "known-weak spot" — measure the cmap cost rather than assuming it is negligible — was measured.** Parse is 3.5 ms for `mat` and 6.6 ms for `fluent`, once per font and cached; the per-glyph check is 0.45 µs, 0.42% of a 145 µs `render_pil`. The memory half of that sentence used to read "codepoint sets hold 0.47 MB for `mat` against 1.31 MB of font bytes already resident", which was true of the representation at the time and is not any more — see the amendment below.
+**No `format=` parameter.** PNG is what Tk reads, and a format knob invites GIF, which cannot carry the alpha this library depends on. Adding it later is compatible; removing it would not be.
 
----
+## Testing
 
-## Amendments after round 2's review — two changes the plan never contemplated
+`TestRenderData` in `tests/test_icon.py`. Every assertion re-opens the bytes through Pillow and looks at them, because a name that draws nothing still encodes to a perfectly valid, perfectly transparent PNG — so asserting that bytes came back, or that nothing raised, would pass on a blank. That is the trap `CLAUDE.md` records twice.
 
-Both were directed by the owner during the fix round rather than found by a review, and neither appears anywhere in the plan below. They are recorded here so round 3 measures the diff against what the code was actually meant to do, which is the whole reason this file exists.
+`getcolors`, not `getdata`: the latter is deprecated for removal in Pillow 14 and adding it would put a new warning into a clean suite.
 
-**`on_missing` now defaults to `"raise"` rather than `"transparent"`.** The plan treated the policy's default as fixed background and reasoned only about which *cases* route into it. The owner's instruction was that the library should raise for a glyph that does not exist. Most of that was already true — a pack class raises `ValueError` for an unresolvable name at both entry points — so what changed is the one remaining silent path, a name handed straight to an icon set. `"warn"` and `"transparent"` survive as opt-ins.
+## Known-weak spots, stated rather than hidden
 
-The invariant this adds: **a name that cannot be drawn stops the caller, unless the caller has asked for something else.** And the consequence the plan could not have anticipated, because it is the kind of thing only a flip exposes — **the `"none"` sentinel was relying on the old default.** It drew a blank by falling through the missing-name path, so it had always raised for anyone who set `on_missing="raise"`. It is `providers.NO_ICON` now and is handled before the policy. Round 3 should assume there are others and go looking; this one surfaced from a failing test, not from anyone reasoning about it.
-
-**Superseded after round 3, and the invariant loses its second clause: `on_missing` is removed.** The owner's decision, 2026-08-10, on reading that the policy was 4.0.x's silent blank preserved as a default rather than a designed feature. **A name that cannot be drawn stops the caller, full stop** — there is no longer anything to ask for something else with. `"warn"` and `"transparent"` are gone with the attribute, and the "bulk renderer" case they were kept for is served by `try`/`except`. `NO_ICON` is unaffected in behavior and simpler in mechanism: it is answered before the lookup on both paths rather than by failing one.
-
-Round 3 did find another thing depending on the policy, exactly as this section predicted — the widget path read it off `Icon` with the class named literally while `render_pil` read it off `cls`, so a policy scoped to a pack subclass was honored on one path and ignored on the other. That is REVIEW.md round 3 finding 1, and removing the policy is what fixed it.
-
-**Font coverage is stored as sorted ranges rather than as a set of codepoints.** The plan's cost analysis concluded the memory was acceptable; the owner's instruction was not to spend much on checking at all. Measured across the thirty-one shipped styles, the set form held 5,792 KB — the `frozenset` built from a `set`, as the old code built it, plus its int objects — and the range form holds 17.4 KB, a factor of 333, at 0.18 µs per membership test against 0.04 µs. `cmap_codepoints` became `cmap_coverage` returning a `Coverage`, and `render.font_codepoints` became `font_coverage`; neither name has ever been released.
-
-The invariant: **`Coverage` and the `frozenset` it replaced answer identically for every codepoint.** Checked against `fontTools` on all thirty-one shipped styles, and separately on every covered codepoint plus both of its neighbors. A second invariant worth stating because nothing else in the suite can see it: **the retained size does not grow with the codepoint count**, which is what `Coverage.nbytes` and `TestCoverageIsCheapToKeep` exist to pin.
-
-This also closed two of round 1's deferred nits — format 0 truncation, and the unbounded format 12 enumeration, which the range form removes outright by emitting groups rather than walking them.
-
----
-
-## What this is supposed to do
-
-A name that is in a pack's glyph map but whose codepoint the pack's own font does not carry renders as a fully transparent image, with no exception and no warning — **not even under `on_missing="raise"`**. 123 glyphs across two packs are in this state, they are advertised by the packs' own `build_name_lookup()`, and the shipped icon browser draws them as empty tiles.
-
-There are three ways an icon can fail to be found. Two are answered; the third is not.
-
-| | Case | Where | Behavior |
-|---|---|---|---|
-| 1 | The name resolves nowhere in the pack | `provider.resolve_icon`, `icon.py:324` | Raises `ValueError`, matching the constructor. Correct — this is what #115/#135 closed. |
-| 2 | The name resolves, but the set has no glyph for it | `icon_set.glyph`, `icon.py:331` | `on_missing` policy. Correct, deliberate, documented. |
-| 3 | The set has a glyph, but the **font's cmap has no such codepoint** | nowhere | Silently draws nothing. **This issue.** |
-
-`on_missing` guards the glyph *map*. Nothing guards the *font*. In case 3 `resolve_icon` succeeds and `icon_set.glyph(name)` returns a real character, so `_report_missing` never fires — from the glyph map's point of view nothing is missing — and `render_glyph` hands the codepoint to Pillow, which renders `.notdef`. In both affected packs `.notdef` is empty, so the result is a blank square rather than the usual tofu box.
-
-The same pack answers the same name two different ways, which is the #115 divergence one layer down:
-
-```
-MatIcon.render_pil("blank", style="outline")  ->  ValueError: blank not found in lookup for mat in outline style.
-MatIcon.render_pil("blank", style="fill")     ->  blank image, silently
-```
-
----
-
-## Root cause — two separate bugs, not one
-
-**`gmi`, 119 of the 123.** `packages/tkinter-icons-gmi/src/tkinter_icons_gmi/tools/generate_assets.py:132-136` parses one downloaded `.codepoints` text file — the **baseline** one — and writes it verbatim to all four style glyphmaps, under a comment that states the false assumption out loud: *"Material Icons use the same codepoints across all styles"*. Baseline carries 43 codepoints `outlined` does not, 38 `round` does not, and 38 `sharp` does not. This is also why all four styles report an identical 4,468 names. The generator already imports `glyphmap_from_ttf` and does not use it on this path.
-
-**`mat`, the other 4.** `packages/tkinter-icons-mat/src/tkinter_icons_mat/tools/generate_assets.py:108-114` builds the mapping with `glyphmap_from_ttf` from one font and writes a single shared `glyphmap.json` used by both `outline` and `fill`. Different mechanism, same shape of defect: one style's truth published as every style's.
-
-Neither is a data scrub. **Fix the generators, or the next asset regeneration reintroduces all 123.**
-
----
-
-## The shape of the fix — two halves
-
-**The data half fixes today's symptom.** Build each style's glyphmap from that style's own font, or intersect the shared mapping with each font's cmap before writing. This needs a pack release for `gmi` and `material`, which the single `v5.1.0` tag carries alongside the base — that is #97 working as designed.
-
-**The guard half makes the next one loud.** Add the cmap check beside the existing lookup at `icon.py:331` and route a miss through `_report_missing`, so it lands under the same `on_missing` policy: a name in the map with no glyph in the font is precisely "the set's data is inconsistent", which is what that policy is documented to cover. Compute the cmap's codepoint set once per `IconSet` and cache it alongside `font_bytes`, so the cost is one membership test per render.
-
-The argument for the guard is stronger *because* the generators are the root cause: they are run rarely and by hand, upstream fonts drift between releases, and nothing in CI reads a font.
-
----
-
-## Invariants
-
-- **Every glyph-map entry's codepoint is present in that style's font**, for every installed pack and every style. This is the invariant to assert directly — not a frozen count of 123, which stops meaning anything the moment the data is fixed.
-- **`on_missing` still governs case 2 unchanged.** `"transparent"` stays the default and the transparent square for a name that reaches a set without a glyph stays deliberate. Case 3 joins that policy rather than growing a new one.
-- **Case 1 still raises.** Nothing here may soften what #135 established.
-- **The browser shows no blank tiles in any style of any pack**, which is the user-visible statement of the first invariant.
-- **`render_glyph` keeps taking a character, not a name.** It sits below resolution and must not grow a provider dependency. (See the docstring on `test_render_glyph_draws_without_tkinter` for what happens when a caller confuses the two.)
-- **The census delta goes to zero.** `totals.glyphmap_entries - totals.drawing` is currently exactly 123; after the data fix it is 0.
-
----
-
-## How it should be tested
-
-A new test asserting the first invariant, alongside `tests/test_placement_census.py` and with the same skip-if-absent handling — it needs all sixteen packs installed, which the CI matrix deliberately does not guarantee. Shape:
-
-```python
-for pack in installed_packs:
-    for style in provider.style_list or [None]:
-        iset = get_icon_set(provider, style)
-        cmap = TTFont(io.BytesIO(iset.font_bytes)).getBestCmap()
-        for name, ch in iset.glyphs.items():
-            assert len(ch) == 1 and ord(ch) in cmap
-```
-
-That check would have failed the day the `gmi` generator was written, and it stays meaningful after the data is fixed.
-
-Guard the `fontTools` import the way `tests/test_packs.py` guards `tomllib` — CI runs 3.10 through 3.14 and the working venv here is only one of them. Prefer guarding **inside a helper** rather than at module scope, so a missing dependency does not silently retire the whole file.
-
-For the guard half, a test that a set whose glyph map points at an absent codepoint applies `on_missing` — constructed by hand, since after the data fix no shipped pack is in that state.
-
----
-
-## Knock-on, and the sequencing that matters
-
-Fixing the data moves the census. `.github/scripts/generate_placement_census.py` must be re-run and the four files `tests/test_placement_census.py` checks updated with it: `docs/user-guide/sizing-and-quality.rst`, `docs/_ext/render_figures.py`, `docs/_data/placement-census.json`, and `CLAUDE.md`. It is 178,584 renders, about 20 seconds. **Do this before writing any 5.1.0 release prose, not after** — the released numbers should be the fixed ones.
-
-Regenerate with the script, never by hand. Three sessions measured these numbers with throwaway snippets and transcribed them, and they disagreed every time.
-
----
-
-## Known-weak spots — worth a reviewer's attention
-
-- **Regenerating a pack's assets downloads from upstream**, so a regeneration is not reproducible against a moving source and may pick up unrelated upstream drift. Consider filtering the *committed* glyphmaps against the committed fonts instead, which is a pure local transform and reviewable as a diff. That is a real decision, not an obvious call — the generator is still wrong either way and should be fixed, but whether this PR *runs* it is separate.
-- **Dropping names is a user-visible removal.** Anyone currently calling `GMatIcon("add_call", style="outlined")` gets a blank today and a `ValueError` after the fix. That is the intended improvement, but it belongs in `CHANGELOG.md` under Changed with the names counted, not buried under Fixed.
-- **The cmap lookup is per-`IconSet`, and `IconSet` is immutable and cached.** Whatever holds the codepoint set has to respect that, and `fontTools` on every set construction is not free — measure before assuming it is negligible, or derive the set from the glyph map's own values rather than parsing the font twice.
-- **`.notdef` being empty is what made this invisible.** A pack whose `.notdef` is a tofu box would have shown visible garbage instead of nothing. Do not write the guard in a way that only catches the blank case.
-- **Scale is modest and should not be oversold**: 123 of 89,292 entries, 0.14%, two of sixteen packs, and every pack's default style is already clean. Nothing crashes and no correct call yields a wrong image. It is worth fixing because the silence violates the rule that a missing icon should say so, and because it already cost a reviewer time as an unexplained census discrepancy.
+- **The lossless-round-trip test is the only thing pinning PNG as the format.** Nothing asserts the bytes are *not* some other format that also happens to round-trip; the magic-number check is the closest thing and is a check on the header, not on the choice.
+- **No test covers a very large icon.** Encoding cost is assumed to scale with pixels and has not been measured at, say, 512 px, where a PSG layout building many icons at once might notice.
+- **The docs claim base64 is a third larger.** That is one measurement of one 24 px glyph, and the ratio is fixed by the encoding rather than by the image, so the *ratio* generalizes while the byte counts do not. Both are quoted with the size they were measured at.
