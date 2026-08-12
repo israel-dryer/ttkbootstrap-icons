@@ -71,7 +71,7 @@ By default the icon follows the button's own colors, so it greys out along with 
 
 Each state takes a color, or a dict that can swap the glyph too — above, the disabled state changes to the filled trash. ``reactive_states=False`` draws the icon exactly as you built it and ignores the button.
 
-The three states are ``hover``, ``pressed`` and ``disabled``. **``hover`` needs ``use_ttk_buttons=True``**; a plain ``tk`` button cannot carry a separate hover image, and asking for one there warns and is ignored. PySimpleGUI defaults to ``tk`` buttons on Windows and Linux.
+The three states are ``hover``, ``pressed`` and ``disabled``. **Hover needs** ``use_ttk_buttons=True``: a plain ``tk`` button cannot carry a separate hover image, and asking for one there warns and is ignored. PySimpleGUI defaults to ``tk`` buttons on Windows and Linux.
 
 Changing the icon later
 -----------------------
@@ -116,13 +116,13 @@ Caveats
 
 **Set** ``compound="none"`` **on a button with no text.** The default, ``"left"``, reserves room for a label that is not there — on a ttk button that is around 70 px of empty space.
 
-**``image_data`` on a Button is not a substitute for** :class:`~tkinter_icons.extensions.psg.IconButton`. PySimpleGUI centers the image and sizes the button to it, so any text is drawn *on top of* the icon. Use it for icon-only buttons; use ``IconButton`` when there is a label. Bytes also never react to state or color — that is the difference between the two.
+**Do not use** ``image_data`` **on a Button as a substitute for** :class:`~tkinter_icons.extensions.psg.IconButton`. PySimpleGUI centers the image and sizes the button to it, so any text is drawn *on top of* the icon. Use it for icon-only buttons; use ``IconButton`` when there is a label. Bytes also never react to state or color — that is the difference between the two.
 
 **An explicit** ``size=`` **is not honored on a tk icon button.** Tk measures a button in characters while it shows text alone and in pixels once it also shows an image, so the button is auto-sized instead. ``ttk`` buttons are unaffected.
 
 **A tab icon does not react to selection.** ``sg.Tab(image_source=...)`` sets a fixed per-tab image, and ttk's style map does not override it. If you want the current tab marked, swap the image yourself on the tab-changed event — ``window["-TABS-"].Widget.tab(index, image=...)``, keeping a reference to each ``tk.PhotoImage``.
 
-**``sg.theme()`` does not change a window that already exists**, in PySimpleGUI or here. Build the window after setting the theme, and its icons will be colored to match.
+**A theme set with** ``sg.theme()`` **does not change a window that already exists**, in PySimpleGUI or here. Build the window after setting the theme, and its icons will be colored to match.
 
 .. versionadded:: 5.1.0
    ``tkinter_icons.extensions.psg``.
