@@ -220,12 +220,13 @@ def ttkbootstrap_theme(out: Path, theme: str) -> None:
 
 
 def pysimplegui(out: Path) -> None:
-    """`integrations/pysimplegui` — both bridges in one window.
+    """`integrations/pysimplegui` — a small window that looks like an application.
 
-    The page's argument is that there are two ways in and they are not
-    interchangeable, so the capture has to show both: `IconButton` where the
-    icon sits beside text and reacts, and `to_data()` bytes on the elements
-    that take an encoded image and never react. One row of each.
+    A hero image should show what the library makes possible, not label its
+    own parts: an earlier version captioned the rows "IconButton" and
+    "to_data() bytes", which taught nothing a picture can carry — bytes are
+    not a visible thing. So this is just a plausible little file browser, and
+    every icon in it happens to come through one bridge or the other.
 
     PySimpleGUI is not a dependency of this project, so this is skipped like
     the ttkbootstrap pair unless it is installed.
@@ -236,45 +237,54 @@ def pysimplegui(out: Path) -> None:
     from tkinter_icons.extensions.psg import IconButton
 
     sg.theme("DarkBlue3")
-    # Only the bytes need a color: an IconButton takes the button's own. And
-    # the color comes from the theme rather than being typed in, which is what
-    # the page teaches, so the code it publishes had better not contradict it.
     text = sg.theme_text_color()
-    on_button = sg.theme_button_color_text()
+    muted = "#9fb0c4"
+    accent = "#7ec8e3"
 
-    layout = [
-        [sg.Text("IconButton — icon beside text, follows the button")],
-        [
-            IconButton("Save", icon=BootstrapIcon("floppy", 16), key="-SAVE-"),
-            IconButton(
-                "Delete",
-                icon=BootstrapIcon("trash", 16),
-                reactive_states={"hover": "#f0918d", "pressed": "#d9534f",
-                                 "disabled": {"name": "trash-fill", "color": "#7c8a99"}},
-                key="-DELETE-",
-            ),
-            # compound="none" because there is no text: the default reserves
-            # room for a label that is not there, ~70 px of it on a ttk button.
-            IconButton("", icon=BootstrapIcon("gear", 16), compound="none",
-                       key="-PREFS-"),
-        ],
-        [sg.Text("to_data() bytes — no deferral, no subclass, no reacting")],
-        [
-            sg.Image(data=BootstrapIcon("house", 16, text).to_data()),
-            sg.Text("Dashboard"),
-            sg.Push(),
-            sg.Button(image_data=BootstrapIcon("bell", 16, on_button).to_data(), key="-BELL-"),
-        ],
+    def image(name, color=None, size=16):
+        return sg.Image(data=BootstrapIcon(name, size, color or text).to_data(), pad=(6, 3))
+
+    def row(icon, label, color, meta):
+        return [image(icon, color), sg.Text(label, size=(18, 1)),
+                sg.Text(meta, text_color=muted, size=(8, 1), justification="right")]
+
+    toolbar = [
+        IconButton("New", icon=BootstrapIcon("plus-lg", 16), key="-NEW-"),
+        IconButton("Save", icon=BootstrapIcon("floppy", 16), key="-SAVE-"),
+        IconButton(
+            "Delete",
+            icon=BootstrapIcon("trash", 16),
+            reactive_states={"hover": "#f0918d", "pressed": "#d9534f"},
+            key="-DELETE-",
+        ),
+        sg.Push(),
+        IconButton("", icon=BootstrapIcon("gear", 16), compound="none", key="-PREFS-"),
     ]
 
-    # ttk buttons, because `hover` above is a state a tk.Button does not have
-    # — asking for it there warns, correctly, and the page says why.
-    window = sg.Window("PySimpleGUI", layout, finalize=True, size=(420, 190),
-                       use_ttk_buttons=True,
-                       icon=BootstrapIcon("gear", 32, text).to_data())
-    # The disabled state is half of what the Delete button demonstrates, so
-    # show it rather than describing it in the caption.
+    layout = [
+        toolbar,
+        [sg.HorizontalSeparator()],
+        row("folder-fill", "assets", "#f5c46b", "4 items"),
+        row("file-earmark-text", "report.md", text, "12 kB"),
+        row("file-earmark-image", "diagram.png", accent, "84 kB"),
+        row("star-fill", "notes.md", "#f5c46b", "3 kB"),
+        [sg.HorizontalSeparator()],
+        [image("check-circle-fill", "#8fd694", 14),
+         sg.Text("Synced a moment ago", text_color=muted)],
+    ]
+
+    window = sg.Window(
+        "Files", layout, finalize=True, use_ttk_buttons=True,
+        icon=BootstrapIcon("folder-fill", 32, text).to_data(),
+    )
+    # Disabled without a caption saying so: the greyed glyph is the point.
     window["-DELETE-"].update(disabled=True)
+    window.refresh()
+    # Width set, height left to the content: sizing both leaves dead space under
+    # the last row, sizing neither leaves the toolbar cramped.
+    root = window.TKroot
+    root.update_idletasks()
+    root.geometry(f"420x{root.winfo_reqheight()}")
     window.refresh()
     capture(window.TKroot, out)
     window.close()

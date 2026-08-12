@@ -15,10 +15,10 @@ PySimpleGUI
       For anything that takes an image: ``sg.Image``, ``sg.Tab``, the window icon, icon-only buttons.
 
 .. figure:: ../assets/pysimplegui_icons.png
-   :alt: A PySimpleGUI window with icon buttons and image elements, all drawn from icon fonts.
+   :alt: A small PySimpleGUI file browser with icons on its toolbar buttons, beside each file, and in the status line.
    :align: center
 
-   The top row is :class:`~tkinter_icons.extensions.psg.IconButton`, with Delete shown disabled. The bottom row is ``to_data()`` bytes on an ``sg.Image`` and an icon-only ``sg.Button``.
+   Every icon here is a font glyph rendered by ``tkinter-icons``, including the one in the title bar.
 
 Installing
 ----------
