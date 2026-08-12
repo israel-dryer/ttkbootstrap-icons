@@ -46,7 +46,7 @@ Buttons
 
    window = sg.Window("Editor", layout, finalize=True)
 
-Give the icon the pixel size you want it drawn at, and nothing else — **no color**. By default the icon takes the button's own text color, so it matches the theme without being told to, and any color you pass the icon is discarded. Pass one only with ``reactive_states=False``, below.
+Give the icon the pixel size you want it drawn at. **Leave the color alone and it takes the button's**, so icons match your theme without being told to — which is why there is no color above. Give the icon a color and that color is kept, while hover, press and disable still follow the button.
 
 The icon is applied when the window is built, before it is shown.
 

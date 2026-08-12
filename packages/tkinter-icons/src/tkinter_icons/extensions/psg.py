@@ -28,6 +28,7 @@ beside text, or has to react to what the button is doing.
 from __future__ import annotations
 
 import importlib
+import inspect
 import tkinter as tk
 import warnings
 from tkinter import ttk
@@ -88,6 +89,26 @@ def _import_psg():
         raise PySimpleGUINotInstalled(_not_installed_message()) from exc
 
 
+def _chosen_color(icon: Icon) -> Optional[str]:
+    """The color the caller asked for, or `None` if the icon was left as-is.
+
+    An `Icon` records its color but not whether anyone chose it, so the
+    constructor default is read off the signature and compared. Reading it
+    rather than hard-coding ``"black"`` means this cannot drift if that default
+    ever changes.
+
+    The one thing it cannot tell apart is a deliberate black from a defaulted
+    one, and that is harmless in practice: a button whose text is black gives a
+    black icon either way, and on a button whose text is not black, asking for
+    black is not what anyone meant.
+    """
+    try:
+        default = inspect.signature(type(icon).__init__).parameters["color"].default
+    except (ValueError, KeyError):  # pragma: no cover - a pack with an odd signature
+        default = "black"
+    return None if icon.color == default else icon.color
+
+
 def _hex_color(widget, color) -> Optional[str]:
     """Normalize a Tk color into something Pillow can parse.
 
@@ -120,11 +141,15 @@ def _build_icon_button(sg) -> type:
             args: Positional arguments for ``sg.Button``, i.e. the button text.
             icon: The icon to draw. Constructing one costs nothing — an `Icon`
                 renders on demand, not on construction — so building it inline
-                in a layout is fine.
+                in a layout is fine. **Leave its color unset** and the icon
+                takes the button's, so it matches the theme without being told
+                to; **give it one** and that color is kept for the resting
+                state while the others still follow the button.
             reactive_states: ``True`` to follow the button's own colors,
                 ``False`` to draw the icon exactly as given, or a mapping of
                 state name to either a color or a ``{"name": ..., "color": ...}``
-                dict, which can swap the glyph as well as tint it.
+                dict, which can swap the glyph as well as tint it. A ``""``
+                entry names the resting state and outranks the icon's color.
             compound: Where the icon sits relative to the text, as Tk means it.
                 Pass ``"none"`` for a button with **no text**: the default
                 ``"left"`` reserves a text slot, and on ttk that is not free —
@@ -242,7 +267,20 @@ def _build_icon_button(sg) -> type:
                 statespec = [(_TTK_STATES.get(state, state), spec)
                              for state, spec in self._reactive_states.items()]
             self._icon.map(self._widget, statespec=statespec, mode="replace")
-            self._state_colors = {"": self._ttk_parent_foreground()}
+
+            # A color the caller chose wins for the resting state. It has to be
+            # a second, merging call: handing Icon.map a statespec makes it use
+            # only that spec, so folding "" into the first call would discard
+            # the states derived from the style. Merging keeps them and
+            # overwrites the one entry.
+            chosen = _chosen_color(self._icon)
+            if chosen is not None and not self._has_own_resting_spec():
+                self._icon.map(self._widget, statespec=[("", chosen)], mode="merge")
+            self._state_colors = {"": chosen or self._ttk_parent_foreground()}
+
+        def _has_own_resting_spec(self) -> bool:
+            """Whether `reactive_states` names the resting state itself."""
+            return isinstance(self._reactive_states, Mapping) and "" in self._reactive_states
 
         def _ttk_parent_foreground(self) -> Optional[str]:
             """The style foreground the ttk icons were last derived from."""
@@ -341,6 +379,14 @@ def _build_icon_button(sg) -> type:
                     return spec
             elif self._reactive_states is False:
                 return self._icon.color
+
+            # A color the caller chose wins for the resting state; the others
+            # still follow the button, so a chosen color does not freeze the
+            # icon against being greyed out when the button is disabled.
+            if state == "":
+                chosen = _chosen_color(self._icon)
+                if chosen is not None:
+                    return chosen
             return _hex_color(self._widget, self._widget.cget(_TK_STATE_COLORS[state]))
 
         def _sync_tk_image(self, _event=None) -> None:

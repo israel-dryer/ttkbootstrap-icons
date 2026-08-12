@@ -158,7 +158,9 @@ class TestIconButton:
         windows = []
 
         def make(**kwargs):
-            kwargs.setdefault("icon", Icon(sample_name, 24, "#ff0000"))
+            # No color: the documented default, where the icon follows the
+            # button. Tests that need a chosen color pass one.
+            kwargs.setdefault("icon", Icon(sample_name, 24))
             use_ttk = kwargs.pop("use_ttk_buttons", True)
             button = IconButton("Go", key="-B-", use_ttk_buttons=use_ttk, **kwargs)
             try:
@@ -295,6 +297,44 @@ class TestIconButton:
         window.refresh()
         assert str(button.Widget.cget("image")) == rest
 
+    def test_an_unset_color_follows_the_button(self, build, sample_name):
+        """The whole reason the examples pass no color."""
+        from tkinter_icons import Icon
+
+        button, _window = build(use_ttk_buttons=False, icon=Icon(sample_name, 24))
+        foreground = button.Widget.cget("foreground")
+        expected = button.Widget.winfo_rgb(foreground)
+        actual = button.Widget.winfo_rgb(button._state_colors[""])
+        assert actual == expected
+
+    def test_a_chosen_color_is_kept(self, build, sample_name):
+        """Silently overriding an argument the caller wrote is the failure mode
+        this project keeps writing guards against."""
+        from tkinter_icons import Icon
+
+        button, _window = build(use_ttk_buttons=False, icon=Icon(sample_name, 24, "#ff00ff"))
+        assert button._state_colors[""] == "#ff00ff"
+
+    def test_a_chosen_color_does_not_freeze_the_other_states(self, build, sample_name):
+        """Choosing a resting color must not opt out of reacting."""
+        from tkinter_icons import Icon
+
+        button, _window = build(use_ttk_buttons=False, icon=Icon(sample_name, 24, "#ff00ff"))
+        assert button._state_colors[""] == "#ff00ff"
+        assert button._state_colors["disabled"] != "#ff00ff"
+        assert "disabled" in button._state_images
+
+    def test_a_resting_entry_in_reactive_states_outranks_the_icon(self, build, sample_name):
+        """Two ways to name the resting color, and the explicit one wins."""
+        from tkinter_icons import Icon
+
+        button, _window = build(
+            use_ttk_buttons=False,
+            icon=Icon(sample_name, 24, "#ff00ff"),
+            reactive_states={"": "#00ff00"},
+        )
+        assert button._state_colors[""] == "#00ff00"
+
     def test_a_color_change_re_tints_the_icon(self, build):
         """update(button_color=...) moves what the icon was derived from."""
         button, window = build(use_ttk_buttons=False)
@@ -302,6 +342,15 @@ class TestIconButton:
         button.update(button_color=("#00ff00", None))
         window.refresh()
         assert button._state_colors[""] != before[""]
+
+    def test_a_chosen_color_survives_a_button_color_change(self, build, sample_name):
+        """The caller chose it, so a later theme-ish change must not take it."""
+        from tkinter_icons import Icon
+
+        button, window = build(use_ttk_buttons=False, icon=Icon(sample_name, 24, "#ff00ff"))
+        button.update(button_color=("#00ff00", None))
+        window.refresh()
+        assert button._state_colors[""] == "#ff00ff"
 
     def test_the_icon_can_be_swapped(self, build, icon_set, sample_name):
         """A play/pause button is two glyphs on one element."""
