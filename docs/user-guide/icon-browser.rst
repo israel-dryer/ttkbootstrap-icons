@@ -9,6 +9,7 @@ Icon names are impossible to guess and tedious to look up on sixteen different w
 
 .. image:: /assets/browser.png
    :alt: The icon browser, showing a searchable grid of icons with a detail panel
+   :class: window-screenshot
 
 It lists every pack you have installed, in one window.
 

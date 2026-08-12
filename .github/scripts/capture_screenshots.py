@@ -275,7 +275,10 @@ def pysimplegui(out: Path) -> None:
 
     window = sg.Window(
         "Files", layout, finalize=True, use_ttk_buttons=True,
-        icon=BootstrapIcon("folder-fill", 32, text).to_data(),
+        # Not `text`: the title bar and taskbar are drawn by the OS, not on
+        # the theme's background, so the theme's foreground colour is the wrong
+        # one there — white on a light title bar is invisible.
+        icon=BootstrapIcon("folder-fill", 32, "#d9922e").to_data(),
     )
     # Disabled without a caption saying so: the greyed glyph is the point.
     window["-DELETE-"].update(disabled=True)

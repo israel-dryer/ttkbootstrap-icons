@@ -17,6 +17,7 @@ PySimpleGUI
 .. figure:: ../assets/pysimplegui_icons.png
    :alt: A small PySimpleGUI file browser with icons on its toolbar buttons, beside each file, and in the status line.
    :align: center
+   :class: window-screenshot
 
    Every icon here is a font glyph rendered by ``tkinter-icons``, including the one in the title bar.
 

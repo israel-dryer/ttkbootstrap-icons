@@ -282,3 +282,29 @@ html[data-theme="dark"] {
     height: 2.25rem;
     width: auto;
 }
+
+/* Full-window screenshots. Matches the treatment bootstack and ttkbootstrap
+   use, so the family's docs look like one set: a themed hairline in place of
+   the desktop the window was cropped from, and a shadow to lift it off the
+   page. The border token follows light/dark by itself. */
+.window-screenshot {
+    border-radius: 6px;
+    border: 1px solid var(--pst-color-border);
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.16);
+}
+
+html[data-theme="dark"] .window-screenshot {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+}
+
+/* pydata paints a white plate and its own radius behind content images in dark
+   mode (`.bd-content img:not(.only-dark,.dark-light)`), which flashes at the
+   corners while the image decodes. These captures already carry their window's
+   own background, so strip the plate but keep the radius above. Matching the
+   theme's specificity with `.bd-content img.<class>`; this file loads later,
+   so it wins. */
+html[data-theme="dark"] .bd-content img.window-screenshot {
+    background-color: transparent !important;
+    border-radius: 6px !important;
+    filter: none !important;
+}
