@@ -87,31 +87,34 @@ Changing the icon later
 Everything that is not a button
 -------------------------------
 
-Elsewhere PySimpleGUI wants image **bytes**. Build the icon the same way and ask for its data — but here there is no button to take a color from, so give it one:
+Elsewhere PySimpleGUI wants image **bytes**. Build the icon the same way and ask for its data. There is no button here to take a color from, so give it one — and take it from the theme rather than typing a color in, since PySimpleGUI will tell you:
 
 .. code-block:: python
 
-   white = "#FFFFFF"
+   text = sg.theme_text_color()
+   on_button = sg.theme_button_color_text()
 
    layout = [
-       [sg.Image(data=BootstrapIcon("house", 16, white).to_data()), sg.Text("Dashboard")],
-       [sg.Button(image_data=BootstrapIcon("bell", 16, white).to_data(), key="-BELL-")],
+       [sg.Image(data=BootstrapIcon("house", 16, text).to_data()), sg.Text("Dashboard")],
+       [sg.Button(image_data=BootstrapIcon("bell", 16, on_button).to_data(), key="-BELL-")],
        [sg.TabGroup([[
            sg.Tab("Home", [[sg.Text("...")]],
-                  image_source=BootstrapIcon("house", 16, white).to_data()),
+                  image_source=BootstrapIcon("house", 16, text).to_data()),
        ]])],
    ]
 
    window = sg.Window(
        "Dashboard", layout, finalize=True,
-       icon=BootstrapIcon("gear", 32, white).to_data(),
+       icon=BootstrapIcon("gear", 32, text).to_data(),
    )
+
+Those getters need no window and are readable while you are still writing the layout. Use the right one for the place the icon lands: under ``DarkAmber``, text is ``#fdcb52`` and text on a button is ``#000000``.
 
 The same bytes work at runtime — ``window["-IMG-"].update(data=...)``.
 
 .. tip::
 
-   :meth:`Icon.render_data <tkinter_icons.Icon.render_data>` does the same without an instance: ``BootstrapIcon.render_data("house", 16, white)``.
+   :meth:`Icon.render_data <tkinter_icons.Icon.render_data>` does the same without an instance: ``BootstrapIcon.render_data("house", 16, text)``.
 
 Caveats
 -------
@@ -124,7 +127,7 @@ Caveats
 
 **A tab icon does not react to selection.** ``sg.Tab(image_source=...)`` sets a fixed per-tab image, and ttk's style map does not override it. If you want the current tab marked, swap the image yourself on the tab-changed event — ``window["-TABS-"].Widget.tab(index, image=...)``, keeping a reference to each ``tk.PhotoImage``.
 
-**A theme set with** ``sg.theme()`` **does not change a window that already exists**, in PySimpleGUI or here. Build the window after setting the theme, and its icons will be colored to match.
+**A theme set with** ``sg.theme()`` **does not change a window that already exists**, in PySimpleGUI or here. Build the window after setting the theme and its icons match it — automatically for :class:`~tkinter_icons.extensions.psg.IconButton`, and through ``sg.theme_text_color()`` for bytes, which are a snapshot of whatever the theme said when you asked.
 
 .. versionadded:: 5.1.0
    ``tkinter_icons.extensions.psg``.

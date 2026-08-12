@@ -236,10 +236,11 @@ def pysimplegui(out: Path) -> None:
     from tkinter_icons.extensions.psg import IconButton
 
     sg.theme("DarkBlue3")
-    # Only the bytes need a color. An IconButton takes the button's own text
-    # color, so passing one there would be discarded -- which is what the page
-    # says, so the code it publishes had better not contradict it.
-    white = "#FFFFFF"
+    # Only the bytes need a color: an IconButton takes the button's own. And
+    # the color comes from the theme rather than being typed in, which is what
+    # the page teaches, so the code it publishes had better not contradict it.
+    text = sg.theme_text_color()
+    on_button = sg.theme_button_color_text()
 
     layout = [
         [sg.Text("IconButton — icon beside text, follows the button")],
@@ -259,10 +260,10 @@ def pysimplegui(out: Path) -> None:
         ],
         [sg.Text("to_data() bytes — no deferral, no subclass, no reacting")],
         [
-            sg.Image(data=BootstrapIcon("house", 16, white).to_data()),
+            sg.Image(data=BootstrapIcon("house", 16, text).to_data()),
             sg.Text("Dashboard"),
             sg.Push(),
-            sg.Button(image_data=BootstrapIcon("bell", 16, white).to_data(), key="-BELL-"),
+            sg.Button(image_data=BootstrapIcon("bell", 16, on_button).to_data(), key="-BELL-"),
         ],
     ]
 
@@ -270,7 +271,7 @@ def pysimplegui(out: Path) -> None:
     # — asking for it there warns, correctly, and the page says why.
     window = sg.Window("PySimpleGUI", layout, finalize=True, size=(420, 190),
                        use_ttk_buttons=True,
-                       icon=BootstrapIcon("gear", 32, white).to_data())
+                       icon=BootstrapIcon("gear", 32, text).to_data())
     # The disabled state is half of what the Delete button demonstrates, so
     # show it rather than describing it in the caption.
     window["-DELETE-"].update(disabled=True)
