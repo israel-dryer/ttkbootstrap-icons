@@ -53,10 +53,35 @@ def run_child(body: str) -> subprocess.CompletedProcess:
 
 
 def psg():
-    """PySimpleGUI, or skip."""
-    return pytest.importorskip(
-        "PySimpleGUI", reason="the PySimpleGUI integration needs PySimpleGUI installed",
-    )
+    """PySimpleGUI, or skip.
+
+    Reaching PySimpleGUI can construct a Tk interpreter, and that is not
+    reproducible across platforms: on Windows with 3.13 neither importing it
+    nor building `IconButton` creates one, while on the 3.14 runner something
+    on this path does. Tk 8.6 cannot reliably create a *second* interpreter in
+    a process, and which test trips that depends on ordering — so an unguarded
+    call here fails intermittently on one job of one interpreter rather than
+    reproducibly anywhere. The same `TclError` is what `conftest.root` skips
+    on, and it is the same skip for the same reason.
+    """
+    tkinter = pytest.importorskip("tkinter")
+    try:
+        return pytest.importorskip(
+            "PySimpleGUI", reason="the PySimpleGUI integration needs PySimpleGUI installed",
+        )
+    except tkinter.TclError as exc:  # pragma: no cover - ordering-dependent
+        pytest.skip(f"PySimpleGUI could not create a Tk interpreter: {exc}")
+
+
+def icon_button():
+    """The lazily built `IconButton`, or skip for the reasons `psg` gives."""
+    tkinter = pytest.importorskip("tkinter")
+    psg()
+    try:
+        from tkinter_icons.extensions.psg import IconButton
+    except tkinter.TclError as exc:  # pragma: no cover - ordering-dependent
+        pytest.skip(f"IconButton could not be built without a Tk interpreter: {exc}")
+    return IconButton
 
 
 class TestTheIntegrationStaysOptional:
@@ -131,14 +156,11 @@ class TestTheIntegrationStaysOptional:
 class TestTheClass:
     def test_iconbutton_subclasses_the_real_button(self):
         sg = psg()
-        from tkinter_icons.extensions.psg import IconButton
-
-        assert issubclass(IconButton, sg.Button)
+        assert issubclass(icon_button(), sg.Button)
 
     def test_the_class_is_built_once(self):
         """Built lazily, then cached -- two imports must not be two classes."""
-        psg()
-        from tkinter_icons.extensions.psg import IconButton
+        IconButton = icon_button()
         from tkinter_icons.extensions import psg as module
 
         assert module.IconButton is IconButton
