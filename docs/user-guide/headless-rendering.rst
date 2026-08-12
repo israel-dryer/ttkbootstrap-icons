@@ -93,6 +93,41 @@ Exporting a set of icons
 
 No root window is created anywhere in that loop, so it runs under ``xvfb``-less CI, in a container, or from a build script.
 
+.. _icons-as-bytes:
+
+Getting an icon as bytes
+------------------------
+
+:meth:`~tkinter_icons.Icon.render_data` is :meth:`~tkinter_icons.Icon.render_pil` with the image already encoded. Same arguments, same name resolution, same failures — it returns the bytes of a PNG instead of a Pillow image:
+
+.. code-block:: python
+
+   from tkinter_icons import MaterialIcon
+
+   data = MaterialIcon.render_data("home", size=24, color="#0F766E")
+
+That is the form a GUI toolkit wants when it builds its interface before there is a window to attach an image to. Tk's own :class:`~tkinter.PhotoImage` takes it, which is where the name comes from, and toolkits layered on Tk inherit the same parameter:
+
+.. code-block:: python
+
+   import tkinter as tk
+
+   from tkinter_icons import MaterialIcon
+
+   root = tk.Tk()
+   photo = tk.PhotoImage(data=MaterialIcon.render_data("home", size=24, color="#0F766E"))
+
+The bytes are raw PNG rather than base64. Tk's PNG reader takes binary data directly, so encoding it would cost roughly a third more for no benefit; base64 would only buy portability to Tk 8.5, which cannot read PNG at all.
+
+There is an instance form too, :meth:`~tkinter_icons.Icon.to_data`, standing to ``render_data`` exactly as :meth:`~tkinter_icons.Icon.to_pil` stands to ``render_pil``.
+
+.. note::
+
+   Bytes are a snapshot. Nothing about them follows a theme or a widget state, so an icon that has to react to hover, pressed or disabled wants a live :class:`~tkinter_icons.Icon` and :meth:`Icon.map <tkinter_icons.Icon.map>` — see :doc:`stateful-icons`.
+
+.. versionadded:: 5.1.0
+   ``render_data`` and ``to_data``.
+
 .. _explicit-icon-sets:
 
 Being explicit about the icon set

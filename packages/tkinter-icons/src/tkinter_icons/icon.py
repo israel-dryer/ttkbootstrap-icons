@@ -29,6 +29,7 @@ its first line.
 
 from __future__ import annotations
 
+import io
 from abc import ABC
 from typing import Any, ClassVar, Mapping, Optional
 
@@ -287,6 +288,16 @@ class Icon(StatefulIconMixin, ABC):
             icon_set=self._icon_set, options=self._options,
         )
 
+    def to_data(self) -> bytes:
+        """Render this icon to PNG bytes, bypassing Tk entirely.
+
+        .. versionadded:: 5.1.0
+        """
+        return self.render_data(
+            self.name, self.size, self.color,
+            icon_set=self._icon_set, options=self._options,
+        )
+
     @classmethod
     def render_pil(
         cls,
@@ -390,6 +401,65 @@ class Icon(StatefulIconMixin, ABC):
             ink=icon_set.ink(name),
             options=options or icon_set.options,
         )
+
+    @classmethod
+    def render_data(
+        cls,
+        name: str,
+        size: int = 24,
+        color: str = "black",
+        style: Optional[str] = None,
+        *,
+        icon_set: Optional[IconSet] = None,
+        options: Optional[RenderOptions] = None,
+    ) -> bytes:
+        """Render a glyph to PNG bytes without needing a Tk root.
+
+        `render_pil` for anything that draws its own pixels; this for anything
+        that takes an encoded image. Toolkits that build their interface before
+        a window exists — PySimpleGUI's `data=`, and Tk's own
+        `PhotoImage(data=...)`, which is where the name comes from — accept an
+        image as bytes and nothing else, and this is how an icon reaches them.
+
+        Arguments, resolution and failures are `render_pil`'s exactly; only the
+        return type differs. See it for what `style` and `icon_set` do and for
+        which mistakes raise.
+
+        The bytes are **raw PNG, not base64**. Tk's PNG reader takes binary
+        data directly, so encoding it would cost about a third more for
+        nothing, and base64 would only buy portability to Tk 8.5, which cannot
+        read PNG at all. PNG rather than GIF because every glyph here is
+        antialiased against transparency, which GIF cannot carry.
+
+        Nothing is cached, matching `render_pil`. Encoding is cheap beside
+        rendering, and the expensive part — loading and sizing the font — is
+        already cached in `render.py`. A caller rendering the same icon in a
+        loop should hold the result, as it would with any other render.
+
+        .. versionadded:: 5.1.0
+
+        Args:
+            name: Icon name, as `render_pil` takes it.
+            size: Pixel size.
+            color: Foreground color.
+            style: Which of the pack's styles to draw from.
+            icon_set: Which set to draw from.
+            options: Overrides of the set's render options.
+
+        Returns:
+            The bytes of a square RGBA PNG.
+
+        Raises:
+            RuntimeError: As `render_pil`.
+            ValueError: As `render_pil`.
+            KeyError: As `render_pil`.
+        """
+        image = cls.render_pil(
+            name, size, color, style, icon_set=icon_set, options=options,
+        )
+        buffer = io.BytesIO()
+        image.save(buffer, format="PNG")
+        return buffer.getvalue()
 
     @classmethod
     def initialize_with_provider(cls, provider: BaseFontProvider, style: str | None = None) -> IconSet:

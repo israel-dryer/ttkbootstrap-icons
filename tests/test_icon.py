@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
+import base64
+import binascii
+import io
+
 import pytest
+from PIL import Image
 
 from tkinter_icons.icon import Icon, create_transparent_icon
 from tkinter_icons.providers import NO_ICON
@@ -66,6 +71,80 @@ class TestRenderPil:
     def test_to_pil_matches_render_pil(self, icon_set, sample_name):
         icon = Icon(sample_name, 24, "#00ff00")
         assert icon.to_pil().tobytes() == Icon.render_pil(sample_name, 24, "#00ff00").tobytes()
+
+
+class TestRenderData:
+    """PNG bytes, for toolkits that take an encoded image rather than pixels.
+
+    Every assertion here re-opens the bytes and looks at them. A name that
+    draws nothing still encodes to a perfectly valid, perfectly transparent
+    PNG, so checking that bytes came back — or that nothing raised — would
+    pass on a blank.
+    """
+
+    def test_the_bytes_are_a_png_carrying_ink(self, icon_set, sample_name):
+        data = Icon.render_data(sample_name, 24, "#000000")
+        assert data[:8] == b"\x89PNG\r\n\x1a\n"
+
+        image = Image.open(io.BytesIO(data))
+        assert image.format == "PNG"
+        assert image.size == (24, 24)
+        assert image.convert("RGBA").getchannel("A").getbbox() is not None
+
+    def test_it_is_not_base64(self, icon_set, sample_name):
+        """The reflex is to encode, and it would cost a third more for nothing."""
+        data = Icon.render_data(sample_name, 24, "#000000")
+        assert len(data) < len(base64.b64encode(data))
+        with pytest.raises(binascii.Error):
+            base64.b64decode(data, validate=True)
+
+    def test_size_and_snapping_follow_render_pil(self, icon_set, sample_name):
+        """15 snaps to 16, and the encoded image has to agree."""
+        image = Image.open(io.BytesIO(Icon.render_data(sample_name, 15, "#000000")))
+        assert image.size == (16, 16)
+
+    def test_color_reaches_the_pixels(self, icon_set, sample_name):
+        """Two colors must not encode to the same bytes."""
+        red = Icon.render_data(sample_name, 24, "#ff0000")
+        blue = Icon.render_data(sample_name, 24, "#0000ff")
+        assert red != blue
+
+        # getcolors, not getdata: getdata is deprecated for removal in Pillow 14.
+        colors = Image.open(io.BytesIO(red)).convert("RGBA").getcolors(maxcolors=1 << 16)
+        opaque = [color for _count, color in colors if color[3] == 255]
+        assert opaque, "no fully opaque pixel to read the color from"
+        assert all(color[0] > color[2] for color in opaque)
+
+    def test_transparency_survives_the_encode(self, icon_set, sample_name):
+        """PNG is chosen over GIF for this; a glyph is antialiased against nothing."""
+        image = Image.open(io.BytesIO(Icon.render_data(sample_name, 24, "#000000")))
+        assert image.mode == "RGBA"
+        alphas = {color[3] for _count, color in image.getcolors(maxcolors=1 << 16)}
+        assert any(0 < alpha < 255 for alpha in alphas), "no antialiased edge survived"
+
+    def test_no_icon_encodes_a_blank(self, icon_set):
+        """`NO_ICON` is the one blank anyone asks for, so it must not raise."""
+        image = Image.open(io.BytesIO(Icon.render_data(NO_ICON, 24, "#000000")))
+        assert image.convert("RGBA").getbbox() is None
+
+    def test_it_fails_exactly_where_render_pil_does(self, icon_set):
+        with pytest.raises(KeyError, match="definitely-not-an-icon"):
+            Icon.render_data("definitely-not-an-icon", 24, "#000000")
+
+    def test_without_any_set_it_explains_itself(self, sample_name):
+        Icon.cleanup()
+        with pytest.raises(RuntimeError, match="Initialize a provider"):
+            Icon.render_data(sample_name)
+
+    def test_to_data_matches_render_data(self, icon_set, sample_name):
+        icon = Icon(sample_name, 24, "#00ff00")
+        assert icon.to_data() == Icon.render_data(sample_name, 24, "#00ff00")
+
+    def test_the_bytes_decode_to_what_render_pil_drew(self, icon_set, sample_name):
+        """The encode must be lossless, or the two entry points disagree."""
+        drawn = Icon.render_pil(sample_name, 24, "#123456")
+        decoded = Image.open(io.BytesIO(Icon.render_data(sample_name, 24, "#123456")))
+        assert decoded.convert("RGBA").tobytes() == drawn.tobytes()
 
 
 class TestAGlyphThatCannotBeDrawnRaises:
