@@ -13,13 +13,12 @@ there, since a `PhotoImage` needs an interpreter that does not exist yet.
     window = sg.Window("App", layout, finalize=True)
 
 PySimpleGUI is **not** a dependency of this package and nothing from it is
-redistributed here. Install it yourself, either flavor — see
-:func:`resolve_flavor`.
+redistributed here. Install it yourself.
 
 Not every icon needs this. Anything that takes an encoded image —
 ``sg.Image(data=...)``, ``sg.Tab(image_source=...)``, ``sg.Window(icon=...)``,
 and icon-*only* buttons through ``image_data=`` — can take
-:meth:`Icon.render_data <tkinter_icons.Icon.render_data>` bytes directly, with
+:meth:`Icon.to_data <tkinter_icons.Icon.to_data>` bytes directly, with
 no deferral and no subclass. Reach for :class:`IconButton` when the icon sits
 beside text, or has to react to what the button is doing.
 
@@ -29,7 +28,6 @@ beside text, or has to react to what the button is doing.
 from __future__ import annotations
 
 import importlib
-import sys
 import tkinter as tk
 import warnings
 from tkinter import ttk
@@ -37,10 +35,7 @@ from typing import Any, Mapping, Optional
 
 from ..icon import Icon
 
-__all__ = ["IconButton", "resolve_flavor", "PySimpleGUINotInstalled"]
-
-#: Checked in this order, and only imported if neither is already loaded.
-FLAVORS = ("FreeSimpleGUI", "PySimpleGUI")
+__all__ = ["IconButton", "PySimpleGUINotInstalled"]
 
 #: ttk's own name for each state. ttk calls hover "active", which is why this
 #: module does not reuse that word. Unknown keys pass through untouched, so a
@@ -66,50 +61,31 @@ _TK_STATE_EVENTS = ("<ButtonPress-1>", "<ButtonRelease-1>", "<Enter>", "<Leave>"
 
 
 class PySimpleGUINotInstalled(ImportError):
-    """Neither PySimpleGUI nor FreeSimpleGUI could be imported."""
+    """PySimpleGUI could not be imported."""
 
 
 def _not_installed_message() -> str:
     lines = [
         "This integration needs PySimpleGUI, which tkinter-icons does not install for you.",
         "",
-        "Either flavor works — they are the same API for what this module uses:",
-        "  pip install PySimpleGUI      # LGPL v3 as of version 6",
-        "  pip install FreeSimpleGUI    # the LGPL fork of the 4.x line",
+        "  pip install PySimpleGUI",
         "",
         "Icons that do not need this module — sg.Image, sg.Tab, sg.Window(icon=) —",
-        "take Icon.render_data() bytes directly.",
+        "take Icon.to_data() bytes directly.",
     ]
     return "\n".join(lines)
 
 
-def resolve_flavor():
-    """Return the PySimpleGUI flavor this process is using.
-
-    **A flavor already in `sys.modules` wins**, and that rule is the whole
-    reason this is not a plain ``try: import``. :class:`IconButton` subclasses
-    the flavor's ``Button``, so if the application did ``import FreeSimpleGUI``
-    while this module independently imported ``PySimpleGUI``, the layout would
-    mix element classes from two unrelated copies of the library. Asking what
-    is already loaded lets the application answer for itself.
-
-    Only when neither is loaded is one imported, `FLAVORS` in order. That case
-    means this module was imported before the application's own GUI import,
-    which is worth avoiding: import your framework first.
+def _import_psg():
+    """Import PySimpleGUI, or explain how to install it.
 
     Raises:
-        PySimpleGUINotInstalled: If neither can be imported.
+        PySimpleGUINotInstalled: If it is not installed.
     """
-    for name in FLAVORS:
-        module = sys.modules.get(name)
-        if module is not None:
-            return module
-    for name in FLAVORS:
-        try:
-            return importlib.import_module(name)
-        except ImportError:
-            continue
-    raise PySimpleGUINotInstalled(_not_installed_message())
+    try:
+        return importlib.import_module("PySimpleGUI")
+    except ImportError as exc:
+        raise PySimpleGUINotInstalled(_not_installed_message()) from exc
 
 
 def _hex_color(widget, color) -> Optional[str]:
@@ -131,10 +107,10 @@ def _hex_color(widget, color) -> Optional[str]:
 
 
 def _build_icon_button(sg) -> type:
-    """Build `IconButton` against one flavor's `Button`.
+    """Build `IconButton` on PySimpleGUI's `Button`.
 
-    A class statement needs its base at class-creation time, so this runs once
-    per flavor rather than at module import — see the module `__getattr__`.
+    A class statement needs its base at class-creation time, so this runs on
+    first use rather than at module import — see the module `__getattr__`.
     """
 
     class IconButton(sg.Button):
@@ -158,15 +134,12 @@ def _build_icon_button(sg) -> type:
             kwargs: Further keyword arguments for ``sg.Button``.
 
         State names describe the interaction — ``hover``, ``pressed``,
-        ``disabled`` — rather than either toolkit's vocabulary, because the two
-        disagree about the word "active": in ttk it means hover, on a
-        `tk.Button` it means pressed. Each path translates. A `tk.Button` has
-        no hover state at all, so asking for ``hover`` there warns rather than
-        silently doing nothing.
+        ``disabled`` — rather than either toolkit's vocabulary, because Tk and
+        ttk disagree about the word "active": in ttk it means hover, on a
+        `tk.Button` it means pressed. Each path translates. A `tk.Button`
+        cannot carry a separate hover image at all, so asking for ``hover``
+        there warns rather than silently doing nothing.
         """
-
-        #: Which flavor this class was built against, for the mixing check.
-        _flavor = sg.__name__.split(".")[0]
 
         def __init__(
             self,
@@ -201,10 +174,6 @@ def _build_icon_button(sg) -> type:
             self._widget = widget
             if widget is None:
                 return
-            # Here rather than at attach: this setter runs synchronously inside
-            # PySimpleGUI's packer, so the error propagates out of sg.Window().
-            # An exception from the idle callback would only be printed by Tk.
-            self._check_one_flavor()
             # Idle is the trigger, not <Map>. PySimpleGUI never yields to the
             # event loop while configuring an element, so the first idle after
             # the widget exists is the first moment it is fully configured —
@@ -243,25 +212,6 @@ def _build_icon_button(sg) -> type:
             # A widget option beats the style, so this wins over the compound
             # Icon.map sets, and covers both paths in one place.
             self._widget.configure(compound=self._compound)
-
-        def _check_one_flavor(self) -> None:
-            """Fail loudly if this button ended up in the other flavor's window.
-
-            `resolve_flavor` picks from `sys.modules` precisely to avoid this,
-            but it can still guess wrong if this module was imported before the
-            application's GUI import. The symptoms otherwise are remote from
-            the cause, so name it here, where both objects are in hand.
-            """
-            window = getattr(self, "ParentForm", None)
-            if window is None:
-                return
-            theirs = type(window).__module__.split(".")[0]
-            if theirs != self._flavor:
-                raise RuntimeError(
-                    f"{type(self).__name__} was built against {self._flavor!r} but this window "
-                    f"is {theirs!r}. Import {theirs} before tkinter_icons.extensions.psg, so the "
-                    f"integration binds to the same library your layout uses."
-                )
 
         # -- ttk: real per-state images -------------------------------------
 
@@ -496,21 +446,20 @@ def _build_icon_button(sg) -> type:
     return IconButton
 
 
-_ICON_BUTTONS: dict[str, type] = {}
+_ICON_BUTTON: list = []
 
 
 def __getattr__(name: str):
     """Build `IconButton` on first use, not at import.
 
-    Deferring means ``import tkinter_icons.extensions.psg`` pulls in no GUI
-    toolkit, and — more usefully — that the flavor is resolved as late as
-    possible, giving the application every chance to have imported its own
-    first. See :func:`resolve_flavor`.
+    A class statement needs its base at class-creation time, and the base is
+    PySimpleGUI's `Button`. Building it here rather than at module scope means
+    ``import tkinter_icons.extensions.psg`` pulls in no GUI toolkit, and that a
+    missing PySimpleGUI is reported by :class:`PySimpleGUINotInstalled` rather
+    than by a bare `ModuleNotFoundError` from an import line.
     """
     if name != "IconButton":
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-    sg = resolve_flavor()
-    flavor = sg.__name__.split(".")[0]
-    if flavor not in _ICON_BUTTONS:
-        _ICON_BUTTONS[flavor] = _build_icon_button(sg)
-    return _ICON_BUTTONS[flavor]
+    if not _ICON_BUTTON:
+        _ICON_BUTTON.append(_build_icon_button(_import_psg()))
+    return _ICON_BUTTON[0]

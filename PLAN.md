@@ -20,15 +20,14 @@ PySimpleGUI is declarative: constructing `sg.Button` creates no Tk widget, so `e
 
 ## What was built
 
-`tkinter_icons/extensions/__init__.py`, which imports nothing, and `extensions/psg.py`, which holds `IconButton`, `resolve_flavor` and `PySimpleGUINotInstalled`.
+`tkinter_icons/extensions/__init__.py`, which imports nothing, and `extensions/psg.py`, which holds `IconButton` and `PySimpleGUINotInstalled`.
 
 ## What must hold
 
 - **The base package never gains a load-time dependency on a GUI toolkit.** `import tkinter_icons` must not import PySimpleGUI, and neither must `import tkinter_icons.extensions`.
 - **The icon is on the button before the window is first painted.** Not merely "eventually correct" — the failure this replaces was visible.
 - **The window does not resize after it is shown.**
-- **A missing dependency explains itself**, as an `ImportError`, naming both flavors and the path that needs no install at all.
-- **One flavor per process.** `IconButton` subclasses one library's `Button`; a layout that mixes two must raise rather than misbehave later.
+- **A missing dependency explains itself**, as an `ImportError`, naming the install command and the path that needs no install at all.
 - **`hover` is unreachable on `tk` and says so.** Silently dropping it is the failure mode this project keeps writing guards against.
 - **The tk icon reflects the widget's own `-state`**, never an inference from the pointer.
 
@@ -36,13 +35,13 @@ PySimpleGUI is declarative: constructing `sg.Button` creates no Tk widget, so `e
 
 **The trigger is an idle callback scheduled when the widget is created, not `<Map>`.** `update_idletasks` does not deliver events, and PySimpleGUI sizes and places the window inside one — so `<Map>` lands after the window is on screen. Safe because the packer never yields to the event loop while configuring an element. There is **no true per-element finalize hook**: after the ttk style is applied PySimpleGUI only reads attributes on the element, so a property getter would work today and break silently on a reordering.
 
-**`Widget` is a property.** `element.Widget = tk.Button(...)` is the one reliable "the widget now exists" signal. The flavor check lives in that setter rather than in the attach, because the setter runs synchronously inside the packer — so the error propagates out of `sg.Window(...)` instead of being printed and swallowed by Tk's idle-callback handler.
+**`Widget` is a property.** `element.Widget = tk.Button(...)` is the one reliable "the widget now exists" signal, and a property setter is the only way to observe an assignment PySimpleGUI makes from outside.
 
-**`resolve_flavor` asks `sys.modules` before importing.** The application's own import decides. Only if neither is loaded is one imported, which is the case worth avoiding and is documented as "import your framework first".
+**The class is built lazily, through a module `__getattr__`.** A class statement needs its base at class-creation time, and the base is PySimpleGUI's `Button`, so building at import would import PySimpleGUI at import. Deferring it means `import tkinter_icons.extensions.psg` pulls in no toolkit, and that a missing PySimpleGUI is reported by `PySimpleGUINotInstalled` rather than by a bare `ModuleNotFoundError`.
 
-**The class is built lazily, through a module `__getattr__`.** A class statement needs its base at class-creation time, so building at import would force the flavor choice at import. Deferring it also means `import tkinter_icons.extensions.psg` pulls in no toolkit.
+**Only PySimpleGUI is targeted.** An earlier draft also resolved FreeSimpleGUI and picked between them from `sys.modules`, which brought a public `resolve_flavor`, a mixing check, a per-library class cache, and an import-order caveat on the docs page — all for a path that could not be tested here. The owner's call on 2026-08-12 was to target PySimpleGUI proper, and removing the rest deleted the branch this plan had listed as its largest untested surface.
 
-**No `[psg]` extra.** An extra cannot express "either flavor", and here an extra means an icon pack — `check_extras_cover_every_pack` is built around that. `verify_packages.py` would tolerate one, so this is keeping an invariant, not working around a limit.
+**No `[psg]` extra.** In this project an extra means an icon pack — `check_extras_cover_every_pack` is built around that. `verify_packages.py` would tolerate one, so this is keeping an invariant, not working around a limit.
 
 **PySimpleGUI is added to CI's test job.** Without it the integration would ship with no CI coverage. The absent-dependency tests still run everywhere, because they block the import in a subprocess rather than relying on it being uninstalled.
 
@@ -50,8 +49,6 @@ PySimpleGUI is declarative: constructing `sg.Button` creates no Tk widget, so `e
 
 ## Known-weak spots, stated rather than hidden
 
-- **The two-flavor path is untested.** Only PySimpleGUI is installed here; FreeSimpleGUI was deliberately not installed, since that changes the environment the release is verified in. `resolve_flavor`'s preference order and the mixing check have therefore only been exercised against one library.
-- **The mixing check compares the root module name** of the window's class against the flavor the class was built from. A vendored or re-exported PySimpleGUI would defeat it.
 - **`_refresh_for_colors` compares resolved colors**, so it catches a color moving but not a change that resolves to the same color through a different route.
 - **Nothing tests the visual result**, only that images differ and states map. The screenshot is the only thing that says the icons *read*, and it is checked by eye.
 - **The idle trigger is asserted through its consequences** — attached by the end of `finalize`, geometry stable afterward — rather than by observing which callback fired. If PySimpleGUI ever stopped calling `update_idletasks` during startup, those tests would fail, which is the intent.

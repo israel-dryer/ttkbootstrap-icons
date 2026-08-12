@@ -29,13 +29,6 @@ PySimpleGUI is not a dependency of ``tkinter-icons`` and nothing from it is bund
 
    pip install "tkinter-icons[bootstrap]" PySimpleGUI
 
-`FreeSimpleGUI <https://github.com/spyoungtech/FreeSimpleGUI>`_ works too. **Import your GUI framework first**, so the integration binds to the one your layout uses:
-
-.. code-block:: python
-
-   import PySimpleGUI as sg                             # first
-   from tkinter_icons.extensions.psg import IconButton  # then this
-
 Buttons
 -------
 

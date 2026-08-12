@@ -72,6 +72,4 @@ Optional bridges onto GUI frameworks that are not dependencies of this package. 
 .. autoclass:: IconButton
    :members: attach_icon, update
 
-.. autofunction:: resolve_flavor
-
 .. autoexception:: PySimpleGUINotInstalled

@@ -33,19 +33,18 @@ BLOCK_PSG = """
 import builtins, sys
 _real = builtins.__import__
 def _blocked(name, *args, **kwargs):
-    root = name.split(".")[0]
-    if root in ("PySimpleGUI", "FreeSimpleGUI"):
+    if name.split(".")[0] == "PySimpleGUI":
         raise ImportError("blocked for this test: " + name)
     return _real(name, *args, **kwargs)
 builtins.__import__ = _blocked
 for _name in list(sys.modules):
-    if _name.split(".")[0] in ("PySimpleGUI", "FreeSimpleGUI"):
+    if _name.split(".")[0] == "PySimpleGUI":
         del sys.modules[_name]
 """
 
 
 def run_child(body: str) -> subprocess.CompletedProcess:
-    """Run `body` in a fresh interpreter with both flavors unimportable."""
+    """Run `body` in a fresh interpreter with PySimpleGUI unimportable."""
     source = BLOCK_PSG + textwrap.dedent(body)
     return subprocess.run(
         [sys.executable, "-c", source],
@@ -54,7 +53,7 @@ def run_child(body: str) -> subprocess.CompletedProcess:
 
 
 def psg():
-    """The installed flavor, or skip."""
+    """PySimpleGUI, or skip."""
     return pytest.importorskip(
         "PySimpleGUI", reason="the PySimpleGUI integration needs PySimpleGUI installed",
     )
@@ -95,9 +94,8 @@ class TestTheIntegrationStaysOptional:
         assert result.returncode == 0, result.stderr
         message = result.stdout
         assert "pip install PySimpleGUI" in message
-        assert "pip install FreeSimpleGUI" in message
         # It must also point at the path that needs no install at all.
-        assert "render_data" in message
+        assert "to_data" in message
 
     def test_the_error_is_an_importerror(self):
         """So `except ImportError` around an optional integration still works."""
@@ -130,22 +128,15 @@ class TestTheIntegrationStaysOptional:
         assert "AttributeError" in result.stdout, result.stderr
 
 
-class TestFlavorResolution:
-    def test_a_loaded_flavor_wins_over_importing_one(self):
-        """The application's own import decides, which is the whole rule."""
-        sg = psg()
-        from tkinter_icons.extensions.psg import resolve_flavor
-
-        assert resolve_flavor() is sg
-
-    def test_iconbutton_subclasses_that_flavor(self):
+class TestTheClass:
+    def test_iconbutton_subclasses_the_real_button(self):
         sg = psg()
         from tkinter_icons.extensions.psg import IconButton
 
         assert issubclass(IconButton, sg.Button)
-        assert IconButton._flavor == "PySimpleGUI"
 
-    def test_the_class_is_built_once_per_flavor(self):
+    def test_the_class_is_built_once(self):
+        """Built lazily, then cached -- two imports must not be two classes."""
         psg()
         from tkinter_icons.extensions.psg import IconButton
         from tkinter_icons.extensions import psg as module
