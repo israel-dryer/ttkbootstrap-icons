@@ -12,7 +12,7 @@ history after the fact and are summaries rather than contemporaneous notes.
 
 <!-- release-notes-start -->
 
-## [Unreleased]
+## [5.1.0] — icons on PySimpleGUI, and no more silent blanks
 
 ### Removed
 
