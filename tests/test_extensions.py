@@ -281,8 +281,13 @@ class TestIconButton:
             state, image = settle()
             assert image == expected(state), f"after {event}: -state={state} but image did not match"
 
-        # Press reaches `active` on every platform, so the pressed image is
-        # genuinely exercised rather than only the resting one.
+        # Press *while inside* reaches `active` on both, so the pressed image
+        # is genuinely exercised rather than only the resting one. The <Enter>
+        # is load-bearing and not decoration: the loop above ends on <Leave>,
+        # and on x11 a press from outside does not set the state at all --
+        # there it is <Enter> that does, which is the same platform split this
+        # test exists to stop being written into an assertion.
+        widget.event_generate("<Enter>", x=5, y=5)
         widget.event_generate("<ButtonPress-1>", x=5, y=5)
         state, image = settle()
         assert state == "active"

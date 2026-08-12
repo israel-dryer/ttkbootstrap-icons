@@ -118,40 +118,6 @@ The same bytes work at runtime — ``window["-IMG-"].update(data=...)``.
 
    :meth:`Icon.render_data <tkinter_icons.Icon.render_data>` does the same without an instance: ``BootstrapIcon.render_data("house", 16, white)``.
 
-Tabs
-~~~~
-
-A tab icon is a fixed picture — it will not change when the tab is selected. To mark the current tab, swap it yourself when the selection changes:
-
-.. code-block:: python
-
-   import tkinter as tk
-
-   tabs = sg.TabGroup([[
-       sg.Tab("Home", [[sg.Text("...")]], image_source=BootstrapIcon("house", 16, white).to_data()),
-       sg.Tab("Alerts", [[sg.Text("...")]], image_source=BootstrapIcon("bell", 16, white).to_data()),
-   ]], key="-TABS-", enable_events=True)
-
-   window = sg.Window("App", [[tabs]], finalize=True)
-
-   # Keep these alive: the widget stores only Tk's name for an image.
-   images = {
-       (0, False): tk.PhotoImage(data=BootstrapIcon("house", 16, white).to_data()),
-       (0, True): tk.PhotoImage(data=BootstrapIcon("house-fill", 16, "#FFD166").to_data()),
-       (1, False): tk.PhotoImage(data=BootstrapIcon("bell", 16, white).to_data()),
-       (1, True): tk.PhotoImage(data=BootstrapIcon("bell-fill", 16, "#FFD166").to_data()),
-   }
-
-   while True:
-       event, values = window.read()
-       if event == sg.WINDOW_CLOSED:
-           break
-       if event == "-TABS-":
-           notebook = window["-TABS-"].Widget
-           current = notebook.index("current")
-           for index in range(notebook.index("end")):
-               notebook.tab(index, image=images[(index, index == current)])
-
 Caveats
 -------
 
@@ -160,6 +126,8 @@ Caveats
 **``image_data`` on a Button is not a substitute for** :class:`~tkinter_icons.extensions.psg.IconButton`. PySimpleGUI centers the image and sizes the button to it, so any text is drawn *on top of* the icon. Use it for icon-only buttons; use ``IconButton`` when there is a label. Bytes also never react to state or color — that is the difference between the two.
 
 **An explicit** ``size=`` **is not honored on a tk icon button.** Tk measures a button in characters while it shows text alone and in pixels once it also shows an image, so the button is auto-sized instead. ``ttk`` buttons are unaffected.
+
+**A tab icon does not react to selection.** ``sg.Tab(image_source=...)`` sets a fixed per-tab image, and ttk's style map does not override it. If you want the current tab marked, swap the image yourself on the tab-changed event — ``window["-TABS-"].Widget.tab(index, image=...)``, keeping a reference to each ``tk.PhotoImage``.
 
 **``sg.theme()`` does not change a window that already exists**, in PySimpleGUI or here. Build the window after setting the theme, and its icons will be colored to match.
 
