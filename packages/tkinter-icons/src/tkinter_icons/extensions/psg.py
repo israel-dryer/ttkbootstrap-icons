@@ -150,6 +150,11 @@ def _build_icon_button(sg) -> type:
                 state name to either a color or a ``{"name": ..., "color": ...}``
                 dict, which can swap the glyph as well as tint it. A ``""``
                 entry names the resting state and outranks the icon's color.
+                A mapping **replaces** the states rather than adding to them:
+                only the states it names react at all, so a mapping that omits
+                ``disabled`` is a button whose icon keeps its resting color
+                while the label beside it greys out. An **empty** mapping names
+                nothing, and so means exactly what ``False`` means.
             compound: Where the icon sits relative to the text, as Tk means it.
                 Pass ``"none"`` for a button with **no text**: the default
                 ``"left"`` reserves a text slot, and on ttk that is not free —
@@ -182,6 +187,14 @@ def _build_icon_button(sg) -> type:
             # something has to hold the images themselves or they are collected.
             self._state_images: dict[str, Any] = {}
             self._state_colors: dict[str, Optional[str]] = {}
+            # ttk path only. The parent style's colors the state images were
+            # last derived from, which are not the resting color.
+            self._parent_colors: Optional[tuple] = None
+            # ttk path only. The theme the state images were last built under —
+            # see `_reapply_after_theme_change`, which fires on the name moving
+            # rather than on the event.
+            self._ttk_theme: Optional[str] = None
+            self._theme_refresh_pending = False
             self._tk_bound = False
             self._widget = None
             super().__init__(*args, **kwargs)
@@ -213,6 +226,8 @@ def _build_icon_button(sg) -> type:
             # Backstop for a widget built outside that startup pass.
             # attach_icon is idempotent, so whichever fires first wins.
             widget.bind("<Map>", self.attach_icon, add="+")
+            if isinstance(widget, ttk.Widget):
+                widget.bind("<<ThemeChanged>>", self._reapply_after_theme_change, add="+")
 
         def attach_icon(self, _event=None) -> None:
             """Render and apply the icon. Runs once; re-entry is a no-op.
@@ -223,10 +238,83 @@ def _build_icon_button(sg) -> type:
             test or a screenshot taken immediately after it would otherwise
             catch the button bare.
             """
-            if self._icon_attached or self._widget is None:
+            if self._icon_attached or not self._widget_alive():
                 return
             self._icon_attached = True
             self._apply_icon()
+
+        def _reapply_after_theme_change(self, _event=None) -> None:
+            """Put the state images back after a **ttk** theme change.
+
+            Not the same event as ``sg.theme()``, which changes nothing at
+            runtime. A ttk theme change is real and global to the interpreter,
+            and PySimpleGUI reaches it without any user code touching ttk:
+            `_change_ttk_theme` runs in seven element packers, so a window built
+            with a different `ttk_theme=` — or after `set_options(ttk_theme=)` —
+            re-themes every window already on screen.
+
+            `Icon.map` binds its own listener and replays what it tracks, but it
+            tracks **one mapping per widget, the last one**. On the derived path
+            that is the merging call carrying the resting color alone, so the
+            states are not replayed — and ttk's style database is per-theme, so
+            the map the merge would have merged into is not there either. The
+            button adopts the new theme while its icon silently stops reacting.
+
+            Re-applying is the repair, and it is deferred to the next idle
+            rather than done here: both listeners answer the same event and the
+            order they run in is not ours to choose, so acting after the event
+            has been delivered is what makes this a repair rather than a race.
+
+            **The trigger is the theme's name, not the event.** ``<<ThemeChanged>>``
+            fires for a style being *configured* as well as for a theme being
+            changed, and re-applying configures styles — so answering the event
+            itself is an endless loop, and one that hangs the window rather than
+            failing. Comparing the name is what makes this fire once, and it is
+            also what makes the far more common no-op case free: PySimpleGUI
+            re-asserts its theme while building every window.
+
+            What comes back may not be what was there, and that is right rather
+            than a shortfall. ttk styles are per-theme and PySimpleGUI does not
+            restore its own per-element configuration after a theme change — a
+            button whose style carried ``foreground #FFFFFF`` with an ``active``
+            map is left with plain ``black`` and no map at all — so the button
+            reverts to the theme's default colors. The icon is re-derived from
+            the button *as it now is*, which is the whole contract here.
+            """
+            if self._theme_refresh_pending or not self._icon_attached:
+                return
+            if not self._widget_alive() or self._ttk_theme_name() == self._ttk_theme:
+                return
+            self._theme_refresh_pending = True
+            self._widget.after_idle(self._finish_theme_refresh)
+
+        def _finish_theme_refresh(self) -> None:
+            try:
+                if self._icon_attached and self._widget_alive():
+                    self._apply_icon()
+            finally:
+                self._theme_refresh_pending = False
+
+        @staticmethod
+        def _ttk_theme_name() -> str:
+            return str(ttk.Style().theme_use())
+
+        def _widget_alive(self) -> bool:
+            """Whether there is still a widget to configure.
+
+            Every entry point here can be reached after the window has gone —
+            `after_idle` drains after a toplevel is destroyed, and PySimpleGUI's
+            own `update` returns early (with an error popup) on a closed
+            window rather than raising, so an override that carried on past it
+            would be the thing that raises `TclError`.
+            """
+            widget = self._widget
+            if widget is None:
+                return False
+            try:
+                return bool(widget.winfo_exists())
+            except tk.TclError:  # pragma: no cover - interpreter already gone
+                return False
 
         def _apply_icon(self) -> None:
             """Render the icon onto the widget. Safe to re-run."""
@@ -248,7 +336,12 @@ def _build_icon_button(sg) -> type:
             real parent — `Icon.map` derives a child of it and inherits the
             font and colors PySimpleGUI configured.
             """
-            if self._reactive_states is False:
+            # Recorded before anything is mapped, and on both branches, so a
+            # later `<<ThemeChanged>>` compares against the theme this actually
+            # ran under rather than re-firing forever.
+            self._ttk_theme = self._ttk_theme_name()
+
+            if self._reacts_to_nothing():
                 # Hand the widget back to PySimpleGUI's own style. Leaving it
                 # in a derived one would keep an image map that update() was
                 # just told to stop applying. Read the parent before unmap,
@@ -257,35 +350,68 @@ def _build_icon_button(sg) -> type:
                 self._icon.unmap(self._widget)
                 self._widget.configure(style=parent, image=self._icon.image)
                 self._state_colors = {}
+                self._parent_colors = None
                 return
 
             # None tells Icon.map to derive states from the parent style's
             # foreground map, which is where PySimpleGUI wrote mouseover_colors
             # and disabled_button_color.
             statespec = None
+            chosen = _chosen_color(self._icon)
             if isinstance(self._reactive_states, Mapping):
                 statespec = [(_TTK_STATES.get(state, state), spec)
                              for state, spec in self._reactive_states.items()]
+                # A color the caller chose wins for the resting state, and it
+                # is seeded into *this* spec rather than merged in afterward.
+                # "" is the fallback state, so it belongs here like any other.
+                if chosen is not None and "" not in self._reactive_states:
+                    statespec.append(("", chosen))
             self._icon.map(self._widget, statespec=statespec, mode="replace")
 
-            # A color the caller chose wins for the resting state. It has to be
-            # a second, merging call: handing Icon.map a statespec makes it use
-            # only that spec, so folding "" into the first call would discard
-            # the states derived from the style. Merging keeps them and
-            # overwrites the one entry.
-            chosen = _chosen_color(self._icon)
-            if chosen is not None and not self._has_own_resting_spec():
+            if statespec is None and chosen is not None:
+                # The derived path is the one case that cannot seed: handing
+                # Icon.map a statespec makes it use only that spec, so a ""
+                # entry here would discard the states just derived from the
+                # style. A second, merging call is safe *because* the derived
+                # spec draws every state from the base icon — so both calls
+                # name the same glyph, Icon.map's automatic child-style name
+                # hashes the same, and the merge lands on the first call's map.
+                # Seeding is what the mapping branch above exists to do: a spec
+                # that renames a glyph for one state changes that hash, and the
+                # merge would then land on an empty map and leave the widget
+                # wearing a style holding nothing but the resting image.
                 self._icon.map(self._widget, statespec=[("", chosen)], mode="merge")
-            self._state_colors = {"": chosen or self._ttk_parent_foreground()}
 
-        def _has_own_resting_spec(self) -> bool:
-            """Whether `reactive_states` names the resting state itself."""
-            return isinstance(self._reactive_states, Mapping) and "" in self._reactive_states
+            # Remembered apart from the resting color, which is the *chosen*
+            # one whenever the caller gave one. See `_refresh_for_colors`.
+            self._parent_colors = self._ttk_parent_colors()
+            self._state_colors = {"": chosen or self._ttk_parent_foreground()}
 
         def _ttk_parent_foreground(self) -> Optional[str]:
             """The style foreground the ttk icons were last derived from."""
             style = ttk.Style()
             return style.lookup(Icon._parent_style_for(self._widget), "foreground") or None
+
+        def _ttk_parent_colors(self) -> tuple:
+            """Everything about the parent style the state images depend on.
+
+            The base foreground **and its state map**, because they move
+            independently and only one of them was being watched.
+            ``update(disabled_button_color=…)`` writes
+            ``style.map(name, foreground=[('disabled', …)])`` on the ttk path —
+            the map, not the base — so a comparison against `lookup` alone
+            never noticed, and the icon kept its old disabled tint while the
+            label changed. The `tk` path followed the same argument all along,
+            because that call also sets `disabledforeground` and `_color_for`
+            reads that option; the two paths disagreed about one argument.
+            """
+            style = ttk.Style()
+            parent = Icon._parent_style_for(self._widget)
+            mapped = style.map(parent, "foreground") or ()
+            return (
+                style.lookup(parent, "foreground") or None,
+                tuple(tuple(entry) for entry in mapped),
+            )
 
         # -- tk: no state images exist, so approximate them ------------------
 
@@ -347,7 +473,7 @@ def _build_icon_button(sg) -> type:
 
         def _render_tk_images(self) -> None:
             """Build one image per reachable state, recording the colors used."""
-            states = ("",) if self._reactive_states is False else ("", "pressed", "disabled")
+            states = ("",) if self._reacts_to_nothing() else ("", "pressed", "disabled")
             images, colors = {}, {}
             for state in states:
                 color = self._color_for(state)
@@ -366,8 +492,27 @@ def _build_icon_button(sg) -> type:
                     return spec.get("name", self._icon.name)
             return self._icon.name
 
+        def _reacts_to_nothing(self) -> bool:
+            """Whether the icon should ignore the button entirely.
+
+            ``False`` says so outright. An **empty mapping** says the same
+            thing and used to say three different ones: a mapping replaces the
+            derived states, so naming none of them is naming nothing — but an
+            empty list is falsy, and `StatefulIconMixin._parse_statespec` tests
+            ``if statespec:``, so it fell through to the derive-from-the-style
+            branch and behaved as ``True``. Give the icon a color and the
+            seeded ``""`` entry made the list truthy, so the same input stopped
+            reacting; the `tk` path meanwhile reacted to nothing at all. One
+            input, three behaviors, none of them the documented one.
+            """
+            return self._reactive_states is False or (
+                isinstance(self._reactive_states, Mapping) and not self._reactive_states
+            )
+
         def _color_for(self, state: str) -> Optional[str]:
             """The color for one state, or None if the state is unstyled."""
+            if self._reacts_to_nothing():
+                return self._icon.color
             if isinstance(self._reactive_states, Mapping):
                 spec = self._reactive_states.get(state)
                 if spec is None and state:
@@ -377,8 +522,6 @@ def _build_icon_button(sg) -> type:
                         return spec["color"]
                 elif spec is not None:
                     return spec
-            elif self._reactive_states is False:
-                return self._icon.color
 
             # A color the caller chose wins for the resting state; the others
             # still follow the button, so a chosen color does not freeze the
@@ -400,12 +543,20 @@ def _build_icon_button(sg) -> type:
 
         def _apply_tk_image(self) -> None:
             """Show the image matching the widget's current state."""
-            widget = self._widget
             # Reached from after_idle, so the window may have closed since.
-            if widget is None or not self._state_images or not widget.winfo_exists():
+            if not self._state_images or not self._widget_alive():
                 return
+            widget = self._widget
             state = _TK_STATE_KEYS.get(str(widget.cget("state")), "")
-            widget.configure(image=self._state_images.get(state) or self._state_images[""])
+            # `.get("")` rather than `[""]`: a resting image is not guaranteed.
+            # `_color_for("")` returns None when the widget's own foreground is
+            # empty or unparseable, and a literal in `reactive_states` still
+            # produces the other states — so `_state_images` is non-empty while
+            # the one this used to index is absent. Raising from an after_idle
+            # callback surfaces only through Tk's handler.
+            image = self._state_images.get(state) or self._state_images.get("")
+            if image is not None:
+                widget.configure(image=image)
 
         # -- staying in step with the button --------------------------------
 
@@ -435,11 +586,11 @@ def _build_icon_button(sg) -> type:
             And ``update(button_color=...)`` changes the colors the icon was
             tinted from, on both paths.
 
-            Global re-theming is deliberately **not** followed. ``sg.theme()``
-            affects only windows built afterward — PySimpleGUI has no method to
-            re-theme a live one, and the usual answer is to close the window
-            and rebuild it — so an icon that chased it would react to something
-            the button under it ignores.
+            ``sg.theme()`` is not among them, and not because it is ignored:
+            it makes no runtime change to follow. A theme selects the colors
+            the *next* window is built with and leaves an existing one alone,
+            so an icon resolved when its button was built stays as current as
+            the button is.
             """
             result = super().update(*args, **kwargs)
 
@@ -453,8 +604,11 @@ def _build_icon_button(sg) -> type:
                 redraw = True
 
             # Before the attach there is nothing to redo: it reads these
-            # attributes when it runs, so it will pick the new values up.
-            if not self._icon_attached:
+            # attributes when it runs, so it will pick the new values up. And
+            # after the window has gone there is nothing to redo it *on* —
+            # `sg.Button.update` returns early there rather than raising, so
+            # carrying on past it is what would configure a dead widget.
+            if not self._icon_attached or not self._widget_alive():
                 return result
 
             if redraw:
@@ -465,6 +619,13 @@ def _build_icon_button(sg) -> type:
                 self._apply_tk_image()
             return result
 
+        #: PySimpleGUI keeps the old capitalized spelling as an alias, bound in
+        #: `Button`'s own class body — so `Update` would resolve to *that*
+        #: function and skip everything above, including the disabled-image
+        #: swap. It is not only a courtesy to callers who write it: PySimpleGUI
+        #: calls `.Update(...)` internally, `Window.fill` among others.
+        Update = update
+
         def _refresh_for_colors(self) -> None:
             """Re-derive the icons if the colors they were tinted from moved.
 
@@ -472,13 +633,16 @@ def _build_icon_button(sg) -> type:
             arguments `update` was called with, so a caller reconfiguring the
             widget directly is caught too.
             """
-            if self._reactive_states is False or self._widget is None:
-                return
-            if not self._widget.winfo_exists():
+            if self._reacts_to_nothing() or not self._widget_alive():
                 return
 
             if isinstance(self._widget, ttk.Widget):
-                if self._ttk_parent_foreground() != self._state_colors.get(""):
+                # Against the colors the images were derived from, not against
+                # the resting color: `_state_colors[""]` holds the color the
+                # *caller* chose whenever there was one, which the parent
+                # style's foreground never equals — so comparing them re-mapped
+                # every state on every update() forever.
+                if self._ttk_parent_colors() != self._parent_colors:
                     self._map_ttk_states()
                     self._widget.configure(compound=self._compound)
                 return

@@ -54,7 +54,7 @@ The icon is applied when the window is built, before it is shown.
 Reacting to the button
 ----------------------
 
-By default the icon follows the button's own colors, so it greys out along with the label when the button is disabled. Pass ``reactive_states`` to say more:
+By default the icon follows the button's own colors, so it greys out along with the label when the button is disabled. Pass ``reactive_states`` to say what each state does instead:
 
 .. code-block:: python
 
@@ -71,6 +71,8 @@ By default the icon follows the button's own colors, so it greys out along with 
    )
 
 Each state takes a color, or a dict that can swap the glyph too — above, the disabled state changes to the filled trash. ``reactive_states=False`` is the opposite: it draws the icon in the color you built it with and ignores the button entirely.
+
+A mapping **replaces** the default behavior rather than adding to it — only the states it names react at all. Naming ``hover`` and ``pressed`` alone gives a button whose icon holds its resting color while the label beside it greys out, which is why ``disabled`` is named above.
 
 The three states are ``hover``, ``pressed`` and ``disabled``. **Hover needs** ``use_ttk_buttons=True``: a plain ``tk`` button cannot carry a separate hover image, and asking for one there warns and is ignored. PySimpleGUI defaults to ``tk`` buttons on Windows and Linux.
 

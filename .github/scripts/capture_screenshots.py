@@ -263,7 +263,14 @@ def pysimplegui(out: Path) -> None:
         IconButton(
             "Delete",
             icon=BootstrapIcon("trash", 16),
-            reactive_states={"hover": "#f0918d", "pressed": "#d9534f"},
+            # `disabled` is named because a mapping replaces the derived
+            # states rather than adding to them: without it the greyed-out
+            # button below would keep a full-strength icon on it.
+            reactive_states={
+                "hover": "#f0918d",
+                "pressed": "#d9534f",
+                "disabled": {"name": "trash-fill", "color": "#5f7285"},
+            },
             key="-DELETE-",
         ),
         sg.Push(),
@@ -289,7 +296,9 @@ def pysimplegui(out: Path) -> None:
         # one there — white on a light title bar is invisible.
         icon=BootstrapIcon("folder-fill", 32, "#d9922e").to_data(),
     )
-    # Disabled without a caption saying so: the greyed glyph is the point.
+    # Disabled without a caption saying so: the greyed glyph is the point, and
+    # it is the docs page's own example — the disabled state swaps to the
+    # filled trash as well as dimming it.
     window["-DELETE-"].update(disabled=True)
     window.refresh()
     # Width set, height left to the content: sizing both leaves dead space under
@@ -300,6 +309,22 @@ def pysimplegui(out: Path) -> None:
     window.refresh()
     capture(window.TKroot, out)
     window.close()
+    # Closing the window is not enough, and this shot is not last: PySimpleGUI
+    # keeps a hidden master root of its own and leaves it — and
+    # `tkinter._default_root` — alive afterward, so the ttkbootstrap captures
+    # that follow would ask Tk 8.6 for a second interpreter while the first is
+    # still up, which is the failure `CLAUDE.md` records. Every other shot
+    # destroys its own root; these are the three lines that make this one match.
+    master = getattr(sg.Window, "hidden_master_root", None)
+    if master is not None:
+        try:
+            master.destroy()
+        except Exception:  # pragma: no cover - already gone
+            pass
+        sg.Window.hidden_master_root = None
+    import tkinter
+
+    tkinter._default_root = None
 
 
 SHOTS = {

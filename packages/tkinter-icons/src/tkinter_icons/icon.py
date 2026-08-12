@@ -74,7 +74,7 @@ from .providers import NO_ICON, BaseFontProvider
 from .render import RenderOptions, clear_font_cache, render_glyph, snap_size
 from .stateful_icon_mixin import StatefulIconMixin
 
-_CacheKey = tuple[str, str, int, str, int]
+_CacheKey = tuple[str, str, int, Optional[str], int]
 
 
 class _InterpreterCache:
@@ -557,25 +557,88 @@ class Icon(StatefulIconMixin, ABC):
 
     def _render(self) -> PhotoImage:
         """Render this icon, reusing an identical image when one exists."""
+        return self._render_one(self.name, self.size, self.color, self._icon_set)
+
+    def _render_icon(self, name: str, size: int, color: Optional[str]) -> PhotoImage:
+        """Render one per-state image, as `StatefulIconMixin.map` asks for.
+
+        Overriding this is why the mixin offers it. Its default rebuilds the
+        icon as ``type(self)(name, size, color)``, which goes back through the
+        pack's constructor — and that constructor takes a `style`, so a state
+        image on a multi-style pack came back drawn from the pack's *default*
+        style rather than from the one this icon was built with, silently
+        disagreeing with the resting image beside it. `options` was dropped the
+        same way, having nowhere to travel through a positional signature.
+
+        The set is chosen per name rather than pinned, and both halves matter.
+        Pinning it to this icon's own set fixes the style leak but breaks a
+        statespec that deliberately names a glyph from *another* style — a Font
+        Awesome brand mark beside a solid icon — because `render_pil` stops
+        resolving the moment it is handed a set, and `map` swallows the failure
+        and drops the state without a word. Resolving unconditionally is the
+        old bug. So: this icon's set when it can draw the name, the pack's own
+        resolution when it cannot.
+        """
+        icon_set, glyph_name = self._icon_set_for_state(name)
+        return self._render_one(glyph_name, size, color, icon_set)
+
+    def _icon_set_for_state(self, name: str) -> tuple[IconSet, str]:
+        """The set to draw a per-state `name` from, and its glyph name there.
+
+        Returns this icon's own set unchanged whenever that set can draw the
+        name, so the style the icon was built with is what a state image is
+        drawn from. Otherwise the pack resolves the name as the constructor
+        would, which is the only way a statespec can reach another style.
+
+        A name no pack can resolve raises `ValueError` from here rather than
+        returning something undrawable — the caller sees the same error the
+        constructor gives, though note `StatefulIconMixin.map` currently
+        catches it and skips that state.
+        """
+        if name == NO_ICON or self._icon_set.glyph(name) is not None:
+            return self._icon_set, name
+
+        provider_class = type(self).provider_class
+        if provider_class is None:
+            # Bare `Icon`, or an explicitly-assembled set: there is no provider
+            # to resolve against, so let the set answer for the name it was
+            # given and raise the missing-glyph error naming that set.
+            return self._icon_set, name
+
+        provider = provider_class()
+        style, resolved = provider.resolve_icon(name, None)
+        return get_icon_set(provider, style), resolved
+
+    def _render_one(
+        self, name: str, size: int, color: Optional[str], icon_set: IconSet,
+    ) -> PhotoImage:
+        """Render `(name, size, color)` from `icon_set` at this icon's options.
+
+        The single path from a glyph name to a `PhotoImage` — `image` renders
+        through it too — so the resting image and the states beside it cannot
+        answer one question two ways, which is the defect shape behind #115 and
+        #140.
+        """
         from PIL.ImageTk import PhotoImage
 
         root = _require_root()
         cache = Icon._cache_for(root)
 
-        icon_set = self._icon_set
-        key: _CacheKey = (icon_set.id, self.name, self.size, self.color, hash(self._options))
+        key: _CacheKey = (icon_set.id, name, size, color, hash(self._options))
         cached = cache.images.get(key)
         if cached is not None:
             return cached
 
-        if self.name == NO_ICON:
+        if name == NO_ICON:
             # Deliberately blank, not missing — as in `render_pil`.
-            return Icon._get_transparent(self.rendered_size)
+            return Icon._get_transparent(snap_size(size, snap_even=self._options.snap_even))
 
-        if icon_set.glyph(self.name) is None:
-            raise _missing_glyph_error(self.name, icon_set)
+        if icon_set.glyph(name) is None:
+            raise _missing_glyph_error(name, icon_set)
 
-        photo = PhotoImage(image=self.to_pil())
+        photo = PhotoImage(image=self.render_pil(
+            name, size, color, icon_set=icon_set, options=self._options,
+        ))
         cache.images[key] = photo
         return photo
 
