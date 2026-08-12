@@ -42,13 +42,13 @@ TEAL = "#0F766E"
 #: library whose whole subject is rendering.
 SETTLE_SECONDS = 0.6
 
-#: Trimmed from every edge of the grab. Windows 11 rounds a window's corners at
-#: roughly eight pixels, and the frame rectangle is square, so the corners of a
-#: raw capture contain whatever was on the desktop behind them. Trimming takes
-#: the frame line and the arcs with it; `.window-screenshot` in the docs then
-#: draws a clean border and rounds the result again, which is the same division
-#: of labour bootstack uses.
-FRAME_TRIM = 5
+#: Trimmed from every edge of the grab, to drop the frame line DWM includes.
+#: Deliberately small. Windows 11 rounds a window's corners while the rectangle
+#: DWM reports is square, so a raw capture holds a little desktop in each
+#: corner — but `.window-screenshot` in the docs rounds the image at 6px, which
+#: clips exactly that region, so there is nothing here to chase. Trimming far
+#: enough to remove the arcs would eat into the title bar for no gain.
+FRAME_TRIM = 2
 
 
 def make_dpi_aware() -> None:
