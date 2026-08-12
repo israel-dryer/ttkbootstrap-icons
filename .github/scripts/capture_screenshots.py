@@ -264,7 +264,7 @@ def pysimplegui(out: Path) -> None:
             "Delete",
             icon=BootstrapIcon("trash", 16),
             # `disabled` is named because a mapping replaces the derived
-            # states rather than adding to them: without it the greyed-out
+            # states rather than adding to them: without it the grayed-out
             # button below would keep a full-strength icon on it.
             reactive_states={
                 "hover": "#f0918d",
@@ -292,11 +292,11 @@ def pysimplegui(out: Path) -> None:
     window = sg.Window(
         "Files", layout, finalize=True, use_ttk_buttons=True,
         # Not `text`: the title bar and taskbar are drawn by the OS, not on
-        # the theme's background, so the theme's foreground colour is the wrong
+        # the theme's background, so the theme's foreground color is the wrong
         # one there — white on a light title bar is invisible.
         icon=BootstrapIcon("folder-fill", 32, "#d9922e").to_data(),
     )
-    # Disabled without a caption saying so: the greyed glyph is the point, and
+    # Disabled without a caption saying so: the grayed glyph is the point, and
     # it is the docs page's own example — the disabled state swaps to the
     # filled trash as well as dimming it.
     window["-DELETE-"].update(disabled=True)

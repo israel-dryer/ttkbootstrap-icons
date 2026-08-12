@@ -153,7 +153,7 @@ def _build_icon_button(sg) -> type:
                 A mapping **replaces** the states rather than adding to them:
                 only the states it names react at all, so a mapping that omits
                 ``disabled`` is a button whose icon keeps its resting color
-                while the label beside it greys out. An **empty** mapping names
+                while the label beside it grays out. An **empty** mapping names
                 nothing, and so means exactly what ``False`` means.
             compound: Where the icon sits relative to the text, as Tk means it.
                 Pass ``"none"`` for a button with **no text**: the default
@@ -525,7 +525,7 @@ def _build_icon_button(sg) -> type:
 
             # A color the caller chose wins for the resting state; the others
             # still follow the button, so a chosen color does not freeze the
-            # icon against being greyed out when the button is disabled.
+            # icon against being grayed out when the button is disabled.
             if state == "":
                 chosen = _chosen_color(self._icon)
                 if chosen is not None:

@@ -465,7 +465,7 @@ class TestIconButton:
         # that picked the first available theme would be reporting it as one.
         other = "alt" if "alt" in style.theme_names() and was != "alt" else None
         if other is None:
-            pytest.skip("needs a second ttk theme that derives a state colour")
+            pytest.skip("needs a second ttk theme that derives a state color")
         try:
             style.theme_use(other)
             # `update()`, not `update_idletasks()`: `<<ThemeChanged>>` is a
@@ -491,7 +491,7 @@ class TestIconButton:
 
         It used to give three answers from one input: an empty list is falsy,
         so `_parse_statespec` fell through to deriving from the style and the
-        button reacted exactly as `True`; a chosen colour seeded a `""` entry,
+        button reacted exactly as `True`; a chosen color seeded a `""` entry,
         which made the list truthy and stopped it reacting; and the tk path
         gave no reactive states at all.
         """
@@ -504,7 +504,7 @@ class TestIconButton:
             empty, window = build(use_ttk_buttons=True, icon=icon, reactive_states={})
             mapped = ttk.Style().map(empty.Widget.cget("style"), "image")
             states = {entry[0] for entry in mapped if isinstance(entry[0], str)}
-            assert not states, f"reacted with a chosen colour of {chosen!r}"
+            assert not states, f"reacted with a chosen color of {chosen!r}"
 
         tk_button, _window = build(use_ttk_buttons=False, reactive_states={})
         assert set(tk_button._state_images) == {""}

@@ -175,7 +175,7 @@ class StatefulIconMixin:
             return None
         try:
             rgb = widget.winfo_rgb(color)
-        except Exception:  # pragma: no cover - not a Tk colour name
+        except Exception:  # pragma: no cover - not a Tk color name
             return color
         return "#{:02x}{:02x}{:02x}".format(*(channel >> 8 for channel in rgb))
 

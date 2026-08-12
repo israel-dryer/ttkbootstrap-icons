@@ -167,7 +167,7 @@ class TestColorsReadOffAStyle:
     """A style's color is not necessarily a color Pillow can draw with."""
 
     def test_a_name_a_theme_configures_is_resolved_to_hex(self, root, button, icon_set, sample_name):
-        """A theme configures a colour *name*, and Pillow does not take every name Tk does.
+        """A theme configures a color *name*, and Pillow does not take every name Tk does.
 
         This is the portable half of the translation, and the only half that
         can be asserted off Windows. Every stock X11 theme — `clam`, `alt`,
@@ -183,7 +183,7 @@ class TestColorsReadOffAStyle:
     @pytest.mark.skipif(
         sys.platform != "win32",
         reason=(
-            "SystemWindowText names a Windows system setting rather than a colour; "
+            "SystemWindowText names a Windows system setting rather than a color; "
             "Tk elsewhere raises `unknown color name` and has nothing to resolve it to"
         ),
     )
@@ -212,7 +212,7 @@ class TestColorsReadOffAStyle:
         assert any(entry[0] == "pressed" for entry in image_map if isinstance(entry[0], str))
 
     def test_a_colour_the_caller_wrote_is_left_alone(self, root, button, icon_set, sample_name):
-        """Pillow accepts specifiers Tk does not, so a spec colour is not touched."""
+        """Pillow accepts specifiers Tk does not, so a spec color is not touched."""
         assert Icon._drawable_color(button, "hsl(200, 50%, 50%)") == "hsl(200, 50%, 50%)"
         assert Icon._drawable_color(button, "") is None
 
