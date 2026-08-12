@@ -8,6 +8,20 @@ The previous section here — #144's plan — is gone rather than archived. It s
 
 ---
 
+## Amendments
+
+Written after the work and after CI, before the review. Corrections and late decisions only, so a finding can be measured against what the code was actually meant to do rather than against the first draft of this file.
+
+**`tk`'s `active` state is not one behavior, and this plan first assumed it was.** `button.tcl` defines `tk::ButtonEnter` three times, once per windowing system. **win32 and aqua** set `-state active` only while button 1 is already down, so the state changes on press. **x11** sets it on entry outright — *"on unix the state is active just with mouse-over"*, in Tk's own comment — so there one state covers hover *and* press. The implementation was always correct, because it reads `-state` rather than inferring from the pointer; the first two versions of `test_the_tk_icon_follows_the_widgets_own_state` were not, and both failed on Linux against working code. What holds everywhere is that **`hover` is not separately reachable on `tk`** — on win32 because no hover state exists, on x11 because hover is indistinguishable from press. The docstring, the warning and the docs page all said "no hover state at all" until CI proved otherwise.
+
+**`compound` stays an explicit user setting; it is deliberately not inferred.** An icon-only button wants `"none"`, and the default `"left"` reserves a text slot that is not free — an empty-text ttk button asks for **96 px** against **26**. Inferring it from the absence of button text was implemented and then reverted on the owner's call, 2026-08-12: `tk` and `ttk` accept different values for image-only (`ttk` takes `"image"`, `tk` does not), so the choice belongs to the caller. It is stated as a caveat on the docs page, and the demo and screenshot pass it.
+
+**The docs teach `Icon.to_data()`, not the `render_data()` classmethod.** Owner's call, and the reason is consistency rather than taste: the same page already constructs icons for `IconButton(icon=...)`, so a classmethod for images would put two idioms on one page. `render_data` appears once, as a tip.
+
+**A test that builds a PySimpleGUI window has to tear down more than the window.** PySimpleGUI keeps a hidden master root alive after `Window.close()`, along with `tkinter._default_root`. Leaving them breaks any later test that controls when a root exists — `TestTkLifecycle` failed exactly that way, and only when this file ran first.
+
+---
+
 ## The gap
 
 PySimpleGUI is declarative: constructing `sg.Button` creates no Tk widget, so `element.Widget` stays `None` until `sg.Window` builds the layout. An icon cannot be applied in a constructor, and cannot even be *rendered* there, because a `PhotoImage` needs an interpreter that does not exist yet.
@@ -29,7 +43,7 @@ PySimpleGUI is declarative: constructing `sg.Button` creates no Tk widget, so `e
 - **The window does not resize after it is shown.**
 - **A missing dependency explains itself**, as an `ImportError`, naming the install command and the path that needs no install at all.
 - **`hover` is unreachable on `tk` and says so.** Silently dropping it is the failure mode this project keeps writing guards against.
-- **The tk icon reflects the widget's own `-state`**, never an inference from the pointer.
+- **The tk icon reflects the widget's own `-state`**, never an inference from the pointer — and **no test may assert one platform's Tk semantics**. See the amendment below.
 
 ## Decisions
 
@@ -52,3 +66,6 @@ PySimpleGUI is declarative: constructing `sg.Button` creates no Tk widget, so `e
 - **`_refresh_for_colors` compares resolved colors**, so it catches a color moving but not a change that resolves to the same color through a different route.
 - **Nothing tests the visual result**, only that images differ and states map. The screenshot is the only thing that says the icons *read*, and it is checked by eye.
 - **The idle trigger is asserted through its consequences** — attached by the end of `finalize`, geometry stable afterward — rather than by observing which callback fired. If PySimpleGUI ever stopped calling `update_idletasks` during startup, those tests would fail, which is the intent.
+- **Every claim about PySimpleGUI's internals was read off version 6.3 and nothing pins it.** That the packer never yields to the event loop while configuring an element, that `element.Widget` is assigned before the ttk style is applied, that `sg.theme()` cannot reach a live window — all true when measured, none asserted by a test that would fail if a future release changed them. The consequences are covered; the mechanisms are not.
+- **The `gui`-marked tests skip rather than fail when a second Tk interpreter cannot be built**, which is the Tk 8.6 limitation `CLAUDE.md` records. Locally that is one or two of them depending on ordering, so a green run does not guarantee every button test executed. `-rs` shows which.
+- **`_ttk_parent_foreground` reads `Icon._parent_style_for`**, a private classmethod of another module. It is the only way to recover the style PySimpleGUI applied once `Icon.map` has derived a child from it, but it is a private coupling and would break silently if that helper changed.
