@@ -236,22 +236,25 @@ def pysimplegui(out: Path) -> None:
     from tkinter_icons.extensions.psg import IconButton
 
     sg.theme("DarkBlue3")
+    # Only the bytes need a color. An IconButton takes the button's own text
+    # color, so passing one there would be discarded -- which is what the page
+    # says, so the code it publishes had better not contradict it.
     white = "#FFFFFF"
 
     layout = [
         [sg.Text("IconButton — icon beside text, follows the button")],
         [
-            IconButton("Save", icon=BootstrapIcon("floppy", 16, white), key="-SAVE-"),
+            IconButton("Save", icon=BootstrapIcon("floppy", 16), key="-SAVE-"),
             IconButton(
                 "Delete",
-                icon=BootstrapIcon("trash", 16, white),
+                icon=BootstrapIcon("trash", 16),
                 reactive_states={"hover": "#f0918d", "pressed": "#d9534f",
                                  "disabled": {"name": "trash-fill", "color": "#7c8a99"}},
                 key="-DELETE-",
             ),
             # compound="none" because there is no text: the default reserves
             # room for a label that is not there, ~70 px of it on a ttk button.
-            IconButton("", icon=BootstrapIcon("gear", 16, white), compound="none",
+            IconButton("", icon=BootstrapIcon("gear", 16), compound="none",
                        key="-PREFS-"),
         ],
         [sg.Text("to_data() bytes — no deferral, no subclass, no reacting")],

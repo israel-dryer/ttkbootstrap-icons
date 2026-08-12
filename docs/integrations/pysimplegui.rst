@@ -39,16 +39,16 @@ Buttons
    from tkinter_icons import BootstrapIcon
    from tkinter_icons.extensions.psg import IconButton
 
-   white = "#FFFFFF"
-
    layout = [
-       [IconButton("Save", icon=BootstrapIcon("floppy", 16, white), key="-SAVE-")],
-       [IconButton("", icon=BootstrapIcon("gear", 16, white), compound="none", key="-PREFS-")],
+       [IconButton("Save", icon=BootstrapIcon("floppy", 16), key="-SAVE-")],
+       [IconButton("", icon=BootstrapIcon("gear", 16), compound="none", key="-PREFS-")],
    ]
 
    window = sg.Window("Editor", layout, finalize=True)
 
-Give the icon the pixel size you want it drawn at, and let the button take care of itself — the icon is applied when the window is built, before it is shown.
+Give the icon the pixel size you want it drawn at, and nothing else — **no color**. By default the icon takes the button's own text color, so it matches the theme without being told to, and any color you pass the icon is discarded. Pass one only with ``reactive_states=False``, below.
+
+The icon is applied when the window is built, before it is shown.
 
 Reacting to the button
 ----------------------
@@ -59,7 +59,7 @@ By default the icon follows the button's own colors, so it greys out along with 
 
    IconButton(
        "Delete",
-       icon=BootstrapIcon("trash", 16, white),
+       icon=BootstrapIcon("trash", 16),
        reactive_states={
            "hover": "#f0918d",
            "pressed": "#d9534f",
@@ -69,7 +69,7 @@ By default the icon follows the button's own colors, so it greys out along with 
        use_ttk_buttons=True,
    )
 
-Each state takes a color, or a dict that can swap the glyph too — above, the disabled state changes to the filled trash. ``reactive_states=False`` draws the icon exactly as you built it and ignores the button.
+Each state takes a color, or a dict that can swap the glyph too — above, the disabled state changes to the filled trash. ``reactive_states=False`` is the opposite: it draws the icon in the color you built it with and ignores the button entirely.
 
 The three states are ``hover``, ``pressed`` and ``disabled``. **Hover needs** ``use_ttk_buttons=True``: a plain ``tk`` button cannot carry a separate hover image, and asking for one there warns and is ignored. PySimpleGUI defaults to ``tk`` buttons on Windows and Linux.
 
@@ -80,16 +80,18 @@ Changing the icon later
 
 .. code-block:: python
 
-   window["-PLAY-"].update(icon=BootstrapIcon("pause-fill", 16, white))
+   window["-PLAY-"].update(icon=BootstrapIcon("pause-fill", 16))
 
 ``compound`` and ``reactive_states`` can be updated the same way. The ordinary PySimpleGUI arguments work as they always did, and the icon keeps up with two of them by itself: ``update(disabled=True)`` switches to the disabled glyph, and ``update(button_color=...)`` re-tints the icon to match.
 
 Everything that is not a button
 -------------------------------
 
-Elsewhere PySimpleGUI wants image **bytes**. Build the icon the same way and ask for its data:
+Elsewhere PySimpleGUI wants image **bytes**. Build the icon the same way and ask for its data — but here there is no button to take a color from, so give it one:
 
 .. code-block:: python
+
+   white = "#FFFFFF"
 
    layout = [
        [sg.Image(data=BootstrapIcon("house", 16, white).to_data()), sg.Text("Dashboard")],
