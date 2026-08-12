@@ -95,6 +95,12 @@ Integrations
 
       Using another icon set inside ttkbootstrap, and letting the theme choose the color.
 
+   .. grid-item-card:: PySimpleGUI
+      :link: ../integrations/pysimplegui
+      :link-type: doc
+
+      Icons in a declarative layout — reactive buttons through ``IconButton``, and bytes everywhere else.
+
 .. Three captioned toctrees rather than one flat list: the sidebar groups match
    the three headings above, so the page and the sidebar agree. The pages
    themselves stay in `getting-started/` — nav structure is a toctree question
@@ -127,3 +133,4 @@ Integrations
 
    ../integrations/tkinter-ttk
    ../integrations/ttkbootstrap
+   ../integrations/pysimplegui

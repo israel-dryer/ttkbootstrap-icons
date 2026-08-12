@@ -5,6 +5,7 @@ An icon's :attr:`~tkinter_icons.Icon.image` is an ordinary Tk-compatible image, 
 
 .. image:: /assets/tkinter_ttk_widgets.png
    :alt: A ttk window with a File menubar, a Save button, an icon-only close button, a labelled folder, and a treeview whose rows carry folder and document icons
+   :class: window-screenshot
 
 Everything below is in that window: the buttons and label across the top, the menu behind ``File``, and the treeview under both.
 

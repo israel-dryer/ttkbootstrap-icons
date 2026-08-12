@@ -42,6 +42,14 @@ TEAL = "#0F766E"
 #: library whose whole subject is rendering.
 SETTLE_SECONDS = 0.6
 
+#: Trimmed from every edge of the grab, to drop the frame line DWM includes.
+#: Deliberately small. Windows 11 rounds a window's corners while the rectangle
+#: DWM reports is square, so a raw capture holds a little desktop in each
+#: corner — but `.window-screenshot` in the docs rounds the image at 6px, which
+#: clips exactly that region, so there is nothing here to chase. Trimming far
+#: enough to remove the arcs would eat into the title bar for no gain.
+FRAME_TRIM = 2
+
 
 def make_dpi_aware() -> None:
     """Match Tk's pixels to the screen's, so the grab lands on the window.
@@ -78,7 +86,8 @@ def window_bounds(root) -> tuple[int, int, int, int]:
                 int.from_bytes(rect[i * 4:i * 4 + 4], "little", signed=True)
                 for i in range(4)
             )
-            return left, top, right, bottom
+            return (left + FRAME_TRIM, top + FRAME_TRIM,
+                    right - FRAME_TRIM, bottom - FRAME_TRIM)
 
     # Fallback: the client area only, which is still a usable picture.
     root.update_idletasks()
@@ -219,9 +228,109 @@ def ttkbootstrap_theme(out: Path, theme: str) -> None:
     app.destroy()
 
 
+def pysimplegui(out: Path) -> None:
+    """`integrations/pysimplegui` — a small window that looks like an application.
+
+    A hero image should show what the library makes possible, not label its
+    own parts: an earlier version captioned the rows "IconButton" and
+    "to_data() bytes", which taught nothing a picture can carry — bytes are
+    not a visible thing. So this is just a plausible little file browser, and
+    every icon in it happens to come through one bridge or the other.
+
+    PySimpleGUI is not a dependency of this project, so this is skipped like
+    the ttkbootstrap pair unless it is installed.
+    """
+    import PySimpleGUI as sg
+
+    from tkinter_icons import BootstrapIcon
+    from tkinter_icons.extensions.psg import IconButton
+
+    sg.theme("DarkBlue3")
+    text = sg.theme_text_color()
+    muted = "#9fb0c4"
+    accent = "#7ec8e3"
+
+    def image(name, color=None, size=16):
+        return sg.Image(data=BootstrapIcon(name, size, color or text).to_data(), pad=(6, 3))
+
+    def row(icon, label, color, meta):
+        return [image(icon, color), sg.Text(label, size=(18, 1)),
+                sg.Text(meta, text_color=muted, size=(8, 1), justification="right")]
+
+    toolbar = [
+        IconButton("New", icon=BootstrapIcon("plus-lg", 16), key="-NEW-"),
+        IconButton("Save", icon=BootstrapIcon("floppy", 16), key="-SAVE-"),
+        IconButton(
+            "Delete",
+            icon=BootstrapIcon("trash", 16),
+            # `disabled` is named because a mapping replaces the derived
+            # states rather than adding to them: without it the grayed-out
+            # button below would keep a full-strength icon on it.
+            reactive_states={
+                "hover": "#f0918d",
+                "pressed": "#d9534f",
+                "disabled": {"name": "trash-fill", "color": "#5f7285"},
+            },
+            key="-DELETE-",
+        ),
+        sg.Push(),
+        IconButton("", icon=BootstrapIcon("gear", 16), compound="none", key="-PREFS-"),
+    ]
+
+    layout = [
+        toolbar,
+        [sg.HorizontalSeparator()],
+        row("folder-fill", "assets", "#f5c46b", "4 items"),
+        row("file-earmark-text", "report.md", text, "12 kB"),
+        row("file-earmark-image", "diagram.png", accent, "84 kB"),
+        row("star-fill", "notes.md", "#f5c46b", "3 kB"),
+        [sg.HorizontalSeparator()],
+        [image("check-circle-fill", "#8fd694", 14),
+         sg.Text("Synced a moment ago", text_color=muted)],
+    ]
+
+    window = sg.Window(
+        "Files", layout, finalize=True, use_ttk_buttons=True,
+        # Not `text`: the title bar and taskbar are drawn by the OS, not on
+        # the theme's background, so the theme's foreground color is the wrong
+        # one there — white on a light title bar is invisible.
+        icon=BootstrapIcon("folder-fill", 32, "#d9922e").to_data(),
+    )
+    # Disabled without a caption saying so: the grayed glyph is the point, and
+    # it is the docs page's own example — the disabled state swaps to the
+    # filled trash as well as dimming it.
+    window["-DELETE-"].update(disabled=True)
+    window.refresh()
+    # Width set, height left to the content: sizing both leaves dead space under
+    # the last row, sizing neither leaves the toolbar cramped.
+    root = window.TKroot
+    root.update_idletasks()
+    root.geometry(f"420x{root.winfo_reqheight()}")
+    window.refresh()
+    capture(window.TKroot, out)
+    window.close()
+    # Closing the window is not enough, and this shot is not last: PySimpleGUI
+    # keeps a hidden master root of its own and leaves it — and
+    # `tkinter._default_root` — alive afterward, so the ttkbootstrap captures
+    # that follow would ask Tk 8.6 for a second interpreter while the first is
+    # still up, which is the failure `CLAUDE.md` records. Every other shot
+    # destroys its own root; these are the three lines that make this one match.
+    master = getattr(sg.Window, "hidden_master_root", None)
+    if master is not None:
+        try:
+            master.destroy()
+        except Exception:  # pragma: no cover - already gone
+            pass
+        sg.Window.hidden_master_root = None
+    import tkinter
+
+    tkinter._default_root = None
+
+
 SHOTS = {
     "quickstart": lambda: quickstart(ASSETS / "quickstart_button.png"),
     "tkinter-ttk": lambda: tkinter_ttk(ASSETS / "tkinter_ttk_widgets.png"),
+    "pysimplegui": lambda: pysimplegui(ASSETS / "pysimplegui_icons.png"),
     "ttkbootstrap-dark": lambda: ttkbootstrap_theme(
         ASSETS / "ttkbootstrap_dark.png", "bootstrap-dark"
     ),

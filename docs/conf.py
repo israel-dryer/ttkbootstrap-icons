@@ -120,6 +120,11 @@ nitpick_ignore_regex = [
     # methods it contributes, `map` and `unmap`, are documented on `Icon` via
     # `:inherited-members:`, which is where a reader looks for them.
     (r"py:class", r"tkinter_icons\.stateful_icon_mixin\..*"),
+    # `IconButton` subclasses PySimpleGUI's own `Button`, and PySimpleGUI
+    # publishes no object inventory to resolve it against. It is also not a
+    # dependency of this project, so the reference would be unresolvable on any
+    # machine that has not installed it - including Read the Docs.
+    (r"py:.*", r"(?:Free|Py)SimpleGUI\..*"),
 ]
 
 # ---------------------------------------------------------------------------

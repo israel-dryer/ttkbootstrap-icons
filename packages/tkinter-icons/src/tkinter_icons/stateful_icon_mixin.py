@@ -152,13 +152,43 @@ class StatefulIconMixin:
         """
         return (state,)
 
-    def _button_color_for_state(self, style: Style, parent_style: str, state: str) -> Optional[str]:
+    @staticmethod
+    def _drawable_color(widget: Widget, color: Optional[str]) -> Optional[str]:
+        """Translate a color read off a *style* into one Pillow can draw with.
+
+        A ttk style hands back whatever it was configured with, and the native
+        Windows themes configure symbolic system colors — `vista`, `winnative`
+        and `xpnative` all give `SystemWindowText` for a button's foreground.
+        Tk resolves those; Pillow rejects them outright with `unknown color
+        specifier`, and because `map` skips a state it cannot render, the
+        result was a button with no reactive states *and* no tinted resting
+        image, on the three themes Windows ships as its defaults.
+
+        Only colors read off a style come through here. A color the caller
+        wrote is left as typed, since Pillow accepts specifiers Tk does not.
+
+        Tk is the only thing that can translate a system color, so the widget
+        is asked. Anything it cannot parse is handed back unchanged rather than
+        dropped — it may still be something Pillow understands.
+        """
+        if not color:
+            return None
+        try:
+            rgb = widget.winfo_rgb(color)
+        except Exception:  # pragma: no cover - not a Tk color name
+            return color
+        return "#{:02x}{:02x}{:02x}".format(*(channel >> 8 for channel in rgb))
+
+    def _button_color_for_state(
+        self, style: Style, parent_style: str, state: str, widget: Widget,
+    ) -> Optional[str]:
         """Resolve the parent style's foreground color for a given state.
 
         Args:
             style: ttk `Style` instance.
             parent_style: Parent style name (e.g., 'my.TButton').
             state: State flag to resolve (e.g., 'hover').
+            widget: The widget being styled, used to resolve symbolic colors.
 
         Returns:
             The resolved color string or `None` if not available.
@@ -166,7 +196,7 @@ class StatefulIconMixin:
         val = style.lookup(parent_style, "foreground", state=self._state_tuple(state))
         if not val:
             val = style.lookup(parent_style, "foreground")
-        return val or None
+        return self._drawable_color(widget, val)
 
     def _ensure_original_image(self) -> None:
         """Ensure the untinted base image is cached for the '' fallback.
@@ -183,6 +213,7 @@ class StatefulIconMixin:
             style: Style,
             parent_style: str,
             statespec: Optional[list[IconStateSpec]],
+            widget: Widget,
     ) -> list[tuple[str, str, Optional[str]]]:
         """Parse the state spec into `(state, icon_name, color)` triples.
 
@@ -208,7 +239,7 @@ class StatefulIconMixin:
                     icon_name = spec.get("name", self.name)  # type: ignore[attr-defined]
                     color = spec.get("color")
                     if color is None:
-                        color = self._button_color_for_state(style, parent_style, state)
+                        color = self._button_color_for_state(style, parent_style, state, widget)
                     out.append((state, icon_name, color))
                 else:
                     # spec is a raw color string for the base icon
@@ -227,11 +258,12 @@ class StatefulIconMixin:
                     if isinstance(val, str) and val:
                         # Combine state flags with space: "pressed !disabled"
                         st = " ".join(state_flags) if len(state_flags) > 1 else state_flags[0]
+                        val = self._drawable_color(widget, val)
                         out.append((st, self.name, val))  # type: ignore[attr-defined]
 
         # If we couldn't derive any states from the map, use the base foreground color
         if not out:
-            base = style.lookup(parent_style, "foreground") or None
+            base = self._drawable_color(widget, style.lookup(parent_style, "foreground"))
             if base:
                 out.append(("!disabled", self.name, base))  # type: ignore[attr-defined]
         return out
@@ -363,7 +395,7 @@ class StatefulIconMixin:
         parent_style = self._parent_style_for(widget)
 
         # Build (state, icon_name, color) triples
-        triples = self._parse_statespec(style, parent_style, statespec)
+        triples = self._parse_statespec(style, parent_style, statespec, widget)
 
         # Determine child style name
         used_names = {self.name} | {nm for _, nm, _ in triples}  # type: ignore[attr-defined]
@@ -418,7 +450,8 @@ class StatefulIconMixin:
         fallback_img = merged.get("")
         if fallback_img is None:
             # Get the normal state foreground color
-            normal_color = style.lookup(parent_style, "foreground") or None
+            normal_color = self._drawable_color(
+                widget, style.lookup(parent_style, "foreground"))
             try:
                 fallback_img = self._render_icon(self.name, self.size, normal_color)  # type: ignore[attr-defined]
             except Exception:

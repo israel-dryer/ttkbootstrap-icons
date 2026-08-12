@@ -17,6 +17,7 @@ Quickstart
 
 .. image:: /assets/quickstart_button.png
    :alt: A small window with one button reading Home, a teal house icon to the left of the text
+   :class: window-screenshot
 
 That is the shape of every icon in every pack: a name, a size, a color, and ``.image`` where a widget wants a picture. Three things trip people up first, and they are the rest of this page.
 

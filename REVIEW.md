@@ -1,13 +1,103 @@
-# REVIEW — #144, `feat/icon-to-data`
+# REVIEW — #112, `feat/psg-extension`
 
 Findings and resolutions, newest round last. Read `PLAN.md` for what the branch is meant to do.
 
-Scope is `git diff main..feat/icon-to-data`. Triage each finding **blocking** / **should-fix** / **nit**, and pin the scope of each round to the SHA it was read at.
+Scope is `git diff main..feat/psg-extension`. Triage each finding **blocking** / **should-fix** / **nit**, and pin the scope of each round to the SHA it was read at.
 
-#140's four rounds are gone rather than archived. They were findings about work that shipped in #141, and `CLAUDE.md` flagged carrying them forward as a loose end — a review file kept past its merge is a second copy of the truth. The rounds themselves are in git history and their outcomes are in `CHANGELOG.md` and `CLAUDE.md`.
+#144's round is gone rather than archived; it shipped in #145. The standing rule is that each branch resets both files.
 
 ---
 
 ## Round 1
 
-Not yet run.
+Read at `493edf4`, against a live PySimpleGUI 6.3. Seven findings, all fixed.
+
+**Blocking**
+
+1. **The second, merging `Icon.map` call silently discarded every per-state image.** `StatefulIconMixin.map` names the child style after the icon names *that call* uses, so the merge — which named only the base icon — derived a different style from the first call whenever `reactive_states` overrode a glyph *name*, and merged into an empty map. `widget.configure(style=…)` then moved the button onto a style holding nothing but the resting image: hover, pressed and disabled all gone. Reproduced with a chosen color plus `{"disabled": {"name": …}}`.
+
+   Fixed by seeding the resting color into the statespec rather than merging it afterward — `""` is the fallback state and belongs there like any other. The derived path (`reactive_states=True`) is the one case that cannot seed, since a statespec suppresses the derivation it exists for; the second call stays there and is safe *because* a derived spec draws every state from the base icon, so both calls hash the same child style. Guarded by `test_a_chosen_color_does_not_cost_the_ttk_state_images`.
+
+2. **State images dropped `style=` and `options=`.** `_render_icon` fell through to the mixin default, which rebuilds the icon as `type(icon)(name, size, color)` — a constructor call with nowhere to carry either. On the nine multi-style packs the button drew the *default* style's glyph for every state: `FontAwesomeIcon("heart", style="regular")` kept its outline at rest and switched to the solid one on hover. It reached the `tk` path here and the `ttk` path through `Icon.map`, so it was never PySimpleGUI-specific.
+
+   Fixed in `Icon`, not in the extension: `Icon._render_icon` renders against the instance's own `IconSet` and options, and `.image` renders through it too, so the resting image and the states beside it cannot come from two places. Guarded by `TestStateImagesComeFromTheIconsOwnSet`. **Round 2 found this over-corrected** — see its finding 1.
+
+**Should fix**
+
+3. **The color check could never match once a color was chosen.** `_refresh_for_colors` compared the parent style's foreground against `_state_colors[""]`, which holds the *chosen* color whenever the caller gave one — so an `update()` that changed no color at all re-ran the whole state map, and with finding 1 unfixed re-lost the state images each time. The parent foreground is remembered separately now. **Round 2 widened what is remembered** to the foreground *and its state map* — see its finding 4.
+
+4. **`update()` carried on after PySimpleGUI had bailed out.** `sg.Button.update` returns early (with an error popup) on a destroyed widget or a closed window rather than raising, and the override then reached `configure()` on a dead widget and raised `TclError`. A single `_widget_alive()` guard now covers `update`, `attach_icon` and `_apply_tk_image` — the `after_idle(self.attach_icon)` callback had the same exposure.
+
+5. **PySimpleGUI's `Update` alias bypassed the override entirely.** `Button` binds `Update = update` in its own class body, so `IconButton.Update` resolved to the base function — and PySimpleGUI calls `.Update(...)` internally, `Window.fill` among others. Rebound in the generated class.
+
+6. **The docs read `reactive_states` as additive; it replaces.** Both paths replace — `ttk` maps with `mode="replace"`, and `_color_for` returns `None` for any non-resting state a mapping does not name — so `{"hover": …, "pressed": …}` silently loses the derived `disabled` tint. Said plainly on the page and in the class docstring. `capture_screenshots.py` was written against the additive reading, so the committed screenshot showed Tk's own disabled stipple rather than a tint this integration applied; the capture now names `disabled` and has been retaken.
+
+**Found while closing round 1, not reported by it**
+
+0. **A ttk theme change emptied the state map on the derived path.** Chasing whether "theme awareness" was still open turned this up. `StatefulIconMixin` records **one mapping per widget, the last one**, so on `<<ThemeChanged>>` it replayed only the merging call carrying the resting color — and ttk's style database is per-theme, so the map that merge would have merged into was gone too. The button adopted the new theme while its icon silently stopped reacting.
+
+   Reachable without any user code touching ttk: `_change_ttk_theme` runs in seven PySimpleGUI element packers, so a window built with a different `ttk_theme=`, or after `set_options(ttk_theme=…)`, re-themes every window already on screen. It is a no-op when the theme does not actually change — `theme_use` on the theme already in use fires no event — so the common case never triggers it.
+
+   `IconButton` binds `<<ThemeChanged>>` and re-applies on the next idle. **Two things that cost a hang and a red test to learn, both now in the code's comments.** `style.map()` and `style.configure()` fire `<<ThemeChanged>>` themselves, so answering the *event* is an endless loop; the trigger is the theme's **name** moving, compared against what was recorded at map time. And `<<ThemeChanged>>` is a queued virtual event, so `update_idletasks()` does not deliver it — the same distinction the attach trigger turns on, in the opposite direction.
+
+   Two things it does *not* fix, both deliberate. PySimpleGUI does not restore its own per-element style configuration across a theme change — a style carrying `foreground #FFFFFF` with an `active` map is left with plain `black` and no map — so the button reverts to the theme's default colors and the icon re-derives from the button *as it now is*. And under Windows' `winnative` the button's foreground reads back as the symbolic `SystemWindowText`, which Pillow rejects, so `Icon.map` skips that state and leaves the fallback alone. That second one was called pre-existing and out of scope here, and **round 2 found it was worse than described and fixed it** — see finding 2 there. It is still why `test_a_ttk_theme_change_does_not_empty_the_state_map` names `alt` rather than taking whichever theme comes first: which states a theme can derive is the theme's business, and a test that took the first available one would be asserting that rather than the repair.
+
+**Nit**
+
+7. **The changelog stated the win32/aqua `tk::ButtonEnter` behavior as universal**, which is the claim `_map_tk_states` and its test exist to correct — x11 sets `-state active` on entry outright. Rewritten to the three-way split the module documents.
+
+---
+
+## Round 2
+
+Read at the round-1 tree plus the theme repair. Six findings, all fixed. Two of them are round 1's own fixes being corrected, which is the pattern the #121–#125 stack recorded and worth noticing again: **the second round's findings came from the first round's fixes.**
+
+**Blocking**
+
+1. **Round 1's fix for the style leak silently lost cross-style per-state names.** Pinning `render_pil` with `icon_set=` is what stops the style being dropped — and it also switches `render_pil` off its resolving branch, so a `statespec` naming a glyph from another style stopped resolving. `StatefulIconMixin.map` catches the failure and `continue`s, so the state was dropped without a word. Reproduced: `FontAwesomeIcon("house", 16).map(btn, statespec=[("pressed", {"name": "42-group"})])` left the image map as the bare fallback.
+
+   The fix is layered rather than either-or, because both halves are real: `Icon._icon_set_for_state` returns this icon's own set wherever it can draw the name, and the pack's own resolution wherever it cannot. Guarded by `test_a_state_name_from_another_style_still_resolves`, which needs a pack whose styles do not share one glyph map — **Bootstrap is no use**, its two styles are one font split by a name predicate, so the first version of that test skipped silently and proved nothing.
+
+2. **`Icon.map` drew nothing usable on the ttk themes Windows ships as its own defaults.** A style hands back what it was configured with, and `vista`, `winnative` and `xpnative` configure `SystemWindowText`. Pillow rejects it; `map` skips any state it cannot render, *including the resting fallback*, so a mapped button came out with no reactive states and an untinted icon. Round 1 saw this as a lost `winnative` state and filed it as pre-existing and narrow; it is neither — `vista` is the default theme on Windows.
+
+   Colors read off a style now go through `StatefulIconMixin._drawable_color`, which asks the widget, since Tk is the only thing that can resolve a system color. A color the caller wrote is untouched, because Pillow accepts specifiers Tk does not. This is a library fix rather than an extension one on purpose: `Icon.map` is what reads a style and hands the result to Pillow, and the extension already normalized its own reads through `_hex_color`.
+
+   **Findings 1 and 2 were entangled**, and this is the part worth keeping. Finding 1's repro failed on this machine for finding 2's reason — the name resolved perfectly and both renders then died on `SystemWindowText`. Fixing one without the other looks like the fix not working.
+
+**Should fix**
+
+3. **`reactive_states={}` gave three answers from one input.** An empty list is falsy and `_parse_statespec` tests `if statespec:`, so it fell through to the derive-from-the-style branch and behaved as `True`; a chosen color seeded a `""` entry, which made the list truthy and stopped it reacting; and the `tk` path reacted to nothing at all. **The owner's call, 2026-08-12: an empty mapping means what `False` means** — it names no states, so nothing reacts. `_reacts_to_nothing()` is the one predicate both paths ask.
+
+4. **`_refresh_for_colors` could not see `disabled_button_color` on the ttk path.** It compared `style.lookup(parent, "foreground")`, the base value, while `sg.Button.update(disabled_button_color=…)` writes `style.map(name, foreground=[('disabled', …)])` — the state map. So the icon kept its old disabled tint while the label changed, and the `tk` path followed the same argument correctly, because it reads `disabledforeground`. The comparison is against `(base, map)` now.
+
+**Nits**
+
+5. **`_apply_tk_image` could `KeyError` on its own fallback.** `self._state_images[""]` assumes a resting image, but `_color_for("")` returns `None` when the widget's foreground is empty or unparseable, while a literal in `reactive_states` still produces the other states — so the dict is non-empty and the guard above did not fire. It runs from `after_idle`, so it would have surfaced only through Tk's callback handler.
+
+6. **The PySimpleGUI capture left a live Tk root behind.** `pysimplegui()` closed its window but left PySimpleGUI's hidden master root and `tkinter._default_root` alive, and it runs *third*, ahead of the two ttkbootstrap captures — so a full run in an environment with both installed asks Tk 8.6 for a second interpreter while the first is up. It now tears down exactly as `tests/test_extensions.py`'s fixture does, and the capture was retaken and looked at afterward.
+
+---
+
+## Round 3
+
+Read at `a6b93ce`, on **WSL2 — Ubuntu 22.04, Python 3.10.12, Tk 8.6, X11 under Xvfb**. This is the platform pass `HANDOFF-LINUX.md` asks for, and it found **one code defect: the single test that file predicted would pass anywhere.** Everything else is clean — all 53 `gui` tests ran rather than skipped, the docs build under `-W`, `verify_packages.py --strict` is all clear across eighteen distributions, and the placement census and pack READMEs are both current. The extension was also exercised end to end against a real PySimpleGUI 6.3 window — both the `tk` and `ttk` paths, all three reactive states, the `disabled` glyph swap, and `to_data()` on an `sg.Image` — asserting on non-transparent pixel counts rather than on the absence of an exception.
+
+**Blocking**
+
+1. **`test_a_symbolic_system_color_is_translated` fails on X11, and would fail every Linux CI job.** `ci.yml:79` runs the whole suite under `xvfb-run` on Linux across five interpreters, so this is not a local-only artefact.
+
+   **The code is right and the test is wrong.** `winfo_rgb("SystemWindowText")` raises `TclError: unknown color name` on X11: the `System*` names exist only in Tk's Windows build, and macOS's equivalent `systemTextColor` is just as absent here. `_drawable_color` catches that and hands the string back unchanged, exactly as its docstring says it will; Pillow then rejects it with `unknown color specifier`, `map` skips the state, and no `pressed` entry is written. Every step is designed behavior meeting a value that has no meaning on the platform.
+
+   `HANDOFF-LINUX.md` predicted this test would pass anywhere *because* it configures the symbolic color by hand rather than relying on a native theme. That reasoning does not hold, and the distinction is worth keeping: configuring a value by hand does not make Tk able to **resolve** it. `SystemWindowText` is a reference to a Windows system setting rather than a color literal, so off Windows there is nothing to resolve it *to* — this cannot be fixed by resolving harder.
+
+   Two details worth keeping. The **resting icon still survives on Linux** — the image map keeps its fallback — so the Linux failure is narrower than the docstring's "no reactive states *and* an untinted resting icon", which remains accurate for the Windows case it was written about. And the `# pragma: no cover - not a Tk color name` on the passthrough branch is **inaccurate off Windows**: that branch is exercised on every X11 run.
+
+   **The fix, and two wrong turns worth recording, because the obvious repair is a trap.** The first attempt was to make the test portable by picking a value Tk resolves and Pillow rejects on every platform. Three qualify — `gray50`, `light steel blue`, and Tk's 16-bit-per-channel `#ffff00000000` — and all three were measured to map `pressed` with the translation in place and to drop it with the translation stubbed to identity, so they do reproduce the bug portably. **They were rejected as unrealistic.** Surveying every theme on this build, `clam`, `alt`, `default` and `classic` all configure a `TButton` foreground of `black` or `#000000`, both of which Pillow parses happily; no real theme on any platform configures any of those three specs. The test would have asserted against a fabricated configuration — portable, but no more realistic than the Windows-only value it replaced.
+
+   The second wrong turn is what makes the first one tempting: **a merely *named* color is not enough.** Pillow parses `SteelBlue`, so a test built on it still passes with the translation removed — measured, not assumed. Any portable replacement has to be a spec Tk resolves and Pillow does not, and no such spec is one a real theme actually produces off Windows.
+
+   What ships instead splits the test along the line the platforms genuinely draw. `test_a_name_a_theme_configures_is_resolved_to_hex` asserts the translation **everywhere**, on the value every stock theme really configures: `black` becomes `#000000`. That is realistic, portable, and has teeth — untranslated, the style hands the name straight back, and the assertion fails with `assert 'black' == '#000000'`. The `SystemWindowText` integration test is kept **unchanged** and gated on `sys.platform == "win32"`, because it is Windows-only by nature rather than by convenience, and its skip reason says so. Suite on Linux is green afterwards: 849 passed, 17 skipped.
+
+**Not the code — the checklist**
+
+2. **`HANDOFF-LINUX.md`'s setup block does not survive a stock WSL image**, in three ways, none of them a branch defect. Ubuntu 22.04's default interpreter is **3.10**, not the 3.13 this branch was written on, so `tomli` is needed by the tests that read `pyproject.toml` — `ci.yml:69` installs it conditionally and the checklist omitted it. `verify_packages.py --strict` **cannot run on 3.10 at all**, because `.github/scripts/packages.py` bare-imports `tomllib` and documents the 3.11 floor in its own module docstring; that is unchanged from `main` and is a deliberate developer-tooling constraint rather than a bug, but it means that command needs a 3.11+ interpreter. And `.venv-linux/` is not in `.gitignore`, which carries `.venv/` and `venv/` only, so the venv the checklist tells you to create shows up as untracked. All three are corrected in that file.

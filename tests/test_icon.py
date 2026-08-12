@@ -156,7 +156,7 @@ class TestAGlyphThatCannotBeDrawnRaises:
     adding `"warn"` and `"raise"` as opt-ins, so the option existed to escape
     the old behavior rather than to offer a choice anyone wanted.
 
-    Nothing ever set it. Not the browser, not the placement census over 178,584
+    Nothing ever set it. Not the browser, not the placement census over 178,338
     renders, not the docs extensions that render every pack's previews — the
     bulk renderers the option was justified by. They cannot reach it: they
     iterate names that come out of the glyph map, so a name the map lacks is

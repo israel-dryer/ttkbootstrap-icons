@@ -13,3 +13,9 @@ sphinx-design
 sphinx-copybutton
 sphinx-autobuild
 myst-parser
+# PySimpleGUI is not a dependency of the library — it is the optional framework
+# `tkinter_icons.extensions.psg` bridges onto. It is here because `api.rst`
+# autodocs `IconButton`, and `IconButton` subclasses PySimpleGUI's own `Button`,
+# so autodoc has to import it. Without this the docs build fails on every
+# machine that has not installed it, including Read the Docs.
+PySimpleGUI
