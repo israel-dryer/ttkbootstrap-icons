@@ -314,7 +314,7 @@ class TestTheTwoEntryPointsLookNamesUpTheSameWay:
     """
 
     #: Icons rendered per style to compare pixels. Resolution is checked over
-    #: every name — it is dictionary lookups — but rendering all 113,399 would
+    #: every name — it is dictionary lookups — but rendering all 113,157 would
     #: cost more than the rest of the suite put together, so the raster check
     #: is a bounded sample and says so.
     PIXEL_SAMPLE = 5

@@ -55,7 +55,7 @@ Usage
 tree. It runs in the docs job, which already installs every pack.
 
 It is a committed artifact rather than a pytest fixture for two reasons, and
-speed is only half of one: 178,584 renders take about 20 seconds, which is
+speed is only half of one: 178,338 renders take about 20 seconds, which is
 nothing for a CI step and seven times the whole test suite. The other half is
 that it needs all sixteen packs installed, where the tests are meant to run on
 every platform in the matrix. Same call `metrics.json` already made.
