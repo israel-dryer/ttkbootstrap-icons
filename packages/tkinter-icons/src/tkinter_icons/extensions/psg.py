@@ -149,7 +149,12 @@ def _build_icon_button(sg) -> type:
                 ``False`` to draw the icon exactly as given, or a mapping of
                 state name to either a color or a ``{"name": ..., "color": ...}``
                 dict, which can swap the glyph as well as tint it.
-            compound: Where the icon sits relative to the text.
+            compound: Where the icon sits relative to the text, as Tk means it.
+                Pass ``"none"`` for a button with **no text**: the default
+                ``"left"`` reserves a text slot, and on ttk that is not free —
+                an empty-text button asks for 96 px against 26. ``ttk`` also
+                accepts ``"image"``, which ``tk`` does not, so ``"none"`` is
+                the value that means image-only on both.
             kwargs: Further keyword arguments for ``sg.Button``.
 
         State names describe the interaction — ``hover``, ``pressed``,
@@ -304,12 +309,23 @@ def _build_icon_button(sg) -> type:
             class bindings have run. That is correct on every platform by
             construction, whatever each one does.
 
-            Which matters, because Tk's ``active`` is not hover:
-            ``tk::ButtonEnter`` sets ``-state active`` only when the mouse
-            button is already down. On win32 the state therefore changes on
-            *press*, and ``<Enter>`` alone leaves it ``normal``. Hover is drawn
-            with ``-overrelief``, which carries no image — so ``hover`` cannot
-            be honored here at all.
+            Which matters, because Tk's ``active`` does not mean what ttk's
+            does, and **it does not mean the same thing on every platform**.
+            ``button.tcl`` defines ``tk::ButtonEnter`` three times, once per
+            windowing system:
+
+            * **win32 and aqua** set ``-state active`` only when the mouse
+              button is already down, so the state changes on *press* and
+              ``<Enter>`` alone leaves it ``normal``.
+            * **x11** sets it on entry unconditionally — "on unix the state is
+              active just with mouse-over", in Tk's own comment — so there the
+              one state covers hover *and* press.
+
+            Reading the widget rather than the pointer is what makes this
+            correct anywhere: whichever Tk does, the icon follows. What stays
+            true everywhere is that ``hover`` is not separately reachable — on
+            win32 because no hover state exists, on x11 because hover is
+            indistinguishable from press.
             """
             # A tk.Button measures -width/-height in characters and lines while
             # it shows text alone, and in *pixels* once it also shows an image.
@@ -322,8 +338,10 @@ def _build_icon_button(sg) -> type:
             if isinstance(self._reactive_states, Mapping) and "hover" in self._reactive_states:
                 warnings.warn(
                     f"{type(self).__name__}(key={self.Key!r}) was given a 'hover' state, but a "
-                    f"tk.Button has no hover state that can carry an image, so it is ignored. "
-                    f"Pass use_ttk_buttons=True to get one, or use 'pressed'.",
+                    f"tk.Button cannot carry a separate hover image, so it is ignored — on "
+                    f"Windows and macOS because it has no hover state at all, on X11 because "
+                    f"hover and press are both '-state active' there. Pass use_ttk_buttons=True "
+                    f"for a real hover, or use 'pressed'.",
                     stacklevel=2,
                 )
 

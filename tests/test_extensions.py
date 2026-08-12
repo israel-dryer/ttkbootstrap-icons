@@ -172,8 +172,14 @@ class TestIconButton:
             button = IconButton("Go", key="-B-", use_ttk_buttons=use_ttk, **kwargs)
             try:
                 window = sg.Window("t", [[button]], finalize=True, location=(50, 50))
-            except Exception as exc:  # pragma: no cover - headless
-                pytest.skip(f"no display: {exc}")
+            except Exception as exc:  # pragma: no cover - environment, not the code
+                # Two different causes, and calling both "no display" would
+                # misreport one of them. Either there is genuinely no display,
+                # or this is Tk 8.6 failing to build a second interpreter in
+                # one process -- a known limitation `CLAUDE.md` records, which
+                # surfaces as `invalid command name "tcl_findLibrary"` and
+                # depends on test ordering rather than on anything here.
+                pytest.skip(f"could not create a Tk window: {type(exc).__name__}: {exc}")
             windows.append(window)
             return button, window
 
@@ -245,24 +251,42 @@ class TestIconButton:
     def test_the_tk_icon_follows_the_widgets_own_state(self, build):
         """Not inferred from the pointer -- read back off `-state`.
 
-        Tk's `active` is pressed, not hover: `tk::ButtonEnter` sets it only
-        while button 1 is already down. So entering must change nothing.
+        The invariant is "the image matches whatever Tk says the state is",
+        and that is deliberately **not** the same as "hover changes nothing".
+        `button.tcl` defines `tk::ButtonEnter` once per windowing system: win32
+        and aqua set `-state active` only while button 1 is already down, while
+        x11 sets it on entry outright -- "on unix the state is active just with
+        mouse-over", in Tk's own comment.
+
+        An earlier version of this test asserted the win32 behavior as
+        universal and failed on Linux against code that was doing exactly the
+        right thing. Assert the mapping, not one platform's Tk.
         """
+        from tkinter_icons.extensions.psg import _TK_STATE_KEYS
+
         button, window = build(use_ttk_buttons=False, reactive_states={"pressed": "#0000ff"})
         widget = button.Widget
 
-        def current():
+        def settle():
             window.TKroot.update_idletasks()
             window.TKroot.update()
-            return str(widget.cget("image"))
+            return str(widget.cget("state")), str(widget.cget("image"))
 
-        rest = current()
-        widget.event_generate("<Enter>", x=5, y=5)
-        assert current() == rest, "hover must not change a tk.Button's icon"
+        def expected(state):
+            return str(button._state_images.get(_TK_STATE_KEYS.get(state, ""),
+                                                button._state_images[""]))
 
+        for event in ("<Enter>", "<ButtonPress-1>", "<ButtonRelease-1>", "<Leave>"):
+            widget.event_generate(event, x=5, y=5)
+            state, image = settle()
+            assert image == expected(state), f"after {event}: -state={state} but image did not match"
+
+        # Press reaches `active` on every platform, so the pressed image is
+        # genuinely exercised rather than only the resting one.
         widget.event_generate("<ButtonPress-1>", x=5, y=5)
-        assert str(widget.cget("state")) == "active"
-        assert current() == str(button._state_images["pressed"])
+        state, image = settle()
+        assert state == "active"
+        assert image == str(button._state_images["pressed"])
 
     def test_disabling_swaps_the_tk_image(self, build):
         """A tk.Button has no disabled image, only disabledforeground."""

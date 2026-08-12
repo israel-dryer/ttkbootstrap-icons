@@ -249,7 +249,10 @@ def pysimplegui(out: Path) -> None:
                                  "disabled": {"name": "trash-fill", "color": "#7c8a99"}},
                 key="-DELETE-",
             ),
-            IconButton("", icon=BootstrapIcon("gear", 16, white), key="-PREFS-"),
+            # compound="none" because there is no text: the default reserves
+            # room for a label that is not there, ~70 px of it on a ttk button.
+            IconButton("", icon=BootstrapIcon("gear", 16, white), compound="none",
+                       key="-PREFS-"),
         ],
         [sg.Text("to_data() bytes — no deferral, no subclass, no reacting")],
         [
