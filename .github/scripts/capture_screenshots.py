@@ -219,9 +219,64 @@ def ttkbootstrap_theme(out: Path, theme: str) -> None:
     app.destroy()
 
 
+def pysimplegui(out: Path) -> None:
+    """`integrations/pysimplegui` — both bridges in one window.
+
+    The page's argument is that there are two ways in and they are not
+    interchangeable, so the capture has to show both: `IconButton` where the
+    icon sits beside text and reacts, and `to_data()` bytes on the elements
+    that take an encoded image and never react. One row of each.
+
+    PySimpleGUI is not a dependency of this project, so this is skipped like
+    the ttkbootstrap pair unless it is installed.
+    """
+    import PySimpleGUI as sg
+
+    from tkinter_icons import BootstrapIcon
+    from tkinter_icons.extensions.psg import IconButton
+
+    sg.theme("DarkBlue3")
+    white = "#FFFFFF"
+
+    layout = [
+        [sg.Text("IconButton — icon beside text, follows the button")],
+        [
+            IconButton("Save", icon=BootstrapIcon("floppy", 16, white), key="-SAVE-"),
+            IconButton(
+                "Delete",
+                icon=BootstrapIcon("trash", 16, white),
+                reactive_states={"hover": "#f0918d", "pressed": "#d9534f",
+                                 "disabled": {"name": "trash-fill", "color": "#7c8a99"}},
+                key="-DELETE-",
+            ),
+            IconButton("", icon=BootstrapIcon("gear", 16, white), key="-PREFS-"),
+        ],
+        [sg.Text("to_data() bytes — no deferral, no subclass, no reacting")],
+        [
+            sg.Image(data=BootstrapIcon("house", 16, white).to_data()),
+            sg.Text("Dashboard"),
+            sg.Push(),
+            sg.Button(image_data=BootstrapIcon("bell", 16, white).to_data(), key="-BELL-"),
+        ],
+    ]
+
+    # ttk buttons, because `hover` above is a state a tk.Button does not have
+    # — asking for it there warns, correctly, and the page says why.
+    window = sg.Window("PySimpleGUI", layout, finalize=True, size=(420, 190),
+                       use_ttk_buttons=True,
+                       icon=BootstrapIcon("gear", 32, white).to_data())
+    # The disabled state is half of what the Delete button demonstrates, so
+    # show it rather than describing it in the caption.
+    window["-DELETE-"].update(disabled=True)
+    window.refresh()
+    capture(window.TKroot, out)
+    window.close()
+
+
 SHOTS = {
     "quickstart": lambda: quickstart(ASSETS / "quickstart_button.png"),
     "tkinter-ttk": lambda: tkinter_ttk(ASSETS / "tkinter_ttk_widgets.png"),
+    "pysimplegui": lambda: pysimplegui(ASSETS / "pysimplegui_icons.png"),
     "ttkbootstrap-dark": lambda: ttkbootstrap_theme(
         ASSETS / "ttkbootstrap_dark.png", "bootstrap-dark"
     ),

@@ -61,3 +61,17 @@ Packaging
 ---------
 
 .. autofunction:: get_hook_dirs
+
+Framework integrations
+----------------------
+
+Optional bridges onto GUI frameworks that are not dependencies of this package. Each is imported by name, and each requires its framework to be installed separately — see :doc:`integrations/pysimplegui`.
+
+.. currentmodule:: tkinter_icons.extensions.psg
+
+.. autoclass:: IconButton
+   :members: attach_icon, update
+
+.. autofunction:: resolve_flavor
+
+.. autoexception:: PySimpleGUINotInstalled

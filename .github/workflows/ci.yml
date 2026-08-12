@@ -67,6 +67,12 @@ jobs:
           # tomli is tomllib's backport; the pack tests read pyproject.toml and
           # 3.10 has no tomllib in the stdlib.
           python -m pip install pytest 'tomli; python_version < "3.11"'
+          # PySimpleGUI is not a dependency of this project - it is the optional
+          # framework `tkinter_icons.extensions.psg` bridges onto. Without it
+          # here the integration would ship with no CI coverage at all, and the
+          # tests that need it absent still run, because they block the import
+          # in a subprocess rather than relying on it being uninstalled.
+          python -m pip install PySimpleGUI
         shell: bash
 
       - name: Run tests
