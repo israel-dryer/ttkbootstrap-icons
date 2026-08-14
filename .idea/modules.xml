@@ -2,7 +2,25 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/tkinter-icons.iml" filepath="$PROJECT_DIR$/.idea/tkinter-icons.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/tkinter-icons-bs.iml" filepath="$PROJECT_DIR$/.idea/tkinter-icons-bs.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/tkinter-icons-devicon.iml" filepath="$PROJECT_DIR$/.idea/tkinter-icons-devicon.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/tkinter-icons-eva.iml" filepath="$PROJECT_DIR$/.idea/tkinter-icons-eva.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/tkinter-icons-fa.iml" filepath="$PROJECT_DIR$/.idea/tkinter-icons-fa.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/tkinter-icons-fluent.iml" filepath="$PROJECT_DIR$/.idea/tkinter-icons-fluent.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/tkinter-icons-fluent-reg.iml" filepath="$PROJECT_DIR$/.idea/tkinter-icons-fluent-reg.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/tkinter-icons-gmi.iml" filepath="$PROJECT_DIR$/.idea/tkinter-icons-gmi.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/tkinter-icons-ion.iml" filepath="$PROJECT_DIR$/.idea/tkinter-icons-ion.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/tkinter-icons-lucide.iml" filepath="$PROJECT_DIR$/.idea/tkinter-icons-lucide.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/tkinter-icons-mat.iml" filepath="$PROJECT_DIR$/.idea/tkinter-icons-mat.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/tkinter-icons-meteocons.iml" filepath="$PROJECT_DIR$/.idea/tkinter-icons-meteocons.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/tkinter-icons-remix.iml" filepath="$PROJECT_DIR$/.idea/tkinter-icons-remix.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/tkinter-icons-rpga.iml" filepath="$PROJECT_DIR$/.idea/tkinter-icons-rpga.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/tkinter-icons-simple.iml" filepath="$PROJECT_DIR$/.idea/tkinter-icons-simple.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/tkinter-icons-typicons.iml" filepath="$PROJECT_DIR$/.idea/tkinter-icons-typicons.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/tkinter-icons-weather.iml" filepath="$PROJECT_DIR$/.idea/tkinter-icons-weather.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/ttkbootstrap-icons.iml" filepath="$PROJECT_DIR$/.idea/ttkbootstrap-icons.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/ttkbootstrap-icons@1.iml" filepath="$PROJECT_DIR$/.idea/ttkbootstrap-icons@1.iml" />
     </modules>
   </component>
 </project>
