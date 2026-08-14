@@ -96,6 +96,8 @@ between a mistyped tag and an immutable upload.
 
 5. **Do a dry run.** Actions → Release → *Run workflow*, naming the tag and `main`. It builds and verifies everything and publishes nothing — the `publish` and `release` jobs are gated on `github.event_name == 'push'`. Worth doing at least once before a release that matters, since the real run ends in uploads PyPI will not let you take back.
 
+   The `build` job uploads all eighteen distributions as the `dist` artifact, so this is also how you try a wheel out before its version is permanent: download the artifact and `pip install` the file. That is what the old `publish.ps1` and its TestPyPI upload were for, and it is why neither exists any more — a real wheel installed from disk answers the question, without an index that cannot resolve Pillow or the packs' floor on `tkinter-icons`.
+
 6. **Tag the merge commit and push:**
 
    ```bash
@@ -188,17 +190,6 @@ reports instead:
 ```bash
 SETUPTOOLS_SCM_PRETEND_VERSION_FOR_TKINTER_ICONS=5.0.0 \
     python -m pip install -e packages/tkinter-icons
-```
-
-## Publishing to TestPyPI
-
-`publish.ps1` builds one package and uploads it to TestPyPI, for trying a
-package out before it is real. It refuses to publish to PyPI — that is the
-tag-driven workflow's job, and doing it by hand is what this replaced.
-
-```powershell
-$env:TWINE_PASSWORD = 'pypi-...'   # a TestPyPI token
-./publish.ps1 fa
 ```
 
 ## Verifying afterwards
